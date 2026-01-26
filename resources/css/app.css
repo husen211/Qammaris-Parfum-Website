@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+
+@plugin "daisyui";
+
+/* ========================================
+   QAMMARIS PERFUMES - LUXURY MINIMALIST
+   ======================================== */
+
+@theme {
+    /* Palette Mewah & Clean */
+    --color-brand-emerald: #0D3F33;  /* Main Accent */
+    --color-brand-gold: #C5A059;     /* Luxury Accent */
+    --color-brand-black: #1A1A1A;    /* Text Utama */
+    --color-brand-cream: #F9F9F7;    /* Background Section (Warm White) */
+    --color-brand-white: #FFFFFF;
+    
+    --font-sans: 'Inter', sans-serif;
+}
+
+@layer utilities {
+    .text-gold {
+        color: var(--color-brand-gold);
+    }
+    
+    /* Hover effect yang halus (Zimaya Style) */
+    .hover-luxury {
+        transition: all 0.4s ease;
+    }
+    .hover-luxury:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+    }
+}
+
+@layer components {
+    /* Button Minimalis Mewah */
+    .btn-primary {
+        background-color: var(--color-brand-black);
+        color: white;
+        border-radius: 0px; /* Kotak memberi kesan tegas/mahal */
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.875rem;
+        padding: 1rem 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--color-brand-emerald);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-luxury {
+        background-color: transparent;
+        border: 1px solid var(--color-brand-black);
+        color: var(--color-brand-black);
+        border-radius: 0px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 1rem 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-luxury:hover {
+        background-color: var(--color-brand-black);
+        color: white;
+    }
+    
+    /* Product Card Clean */
+    .card-product {
+        background-color: white;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+    }
+    
+    .card-product:hover {
+        border-color: var(--color-brand-gold);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+
+    .hover-3d {
+        position: relative;
+        perspective: 1200px;
+    }
+
+    .hover-3d figure {
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s ease, box-shadow 0.6s ease;
+        will-change: transform;
+    }
+
+    .hover-3d figure::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 1rem;
+        background: linear-gradient(135deg, rgba(197, 160, 89, 0.12), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.6s ease;
+        pointer-events: none;
+    }
+
+    .hover-3d img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 1rem;
+    }
+
+    .hover-3d:hover figure {
+        transform: rotateX(4deg) rotateY(-6deg) translateY(-6px);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+    }
+
+    .hover-3d:hover figure::after {
+        opacity: 1;
+    }
+}
+
+[data-theme="qammaris"] {
+    --p: 13 63 51;  /* Emerald */
+    --s: 26 26 26;  /* Black */
+    --a: 197 160 89; /* Gold */
+    --b1: 255 255 255;
+}
+
+
+
+@layer utilities {
+    /* Mencegah font besar merusak layout mobile */
+    .text-responsive-h1 {
+        font-size: clamp(2.5rem, 5vw, 5rem); /* Otomatis mengecil di HP */
+    }
+
+    .animate-fade-in-up {
+        animation: fade-in-up 0.6s ease both;
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .animate-slide-pause,
+    .animate-fade-in-up,
+    .animate-float,
+    .animate-bounce {
+        animation: none;
+    }
+
+    .reveal,
+    .reveal.is-visible {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+
+
+   @keyframes slide-pause-snap {
+        0%, 45% { transform: translateX(0); }       /* DIAM di Set 1 (lama) */
+        50%, 95% { transform: translateX(-50%); }   /* GESER ke Set 2 & DIAM (lama) */
+        100% { transform: translateX(0); }          /* RESET cepat ke awal */
+    }
+    
+    .animate-slide-pause {
+        animation: slide-pause-snap 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* Font Fix untuk Mobile */
+    .font-mayluxa {
+        font-family: var(--font-sans);
+    }
