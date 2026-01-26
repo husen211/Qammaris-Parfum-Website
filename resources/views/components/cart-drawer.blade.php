@@ -20,7 +20,7 @@
             </div>
         </div>
         
-        <div class="border-t border-gray-100 bg-white p-6 space-y-4">
+        <div class="border-t border-gray-100 bg-white px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4">
             <div class="flex justify-between items-center">
             <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Subtotal</span>
             <span class="font-mayluxa text-xl text-brand-black" id="drawerSubtotal">Rp 0</span>
