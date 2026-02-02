@@ -18,6 +18,7 @@ class ProductStoreRequest extends FormRequest
             'brand_id' => ['required', 'exists:brands,id'],
             'category_id' => ['required', 'exists:categories,id'],
             'description' => ['required', 'string'],
+            'compare_at_price' => ['nullable', 'numeric', 'min:0'],
             'gender' => ['nullable', 'string'],
             'top_notes' => ['nullable', 'string'],
             'middle_notes' => ['nullable', 'string'],

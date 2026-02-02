@@ -18,6 +18,7 @@ class Product extends Model
         'slug',
         'description',
         'base_price',
+        'compare_at_price',
         'fragrance_notes',
         'gender',
         'is_best_seller',
@@ -28,6 +29,7 @@ class Product extends Model
 
     protected $casts = [
         'base_price' => 'decimal:2',
+        'compare_at_price' => 'decimal:2',
         'fragrance_notes' => 'array',
         'is_best_seller' => 'boolean',
         'is_active' => 'boolean',

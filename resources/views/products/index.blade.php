@@ -178,8 +178,15 @@
                                             </a>
                                         </h3>
 
-                                        <div class="mt-auto text-sm md:text-base font-medium text-brand-black">
-                                            {{ format_rupiah($product->cheapest_price) }}
+                                        <div class="mt-auto">
+                                            @if ($product->compare_at_price && $product->compare_at_price > $product->cheapest_price)
+                                                <div class="text-[10px] md:text-xs text-gray-400 line-through">
+                                                    {{ format_rupiah($product->compare_at_price) }}
+                                                </div>
+                                            @endif
+                                            <div class="text-sm md:text-base font-medium text-brand-black">
+                                                {{ format_rupiah($product->cheapest_price) }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

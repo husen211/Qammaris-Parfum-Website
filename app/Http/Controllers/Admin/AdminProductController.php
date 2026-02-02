@@ -58,6 +58,9 @@ class AdminProductController extends Controller
         try {
             DB::beginTransaction();
             $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
+            $compareAtPrice = $request->filled('compare_at_price')
+                ? $request->compare_at_price
+                : null;
 
             $fragranceNotes = [
                 'top' => array_map('trim', explode(',', $request->top_notes)),
@@ -73,6 +76,7 @@ class AdminProductController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'base_price' => $basePrice,
+                'compare_at_price' => $compareAtPrice,
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),
@@ -121,6 +125,9 @@ class AdminProductController extends Controller
         try {
             DB::beginTransaction();
             $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
+            $compareAtPrice = $request->filled('compare_at_price')
+                ? $request->compare_at_price
+                : null;
 
             $fragranceNotes = [
                 'top' => array_map('trim', explode(',', $request->top_notes)),
@@ -136,6 +143,7 @@ class AdminProductController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'base_price' => $basePrice,
+                'compare_at_price' => $compareAtPrice,
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),

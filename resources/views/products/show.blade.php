@@ -63,6 +63,11 @@
                     </h1>
                     
                     <div class="flex items-end gap-3">
+                        @if ($product->compare_at_price && $product->compare_at_price > $product->variants->min('price'))
+                            <div class="text-xs md:text-sm text-gray-400 line-through" id="compareAtPrice" data-compare-at="{{ $product->compare_at_price }}">
+                                {{ format_rupiah($product->compare_at_price) }}
+                            </div>
+                        @endif
                         <div class="text-2xl lg:text-3xl font-medium text-brand-black" id="displayPrice">
                             {{ format_rupiah($product->variants->first()->price) }}
                         </div>
@@ -174,6 +179,11 @@
                     <h3 class="font-mayluxa text-base md:text-lg mb-1 group-hover:text-brand-gold transition-colors">
                         <a href="{{ route('products.show', $related->slug) }}">{{ $related->name }}</a>
                     </h3>
+                    @if ($related->compare_at_price && $related->compare_at_price > $related->cheapest_price)
+                        <p class="text-[10px] text-gray-400 line-through">
+                            {{ format_rupiah($related->compare_at_price) }}
+                        </p>
+                    @endif
                     <p class="text-sm font-medium">{{ format_rupiah($related->cheapest_price) }}</p>
                 </div>
             </div>
@@ -229,12 +239,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const variantRadios = document.querySelectorAll('.variant-radio');
     const stockStatus = document.getElementById('stockStatus');
     const displayPrice = document.getElementById('displayPrice');
+    const compareAtPrice = document.getElementById('compareAtPrice');
+
+    function updateCompareAtVisibility(price) {
+        if (!compareAtPrice) return;
+        const compareValue = parseFloat(compareAtPrice.dataset.compareAt);
+        const currentPrice = parseFloat(price);
+        if (!compareValue || Number.isNaN(compareValue) || Number.isNaN(currentPrice)) {
+            return;
+        }
+
+        if (compareValue > currentPrice) {
+            compareAtPrice.classList.remove('hidden');
+        } else {
+            compareAtPrice.classList.add('hidden');
+        }
+    }
 
     if (variantRadios.length) {
         variantRadios.forEach(radio => {
             radio.addEventListener('change', function() {
                 const price = this.dataset.price;
                 displayPrice.textContent = formatRupiah(price);
+                updateCompareAtVisibility(price);
 
                 const stock = parseInt(this.dataset.stock);
                 if (stock > 0) {
@@ -249,6 +276,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('quantity').value = 1;
             });
         });
+    }
+
+    const initialVariant = document.querySelector('.variant-radio:checked');
+    if (initialVariant) {
+        updateCompareAtVisibility(initialVariant.dataset.price);
     }
 });
 

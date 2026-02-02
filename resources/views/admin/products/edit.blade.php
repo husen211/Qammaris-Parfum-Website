@@ -96,6 +96,15 @@
                             @enderror
                         </div>
 
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Compare At Price (Rp) <span class="text-gray-400 text-xs">(Optional)</span></label>
+                            <input type="number" name="compare_at_price" value="{{ old('compare_at_price', $product->compare_at_price) }}" min="0" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
+                            <p class="mt-1 text-xs text-gray-400">Kosongkan jika tidak ingin harga coret.</p>
+                            @error('compare_at_price')
+                            <p id="compare-at-price-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
