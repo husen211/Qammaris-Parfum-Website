@@ -9,6 +9,10 @@ class StoreInfo extends Model
 {
     use HasFactory;
 
+    private const DEFAULT_WHATSAPP_NUMBER = '6285144924931';
+    private const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/qammaris';
+    private const DEFAULT_TIKTOK_URL = 'https://www.tiktok.com/@qammaris.parfum?_r=1&_t=ZS-93QXMasV6w5';
+
     protected $table = 'store_info';
 
     protected $fillable = [
@@ -36,10 +40,57 @@ class StoreInfo extends Model
     {
         return self::first() ?? self::create([
             'store_name' => 'Qammaris Perfumes',
-            'whatsapp_number' => '6282271636339',
+            'whatsapp_number' => self::DEFAULT_WHATSAPP_NUMBER,
             'hero_title' => 'Explore Premium Middle Eastern Fragrances',
             'hero_subtitle' => 'Koleksi parfum otentik dari brand ternama Timur Tengah',
         ]);
+    }
+
+    public function getWhatsappNumberAttribute($value): string
+    {
+        $normalized = preg_replace('/\D+/', '', (string) $value);
+
+        if ($normalized === '') {
+            return self::DEFAULT_WHATSAPP_NUMBER;
+        }
+
+        if (str_starts_with($normalized, '0')) {
+            $normalized = '62' . substr($normalized, 1);
+        }
+
+        return $normalized === self::DEFAULT_WHATSAPP_NUMBER
+            ? $normalized
+            : self::DEFAULT_WHATSAPP_NUMBER;
+    }
+
+    public function getInstagramUrlAttribute($value): string
+    {
+        $normalized = trim((string) $value);
+
+        if ($normalized === '') {
+            return self::DEFAULT_INSTAGRAM_URL;
+        }
+
+        if (str_contains($normalized, 'instagram.com/qammaris')) {
+            return self::DEFAULT_INSTAGRAM_URL;
+        }
+
+        return $normalized;
+    }
+
+    public function getTiktokUrlAttribute($value): string
+    {
+        $normalized = trim((string) $value);
+
+        if ($normalized === '') {
+            return self::DEFAULT_TIKTOK_URL;
+        }
+
+        if (str_contains($normalized, 'tiktok.com/@qammaris.parfum')) {
+            return self::DEFAULT_TIKTOK_URL;
+        }
+
+        return $normalized;
     }
 
     /**

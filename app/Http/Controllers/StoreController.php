@@ -19,14 +19,14 @@ class StoreController extends Controller
         $defaultEmbedSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.3280930730352!2d119.85686147529862!3d-0.8981817990931196!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2d8bedf9428ef169%3A0xcc6edf75dd6bb931!2sQammaris%20Perfumes!5e0!3m2!1sid!2sid!4v1768991591896!5m2!1sid!2sid';
         $mapsEmbedRaw = $storeInfo->google_maps_embed ?: $defaultEmbedSrc;
         $mapsLink = $this->resolveMapsLink($addressText, $mapsEmbedRaw);
-        $whatsappNumber = '085144924931';
+        $whatsappNumber = $storeInfo->whatsapp_number ?: '6285144924931';
         $whatsappLink = $this->resolveWhatsappLink($whatsappNumber);
-        $phoneDisplay = $whatsappNumber;
-        $instagramUrl = $storeInfo->instagram_url ?: 'https://www.instagram.com/qammaris?igsh=bTUyeHFzeXdtc3E4';
+        $phoneDisplay = $this->formatPhoneDisplay($whatsappNumber);
+        $instagramUrl = $storeInfo->instagram_url ?: 'https://www.instagram.com/qammaris';
         $shopeeUrl = $storeInfo->shopee_url ?: 'https://shopee.co.id/qammarisperfumes';
         $facebookUrl = $storeInfo->facebook_url ?: 'https://www.facebook.com/share/17taPWJ4Rg/?mibextid=wwXIfr';
         $tokopediaUrl = $storeInfo->tokopedia_url ?? '';
-        $tiktokUrl = $storeInfo->tiktok_url ?? 'https://www.tiktok.com/@qammaris.parfum';
+        $tiktokUrl = $storeInfo->tiktok_url ?? 'https://www.tiktok.com/@qammaris.parfum?_r=1&_t=ZS-93QXMasV6w5';
         $tiktokShopUrl = $storeInfo->tiktokshop_url ?? 'https://vt.tiktok.com/ZSajpqEPN/?page=Mall';
         $mapsEmbedSrc = $this->resolveMapsEmbedSrc($mapsEmbedRaw, $addressText, $defaultEmbedSrc);
         $formattedAddress = trim((string) $storeInfo->formatted_address);
@@ -97,11 +97,15 @@ class StoreController extends Controller
     {
         $normalized = preg_replace('/\D+/', '', (string) $number);
 
-        if ($normalized === '' || $normalized === '6282271636339' || $normalized === '082271636339') {
-            return '085144924931';
+        if ($normalized === '') {
+            return '6285144924931';
         }
 
-        return $number;
+        if (str_starts_with($normalized, '0')) {
+            $normalized = '62' . substr($normalized, 1);
+        }
+
+        return $normalized === '6285144924931' ? $normalized : '6285144924931';
     }
 
     private function resolveMapsEmbed(?string $embed, ?string $address): string
@@ -153,5 +157,24 @@ class StoreController extends Controller
         }
 
         return 'https://www.google.com/maps?q=' . urlencode($query) . '&t=&z=16&ie=UTF8&iwloc=&output=embed';
+    }
+
+    private function formatPhoneDisplay(?string $number): string
+    {
+        $normalized = preg_replace('/\D+/', '', (string) $number);
+
+        if ($normalized === '') {
+            return '';
+        }
+
+        if (str_starts_with($normalized, '0')) {
+            $normalized = '62' . substr($normalized, 1);
+        }
+
+        if (preg_match('/^(\d{2})(\d{3})(\d{4})(\d{4})$/', $normalized, $matches)) {
+            return "{$matches[1]} {$matches[2]}-{$matches[3]}-{$matches[4]}";
+        }
+
+        return $normalized;
     }
 }
