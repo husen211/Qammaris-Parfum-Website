@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /login
 Disallow: /cart
-Sitemap: http://localhost/sitemap.xml
+Sitemap: https://qammarisparfum.id/sitemap.xml

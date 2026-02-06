@@ -2,6 +2,8 @@
 
 @section('title', $product->name . ' - ' . $product->brand->name)
 @section('meta_description', Str::limit($product->description, 160))
+@section('og_type', 'product')
+@section('og_image', $product->primaryImage?->image_url ?? asset('images/logo.png'))
 
 @section('content')
 
@@ -354,6 +356,29 @@ async function addToCart() {
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
+    }
+}
+</script>
+@endpush
+
+@push('jsonld')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ addslashes($product->name) }}",
+    "description": "{{ addslashes(Str::limit($product->description, 200)) }}",
+    "image": "{{ $product->primaryImage?->image_url ?? asset('images/logo.png') }}",
+    "brand": {
+        "@type": "Brand",
+        "name": "{{ addslashes($product->brand->name) }}"
+    },
+    "offers": {
+        "@type": "Offer",
+        "priceCurrency": "IDR",
+        "price": "{{ $product->variants->min('price') }}",
+        "availability": "https://schema.org/InStock",
+        "url": "{{ route('products.show', $product->slug) }}"
     }
 }
 </script>
