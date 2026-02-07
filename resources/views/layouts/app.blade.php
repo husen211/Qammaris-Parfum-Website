@@ -34,22 +34,22 @@
     @stack('meta')
     @stack('styles')
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Qammaris Perfumes",
-        "url": "{{ config('app.url') }}",
-        "logo": "{{ asset('images/logo.png') }}",
-        "image": "{{ asset('images/logo.png') }}"
-    }
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => 'Qammaris Perfumes',
+        'url' => config('app.url'),
+        'logo' => asset('images/logo.png'),
+        'image' => asset('images/logo.png'),
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Qammaris Perfumes",
-        "url": "{{ config('app.url') }}"
-    }
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'Qammaris Perfumes',
+        'url' => config('app.url'),
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
     @stack('jsonld')
 

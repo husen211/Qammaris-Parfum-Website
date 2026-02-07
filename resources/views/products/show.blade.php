@@ -363,23 +363,23 @@ async function addToCart() {
 
 @push('jsonld')
 <script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "{{ addslashes($product->name) }}",
-    "description": "{{ addslashes(Str::limit($product->description, 200)) }}",
-    "image": "{{ $product->primaryImage?->image_url ?? asset('images/logo.png') }}",
-    "brand": {
-        "@type": "Brand",
-        "name": "{{ addslashes($product->brand->name) }}"
-    },
-    "offers": {
-        "@type": "Offer",
-        "priceCurrency": "IDR",
-        "price": "{{ $product->variants->min('price') }}",
-        "availability": "https://schema.org/InStock",
-        "url": "{{ route('products.show', $product->slug) }}"
-    }
-}
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'Product',
+    'name' => $product->name,
+    'description' => Str::limit($product->description, 200),
+    'image' => $product->primaryImage?->image_url ?? asset('images/logo.png'),
+    'brand' => [
+        '@type' => 'Brand',
+        'name' => $product->brand->name,
+    ],
+    'offers' => [
+        '@type' => 'Offer',
+        'priceCurrency' => 'IDR',
+        'price' => $product->variants->min('price'),
+        'availability' => 'https://schema.org/InStock',
+        'url' => route('products.show', $product->slug),
+    ],
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush

@@ -42,8 +42,28 @@ class ProductImage extends Model
             return $this->image_path;
         }
 
-        // 3. Logic Utama: Tambahkan 'storage/' di depannya
-        // Ini solusi paling aman karena kita simpan di disk 'public'
-        return asset('storage/' . $this->image_path);
+        $path = ltrim($this->image_path, '/');
+
+        // 3. Jika sudah diawali storage/, langsung gunakan URL itu
+        if (str_starts_with($path, 'storage/')) {
+            $storagePath = substr($path, strlen('storage/'));
+            if (!Storage::disk('public')->exists($storagePath)) {
+                return 'https://placehold.co/600x600/F5F5F5/333?text=No+Image';
+            }
+
+            return asset($path);
+        }
+
+        // 4. Normalisasi jika disimpan dengan prefix public/
+        if (str_starts_with($path, 'public/')) {
+            $path = substr($path, strlen('public/'));
+        }
+
+        if (!Storage::disk('public')->exists($path)) {
+            return 'https://placehold.co/600x600/F5F5F5/333?text=No+Image';
+        }
+
+        // 5. Logic utama: gunakan URL dari disk public
+        return Storage::disk('public')->url($path);
     }
 }

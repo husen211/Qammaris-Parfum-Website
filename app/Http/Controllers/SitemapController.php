@@ -10,52 +10,56 @@ class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $urls = [
-            [
-                'loc' => url('/'),
-                'lastmod' => now()->toAtomString(),
-            ],
-            [
-                'loc' => route('products.index'),
-                'lastmod' => now()->toAtomString(),
-            ],
-            [
-                'loc' => route('blog.index'),
-                'lastmod' => now()->toAtomString(),
-            ],
-            [
-                'loc' => route('store.about'),
-                'lastmod' => now()->toAtomString(),
-            ],
-            [
-                'loc' => route('store.location'),
-                'lastmod' => now()->toAtomString(),
-            ],
-            [
-                'loc' => route('quiz.index'),
-                'lastmod' => now()->toAtomString(),
-            ],
-        ];
-
-        $products = Product::active()->get(['slug', 'updated_at']);
-        foreach ($products as $product) {
-            $urls[] = [
-                'loc' => route('products.show', $product->slug),
-                'lastmod' => $product->updated_at?->toAtomString(),
+        $xml = cache()->remember('sitemap.xml', 3600, function () {
+            $urls = [
+                [
+                    'loc' => url('/'),
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('products.index'),
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('blog.index'),
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('store.about'),
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('store.location'),
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('quiz.index'),
+                    'lastmod' => now()->toAtomString(),
+                ],
             ];
-        }
 
-        $posts = BlogPost::published()->get(['slug', 'updated_at', 'published_at']);
-        foreach ($posts as $post) {
-            $urls[] = [
-                'loc' => route('blog.show', $post->slug),
-                'lastmod' => ($post->published_at ?? $post->updated_at)?->toAtomString(),
-            ];
-        }
+            $products = Product::active()->get(['slug', 'updated_at']);
+            foreach ($products as $product) {
+                $urls[] = [
+                    'loc' => route('products.show', $product->slug),
+                    'lastmod' => $product->updated_at?->toAtomString(),
+                ];
+            }
 
-        $xml = $this->renderXml($urls);
+            $posts = BlogPost::published()->get(['slug', 'updated_at', 'published_at']);
+            foreach ($posts as $post) {
+                $urls[] = [
+                    'loc' => route('blog.show', $post->slug),
+                    'lastmod' => ($post->published_at ?? $post->updated_at)?->toAtomString(),
+                ];
+            }
 
-        return response($xml, 200)->header('Content-Type', 'application/xml');
+            return $this->renderXml($urls);
+        });
+
+        return response($xml, 200)
+            ->header('Content-Type', 'application/xml; charset=UTF-8')
+            ->header('Cache-Control', 'public, max-age=3600');
     }
 
     private function renderXml(array $urls): string

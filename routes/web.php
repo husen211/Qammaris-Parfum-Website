@@ -10,11 +10,10 @@ use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FragranceQuizController;
-use App\Http\Controllers\SitemapController;
 
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+// Sitemap route moved to routes/sitemap.php (no web middleware)
 
 // Products
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
