@@ -11,6 +11,8 @@ class ExampleTest extends TestCase
 
     public function test_homepage_renders_without_seeded_store_information(): void
     {
+        $this->withoutVite();
+
         $response = $this->get('/');
 
         $response->assertStatus(200);
