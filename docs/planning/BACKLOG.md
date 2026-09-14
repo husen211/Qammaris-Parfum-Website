@@ -82,7 +82,7 @@ Known limitation:
 
 - Tabel runtime lokal `sessions` terindikasi korup dan membuat full dump MariaDB gagal. Tabel runtime dikecualikan dari backup bisnis dan aplikasi lokal memakai file session. Tidak ada repair/drop yang dilakukan.
 
-### P1-02 Reproducible setup dan CI — IN_PROGRESS
+### P1-02 Reproducible setup dan CI — DONE
 
 Outcome target:
 
@@ -96,7 +96,9 @@ Current verification:
 - Frontend build berhasil dengan peringatan bundle besar.
 - Laravel test lulus: 2 test, 3 assertion, termasuk homepage tanpa seeded store information.
 - `composer audit` dan `npm audit` melaporkan 0 advisory/vulnerability setelah lockfile diperbarui dalam constraint yang disetujui.
-- Workflow CI telah dibuat tetapi belum dijalankan oleh GitHub karena branch belum dipush.
+- Branch `modernization/phase-1-foundation` telah dipush tanpa mengubah `main`.
+- GitHub Actions run `34871619589` lulus pada commit `e135986`: job PHP 8.2/Laravel dan Node/Vite sama-sama hijau.
+- Workflow hanya melakukan validation, install, test, dan build; tidak memuat langkah deployment.
 
 ### P1-03 Staging topology dan hPanel Git — READY
 

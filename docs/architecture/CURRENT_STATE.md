@@ -112,7 +112,8 @@
 - Restore database sementara berhasil dengan aggregate count yang sama; database sementara kemudian dihapus.
 - Archive media berisi 38 file dan seluruh hash cocok dengan sumber.
 - Full database dump tidak dapat digunakan karena MariaDB crash saat membaca tabel runtime `sessions`; log mengindikasikan page corruption. Tidak ada repair atau drop yang dilakukan.
-- Baseline test: unit test default lulus, homepage feature test gagal 500 karena `$storeInfo` tidak tersedia pada test database kosong.
+- Baseline test awal menemukan homepage gagal pada test database kosong karena `$storeInfo` tidak tersedia. Provider kemudian dibatasi agar tetap membagikan data default selama unit test, dan feature test dibuat independen dari manifest Vite. Hasil akhir: 2 test dan 3 assertion lulus lokal maupun CI.
 - Frontend build berhasil, tetapi chunk `about-lanyard` berukuran sekitar 3,28 MB sebelum gzip dan menjadi risiko performance mobile untuk backlog mendatang.
 - `composer audit` awal menemukan 41 advisory pada 13 package. Lockfile diperbarui dalam constraint existing dan audit akhir melaporkan 0 advisory.
 - `npm audit` awal menemukan 14 vulnerability. Lockfile diperbarui tanpa `--force` atau major upgrade dan audit akhir melaporkan 0 vulnerability.
+- GitHub Actions run `34871619589` pada branch `modernization/phase-1-foundation` berhasil menjalankan PHP 8.2/Laravel test dan Node/Vite build. Workflow tidak melakukan deployment.
