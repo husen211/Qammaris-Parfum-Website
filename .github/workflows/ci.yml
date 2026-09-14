@@ -44,7 +44,7 @@ jobs:
           php artisan key:generate --no-interaction
 
       - name: Run Laravel tests
-        run: php artisan test --no-interaction
+        run: php artisan test
 
   frontend-build:
     name: Node / Vite build
