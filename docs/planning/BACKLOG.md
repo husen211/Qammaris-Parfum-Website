@@ -313,7 +313,7 @@ Verification:
 - CI GitHub Actions run `34959341933` lulus untuk commit implementasi `6c21d60`.
 - Tidak ada schema, data/media, UI, staging, atau production yang diubah.
 
-### P2-06 Safe rich-text rendering — IN_REVIEW
+### P2-06 Safe rich-text rendering — DONE
 
 Outcome:
 
@@ -344,7 +344,8 @@ Verification:
 - Seluruh Laravel test lulus lokal pada PHP 8.2.12: `26 passed (130 assertions)`.
 - Pint lulus untuk sanitizer dan regression test baru.
 - Seluruh file PHP yang diubah lulus syntax check dan `git diff --check`.
-- CI GitHub Actions menunggu commit dan push P2-06.
+- CI GitHub Actions run `34960008760` lulus untuk commit implementasi `47ca61a`.
+- Tidak ada schema, migrasi data/media, perubahan visual, staging, atau production yang diubah.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
