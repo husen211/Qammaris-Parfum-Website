@@ -100,7 +100,7 @@ Current verification:
 - GitHub Actions run `34871619589` lulus pada commit `e135986`: job PHP 8.2/Laravel dan Node/Vite sama-sama hijau.
 - Workflow hanya melakukan validation, install, test, dan build; tidak memuat langkah deployment.
 
-### P1-03 Staging topology dan hPanel Git — IN_REVIEW
+### P1-03 Staging topology dan hPanel Git — DONE
 
 Outcome target:
 
@@ -131,9 +131,10 @@ Current progress:
 - Branch referensi `staging/known-good-8dc28df` telah dipush dan diverifikasi menunjuk tepat ke SHA staging sehat `8dc28dfd2567c992b7277e471df6985633ea0891`. Branch ini belum dipilih di hPanel dan tidak mengubah staging/production; branch tersebut menjadi ref source yang aman untuk recovery release berikutnya.
 - Akses deployment memakai key terpisah yang dapat dicabut. Setelah audit filesystem account Hostinger yang disetujui owner, account tersebut hanya ditemukan memiliki dua domain Qammaris (`qammarisparfum.id` dan `staging.qammarisparfum.id`); pipeline hanya mengarah ke path staging. Production tidak disentuh.
 
-Review checkpoint berikutnya:
+Close-out review:
 
-- Pada release source staging berikutnya, gunakan branch `staging/known-good-8dc28df` sebagai ref recovery bila release baru gagal, lalu jalankan health check autentik penuh. Jangan mengubah production.
+- Acceptance gate P1-03 dinyatakan lulus pada 2026-09-15: staging terpisah, source revision, environment/database/storage, workflow manual, idempotensi, proteksi akses, dan rollback asset mempunyai bukti verifikasi.
+- Pada release source staging berikutnya, gunakan branch `staging/known-good-8dc28df` sebagai ref recovery bila release baru gagal, lalu jalankan health check autentik penuh. Ini adalah kewajiban operasi release berikutnya, bukan izin mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

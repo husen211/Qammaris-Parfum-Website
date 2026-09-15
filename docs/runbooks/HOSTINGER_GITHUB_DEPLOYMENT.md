@@ -1,6 +1,6 @@
 # Runbook Rencana Deployment Hostinger melalui GitHub
 
-**Status:** P1-03 dalam review — release GitHub Actions pertama ke staging sudah terbukti
+**Status:** P1-03 selesai — staging dan release workflow terverifikasi
 
 ## Tujuan
 
