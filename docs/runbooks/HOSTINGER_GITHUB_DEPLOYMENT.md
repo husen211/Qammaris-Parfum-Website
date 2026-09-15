@@ -106,6 +106,8 @@ Tidak ada source, migration, data, media, atau konfigurasi production yang diuba
 
 Workflow `Staging release #2` kemudian dijalankan ulang untuk SHA yang sama dan berhasil dalam 35 detik. Setelahnya, migration pending berjumlah nol dan manifest build, symlink storage, serta respons anonim `401` tetap valid. Untuk membuktikan recovery asset, folder build backup dengan manifest berbeda diaktifkan sementara melalui rename atomik, tervalidasi, lalu build aktif dipulihkan. Dua folder rollback asset dipertahankan; tidak ada folder dihapus dan tidak ada source, database, media, atau production yang diubah.
 
+**Batas rollback source yang ditemukan:** checkout Git hPanel di staging berada pada detached, shallow snapshot; `git log` server hanya memuat SHA aktif `8dc28df`. Jangan menjalankan `git checkout`, `reset`, atau rollback source dari filesystem staging. Recovery source harus memakai riwayat deployment/ref yang terbukti tersedia di hPanel, atau branch/tag rollback sementara yang disetujui dan dipublikasikan melalui prosedur hPanel yang sama.
+
 ## Pemisahan tanggung jawab
 
 - GitHub: source code, migration, test, dokumentasi, lockfile.
