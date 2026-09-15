@@ -412,7 +412,7 @@ Verification:
 - CI GitHub Actions run `34960611351` lulus untuk commit implementasi `e675601`.
 - Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
 
-### P2-09 Product detail JSON-LD reconciliation — BACKLOG
+### P2-09 Product detail JSON-LD reconciliation — IN_REVIEW
 
 Outcome:
 
@@ -425,6 +425,24 @@ Dependency:
 Known issue:
 
 - Inline key `@context` dapat diproses sebagai directive Blade dan serialisasi saat ini belum memakai JSON hex flags.
+
+Acceptance criteria:
+
+- Seluruh perubahan fallback/null-safety owner pada halaman detail dipertahankan.
+- Product JSON-LD dapat di-decode dan mempunyai key `@context`/`@type` yang benar.
+- Nama/deskripsi hostile tidak dapat menutup tag JSON-LD script.
+- Availability tidak diklaim `InStock` sebelum semantics Phase 3 tersedia.
+- Product tanpa variant tetap memakai `base_price`; guard tanpa harga disiapkan untuk draft nullable pada Phase 3.
+- Seluruh test Laravel, kompilasi Blade, dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (12 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `34 passed (165 assertions)`.
+- Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`.
+- Regression test baru lulus Pint/PHP syntax check dan `git diff --check` lulus.
+- Perubahan fallback/null-safety owner dipertahankan dan kini masuk dalam scope commit atas persetujuan eksplisit owner.
+- CI GitHub Actions menunggu commit dan push P2-09.
 
 ### P2-10 Destructive product/media behavior — BACKLOG
 
