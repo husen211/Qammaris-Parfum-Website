@@ -1,0 +1,118 @@
+name: Staging release
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_revision:
+        description: 'Commit penuh yang sudah selesai dipublikasikan oleh hPanel Git ke staging'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qammaris-staging-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Upload assets and finalize Laravel staging release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+
+    steps:
+      - name: Checkout expected revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.expected_revision }}
+
+      - name: Verify requested revision
+        run: test "$(git rev-parse HEAD)" = "${{ inputs.expected_revision }}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run build
+          test -f public/build/manifest.json
+          tar -C public -czf staging-build.tar.gz build
+
+      - name: Configure constrained SSH access
+        env:
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          STAGING_SSH_KNOWN_HOSTS: ${{ secrets.STAGING_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$STAGING_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify hPanel source deployment revision
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          STAGING_SSH_USERNAME: ${{ secrets.STAGING_SSH_USERNAME }}
+          STAGING_PATH: ${{ vars.STAGING_PATH }}
+          EXPECTED_REVISION: ${{ inputs.expected_revision }}
+        run: |
+          test -n "$STAGING_PATH"
+          remote_revision="$(ssh -i ~/.ssh/id_ed25519 -p "$STAGING_SSH_PORT" "$STAGING_SSH_USERNAME@$STAGING_SSH_HOST" "cd '$STAGING_PATH' && git rev-parse HEAD")"
+          test "$remote_revision" = "$EXPECTED_REVISION"
+
+      - name: Upload built asset artifact
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          STAGING_SSH_USERNAME: ${{ secrets.STAGING_SSH_USERNAME }}
+          STAGING_PATH: ${{ vars.STAGING_PATH }}
+        run: |
+          scp -i ~/.ssh/id_ed25519 -P "$STAGING_SSH_PORT" staging-build.tar.gz "$STAGING_SSH_USERNAME@$STAGING_SSH_HOST:$STAGING_PATH/public/.staging-build.tar.gz"
+
+      - name: Atomically activate assets and finalize Laravel
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          STAGING_SSH_USERNAME: ${{ secrets.STAGING_SSH_USERNAME }}
+          STAGING_PATH: ${{ vars.STAGING_PATH }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$STAGING_SSH_PORT" "$STAGING_SSH_USERNAME@$STAGING_SSH_HOST" "STAGING_PATH='$STAGING_PATH' bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          cd "$STAGING_PATH"
+          php artisan migrate --force --no-interaction
+          if [ ! -e public/storage ]; then
+            ln -s "$STAGING_PATH/storage/app/public" public/storage
+          fi
+          rm -rf public/.staging-build
+          mkdir -p public/.staging-build
+          tar -xzf public/.staging-build.tar.gz -C public/.staging-build
+          rm -f public/.staging-build.tar.gz
+          release_marker="$(date +%Y%m%d%H%M%S)"
+          if [ -d public/build ]; then
+            mv public/build "public/build.previous-$release_marker"
+          fi
+          mv public/.staging-build/build public/build
+          rmdir public/.staging-build
+          auth_file="$(dirname "$STAGING_PATH")/.htpasswd"
+          if [ -f "$auth_file" ] && ! grep -q 'Qammaris Staging Review' .htaccess; then
+            auth_config="$(mktemp .htaccess.XXXXXX)"
+            {
+              printf '%s\n' 'AuthType Basic'
+              printf '%s\n' 'AuthName "Qammaris Staging Review"'
+              printf 'AuthUserFile %s\n' "$auth_file"
+              printf '%s\n\n' 'Require valid-user'
+              cat .htaccess
+            } > "$auth_config"
+            mv "$auth_config" .htaccess
+          fi
+          php artisan optimize
+          test -f public/build/manifest.json
+          test -L public/storage
+          REMOTE_SCRIPT

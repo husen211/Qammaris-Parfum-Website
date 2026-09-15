@@ -123,10 +123,11 @@ Current progress:
 - `.env` berpermission `0600`, database kosong khusus staging, 12 migration batch 1, storage link, dan cache Laravel telah dibuat serta diverifikasi.
 - HTTP Basic Auth terverifikasi menghasilkan `401` tanpa credential dan `200` dengan credential. Deploy Git dapat menimpa aturan auth sehingga pemasangan ulang wajib menjadi bagian release procedure.
 - Auto-deploy telah dinonaktifkan. Production tetap tidak disentuh.
+- Workflow manual `Staging release` telah disiapkan untuk memverifikasi SHA source yang dipublikasikan hPanel, membangun/mengunggah asset Vite, menjalankan migration additive, memastikan storage link, dan mengoptimalkan Laravel. Workflow belum dapat dijalankan sebelum environment GitHub `staging` diberi SSH deployment key terbatas serta known-host verification.
 
 Review checkpoint berikutnya:
 
-- Verifikasi manual halaman staging di browser menggunakan akun review, lalu pilih mekanisme release repeatable (disarankan GitHub Actions/artifact deployment) yang menjaga `.env`, menjalankan build/migration/cache, dan memasang ulang proteksi staging. Jangan mengubah production.
+- Konfigurasikan deployment key dan GitHub Environment `staging`, jalankan workflow terhadap revision staging yang sudah dipublikasikan hPanel, lalu verifikasi bahwa source, asset, migration, storage, cache, dan HTTP Basic Auth tetap sehat. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

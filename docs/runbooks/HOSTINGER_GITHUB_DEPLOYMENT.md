@@ -65,6 +65,32 @@ feature branch
   -> observation + rollback bila perlu
 ```
 
+## Staging release terkontrol
+
+Shared hosting Hostinger pada staging ini tidak menyediakan Node/npm atau deploy hook kustom. Karena itu, source code tetap dipublikasikan oleh hPanel Git, sedangkan workflow GitHub Actions `Staging release` menyelesaikan bagian yang tidak dapat dilakukan hPanel:
+
+1. owner menekan deploy hPanel untuk commit yang sudah lulus CI;
+2. owner menjalankan workflow GitHub Actions secara manual dengan SHA penuh commit yang sama;
+3. workflow membuktikan revision remote sama persis sebelum menyentuh asset;
+4. workflow menjalankan migration additive dan memastikan storage link ada sebelum asset diganti;
+5. workflow membuat Vite asset dari `package-lock.json`, mengunggah archive sementara, mengaktifkan `public/build` melalui rename pada server, memasang ulang Basic Auth staging bila file credential server tersedia, lalu menjalankan `php artisan optimize`.
+
+Workflow tidak mengubah production, tidak menjalankan seeder, tidak mengirim `.env`, dan tidak menimpa media pada `storage/app/public`. Jika revision di staging berbeda dengan input, workflow gagal sebelum upload asset.
+
+### Konfigurasi satu kali di GitHub
+
+Buat GitHub Environment bernama `staging`, lalu simpan secret berikut hanya pada environment tersebut:
+
+- `STAGING_SSH_HOST`
+- `STAGING_SSH_PORT`
+- `STAGING_SSH_USERNAME`
+- `STAGING_SSH_PRIVATE_KEY`
+- `STAGING_SSH_KNOWN_HOSTS`
+
+Tambahkan environment variable `STAGING_PATH` dengan path absolut release staging. Nilai credential tidak boleh ditaruh dalam workflow, dokumentasi, commit, atau log. SSH key khusus deployment wajib berbeda dari password login owner dan dapat dicabut terpisah.
+
+Hasil akhir workflow menyisakan folder `public/build.previous-<timestamp>` sebagai rollback asset cepat. Folder itu tidak boleh dibersihkan otomatis; pembersihan memerlukan retention policy terpisah.
+
 ## Pemisahan tanggung jawab
 
 - GitHub: source code, migration, test, dokumentasi, lockfile.
