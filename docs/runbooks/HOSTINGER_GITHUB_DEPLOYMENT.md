@@ -1,6 +1,6 @@
 # Runbook Rencana Deployment Hostinger melalui GitHub
 
-**Status:** Draft — belum dieksekusi
+**Status:** P1-03 sedang berjalan — discovery lokal selesai, perubahan hPanel belum dilakukan
 
 ## Tujuan
 
@@ -12,6 +12,29 @@ Menjadikan repository GitHub sebagai source of truth source code Qammaris tanpa 
 - Belum ada auto-deployment yang diaktifkan.
 - Belum ada staging Hostinger yang diverifikasi.
 - Tidak ada migration atau cutover production yang diizinkan oleh runbook ini.
+
+## Aturan cutover domain utama
+
+Website yang sekarang melayani `qammarisparfum.id` tidak dihapus sebelum seluruh gate berikut terpenuhi:
+
+1. backup terbaru file production dan database telah dibuat serta diunduh;
+2. staging baru lulus health check katalog, detail produk, login/admin, asset, media, dan inquiry WhatsApp;
+3. struktur release Laravel, install dependency, build asset, migration, serta rollback sudah diuji;
+4. commit release dan database/media yang akan digunakan sudah dicatat;
+5. owner memberikan approval cutover secara eksplisit.
+
+Saat cutover, domain yang sama tetap digunakan. Yang diganti adalah deployment aplikasinya, bukan registrasi domain atau DNS tanpa alasan yang telah diverifikasi. Deployment legacy dipertahankan selama rollback window; cleanup menjadi tindakan terpisah.
+
+## Target staging
+
+Pilihan utama adalah website terpisah pada `staging.qammarisparfum.id`. Jika paket tidak mendukung website/subdomain tambahan, gunakan temporary domain Hostinger. Staging wajib mempunyai:
+
+- PHP 8.2 atau lebih baru yang kompatibel dengan lockfile;
+- database dan user database khusus staging;
+- `.env`, `APP_KEY`, session, cache, dan storage yang terpisah dari production;
+- HTTPS serta perlindungan dari indexing/search engine;
+- direktori target kosong yang tidak berbagi `public_html` dengan production legacy;
+- auto-deploy nonaktif sampai seluruh deployment proof selesai.
 
 ## Target alur
 
@@ -59,6 +82,22 @@ Hostinger menyediakan koneksi GitHub melalui OAuth pada menu website bagian Adva
 5. Catat commit ID dan hasil deployment dari deployment history.
 
 Mengubah repository atau target deployment dapat menimpa isi direktori target. Karena itu koneksi pertama tidak boleh diarahkan ke website production lama.
+
+## Gap yang harus dibuktikan pada staging
+
+hPanel Git mendokumentasikan clone/redeploy source dari branch GitHub, tetapi panduan yang diperiksa belum menjamin eksekusi otomatis `composer install`, `npm run build`, atau `php artisan migrate`. Pada repository ini, `vendor` dan `public/build` memang tidak disimpan di Git. Akibatnya, clone source mentah saja belum cukup untuk menjalankan aplikasi.
+
+Sebelum memilih mekanisme final, lakukan proof berikut pada staging:
+
+1. catat versi PHP dan extension yang tersedia dari hPanel;
+2. verifikasi apakah hPanel menyediakan build/deploy command yang terdokumentasi untuk custom PHP;
+3. pastikan hanya entry point Laravel `public` yang dapat diakses web;
+4. buktikan cara memasang dependency dari `composer.lock` dan asset dari `package-lock.json`;
+5. buktikan cara menjalankan migration secara terkontrol dan mencatat hasilnya;
+6. lakukan redeploy commit yang sama untuk membuktikan proses idempotent;
+7. lakukan rollback ke commit sebelumnya dan verifikasi aplikasi kembali sehat.
+
+Jika built-in hPanel Git tidak menyediakan build hook, jangan commit `vendor`, `.env`, atau upload production sebagai jalan pintas. Pilih pipeline release terkontrol (misalnya GitHub Actions yang membangun artifact dan menjalankan deployment otomatis dengan credential khusus ber-scope minimum) atau evaluasi hosting yang mempunyai deployment hook Laravel. Keputusan ini harus dicatat setelah kemampuan paket Hostinger benar-benar terlihat di hPanel.
 
 ## Keputusan layout yang masih diperlukan
 

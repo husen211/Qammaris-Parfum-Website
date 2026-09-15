@@ -100,7 +100,7 @@ Current verification:
 - GitHub Actions run `34871619589` lulus pada commit `e135986`: job PHP 8.2/Laravel dan Node/Vite sama-sama hijau.
 - Workflow hanya melakukan validation, install, test, dan build; tidak memuat langkah deployment.
 
-### P1-03 Staging topology dan hPanel Git — READY
+### P1-03 Staging topology dan hPanel Git — IN_PROGRESS
 
 Outcome target:
 
@@ -110,6 +110,17 @@ Outcome target:
 - Auto-deploy tetap nonaktif sampai install/build/migration/rollback terbukti aman.
 
 Tidak dieksekusi pada local foundation dan membutuhkan tindakan owner di hPanel.
+
+Current progress:
+
+- Target aman ditetapkan berupa website staging terpisah pada `staging.qammarisparfum.id` atau temporary domain Hostinger, bukan direktori production aktif.
+- Domain utama dan deployment legacy harus tetap hidup sampai staging lulus, backup production terakhir telah diunduh, dan cutover mendapat approval owner.
+- Dokumentasi Hostinger mengonfirmasi GitHub OAuth dapat digunakan tanpa setup SSH key dan target branch/root directory dapat dipilih, tetapi pemasangan atau penggantian repository dapat menimpa direktori target.
+- Repository saat ini mengecualikan `vendor` dan `public/build`; dokumentasi hPanel Git yang diperiksa belum membuktikan adanya build hook untuk Composer/npm/Artisan. Mekanisme release final harus dipilih dan dibuktikan pada staging, tidak diasumsikan.
+
+Owner checkpoint berikutnya:
+
+- Buka dashboard hPanel website Qammaris untuk verifikasi jenis paket, kemampuan menambah staging/subdomain, versi PHP 8.2+, dan pilihan Git yang benar. Jangan menghapus website, file, database, atau menghubungkan repository ke `public_html` production pada checkpoint ini.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 
