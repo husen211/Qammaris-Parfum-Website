@@ -279,6 +279,39 @@ Verification:
 - CI GitHub Actions run `34958978794` lulus untuk commit implementasi `101088d`.
 - Tidak ada schema, data/media, UI, staging, atau production yang diubah.
 
+### P2-05 Checkout cart integrity — IN_REVIEW
+
+Outcome:
+
+- Inquiry WhatsApp dibangun dari produk, brand, variant, dan harga terbaru di database; bukan dari snapshot session yang mungkin kedaluwarsa.
+
+In scope:
+
+- Validasi ulang seluruh item cart saat checkout terhadap variant dan produk aktif.
+- Tolak checkout jika variant hilang/nonaktif, produk nonaktif, quantity tidak valid, atau stok existing tidak mencukupi.
+- Gunakan nama, brand, ukuran, dan harga authoritative dari database saat membangun pesan WhatsApp.
+- Regression test untuk item tidak tersedia dan snapshot session kedaluwarsa.
+
+Out of scope:
+
+- Availability schema baru, perubahan jaminan stok, redesign cart, payment checkout, staging, dan production.
+
+Acceptance criteria:
+
+- Produk/variant tidak aktif atau hilang tidak dapat dikirim sebagai inquiry.
+- Checkout tidak mempercayai nama, brand, ukuran, atau harga dari session.
+- Quantity wajib integer positif dan masih mengikuti pengecekan stok existing.
+- Checkout valid tetap mengarah ke WhatsApp dengan data database terbaru.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `3 passed (13 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `24 passed (112 assertions)`.
+- Regression test baru lulus Pint; controller dan test lulus PHP syntax check serta `git diff --check`.
+- `CartController` mempunyai style debt pre-existing di luar diff dan sengaja tidak diformat massal.
+- CI GitHub Actions menunggu commit dan push P2-05.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

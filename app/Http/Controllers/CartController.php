@@ -113,12 +113,21 @@ class CartController extends Controller
     }
 
     // === INI FUNGSI BARU UNTUK PROSES CHECKOUT DATA DIRI ===
-   public function checkout(CheckoutRequest $request)
+    public function checkout(CheckoutRequest $request)
     {
         $cart = session('cart', []);
         
         if (empty($cart)) {
             return redirect()->route('products.index')->with('error', 'Keranjang kosong');
+        }
+
+        $checkoutItems = $this->resolveCheckoutItems($cart);
+
+        if ($checkoutItems === null) {
+            return back()->with(
+                'error',
+                'Satu atau lebih produk di keranjang sudah tidak tersedia atau berubah. Silakan perbarui keranjang.'
+            );
         }
         
         // 2. Susun Pesan WhatsApp (Style: Clean Digital Receipt)
@@ -129,7 +138,7 @@ class CartController extends Controller
         $counter = 1;
         $total = 0;
         
-        foreach ($cart as $item) {
+        foreach ($checkoutItems as $item) {
             $subtotal = $item['price'] * $item['quantity'];
             $total += $subtotal;
             
@@ -169,6 +178,61 @@ class CartController extends Controller
         $encodedMessage = urlencode($message);
         
         return redirect()->away("https://wa.me/{$whatsappNumber}?text={$encodedMessage}");
+    }
+
+    private function resolveCheckoutItems(array $cart): ?array
+    {
+        $variantIds = collect($cart)
+            ->map(fn ($item, $key) => is_array($item) ? ($item['variant_id'] ?? $key) : null)
+            ->filter(fn ($id) => filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) !== false)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($variantIds->count() !== count($cart)) {
+            return null;
+        }
+
+        $variants = ProductVariant::with(['product.brand'])
+            ->active()
+            ->whereHas('product', fn ($query) => $query->active())
+            ->whereIn('id', $variantIds)
+            ->get()
+            ->keyBy('id');
+
+        if ($variants->count() !== $variantIds->count()) {
+            return null;
+        }
+
+        $checkoutItems = [];
+
+        foreach ($cart as $key => $sessionItem) {
+            if (! is_array($sessionItem)) {
+                return null;
+            }
+
+            $variantId = (int) ($sessionItem['variant_id'] ?? $key);
+            $quantity = filter_var(
+                $sessionItem['quantity'] ?? null,
+                FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 1]]
+            );
+            $variant = $variants->get($variantId);
+
+            if (! $variant || $quantity === false || $variant->stock < $quantity) {
+                return null;
+            }
+
+            $checkoutItems[] = [
+                'brand_name' => $variant->product->brand->name,
+                'product_name' => $variant->product->name,
+                'volume' => $variant->volume,
+                'price' => $variant->price,
+                'quantity' => $quantity,
+            ];
+        }
+
+        return $checkoutItems;
     }
 
     public function getCartData()
