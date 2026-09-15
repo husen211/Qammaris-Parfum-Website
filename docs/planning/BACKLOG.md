@@ -347,6 +347,38 @@ Verification:
 - CI GitHub Actions run `34960008760` lulus untuk commit implementasi `47ca61a`.
 - Tidak ada schema, migrasi data/media, perubahan visual, staging, atau production yang diubah.
 
+### P2-07 Safe global head metadata and JSON-LD — IN_REVIEW
+
+Outcome:
+
+- Metadata HTML global di-escape pada context atribut/teks dan JSON-LD Organization/WebSite menjadi JSON valid serta aman dari penutupan tag script.
+
+In scope:
+
+- Normalisasi section title, description, robots, Open Graph type, dan image menjadi variabel layout yang di-escape.
+- Serialisasi dua schema JSON-LD global dengan key `@context` yang valid dan JSON hex flags.
+- Regression test memakai metadata hostile serta parsing seluruh JSON-LD global.
+
+Out of scope:
+
+- Product JSON-LD pada `resources/views/products/show.blade.php` karena file tersebut mempunyai perubahan lokal owner yang wajib dipertahankan.
+- Perubahan visual, SEO content strategy, schema/data, staging, dan production.
+
+Acceptance criteria:
+
+- Metadata dari child view tidak dapat keluar dari `<title>` atau atribut `<meta>`.
+- Dua blok JSON-LD global dapat di-decode sebagai JSON dan mempunyai key `@context` yang benar.
+- Output JSON-LD tidak mengandung artefak kompilasi Blade/PHP atau literal `</script>` dari data.
+- Tidak ada perubahan visual dan seluruh test Laravel/CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (15 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `28 passed (145 assertions)`.
+- Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`.
+- Test baru lulus Pint dan PHP syntax check; `git diff --check` lulus.
+- CI GitHub Actions menunggu commit dan push P2-07.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
