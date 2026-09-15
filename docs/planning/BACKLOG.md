@@ -128,11 +128,12 @@ Current progress:
 - Workflow `Staging release #2` berhasil pada 2026-09-15 (35 detik) terhadap SHA yang sama. Tidak ada migration pending setelah release ulang; build, storage link, dan Basic Auth tetap valid. Ini membuktikan release asset/migration yang sama dapat dijalankan ulang pada staging.
 - Rollback asset staging terkontrol telah diuji: build backup dengan manifest berbeda diaktifkan sementara melalui rename, manifest tervalidasi, lalu build aktif dipulihkan. Dua folder rollback asset dipertahankan sebagai bukti; tidak ada data, media, source, atau production yang berubah.
 - Pemeriksaan rollback source menunjukkan checkout hPanel staging detached dan shallow: `git log` hanya berisi commit aktif `8dc28df`. Karena tidak ada history atau branch checkout pada server, rollback source tidak boleh dipaksakan dari filesystem staging.
+- Branch referensi `staging/known-good-8dc28df` telah dipush dan diverifikasi menunjuk tepat ke SHA staging sehat `8dc28dfd2567c992b7277e471df6985633ea0891`. Branch ini belum dipilih di hPanel dan tidak mengubah staging/production; branch tersebut menjadi ref source yang aman untuk recovery release berikutnya.
 - Akses deployment memakai key terpisah yang dapat dicabut. Setelah audit filesystem account Hostinger yang disetujui owner, account tersebut hanya ditemukan memiliki dua domain Qammaris (`qammarisparfum.id` dan `staging.qammarisparfum.id`); pipeline hanya mengarah ke path staging. Production tidak disentuh.
 
 Review checkpoint berikutnya:
 
-- Tentukan mekanisme rollback source staging melalui riwayat deployment/ref yang benar-benar tersedia di hPanel (atau release tag/branch sementara yang disetujui), lalu jalankan health check autentik penuh. Jangan mengubah production.
+- Pada release source staging berikutnya, gunakan branch `staging/known-good-8dc28df` sebagai ref recovery bila release baru gagal, lalu jalankan health check autentik penuh. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

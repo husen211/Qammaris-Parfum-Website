@@ -108,6 +108,8 @@ Workflow `Staging release #2` kemudian dijalankan ulang untuk SHA yang sama dan 
 
 **Batas rollback source yang ditemukan:** checkout Git hPanel di staging berada pada detached, shallow snapshot; `git log` server hanya memuat SHA aktif `8dc28df`. Jangan menjalankan `git checkout`, `reset`, atau rollback source dari filesystem staging. Recovery source harus memakai riwayat deployment/ref yang terbukti tersedia di hPanel, atau branch/tag rollback sementara yang disetujui dan dipublikasikan melalui prosedur hPanel yang sama.
 
+Untuk menyediakan ref recovery yang eksplisit, branch `staging/known-good-8dc28df` telah dipush dan diverifikasi menunjuk ke SHA staging sehat `8dc28dfd2567c992b7277e471df6985633ea0891`. Branch itu belum dipilih pada konfigurasi hPanel dan tidak memicu deployment. Pada release source berikutnya, branch tersebut dapat dipilih/dipublikasikan kembali melalui hPanel jika recovery diperlukan; lalu wajib menjalankan workflow asset yang sesuai SHA dan health check staging.
+
 ## Pemisahan tanggung jawab
 
 - GitHub: source code, migration, test, dokumentasi, lockfile.
