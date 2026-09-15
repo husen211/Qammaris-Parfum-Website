@@ -380,7 +380,7 @@ Verification:
 - CI GitHub Actions run `34960419263` lulus untuk commit implementasi `d042b4f`.
 - Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
 
-### P2-08 Blog publication visibility — IN_REVIEW
+### P2-08 Blog publication visibility — DONE
 
 Outcome:
 
@@ -409,7 +409,32 @@ Verification:
 - Seluruh Laravel test lulus lokal pada PHP 8.2.12: `32 passed (153 assertions)`.
 - Regression test baru lulus Pint; model/controller/test lulus PHP syntax check serta `git diff --check`.
 - `BlogPost` mempunyai style debt pre-existing di luar diff dan sengaja tidak diformat massal.
-- CI GitHub Actions menunggu commit dan push P2-08.
+- CI GitHub Actions run `34960611351` lulus untuk commit implementasi `e675601`.
+- Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
+
+### P2-09 Product detail JSON-LD reconciliation — BACKLOG
+
+Outcome:
+
+- Product JSON-LD menjadi valid dan aman tanpa kehilangan perubahan owner pada halaman detail produk.
+
+Dependency:
+
+- Perubahan lokal owner di `resources/views/products/show.blade.php` harus direkonsiliasi tanpa di-stage atau ditimpa oleh agent.
+
+Known issue:
+
+- Inline key `@context` dapat diproses sebagai directive Blade dan serialisasi saat ini belum memakai JSON hex flags.
+
+### P2-10 Destructive product/media behavior — BACKLOG
+
+Outcome:
+
+- Penghapusan product/image tidak menyebabkan kehilangan metadata, file hilang yang masih direferensikan, atau orphan media saat salah satu storage/database operation gagal.
+
+Decision required before implementation:
+
+- Tentukan apakah tombol hapus produk legacy sementara dinonaktifkan, diubah menjadi nonaktif/archive, atau tetap hard delete dengan compensation flow sampai publication schema Phase 3 tersedia.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
