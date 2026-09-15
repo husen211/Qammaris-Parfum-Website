@@ -1,6 +1,6 @@
 # Qammaris Catalog Business Rules
 
-Status: disetujui owner pada 2026-09-14 (`P0-02`); perubahan material berikutnya harus dicatat dan disetujui.
+Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi import dan maksimum tiga gambar ditambahkan dari keputusan owner pada 2026-09-15.
 
 ## Produk dan identitas
 
@@ -39,6 +39,7 @@ Status: disetujui owner pada 2026-09-14 (`P0-02`); perubahan material berikutnya
 9. Freshness window untuk status available adalah 36 jam sejak `availability_checked_at`, sesuai target pembaruan setiap tutup toko dengan toleransi keterlambatan satu siklus.
 10. Status sold_out tidak otomatis berubah menjadi unknown karena dianggap konfirmasi eksplisit; perubahan menjadi available atau unknown harus berasal dari pembaruan berikutnya.
 11. Produk tanpa pemeriksaan stok yang valid menggunakan status unknown, bukan available.
+12. Quantity dari file kurasi/import diperlakukan sebagai snapshot opsional, bukan janji live stock.
 
 ## Harga
 
@@ -80,6 +81,9 @@ Status: disetujui owner pada 2026-09-14 (`P0-02`); perubahan material berikutnya
 5. Menghapus record harus tidak meninggalkan file yatim; kegagalan storage tidak boleh dilaporkan sebagai sukses.
 6. Migrasi media menggunakan copy, verify, switch, retain, lalu cleanup terpisah.
 7. Gambar hasil pencarian/AI selalu membutuhkan review sumber, varian, watermark, dan kualitas sebelum publish.
+8. Satu produk menggunakan maksimum tiga gambar total: satu primary/cover dan maksimal dua gambar tambahan.
+9. URL gambar Shopee atau provider lain hanya menjadi sumber akuisisi saat import. File harus diunduh, divalidasi, dan disimpan ke storage Qammaris; halaman publik tidak melakukan hotlink ke URL provider.
+10. Kegagalan download gambar tidak membatalkan data draft yang valid, tetapi produk harus ditandai membutuhkan review gambar dan tidak boleh dipublish tanpa primary image.
 
 ## Import/export
 
@@ -89,6 +93,9 @@ Status: disetujui owner pada 2026-09-14 (`P0-02`); perubahan material berikutnya
 4. Produk yang tidak muncul dalam sebuah export tidak boleh dianggap terhapus.
 5. Setiap import memiliki batch ID, source file fingerprint, actor, waktu, hasil, dan error report.
 6. Raw import diperlakukan sebagai input tidak tepercaya dan divalidasi.
+7. File Shopee adalah bahan mentah. Dataset yang dapat diimport adalah template Qammaris hasil kurasi/normalisasi, tetapi seluruh field tetap divalidasi secara deterministik oleh aplikasi.
+8. AI boleh membersihkan teks dan mengekstrak fragrance notes dari deskripsi, tetapi tidak boleh mengarang fakta yang tidak tersedia; nilai yang tidak ditemukan dibiarkan kosong atau ditandai untuk review.
+9. Kode produk provider dapat dipakai untuk mencocokkan update dalam provider yang sama, tetapi tidak menggantikan ID internal. Kode baru pada produk yang dihapus/dibuat ulang diperlakukan sebagai draft baru dan kemiripan nama/brand hanya menghasilkan peringatan duplikat.
 
 ## Admin dan automation
 

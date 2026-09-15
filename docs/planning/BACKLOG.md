@@ -177,6 +177,40 @@ Verification:
 - GitHub Actions CI run `34955143898` lulus: PHP 8.2/Laravel tests dan Node/Vite build hijau.
 - Tidak ada migration, perubahan schema/data/media, UI, staging, atau production.
 
+### P2-02 Admin product validation boundaries — IN_REVIEW
+
+Outcome:
+
+- Admin tidak dapat menyimpan data produk yang melanggar batas schema atau keputusan katalog.
+
+In scope:
+
+- Validasi brand aktif, gender, deskripsi/notes, ukuran, harga, stok, compare-at price, dan maksimum tiga gambar.
+- Regression test create/update menggunakan SQLite dan storage fake.
+
+Out of scope:
+
+- Draft/publication schema, external product code, import engine, dan download gambar remote.
+- Perubahan UI, database nyata, staging, atau production.
+
+Acceptance criteria:
+
+- Gender hanya menerima Unisex, Pria, atau Wanita.
+- Ukuran dan harga jual lebih dari nol; stok tidak negatif.
+- Compare-at price kosong atau lebih besar dari harga jual terendah.
+- Produk mempunyai maksimum tiga gambar total.
+- Brand nonaktif ditolak untuk create/update baru.
+- Produk existing tetap dapat mempertahankan brand lama yang kemudian dinonaktifkan.
+- Jalur create valid dengan tiga gambar tetap berhasil.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Seluruh suite lokal lulus: 16 test dan 50 assertion menggunakan SQLite in-memory serta storage fake.
+- Laravel Pint lulus untuk kedua Form Request dan seluruh test P2.
+- PHP syntax check dan `git diff --check` lulus.
+- Tidak ada migration, perubahan schema/data/media nyata, UI, staging, atau production.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
