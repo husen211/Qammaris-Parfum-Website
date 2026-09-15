@@ -177,7 +177,7 @@ Verification:
 - GitHub Actions CI run `34955143898` lulus: PHP 8.2/Laravel tests dan Node/Vite build hijau.
 - Tidak ada migration, perubahan schema/data/media, UI, staging, atau production.
 
-### P2-02 Admin product validation boundaries — IN_REVIEW
+### P2-02 Admin product validation boundaries — DONE
 
 Outcome:
 
@@ -209,6 +209,7 @@ Verification:
 - Seluruh suite lokal lulus: 16 test dan 50 assertion menggunakan SQLite in-memory serta storage fake.
 - Laravel Pint lulus untuk kedua Form Request dan seluruh test P2.
 - PHP syntax check dan `git diff --check` lulus.
+- GitHub Actions CI run `34958077412` lulus untuk PHP 8.2/Laravel tests dan Node/Vite build.
 - Tidak ada migration, perubahan schema/data/media nyata, UI, staging, atau production.
 
 ## P7 prerequisite — Qammaris UI quality gate
