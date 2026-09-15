@@ -198,15 +198,15 @@
                         @foreach($product->images as $image)
                         <div class="relative group aspect-square rounded overflow-hidden border border-gray-200">
                             <img src="{{ $image->image_url }}" alt="{{ $product->name }} image {{ $loop->iteration }}" class="w-full h-full object-cover" loading="lazy">
-                            {{-- Delete Image Button --}}
-                            @if(!$loop->first || $product->images->count() > 1) 
-                            <button type="button" onclick="deleteImage({{ $image->id }})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Delete image" title="Delete image">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                            @endif
                         </div>
                         @endforeach
                     </div>
+
+                    @if($product->images->isNotEmpty())
+                        <p class="mb-4 text-xs leading-relaxed text-amber-700">
+                            Penghapusan gambar dinonaktifkan sementara agar file dan metadata tetap aman. Penggantian gambar akan disiapkan pada tahap media berikutnya.
+                        </p>
+                    @endif
 
                     <div class="border-t pt-4 mt-4">
                         <label for="new-images" class="block text-sm font-medium text-gray-700 mb-2">Add New Images</label>
@@ -224,10 +224,6 @@
         </div>
     </form>
     
-    <form id="delete-image-form" method="POST" class="hidden">
-        @csrf
-        @method('DELETE')
-    </form>
 </div>
 
 <script>
@@ -268,12 +264,5 @@
         }
     }
 
-    function deleteImage(imageId) {
-        if(confirm('Delete this image permanently?')) {
-            const form = document.getElementById('delete-image-form');
-            form.action = `/admin/products/image/${imageId}`;
-            form.submit();
-        }
-    }
 </script>
 @endsection

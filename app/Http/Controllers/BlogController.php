@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
+use App\Support\BlogHtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -32,13 +33,12 @@ class BlogController extends Controller
         return view('blog.index', compact('posts', 'categories'));
     }
     
-    public function show(BlogPost $post)
+    public function show(BlogPost $post, BlogHtmlSanitizer $sanitizer)
     {
-        if (!$post->is_published) {
-            abort(404);
-        }
+        abort_unless($post->isPubliclyVisible(), 404);
         
         $post->incrementViewCount();
+        $post->setAttribute('content', $sanitizer->sanitize($post->content));
         
         $relatedPosts = BlogPost::published()
             ->whereRaw('lower(category) = ?', [Str::lower($post->category)])
