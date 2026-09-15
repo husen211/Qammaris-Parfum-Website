@@ -142,7 +142,7 @@ Membutuhkan staging hijau, backup production terbaru, recovery evidence, serta a
 
 ## P2 — Tests & catalog safety
 
-### P2-01 Public visibility dan variant ownership — IN_REVIEW
+### P2-01 Public visibility dan variant ownership — DONE
 
 Outcome:
 
@@ -174,6 +174,7 @@ Verification:
 - Setelah fix: seluruh suite lulus, 8 test dan 18 assertion menggunakan SQLite in-memory.
 - PHP syntax check lulus untuk seluruh file PHP yang diubah.
 - Laravel Pint lulus untuk request dan test baru. Controller existing masih mempunyai style debt lama; tidak diformat massal agar diff tetap fokus.
+- GitHub Actions CI run `34955143898` lulus: PHP 8.2/Laravel tests dan Node/Vite build hijau.
 - Tidak ada migration, perubahan schema/data/media, UI, staging, atau production.
 
 ## P7 prerequisite — Qammaris UI quality gate
