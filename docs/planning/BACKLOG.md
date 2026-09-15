@@ -479,7 +479,7 @@ Verification:
 - Flow browser lokal aktif → arsip → restore berhasil dengan pesan/status yang sesuai.
 - Admin catalog dan product editor diverifikasi pada viewport `1440x900` dan `390x844`; tidak ada page-level horizontal overflow atau browser console error. Table catalog mobile tetap memakai internal horizontal scroll legacy.
 - Data audit sementara dibersihkan; jumlah produk lokal kembali `180`. Tidak ada schema, data/media existing, staging, atau production yang diubah.
-- CI GitHub Actions menunggu commit dan push P2-10.
+- CI GitHub Actions run `34974320829` lulus untuk commit implementasi `81115c1`.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
