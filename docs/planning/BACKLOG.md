@@ -15,7 +15,7 @@
 |---|---|---|---|---|
 | P0 | Discovery & decisions | DONE | — | Baseline lokal, keterbatasan production, dan keputusan domain terdokumentasi |
 | P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
-| P2 | Tests & catalog safety | IN_PROGRESS | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
+| P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
 | P3 | Product domain & migrations | BACKLOG | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | BACKLOG | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
@@ -412,7 +412,7 @@ Verification:
 - CI GitHub Actions run `34960611351` lulus untuk commit implementasi `e675601`.
 - Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
 
-### P2-09 Product detail JSON-LD reconciliation — IN_REVIEW
+### P2-09 Product detail JSON-LD reconciliation — DONE
 
 Outcome:
 
@@ -442,17 +442,44 @@ Verification:
 - Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`.
 - Regression test baru lulus Pint/PHP syntax check dan `git diff --check` lulus.
 - Perubahan fallback/null-safety owner dipertahankan dan kini masuk dalam scope commit atas persetujuan eksplisit owner.
-- CI GitHub Actions menunggu commit dan push P2-09.
+- CI GitHub Actions run `34971935885` lulus untuk commit implementasi `0b207d9`.
 
-### P2-10 Destructive product/media behavior — BACKLOG
+### P2-10 Destructive product/media behavior — DONE
 
 Outcome:
 
 - Penghapusan product/image tidak menyebabkan kehilangan metadata, file hilang yang masih direferensikan, atau orphan media saat salah satu storage/database operation gagal.
 
-Decision required before implementation:
+Owner decision:
 
-- Tentukan apakah tombol hapus produk legacy sementara dinonaktifkan, diubah menjadi nonaktif/archive, atau tetap hard delete dengan compensation flow sampai publication schema Phase 3 tersedia.
+- Tombol hapus produk legacy diubah menjadi archive/nonaktif yang dapat dipulihkan. Hard delete product dan media tidak tersedia dari admin pada tahap ini.
+
+Acceptance criteria:
+
+- Request `DELETE` resource product legacy hanya mengubah `is_active` menjadi `false` dan bersifat idempotent.
+- Product ID, slug, variant, metadata image, dan file media tetap utuh setelah archive.
+- Admin dapat mengaktifkan kembali produk yang sudah diarsipkan.
+- Katalog admin menampilkan status aktif/diarsipkan serta label aksi dan konfirmasi yang menjelaskan dampaknya.
+- Customer/non-admin tidak dapat menjalankan archive atau restore.
+- Endpoint dan kontrol hapus gambar legacy tidak menghapus metadata atau file; penghapusan aman ditunda ke Phase 4.
+
+Implementation:
+
+- Aksi resource `DELETE` product kini mengubah `is_active` menjadi `false`; product, slug, variant, metadata gambar, dan file tidak dihapus.
+- Route `PATCH admin/products/{product}/restore` mengaktifkan kembali produk secara idempotent.
+- Catalog manager legacy menampilkan status `Aktif`/`Diarsipkan`, aksi arsip yang tidak memakai affordance hard delete, serta konfirmasi yang menjelaskan data dan gambar tetap disimpan.
+- Endpoint hapus gambar legacy dipertahankan sebagai no-op terotorisasi dan kontrol hapusnya di editor dihilangkan; admin menerima penjelasan bahwa penggantian/penghapusan aman disiapkan pada Phase 4.
+
+Verification:
+
+- Focused regression test lulus: `7 passed (33 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `41 passed (198 assertions)`.
+- Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`; production asset build Vite berhasil.
+- Pint untuk controller, route, dan regression test baru lulus; PHP syntax check dan `git diff --check` lulus.
+- Flow browser lokal aktif → arsip → restore berhasil dengan pesan/status yang sesuai.
+- Admin catalog dan product editor diverifikasi pada viewport `1440x900` dan `390x844`; tidak ada page-level horizontal overflow atau browser console error. Table catalog mobile tetap memakai internal horizontal scroll legacy.
+- Data audit sementara dibersihkan; jumlah produk lokal kembali `180`. Tidak ada schema, data/media existing, staging, atau production yang diubah.
+- CI GitHub Actions menunggu commit dan push P2-10.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

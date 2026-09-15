@@ -20,11 +20,12 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 1. Draft tidak dapat diakses publik.
 2. Published dapat muncul di katalog, search, related products, sitemap, dan detail page.
 3. Archived tidak tampil dalam penelusuran normal tetapi datanya dipertahankan.
-4. Produk baru dari bulk import selalu draft atau needs review.
-5. Product publish membutuhkan field minimal: brand, nama, slug unik, kategori, ukuran, harga valid, deskripsi, gender/audience, dan tepat satu primary image.
-6. Draft boleh disimpan tanpa harga, ukuran, deskripsi lengkap, atau gambar; sistem harus menampilkan alasan mengapa draft belum dapat dipublish.
-7. Publication tidak boleh diturunkan dari availability: produk sold out tetap dapat berstatus published.
-8. Brand atau kategori yang masih dipakai produk tidak boleh dihapus secara cascade dari admin; gunakan nonaktif/archive atau tolak penghapusan sampai relasinya dipindahkan.
+4. Aksi hapus produk pada admin legacy diperlakukan sebagai archive/nonaktif yang dapat dipulihkan; product, variant, metadata, slug, dan media tidak dihapus.
+5. Produk baru dari bulk import selalu draft atau needs review.
+6. Product publish membutuhkan field minimal: brand, nama, slug unik, kategori, ukuran, harga valid, deskripsi, gender/audience, dan tepat satu primary image.
+7. Draft boleh disimpan tanpa harga, ukuran, deskripsi lengkap, atau gambar; sistem harus menampilkan alasan mengapa draft belum dapat dipublish.
+8. Publication tidak boleh diturunkan dari availability: produk sold out tetap dapat berstatus published.
+9. Brand atau kategori yang masih dipakai produk tidak boleh dihapus secara cascade dari admin; gunakan nonaktif/archive atau tolak penghapusan sampai relasinya dipindahkan.
 
 ## Availability
 
@@ -84,6 +85,7 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 8. Satu produk menggunakan maksimum tiga gambar total: satu primary/cover dan maksimal dua gambar tambahan.
 9. URL gambar Shopee atau provider lain hanya menjadi sumber akuisisi saat import. File harus diunduh, divalidasi, dan disimpan ke storage Qammaris; halaman publik tidak melakukan hotlink ke URL provider.
 10. Kegagalan download gambar tidak membatalkan data draft yang valid, tetapi produk harus ditandai membutuhkan review gambar dan tidak boleh dipublish tanpa primary image.
+11. Penghapusan gambar dari admin legacy dinonaktifkan sampai lifecycle media aman tersedia; metadata dan file tidak boleh dihapus sebagian.
 
 ## Import/export
 
