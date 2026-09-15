@@ -17,7 +17,10 @@ class CartController extends Controller
     
     public function add(AddToCartRequest $request)
     {
-        $variant = ProductVariant::with(['product.primaryImage'])->findOrFail($request->variant_id);
+        $variant = ProductVariant::with(['product.primaryImage'])
+            ->active()
+            ->whereHas('product', fn ($query) => $query->active())
+            ->findOrFail($request->variant_id);
         
         if ($variant->stock < $request->quantity) {
             return response()->json([
@@ -64,7 +67,9 @@ class CartController extends Controller
         $cart = session('cart', []);
         
         if (isset($cart[$id])) {
-            $variant = ProductVariant::findOrFail($id);
+            $variant = ProductVariant::active()
+                ->whereHas('product', fn ($query) => $query->active())
+                ->findOrFail($id);
             
             if ($variant->stock < $request->quantity) {
                 return response()->json(['success' => false, 'message' => 'Stok kurang'], 400);

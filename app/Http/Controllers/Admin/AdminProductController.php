@@ -157,7 +157,7 @@ class AdminProductController extends Controller
 
             foreach ($request->variants as $variantData) {
                 if (isset($variantData['id']) && $variantData['id']) {
-                    ProductVariant::where('id', $variantData['id'])->update([
+                    $product->variants()->whereKey($variantData['id'])->firstOrFail()->update([
                         'volume' => $variantData['volume'],
                         'price' => $variantData['price'],
                         'stock' => $variantData['stock'],

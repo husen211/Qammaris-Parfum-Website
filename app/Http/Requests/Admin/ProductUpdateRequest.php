@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductUpdateRequest extends FormRequest
 {
@@ -13,6 +14,9 @@ class ProductUpdateRequest extends FormRequest
 
     public function rules(): array
     {
+        $product = $this->route('product');
+        $productId = is_object($product) ? $product->getKey() : $product;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'brand_id' => ['required', 'exists:brands,id'],
@@ -24,7 +28,13 @@ class ProductUpdateRequest extends FormRequest
             'middle_notes' => ['nullable', 'string'],
             'base_notes' => ['nullable', 'string'],
             'variants' => ['required', 'array', 'min:1'],
-            'variants.*.id' => ['nullable', 'integer'],
+            'variants.*.id' => [
+                'nullable',
+                'integer',
+                'distinct',
+                Rule::exists('product_variants', 'id')
+                    ->where(fn ($query) => $query->where('product_id', $productId)),
+            ],
             'variants.*.volume' => ['required', 'integer'],
             'variants.*.price' => ['required', 'numeric'],
             'variants.*.stock' => ['required', 'integer'],

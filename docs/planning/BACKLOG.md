@@ -15,7 +15,7 @@
 |---|---|---|---|---|
 | P0 | Discovery & decisions | DONE | — | Baseline lokal, keterbatasan production, dan keputusan domain terdokumentasi |
 | P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
-| P2 | Tests & catalog safety | BACKLOG | P1 | Perilaku existing aman dan terlindungi regression tests |
+| P2 | Tests & catalog safety | IN_PROGRESS | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
 | P3 | Product domain & migrations | BACKLOG | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | BACKLOG | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
@@ -139,6 +139,42 @@ Close-out review:
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 
 Membutuhkan staging hijau, backup production terbaru, recovery evidence, serta approval owner. Tidak boleh dimulai dari development lokal.
+
+## P2 — Tests & catalog safety
+
+### P2-01 Public visibility dan variant ownership — IN_REVIEW
+
+Outcome:
+
+- Produk nonaktif tidak dapat dibuka langsung atau dimasukkan ke cart.
+- Update produk admin tidak dapat mengubah variant milik produk lain.
+
+In scope:
+
+- Regression test untuk detail produk, cart add/update, dan update variant admin.
+- Guard pada controller/request tanpa mengubah schema atau UI.
+
+Out of scope:
+
+- Publication/availability schema baru.
+- Redesign katalog atau admin.
+- Perubahan harga, data, media, dan production.
+
+Acceptance criteria:
+
+- Detail produk nonaktif menghasilkan `404` tanpa menaikkan view count.
+- Variant nonaktif atau milik produk nonaktif ditolak dari cart.
+- Variant aktif milik produk aktif tetap dapat ditambahkan ke cart.
+- ID variant pada update admin wajib dimiliki produk pada route.
+- Seluruh test Laravel lulus.
+
+Verification:
+
+- Baseline sebelum fix: 4 test gagal dan membuktikan seluruh guard belum tersedia.
+- Setelah fix: seluruh suite lulus, 8 test dan 18 assertion menggunakan SQLite in-memory.
+- PHP syntax check lulus untuk seluruh file PHP yang diubah.
+- Laravel Pint lulus untuk request dan test baru. Controller existing masih mempunyai style debt lama; tidak diformat massal agar diff tetap fokus.
+- Tidak ada migration, perubahan schema/data/media, UI, staging, atau production.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
