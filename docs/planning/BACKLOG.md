@@ -212,7 +212,7 @@ Verification:
 - GitHub Actions CI run `34958077412` lulus untuk PHP 8.2/Laravel tests dan Node/Vite build.
 - Tidak ada migration, perubahan schema/data/media nyata, UI, staging, atau production.
 
-### P2-03 Transaction-safe product image uploads — IN_REVIEW
+### P2-03 Transaction-safe product image uploads — DONE
 
 Outcome:
 
@@ -244,7 +244,8 @@ Verification:
 - Seluruh Laravel test lulus lokal pada PHP 8.2.12: `18 passed (61 assertions)`.
 - PHP syntax check untuk controller dan regression test lulus.
 - Pint check untuk regression test baru dan `git diff --check` lulus.
-- CI GitHub Actions menunggu commit dan push P2-03.
+- CI GitHub Actions run `34958515257` lulus untuk commit implementasi `82906c5`.
+- Tidak ada schema, data/media nyata, UI, staging, atau production yang diubah.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
