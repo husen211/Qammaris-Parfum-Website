@@ -124,10 +124,11 @@ Current progress:
 - HTTP Basic Auth terverifikasi menghasilkan `401` tanpa credential dan `200` dengan credential. Deploy Git dapat menimpa aturan auth sehingga pemasangan ulang wajib menjadi bagian release procedure.
 - Auto-deploy telah dinonaktifkan. Production tetap tidak disentuh.
 - Workflow manual `Staging release` telah disiapkan untuk memverifikasi SHA source yang dipublikasikan hPanel, membangun/mengunggah asset Vite, menjalankan migration additive, memastikan storage link, dan mengoptimalkan Laravel. Workflow belum dapat dijalankan sebelum environment GitHub `staging` diberi SSH deployment key terbatas serta known-host verification.
+- Key deployment tidak dipasang pada 2026-09-15: SSH identity Hostinger yang tersedia berpotensi memiliki scope ke website/proyek lain, sehingga tidak memenuhi boundary Qammaris-only. Environment GitHub `staging` sudah dibuat tanpa secret; key lokal sementara telah dihapus dan tidak pernah diunggah.
 
 Review checkpoint berikutnya:
 
-- Konfigurasikan deployment key dan GitHub Environment `staging`, jalankan workflow terhadap revision staging yang sudah dipublikasikan hPanel, lalu verifikasi bahwa source, asset, migration, storage, cache, dan HTTP Basic Auth tetap sehat. Jangan mengubah production.
+- Sediakan identity deployment yang terbukti hanya dapat mengakses Qammaris staging (misalnya hosting/account terisolasi), baru konfigurasikan secret GitHub dan jalankan workflow terhadap revision staging yang sudah dipublikasikan hPanel. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

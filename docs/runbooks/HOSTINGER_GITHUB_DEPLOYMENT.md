@@ -89,6 +89,8 @@ Buat GitHub Environment bernama `staging`, lalu simpan secret berikut hanya pada
 
 Tambahkan environment variable `STAGING_PATH` dengan path absolut release staging. Nilai credential tidak boleh ditaruh dalam workflow, dokumentasi, commit, atau log. SSH key khusus deployment wajib berbeda dari password login owner dan dapat dicabut terpisah.
 
+**Batas scope saat ini:** jangan mengisi secret workflow memakai SSH account shared-hosting yang dapat mengakses website/proyek lain. Pada 2026-09-15, key tidak dipasang karena identitas SSH yang tersedia belum dapat dibuktikan terbatas hanya untuk Qammaris staging. Workflow ini hanya boleh diaktifkan saat tersedia account atau deployment identity yang scope-nya benar-benar terisolasi untuk Qammaris.
+
 Hasil akhir workflow menyisakan folder `public/build.previous-<timestamp>` sebagai rollback asset cepat. Folder itu tidak boleh dibersihkan otomatis; pembersihan memerlukan retention policy terpisah.
 
 ## Pemisahan tanggung jawab
