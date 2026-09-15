@@ -247,7 +247,7 @@ Verification:
 - CI GitHub Actions run `34958515257` lulus untuk commit implementasi `82906c5`.
 - Tidak ada schema, data/media nyata, UI, staging, atau production yang diubah.
 
-### P2-04 Login throttling — IN_REVIEW
+### P2-04 Login throttling — DONE
 
 Outcome:
 
@@ -276,7 +276,8 @@ Verification:
 - Focused regression test lulus: `3 passed (38 assertions)`.
 - Seluruh Laravel test lulus lokal pada PHP 8.2.12: `21 passed (99 assertions)`.
 - Pint, PHP syntax check, dan `git diff --check` lulus untuk file P2-04.
-- CI GitHub Actions menunggu commit dan push P2-04.
+- CI GitHub Actions run `34958978794` lulus untuk commit implementasi `101088d`.
+- Tidak ada schema, data/media, UI, staging, atau production yang diubah.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
