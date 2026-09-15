@@ -313,6 +313,39 @@ Verification:
 - CI GitHub Actions run `34959341933` lulus untuk commit implementasi `6c21d60`.
 - Tidak ada schema, data/media, UI, staging, atau production yang diubah.
 
+### P2-06 Safe rich-text rendering — IN_REVIEW
+
+Outcome:
+
+- Konten artikel tetap mendukung rich text dasar tanpa dapat menyisipkan script atau atribut HTML berbahaya ke halaman publik.
+
+In scope:
+
+- Sanitizer HTML allowlist berbasis DOM bawaan PHP tanpa dependency baru.
+- Sanitasi saat admin menyimpan artikel dan sanitasi ulang saat artikel ditampilkan untuk melindungi data legacy.
+- Pertahankan elemen editorial dasar dan batasi atribut/link/image URL.
+- Regression test untuk script, event handler, iframe, dan skema URL berbahaya.
+
+Out of scope:
+
+- Redesign blog/editor, migrasi isi artikel lama, WYSIWYG baru, schema, staging, dan production.
+
+Acceptance criteria:
+
+- Script, embedded executable content, event attributes, dan URL `javascript:` tidak muncul pada respons publik.
+- Paragraph, heading, emphasis, list, quote, code, table, safe link, dan safe image tetap didukung.
+- Konten baru disimpan dalam bentuk tersanitasi; record lama juga aman ketika dirender.
+- Tidak ada dependency baru atau perubahan visual untuk markup yang diizinkan.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (18 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `26 passed (130 assertions)`.
+- Pint lulus untuk sanitizer dan regression test baru.
+- Seluruh file PHP yang diubah lulus syntax check dan `git diff --check`.
+- CI GitHub Actions menunggu commit dan push P2-06.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
