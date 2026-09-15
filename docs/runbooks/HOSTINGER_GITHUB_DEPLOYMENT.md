@@ -1,6 +1,6 @@
 # Runbook Rencana Deployment Hostinger melalui GitHub
 
-**Status:** P1-03 sedang berjalan — staging terpisah dan deployment Git pertama telah dibuat
+**Status:** P1-03 dalam review — staging terpisah sudah aktif dan health check dasar lulus
 
 ## Tujuan
 
@@ -10,14 +10,20 @@ Menjadikan repository GitHub sebagai source of truth source code Qammaris tanpa 
 
 - Website terpisah tersedia pada `staging.qammarisparfum.id`; website production lama tidak diubah.
 - PHP staging menggunakan versi 8.2.
-- Directory `/` pada staging dilindungi HTTP password melalui hPanel.
+- Directory `/` pada staging dilindungi HTTP Basic Auth. Tanpa credential menghasilkan HTTP `401`; dengan akun review menghasilkan HTTP `200`.
 - Database dan user MySQL khusus staging telah dibuat dan tidak memakai database production.
 - hPanel Git terhubung hanya ke repository `Qammaris-Parfum-Website`, branch `modernization/phase-1-foundation`.
-- Deployment manual commit `240f94e` ke `public_html` selesai dalam 16 detik.
+- Deployment manual commit `240f94e` ke `public_html` selesai dalam 16 detik. Commit layout `8dc28df` kemudian berhasil dipublikasikan.
 - Build log membuktikan hPanel menjalankan `composer install --prefer-dist --quiet --no-interaction`, lalu publishing.
-- Build log belum menunjukkan eksekusi `npm ci`, `npm run build`, atau migration Artisan.
-- Auto-deploy belum diaktifkan.
-- Request awal ke staging menghasilkan `403 Forbidden` karena document root paket tetap `public_html`, sedangkan entry point Laravel berada di `public/`.
+- hPanel tidak menyediakan Node/npm dan build log tidak menjalankan Vite. Asset dibangun secara reproducible dengan Node `22.20.0` dan npm `10.9.8` di lokal, lalu artefak `public/build` diunggah ke staging.
+- Auto-deploy sempat aktif secara default dan mempublikasikan commit `8dc28df`, lalu dinonaktifkan kembali serta diverifikasi dalam kondisi off.
+- Root `.htaccess` berhasil mengarahkan fixed document root `public_html` ke entry point Laravel pada `public/`.
+- `.env` staging dibuat langsung di server dengan permission `0600`, `APP_ENV=staging`, `APP_DEBUG=false`, dan database khusus staging. Nilai secret tidak dicatat di Git.
+- Laravel `12.69.2`, PHP `8.2.33`, dan Composer `2.8.9` terverifikasi pada staging.
+- Seluruh 12 migration berjalan pada batch 1 di database staging baru. Tabel bisnis terverifikasi kosong; tidak ada seeder atau import data.
+- Storage link dibuat melalui shell karena fungsi PHP `exec` dan `symlink` dinonaktifkan oleh Hostinger.
+- `config`, `route`, `view`, dan framework metadata cache berhasil dibuat melalui `php artisan optimize`.
+- Health check terautentikasi: homepage, katalog `/products`, `/login`, dan `/cart` menghasilkan HTTP `200`; `/admin` menghasilkan redirect `302` yang benar ke `/login`; asset CSS menghasilkan HTTP `200`.
 
 Tidak ada migration atau cutover production yang diizinkan oleh runbook ini.
 
@@ -93,7 +99,9 @@ Mengubah repository atau target deployment dapat menimpa isi direktori target. K
 
 ## Gap yang harus dibuktikan pada staging
 
-hPanel Git telah terbukti menjalankan `composer install`, tetapi belum terbukti menjalankan `npm run build` atau `php artisan migrate`. Pada repository ini, `public/build` memang tidak disimpan di Git. Akibatnya, deployment source dan dependency PHP saja belum cukup untuk menjalankan aplikasi lengkap.
+hPanel Git telah terbukti menjalankan `composer install`, tetapi tidak menjalankan `npm run build` atau migration Artisan. Pada repository ini, `public/build` memang tidak disimpan di Git. Deployment saat ini karena itu membutuhkan langkah release terkontrol untuk build/upload asset, migration, storage link, dan cache Laravel.
+
+Deployment Git juga menimpa root `.htaccess`, sehingga aturan HTTP Basic Auth yang dikelola pada file tersebut harus dipasang ulang setelah publikasi. Sampai pipeline release tersedia, setiap manual deploy wajib diikuti pemeriksaan `401` tanpa credential dan `200` dengan credential. `.env` berhasil dibuat setelah deployment, tetapi persistensinya terhadap redeploy berikutnya belum diuji dan tidak boleh diasumsikan.
 
 Sebelum memilih mekanisme final, lakukan proof berikut pada staging:
 

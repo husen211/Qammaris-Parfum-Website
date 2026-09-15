@@ -100,7 +100,7 @@ Current verification:
 - GitHub Actions run `34871619589` lulus pada commit `e135986`: job PHP 8.2/Laravel dan Node/Vite sama-sama hijau.
 - Workflow hanya melakukan validation, install, test, dan build; tidak memuat langkah deployment.
 
-### P1-03 Staging topology dan hPanel Git — IN_PROGRESS
+### P1-03 Staging topology dan hPanel Git — IN_REVIEW
 
 Outcome target:
 
@@ -118,13 +118,15 @@ Current progress:
 - Dokumentasi Hostinger mengonfirmasi GitHub OAuth dapat digunakan tanpa setup SSH key dan target branch/root directory dapat dipilih, tetapi pemasangan atau penggantian repository dapat menimpa direktori target.
 - Website staging terpisah telah dibuat, memakai PHP 8.2, dilindungi HTTP password, dan mempunyai database/user MySQL khusus staging.
 - hPanel Git telah terhubung hanya ke repository Qammaris dan branch `modernization/phase-1-foundation`; deployment manual commit `240f94e` berhasil ke `public_html` tanpa menyentuh production.
-- Build log membuktikan Composer dijalankan otomatis. npm/Vite dan migration Artisan belum dijalankan atau dibuktikan.
-- Request awal menghasilkan `403 Forbidden` karena entry point Laravel berada di `public/`; root `.htaccess` ditambahkan untuk layout fixed-document-root Hostinger dan masih memerlukan redeploy serta health check.
-- Auto-deploy tetap nonaktif.
+- Build log membuktikan Composer dijalankan otomatis, tetapi Hostinger tidak menyediakan Node/npm. Vite dibangun lokal secara reproducible dan `public/build` diunggah sebagai artefak staging.
+- Root `.htaccess` pada commit `8dc28df` berhasil mengarahkan fixed document root ke `public/`; homepage, katalog, dan asset CSS menghasilkan HTTP `200` setelah asset tersedia.
+- `.env` berpermission `0600`, database kosong khusus staging, 12 migration batch 1, storage link, dan cache Laravel telah dibuat serta diverifikasi.
+- HTTP Basic Auth terverifikasi menghasilkan `401` tanpa credential dan `200` dengan credential. Deploy Git dapat menimpa aturan auth sehingga pemasangan ulang wajib menjadi bagian release procedure.
+- Auto-deploy telah dinonaktifkan. Production tetap tidak disentuh.
 
-Owner checkpoint berikutnya:
+Review checkpoint berikutnya:
 
-- Redeploy perubahan layout ke staging, buat `.env` staging tanpa memasukkan credential ke Git, buktikan strategi build Vite, jalankan migration pada database staging, lalu lakukan health check. Jangan mengubah production.
+- Verifikasi manual halaman staging di browser menggunakan akun review, lalu pilih mekanisme release repeatable (disarankan GitHub Actions/artifact deployment) yang menjaga `.env`, menjalankan build/migration/cache, dan memasang ulang proteksi staging. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

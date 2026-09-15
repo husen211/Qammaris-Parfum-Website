@@ -117,3 +117,15 @@
 - `composer audit` awal menemukan 41 advisory pada 13 package. Lockfile diperbarui dalam constraint existing dan audit akhir melaporkan 0 advisory.
 - `npm audit` awal menemukan 14 vulnerability. Lockfile diperbarui tanpa `--force` atau major upgrade dan audit akhir melaporkan 0 vulnerability.
 - GitHub Actions run `34871619589` pada branch `modernization/phase-1-foundation` berhasil menjalankan PHP 8.2/Laravel test dan Node/Vite build. Workflow tidak melakukan deployment.
+
+## 13. Staging Hostinger Baseline
+
+- Staging terpisah berada di `staging.qammarisparfum.id`; production lama tidak diubah.
+- hPanel Git memakai branch `modernization/phase-1-foundation`; revision aplikasi terverifikasi `8dc28df`.
+- Runtime staging: PHP `8.2.33`, Laravel `12.69.2`, Composer `2.8.9`, environment `staging`, debug off.
+- `.env` dan database MySQL staging dibuat terpisah dari production. Secret tidak dicatat dalam repository atau dokumentasi.
+- Seluruh 12 migration berjalan sebagai batch 1. Aggregate `users`, `brands`, `categories`, `products`, `product_images`, `product_variants`, `blog_posts`, dan `store_info` semuanya `0`; tidak ada seeding/import.
+- Hostinger tidak menyediakan Node/npm pada shell. Asset Vite dibangun lokal lalu diunggah ke `public/build`; homepage, `/products`, `/login`, `/cart`, dan asset CSS terverifikasi HTTP `200`; `/admin` mengarahkan guest ke `/login` dengan HTTP `302`.
+- `public/storage` menunjuk ke `storage/app/public`. Symlink dibuat lewat shell karena fungsi PHP `exec`/`symlink` dinonaktifkan.
+- HTTP Basic Auth terverifikasi `401` tanpa credential dan `200` dengan akun review.
+- Risiko tersisa: redeploy Git dapat menimpa root `.htaccess`; persistensi `.env`, `public/build`, storage link, dan auth pada redeploy belum dibuktikan. Auto-deploy tetap off sampai pipeline release repeatable tersedia.
