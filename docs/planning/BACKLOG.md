@@ -347,7 +347,7 @@ Verification:
 - CI GitHub Actions run `34960008760` lulus untuk commit implementasi `47ca61a`.
 - Tidak ada schema, migrasi data/media, perubahan visual, staging, atau production yang diubah.
 
-### P2-07 Safe global head metadata and JSON-LD — IN_REVIEW
+### P2-07 Safe global head metadata and JSON-LD — DONE
 
 Outcome:
 
@@ -377,7 +377,39 @@ Verification:
 - Seluruh Laravel test lulus lokal pada PHP 8.2.12: `28 passed (145 assertions)`.
 - Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`.
 - Test baru lulus Pint dan PHP syntax check; `git diff --check` lulus.
-- CI GitHub Actions menunggu commit dan push P2-07.
+- CI GitHub Actions run `34960419263` lulus untuk commit implementasi `d042b4f`.
+- Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
+
+### P2-08 Blog publication visibility — IN_REVIEW
+
+Outcome:
+
+- Artikel draft, tanpa tanggal publish, atau terjadwal di masa depan tidak dapat dibuka langsung melalui slug publik.
+
+In scope:
+
+- Satukan aturan visibility artikel pada model dan gunakan pada detail publik.
+- Regression test untuk draft, missing date, scheduled, dan published article.
+
+Out of scope:
+
+- Redesign blog/admin, workflow approval editorial, schema/data, staging, dan production.
+
+Acceptance criteria:
+
+- Detail publik menghasilkan `404` untuk draft, artikel tanpa tanggal publish, dan artikel terjadwal.
+- Artikel published dengan waktu yang sudah lewat tetap menghasilkan `200`.
+- Request tidak valid tidak menambah view count.
+- Listing/category/sitemap tetap menggunakan scope publication existing.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `4 passed (8 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `32 passed (153 assertions)`.
+- Regression test baru lulus Pint; model/controller/test lulus PHP syntax check serta `git diff --check`.
+- `BlogPost` mempunyai style debt pre-existing di luar diff dan sengaja tidak diformat massal.
+- CI GitHub Actions menunggu commit dan push P2-08.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

@@ -35,9 +35,7 @@ class BlogController extends Controller
     
     public function show(BlogPost $post, BlogHtmlSanitizer $sanitizer)
     {
-        if (!$post->is_published) {
-            abort(404);
-        }
+        abort_unless($post->isPubliclyVisible(), 404);
         
         $post->incrementViewCount();
         $post->setAttribute('content', $sanitizer->sanitize($post->content));
