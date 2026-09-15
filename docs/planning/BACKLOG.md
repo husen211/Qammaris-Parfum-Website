@@ -125,11 +125,13 @@ Current progress:
 - Auto-deploy telah dinonaktifkan. Production tetap tidak disentuh.
 - Workflow manual `Staging release` memverifikasi SHA source yang dipublikasikan hPanel, membangun/mengunggah asset Vite, menjalankan migration additive, memastikan storage link, dan mengoptimalkan Laravel. GitHub Environment `staging` berisi secret SSH dan known-host verification; credential tidak dicatat di repository.
 - Workflow `Staging release #1` berhasil pada 2026-09-15 (43 detik) terhadap SHA `8dc28dfd2567c992b7277e471df6985633ea0891`. Verifikasi server setelah rilis membuktikan `public/build/manifest.json`, symlink `public/storage`, dan seluruh 12 migration batch 1 tersedia. HTTP tanpa credential tetap menghasilkan `401`.
+- Workflow `Staging release #2` berhasil pada 2026-09-15 (35 detik) terhadap SHA yang sama. Tidak ada migration pending setelah release ulang; build, storage link, dan Basic Auth tetap valid. Ini membuktikan release asset/migration yang sama dapat dijalankan ulang pada staging.
+- Rollback asset staging terkontrol telah diuji: build backup dengan manifest berbeda diaktifkan sementara melalui rename, manifest tervalidasi, lalu build aktif dipulihkan. Dua folder rollback asset dipertahankan sebagai bukti; tidak ada data, media, source, atau production yang berubah.
 - Akses deployment memakai key terpisah yang dapat dicabut. Setelah audit filesystem account Hostinger yang disetujui owner, account tersebut hanya ditemukan memiliki dua domain Qammaris (`qammarisparfum.id` dan `staging.qammarisparfum.id`); pipeline hanya mengarah ke path staging. Production tidak disentuh.
 
 Review checkpoint berikutnya:
 
-- Uji deploy ulang SHA yang sama untuk membuktikan idempotensi, lalu lakukan rollback asset/source staging yang terkontrol dan verifikasi aplikasi kembali sehat. Jangan mengubah production.
+- Review rollback source melalui hPanel pada staging dan jalankan health check autentik penuh setelahnya. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

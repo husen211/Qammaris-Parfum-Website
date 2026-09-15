@@ -104,6 +104,8 @@ Pada 2026-09-15, workflow GitHub Actions `Staging release #1` selesai sukses dal
 
 Tidak ada source, migration, data, media, atau konfigurasi production yang diubah. Checkout Git staging menampilkan perubahan yang memang diharapkan dari release (`.htaccess` Basic Auth dan backup `public/build.previous-<timestamp>`). Dua file kecil lama di root checkout bernama `2` dan `20` ditemukan saat inspeksi; keduanya tidak disentuh karena di luar scope release dan perlu keputusan retention/cleanup terpisah.
 
+Workflow `Staging release #2` kemudian dijalankan ulang untuk SHA yang sama dan berhasil dalam 35 detik. Setelahnya, migration pending berjumlah nol dan manifest build, symlink storage, serta respons anonim `401` tetap valid. Untuk membuktikan recovery asset, folder build backup dengan manifest berbeda diaktifkan sementara melalui rename atomik, tervalidasi, lalu build aktif dipulihkan. Dua folder rollback asset dipertahankan; tidak ada folder dihapus dan tidak ada source, database, media, atau production yang diubah.
+
 ## Pemisahan tanggung jawab
 
 - GitHub: source code, migration, test, dokumentasi, lockfile.
