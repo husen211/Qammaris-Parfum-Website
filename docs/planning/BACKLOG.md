@@ -279,7 +279,7 @@ Verification:
 - CI GitHub Actions run `34958978794` lulus untuk commit implementasi `101088d`.
 - Tidak ada schema, data/media, UI, staging, atau production yang diubah.
 
-### P2-05 Checkout cart integrity — IN_REVIEW
+### P2-05 Checkout cart integrity — DONE
 
 Outcome:
 
@@ -310,7 +310,8 @@ Verification:
 - Seluruh Laravel test lulus lokal pada PHP 8.2.12: `24 passed (112 assertions)`.
 - Regression test baru lulus Pint; controller dan test lulus PHP syntax check serta `git diff --check`.
 - `CartController` mempunyai style debt pre-existing di luar diff dan sengaja tidak diformat massal.
-- CI GitHub Actions menunggu commit dan push P2-05.
+- CI GitHub Actions run `34959341933` lulus untuk commit implementasi `6c21d60`.
+- Tidak ada schema, data/media, UI, staging, atau production yang diubah.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
