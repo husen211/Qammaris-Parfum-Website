@@ -13,6 +13,8 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Throwable;
 
 class AdminProductController extends Controller
 {
@@ -55,6 +57,8 @@ class AdminProductController extends Controller
     public function store(ProductStoreRequest $request)
     {
         // ... (Gunakan kode STORE dari jawaban sebelumnya)
+        $storedImagePaths = [];
+
         try {
             DB::beginTransaction();
             $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
@@ -89,7 +93,7 @@ class AdminProductController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('products', 'public');
+                    $path = $this->storeProductImage($image, $storedImagePaths);
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $path,
@@ -102,9 +106,12 @@ class AdminProductController extends Controller
             DB::commit();
             return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
 
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             DB::rollback();
-            return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
+            $this->cleanupStoredImages($storedImagePaths);
+            report($e);
+
+            return back()->with('error', 'Produk gagal disimpan. Silakan coba lagi.')->withInput();
         }
     }
 
@@ -121,6 +128,7 @@ class AdminProductController extends Controller
     {
         // ... (Gunakan kode UPDATE dari jawaban sebelumnya)
          $product = Product::findOrFail($id);
+        $storedImagePaths = [];
 
         try {
             DB::beginTransaction();
@@ -173,7 +181,7 @@ class AdminProductController extends Controller
 
                 foreach ($request->file('new_images') as $index => $image) {
                     $lastSort++;
-                    $path = $image->store('products', 'public');
+                    $path = $this->storeProductImage($image, $storedImagePaths);
                     $setPrimary = !$hasPrimary && $index === 0;
 
                     ProductImage::create([
@@ -192,9 +200,12 @@ class AdminProductController extends Controller
             DB::commit();
             return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
 
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             DB::rollback();
-            return back()->with('error', 'Update failed: ' . $e->getMessage());
+            $this->cleanupStoredImages($storedImagePaths);
+            report($e);
+
+            return back()->with('error', 'Produk gagal diperbarui. Silakan coba lagi.')->withInput();
         }
     }
 
@@ -257,5 +268,33 @@ class AdminProductController extends Controller
         }
 
         return strtoupper(substr($brandName, 0, 3)) ?: $fallback;
+    }
+
+    private function storeProductImage($image, array &$storedImagePaths): string
+    {
+        $path = $image->store('products', 'public');
+
+        if (! is_string($path) || $path === '' || ! Storage::disk('public')->exists($path)) {
+            throw new RuntimeException('Uploaded product image could not be verified on storage.');
+        }
+
+        $storedImagePaths[] = $path;
+
+        return $path;
+    }
+
+    private function cleanupStoredImages(array $storedImagePaths): void
+    {
+        if ($storedImagePaths === []) {
+            return;
+        }
+
+        try {
+            if (! Storage::disk('public')->delete($storedImagePaths)) {
+                report(new RuntimeException('One or more rolled-back product images could not be deleted.'));
+            }
+        } catch (Throwable $cleanupError) {
+            report($cleanupError);
+        }
     }
 }

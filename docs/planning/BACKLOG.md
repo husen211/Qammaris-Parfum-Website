@@ -212,6 +212,40 @@ Verification:
 - GitHub Actions CI run `34958077412` lulus untuk PHP 8.2/Laravel tests dan Node/Vite build.
 - Tidak ada migration, perubahan schema/data/media nyata, UI, staging, atau production.
 
+### P2-03 Transaction-safe product image uploads — IN_REVIEW
+
+Outcome:
+
+- Kegagalan database setelah upload gambar tidak meninggalkan file baru yatim atau perubahan produk setengah jadi.
+
+In scope:
+
+- Verifikasi hasil penyimpanan file gambar pada create/update produk.
+- Cleanup file yang baru diunggah jika transaksi database gagal.
+- Pesan error generik kepada admin dan pelaporan exception internal.
+- Regression test dengan storage fake dan kegagalan model yang disengaja.
+
+Out of scope:
+
+- Penghapusan produk/gambar existing, migrasi storage, dan remote image download.
+- Perubahan schema, UI, staging, atau production.
+
+Acceptance criteria:
+
+- Create yang gagal setelah satu atau lebih upload melakukan rollback database dan membersihkan seluruh file baru.
+- Update yang gagal mempertahankan data/file existing dan membersihkan seluruh file baru.
+- File yang dilaporkan tersimpan wajib terbukti tersedia pada disk.
+- Detail exception tidak ditampilkan kepada admin.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (11 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `18 passed (61 assertions)`.
+- PHP syntax check untuk controller dan regression test lulus.
+- Pint check untuk regression test baru dan `git diff --check` lulus.
+- CI GitHub Actions menunggu commit dan push P2-03.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
