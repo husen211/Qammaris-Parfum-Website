@@ -1,6 +1,6 @@
 # Runbook Rencana Deployment Hostinger melalui GitHub
 
-**Status:** P1-03 dalam review — staging terpisah sudah aktif dan health check dasar lulus
+**Status:** P1-03 dalam review — release GitHub Actions pertama ke staging sudah terbukti
 
 ## Tujuan
 
@@ -89,9 +89,20 @@ Buat GitHub Environment bernama `staging`, lalu simpan secret berikut hanya pada
 
 Tambahkan environment variable `STAGING_PATH` dengan path absolut release staging. Nilai credential tidak boleh ditaruh dalam workflow, dokumentasi, commit, atau log. SSH key khusus deployment wajib berbeda dari password login owner dan dapat dicabut terpisah.
 
-**Batas scope saat ini:** jangan mengisi secret workflow memakai SSH account shared-hosting yang dapat mengakses website/proyek lain. Pada 2026-09-15, key tidak dipasang karena identitas SSH yang tersedia belum dapat dibuktikan terbatas hanya untuk Qammaris staging. Workflow ini hanya boleh diaktifkan saat tersedia account atau deployment identity yang scope-nya benar-benar terisolasi untuk Qammaris.
+**Batas scope saat ini:** pipeline hanya menerima path staging melalui environment variable dan key deployment terpisah dari password owner. Pada 2026-09-15, audit filesystem account Hostinger yang disetujui owner menemukan hanya domain `qammarisparfum.id` dan `staging.qammarisparfum.id`; workflow tetap tidak memiliki langkah atau secret path production. Key dapat dicabut dengan menghapus public key terkait dari `~/.ssh/authorized_keys` dan menghapus secret private key dari GitHub Environment `staging`.
 
 Hasil akhir workflow menyisakan folder `public/build.previous-<timestamp>` sebagai rollback asset cepat. Folder itu tidak boleh dibersihkan otomatis; pembersihan memerlukan retention policy terpisah.
+
+### Bukti release pertama
+
+Pada 2026-09-15, workflow GitHub Actions `Staging release #1` selesai sukses dalam 43 detik untuk SHA `8dc28dfd2567c992b7277e471df6985633ea0891`, setelah hPanel telah mempublikasikan SHA yang sama ke staging. Pemeriksaan pasca-rilis langsung di staging membuktikan hal berikut:
+
+- `public/build/manifest.json` tersedia;
+- `public/storage` adalah symlink;
+- seluruh 12 migration berada di batch 1 dengan status `Ran`;
+- file Basic Auth dan aturannya tersedia; HTTP tanpa credential menghasilkan `401`.
+
+Tidak ada source, migration, data, media, atau konfigurasi production yang diubah. Checkout Git staging menampilkan perubahan yang memang diharapkan dari release (`.htaccess` Basic Auth dan backup `public/build.previous-<timestamp>`). Dua file kecil lama di root checkout bernama `2` dan `20` ditemukan saat inspeksi; keduanya tidak disentuh karena di luar scope release dan perlu keputusan retention/cleanup terpisah.
 
 ## Pemisahan tanggung jawab
 

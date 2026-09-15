@@ -123,12 +123,13 @@ Current progress:
 - `.env` berpermission `0600`, database kosong khusus staging, 12 migration batch 1, storage link, dan cache Laravel telah dibuat serta diverifikasi.
 - HTTP Basic Auth terverifikasi menghasilkan `401` tanpa credential dan `200` dengan credential. Deploy Git dapat menimpa aturan auth sehingga pemasangan ulang wajib menjadi bagian release procedure.
 - Auto-deploy telah dinonaktifkan. Production tetap tidak disentuh.
-- Workflow manual `Staging release` telah disiapkan untuk memverifikasi SHA source yang dipublikasikan hPanel, membangun/mengunggah asset Vite, menjalankan migration additive, memastikan storage link, dan mengoptimalkan Laravel. Workflow belum dapat dijalankan sebelum environment GitHub `staging` diberi SSH deployment key terbatas serta known-host verification.
-- Key deployment tidak dipasang pada 2026-09-15: SSH identity Hostinger yang tersedia berpotensi memiliki scope ke website/proyek lain, sehingga tidak memenuhi boundary Qammaris-only. Environment GitHub `staging` sudah dibuat tanpa secret; key lokal sementara telah dihapus dan tidak pernah diunggah.
+- Workflow manual `Staging release` memverifikasi SHA source yang dipublikasikan hPanel, membangun/mengunggah asset Vite, menjalankan migration additive, memastikan storage link, dan mengoptimalkan Laravel. GitHub Environment `staging` berisi secret SSH dan known-host verification; credential tidak dicatat di repository.
+- Workflow `Staging release #1` berhasil pada 2026-09-15 (43 detik) terhadap SHA `8dc28dfd2567c992b7277e471df6985633ea0891`. Verifikasi server setelah rilis membuktikan `public/build/manifest.json`, symlink `public/storage`, dan seluruh 12 migration batch 1 tersedia. HTTP tanpa credential tetap menghasilkan `401`.
+- Akses deployment memakai key terpisah yang dapat dicabut. Setelah audit filesystem account Hostinger yang disetujui owner, account tersebut hanya ditemukan memiliki dua domain Qammaris (`qammarisparfum.id` dan `staging.qammarisparfum.id`); pipeline hanya mengarah ke path staging. Production tidak disentuh.
 
 Review checkpoint berikutnya:
 
-- Sediakan identity deployment yang terbukti hanya dapat mengakses Qammaris staging (misalnya hosting/account terisolasi), baru konfigurasikan secret GitHub dan jalankan workflow terhadap revision staging yang sudah dipublikasikan hPanel. Jangan mengubah production.
+- Uji deploy ulang SHA yang sama untuk membuktikan idempotensi, lalu lakukan rollback asset/source staging yang terkontrol dan verifikasi aplikasi kembali sehat. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 
