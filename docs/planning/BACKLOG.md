@@ -116,11 +116,15 @@ Current progress:
 - Target aman ditetapkan berupa website staging terpisah pada `staging.qammarisparfum.id` atau temporary domain Hostinger, bukan direktori production aktif.
 - Domain utama dan deployment legacy harus tetap hidup sampai staging lulus, backup production terakhir telah diunduh, dan cutover mendapat approval owner.
 - Dokumentasi Hostinger mengonfirmasi GitHub OAuth dapat digunakan tanpa setup SSH key dan target branch/root directory dapat dipilih, tetapi pemasangan atau penggantian repository dapat menimpa direktori target.
-- Repository saat ini mengecualikan `vendor` dan `public/build`; dokumentasi hPanel Git yang diperiksa belum membuktikan adanya build hook untuk Composer/npm/Artisan. Mekanisme release final harus dipilih dan dibuktikan pada staging, tidak diasumsikan.
+- Website staging terpisah telah dibuat, memakai PHP 8.2, dilindungi HTTP password, dan mempunyai database/user MySQL khusus staging.
+- hPanel Git telah terhubung hanya ke repository Qammaris dan branch `modernization/phase-1-foundation`; deployment manual commit `240f94e` berhasil ke `public_html` tanpa menyentuh production.
+- Build log membuktikan Composer dijalankan otomatis. npm/Vite dan migration Artisan belum dijalankan atau dibuktikan.
+- Request awal menghasilkan `403 Forbidden` karena entry point Laravel berada di `public/`; root `.htaccess` ditambahkan untuk layout fixed-document-root Hostinger dan masih memerlukan redeploy serta health check.
+- Auto-deploy tetap nonaktif.
 
 Owner checkpoint berikutnya:
 
-- Buka dashboard hPanel website Qammaris untuk verifikasi jenis paket, kemampuan menambah staging/subdomain, versi PHP 8.2+, dan pilihan Git yang benar. Jangan menghapus website, file, database, atau menghubungkan repository ke `public_html` production pada checkpoint ini.
+- Redeploy perubahan layout ke staging, buat `.env` staging tanpa memasukkan credential ke Git, buktikan strategi build Vite, jalankan migration pada database staging, lalu lakukan health check. Jangan mengubah production.
 
 ### P1-04 Production backup dan cutover preflight — BACKLOG
 

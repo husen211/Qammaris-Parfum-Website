@@ -1,17 +1,25 @@
 # Runbook Rencana Deployment Hostinger melalui GitHub
 
-**Status:** P1-03 sedang berjalan — discovery lokal selesai, perubahan hPanel belum dilakukan
+**Status:** P1-03 sedang berjalan — staging terpisah dan deployment Git pertama telah dibuat
 
 ## Tujuan
 
 Menjadikan repository GitHub sebagai source of truth source code Qammaris tanpa menjadikan Git sebagai penyimpanan `.env`, database, atau upload media.
 
-## Batas saat ini
+## Kondisi staging yang sudah dibuktikan (2026-09-15)
 
-- Belum ada repository yang dihubungkan ke hPanel oleh program modernisasi.
-- Belum ada auto-deployment yang diaktifkan.
-- Belum ada staging Hostinger yang diverifikasi.
-- Tidak ada migration atau cutover production yang diizinkan oleh runbook ini.
+- Website terpisah tersedia pada `staging.qammarisparfum.id`; website production lama tidak diubah.
+- PHP staging menggunakan versi 8.2.
+- Directory `/` pada staging dilindungi HTTP password melalui hPanel.
+- Database dan user MySQL khusus staging telah dibuat dan tidak memakai database production.
+- hPanel Git terhubung hanya ke repository `Qammaris-Parfum-Website`, branch `modernization/phase-1-foundation`.
+- Deployment manual commit `240f94e` ke `public_html` selesai dalam 16 detik.
+- Build log membuktikan hPanel menjalankan `composer install --prefer-dist --quiet --no-interaction`, lalu publishing.
+- Build log belum menunjukkan eksekusi `npm ci`, `npm run build`, atau migration Artisan.
+- Auto-deploy belum diaktifkan.
+- Request awal ke staging menghasilkan `403 Forbidden` karena document root paket tetap `public_html`, sedangkan entry point Laravel berada di `public/`.
+
+Tidak ada migration atau cutover production yang diizinkan oleh runbook ini.
 
 ## Aturan cutover domain utama
 
@@ -85,7 +93,7 @@ Mengubah repository atau target deployment dapat menimpa isi direktori target. K
 
 ## Gap yang harus dibuktikan pada staging
 
-hPanel Git mendokumentasikan clone/redeploy source dari branch GitHub, tetapi panduan yang diperiksa belum menjamin eksekusi otomatis `composer install`, `npm run build`, atau `php artisan migrate`. Pada repository ini, `vendor` dan `public/build` memang tidak disimpan di Git. Akibatnya, clone source mentah saja belum cukup untuk menjalankan aplikasi.
+hPanel Git telah terbukti menjalankan `composer install`, tetapi belum terbukti menjalankan `npm run build` atau `php artisan migrate`. Pada repository ini, `public/build` memang tidak disimpan di Git. Akibatnya, deployment source dan dependency PHP saja belum cukup untuk menjalankan aplikasi lengkap.
 
 Sebelum memilih mekanisme final, lakukan proof berikut pada staging:
 
@@ -99,9 +107,9 @@ Sebelum memilih mekanisme final, lakukan proof berikut pada staging:
 
 Jika built-in hPanel Git tidak menyediakan build hook, jangan commit `vendor`, `.env`, atau upload production sebagai jalan pintas. Pilih pipeline release terkontrol (misalnya GitHub Actions yang membangun artifact dan menjalankan deployment otomatis dengan credential khusus ber-scope minimum) atau evaluasi hosting yang mempunyai deployment hook Laravel. Keputusan ini harus dicatat setelah kemampuan paket Hostinger benar-benar terlihat di hPanel.
 
-## Keputusan layout yang masih diperlukan
+## Keputusan layout staging
 
-Sebelum staging dibuat, tentukan salah satu layout Hostinger yang didukung dan uji bahwa hanya folder `public` yang dapat dilayani web. Jangan mengarang path dari kondisi lokal. Document root, symlink, Composer behavior, dan kemampuan build harus dibuktikan pada staging.
+Paket shared hosting mempertahankan `public_html` sebagai document root. Repository menggunakan `.htaccess` pada root untuk mengarahkan request ke `public/`, mengikuti pola deployment Laravel yang didokumentasikan Hostinger. File `public/.htaccess` tetap menjadi front controller Laravel. Layout ini harus diuji ulang setelah redeploy dan pemeriksaan akses file sensitif.
 
 ## Checklist deployment
 
