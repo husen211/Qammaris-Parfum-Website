@@ -756,6 +756,51 @@ Verification:
 - Implementasi tercatat pada commit `81cf3bc` (`feat: add r2 media copy verification`).
 - CI GitHub Actions untuk commit implementasi lulus pada run `35059749288` (push) dan `35059752504` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
+### P4-04 R2 staging copy verification — BLOCKED
+
+Outcome:
+
+- Seluruh media produk yang direferensikan metadata tersalin ke bucket R2 khusus Qammaris dan terbukti identik sebelum disk aktif atau URL publik dipertimbangkan untuk dialihkan.
+
+In scope:
+
+- Bucket R2 khusus Qammaris dengan token S3 `Object Read & Write` yang dibatasi hanya ke bucket tersebut.
+- Credential disimpan pada environment operator/staging yang aman, tidak di Git, database, manifest, atau output terminal.
+- Dry-run terhadap source `public` dan target `r2` tanpa mengubah source, database, atau disk aktif.
+- Apply copy, verifikasi SHA-256/ukuran, rerun idempotent, serta review manifest untuk seluruh referenced object.
+- Verifikasi bahwa local source tetap tersedia sebagai rollback source.
+
+Out of scope:
+
+- Mengganti `PRODUCT_MEDIA_DISK`, mengaktifkan upload/read production dari R2, menghubungkan custom domain, public production delivery, cleanup local/orphan file, atau deployment production.
+
+Dependencies:
+
+- Owner mengaktifkan Cloudflare R2, membuat bucket, dan menyediakan credential S3 bucket-scoped melalui channel aman atau memberi izin eksplisit untuk mengontrol dashboard Cloudflare.
+- P4-03 command copy-verify sudah selesai dan teruji.
+
+Risks:
+
+- Pembuatan R2 merupakan perubahan pada layanan eksternal dan dapat melibatkan aktivasi billing; tidak boleh dilakukan tanpa tindakan/izin owner.
+- Secret hanya ditampilkan satu kali saat token dibuat dan tidak boleh ditempel ke chat, Git, dokumentasi, atau log.
+
+Acceptance criteria:
+
+- Preflight credential berhasil tanpa mencetak nilainya.
+- Dry-run selesai tanpa failure/conflict dan merencanakan seluruh referenced object yang belum ada.
+- Apply menghasilkan hanya `copied_verified` atau `already_verified`; source tidak terhapus.
+- Rerun apply menghasilkan `already_verified` untuk seluruh referenced object.
+- Count, ukuran, dan checksum sesuai manifest; credential tidak muncul pada file atau output version control.
+- Database, active product disk, staging public traffic, dan production tidak berubah.
+
+Verification:
+
+- Preflight lokal 2026-09-16 mengonfirmasi disk aktif tetap `public` dan target tetap `r2`.
+- `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT`, dan `R2_URL` belum tersedia pada environment lokal.
+- GitHub Environment `staging` hanya mempunyai secret deployment SSH; belum mempunyai secret R2.
+- Tidak ada koneksi, bucket creation, copy, cutover, atau perubahan data/media yang dijalankan.
+- Blocker: owner perlu mengaktifkan R2 dan membuat bucket/token bucket-scoped, atau membuka dashboard Cloudflare dan memberi izin eksplisit untuk setup tersebut.
+
 ## P5 — Admin Panel V2 captured requirements
 
 ### P5-01 Preserve catalog working context — BACKLOG

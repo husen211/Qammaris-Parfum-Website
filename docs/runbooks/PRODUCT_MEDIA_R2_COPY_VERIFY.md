@@ -11,9 +11,13 @@ Status: foundation lokal; bucket/credential R2 nyata dan cutover belum dijalanka
 
 ## Prasyarat environment
 
-1. Buat bucket R2 khusus Qammaris.
-2. Buat API token Read & Write yang dibatasi hanya ke bucket tersebut.
-3. Simpan nilai berikut di environment staging/host, bukan Git:
+1. Aktifkan Cloudflare R2 pada account owner. Aktivasi layanan/billing dilakukan owner; agent tidak melakukannya tanpa izin eksplisit.
+2. Buat bucket R2 khusus Qammaris. Bucket private secara default dan tidak perlu dibuat public untuk tahap copy-verify.
+3. Dari halaman R2, buat API token dengan permission `Object Read & Write` dan `Apply to specific buckets only` untuk bucket Qammaris tersebut. Jangan gunakan permission admin account-wide.
+4. Salin Access Key ID dan Secret Access Key ke password manager saat token dibuat; Secret Access Key tidak dapat ditampilkan ulang.
+5. Simpan credential ke environment operator/staging melalui secret manager, bukan chat, Git, dokumentasi, database, atau shell history.
+6. Gunakan S3 endpoint yang ditampilkan Cloudflare. Untuk bucket jurisdiction default formatnya `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`; region tetap `auto`.
+7. Simpan nilai berikut di environment staging/host, bukan Git:
 
 ```dotenv
 R2_ACCESS_KEY_ID=
@@ -26,6 +30,8 @@ PRODUCT_MEDIA_TARGET_DISK=r2
 ```
 
 Dokumentasi resmi: [Laravel S3-compatible filesystems](https://laravel.com/framework/docs/11.x/filesystem#amazon-s3-compatible-filesystems) dan [Cloudflare R2 S3 API](https://developers.cloudflare.com/r2/get-started/s3/).
+
+Jangan aktifkan `r2.dev` atau custom domain pada tahap copy-verify. Public delivery dan cutover mempunyai gate terpisah setelah object target terbukti lengkap.
 
 ## Dry-run
 
