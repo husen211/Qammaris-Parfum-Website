@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\ProductImage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -33,7 +34,7 @@ class ProductStoreRequest extends FormRequest
             'variants.*.price' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
             'variants.*.stock' => ['required', 'integer', 'min:0', 'max:999999'],
             'variants.*.sku' => ['nullable', 'string', 'max:255', 'distinct', 'unique:product_variants,sku'],
-            'images' => ['required', 'array', 'min:1', 'max:3'],
+            'images' => ['required', 'array', 'min:1', 'max:'.ProductImage::MAX_PER_PRODUCT],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];
     }

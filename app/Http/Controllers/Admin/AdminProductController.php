@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Products\AttachProductImage;
 use App\Actions\Products\SyncSingleOffer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductStoreRequest;
@@ -59,6 +60,7 @@ class AdminProductController extends Controller
     public function store(
         ProductStoreRequest $request,
         SyncSingleOffer $syncSingleOffer,
+        AttachProductImage $attachProductImage,
         ProductMediaStorage $productMediaStorage
     ) {
         // ... (Gunakan kode STORE dari jawaban sebelumnya)
@@ -98,12 +100,7 @@ class AdminProductController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
                     $path = $this->storeProductImage($image, $storedImagePaths, $productMediaStorage);
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $path,
-                        'is_primary' => $index == 0,
-                        'sort_order' => $index,
-                    ]);
+                    $attachProductImage->handle($product, $path, $index === 0);
                 }
             }
 
@@ -133,6 +130,7 @@ class AdminProductController extends Controller
         ProductUpdateRequest $request,
         $id,
         SyncSingleOffer $syncSingleOffer,
+        AttachProductImage $attachProductImage,
         ProductMediaStorage $productMediaStorage
     ) {
         // ... (Gunakan kode UPDATE dari jawaban sebelumnya)
@@ -166,24 +164,9 @@ class AdminProductController extends Controller
             $syncSingleOffer->handle($product, $offerData);
 
             if ($request->hasFile('new_images')) {
-                $lastSort = $product->images()->max('sort_order') ?? 0;
-                $hasPrimary = $product->images()->where('is_primary', true)->exists();
-
-                foreach ($request->file('new_images') as $index => $image) {
-                    $lastSort++;
+                foreach ($request->file('new_images') as $image) {
                     $path = $this->storeProductImage($image, $storedImagePaths, $productMediaStorage);
-                    $setPrimary = ! $hasPrimary && $index === 0;
-
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $path,
-                        'is_primary' => $setPrimary,
-                        'sort_order' => $lastSort,
-                    ]);
-
-                    if ($setPrimary) {
-                        $hasPrimary = true;
-                    }
+                    $attachProductImage->handle($product, $path);
                 }
             }
 

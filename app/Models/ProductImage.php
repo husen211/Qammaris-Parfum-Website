@@ -10,6 +10,8 @@ class ProductImage extends Model
 {
     use HasFactory;
 
+    public const MAX_PER_PRODUCT = 3;
+
     public const PLACEHOLDER_URL = 'https://placehold.co/600x600/F5F5F5/333?text=No+Image';
 
     protected $fillable = [

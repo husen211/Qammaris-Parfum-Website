@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -59,7 +60,7 @@ class ProductUpdateRequest extends FormRequest
                 'distinct',
                 Rule::unique('product_variants', 'sku')->ignore($offerId),
             ],
-            'new_images' => ['nullable', 'array', 'max:3'],
+            'new_images' => ['nullable', 'array', 'max:'.ProductImage::MAX_PER_PRODUCT],
             'new_images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];
     }
@@ -104,7 +105,7 @@ class ProductUpdateRequest extends FormRequest
         $productId = $product instanceof Product ? $product->getKey() : $product;
         $existingImageCount = Product::whereKey($productId)->first()?->images()->count() ?? 0;
 
-        if ($existingImageCount + $newImageCount > 3) {
+        if ($existingImageCount + $newImageCount > ProductImage::MAX_PER_PRODUCT) {
             $validator->errors()->add(
                 'new_images',
                 'Produk hanya boleh memiliki maksimum tiga gambar.'

@@ -657,6 +657,62 @@ Verification:
 - Tidak ada perubahan tampilan, schema, data, media, staging, atau production. Verifikasi browser tidak berlaku karena item ini mengubah boundary storage backend tanpa mengubah markup/UI.
 - CI GitHub Actions untuk commit implementasi `2f3c15f` lulus pada run `35056320507` (push) dan `35056322360` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
+### P4-02 Shared media attachment dan primary lifecycle — IN_REVIEW
+
+Outcome:
+
+- Admin, import, dan API masa depan memakai operasi domain yang sama untuk menambahkan gambar serta memilih primary image tanpa membuat primary ganda atau melewati batas tiga gambar.
+
+In scope:
+
+- Operasi transactional untuk attach metadata gambar dengan maksimum tiga gambar per produk.
+- Gambar pertama otomatis menjadi primary; primary baru menurunkan primary sebelumnya secara atomik.
+- Operasi terpisah untuk memilih primary existing yang wajib dimiliki produk pada scope-nya.
+- Admin product create/update memakai operasi bersama setelah upload file terverifikasi.
+- Regression test untuk invariant primary, idempotency, ownership, batas tiga gambar, dan cleanup ketika attach gagal.
+
+Out of scope:
+
+- Penghapusan/penggantian file lama, reorder UI, redesign media editor, schema constraint baru, R2, remote image acquisition, staging, dan production.
+
+Dependencies:
+
+- P4-01 product media storage boundary dan maksimal tiga gambar pada business rules.
+
+Risks:
+
+- Database lintas MySQL/SQLite tidak menyediakan partial unique constraint portable untuk primary image; invariant dijaga dengan lock product dan operasi domain bersama.
+
+Acceptance criteria:
+
+- Attach pertama selalu menghasilkan tepat satu primary image meskipun caller tidak meminta primary.
+- Metadata baru hanya dapat dibuat untuk object key canonical di direktori produk yang benar-benar tersedia pada disk terkonfigurasi.
+- Attach primary baru mempertahankan metadata/file existing dan memastikan hanya satu primary.
+- Attach keempat ditolak tanpa mengubah metadata existing.
+- Pemilihan primary mempertahankan ID, path, dan urutan serta menolak image milik product lain.
+- Controller tidak membuat `ProductImage` langsung untuk alur create/update.
+- Data/media existing tidak ditulis ulang atau dihapus.
+- Focused test, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Audit lokal sebelum/sesudah tetap `19` metadata pada `14` produk, tanpa produk di atas tiga gambar, tanpa koleksi bergambar yang kehilangan primary, tanpa primary ganda, dan maksimum existing tiga gambar.
+- Focused media/admin regression test lulus: `24 passed (93 assertions)`; seluruh test Laravel lulus: `76 passed (315 assertions)`.
+- Controller create/update tidak lagi membuat `ProductImage` secara langsung; upload terverifikasi diteruskan ke operasi `AttachProductImage`.
+- Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
+- Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Tidak ada schema, metadata/file existing, tampilan, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini mengubah operasi media backend tanpa mengubah markup/UI.
+- Masukan owner tentang preservasi page/search/filter/sort setelah edit dicatat pada business rules dan `P5-01`; tidak diselipkan ke scope media.
+- CI GitHub Actions menunggu commit implementasi.
+
+## P5 — Admin Panel V2 captured requirements
+
+### P5-01 Preserve catalog working context — BACKLOG
+
+- Catalog manager membawa page, search, filter, dan sort ke product editor melalui return context yang tervalidasi.
+- Setelah simpan atau batal, admin kembali ke konteks daftar sebelumnya dan tidak dipaksa mengulang navigasi dari halaman pertama.
+- Perilaku fallback tetap aman bila context hilang, kedaluwarsa, atau mengarah keluar aplikasi.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

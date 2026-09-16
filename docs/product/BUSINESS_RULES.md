@@ -116,6 +116,7 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 5. Informasi harga, ukuran, availability, dan primary action harus terlihat tanpa scroll berlebihan pada viewport umum.
 6. Semua loading, empty, error, validation, success, dan retry state harus dirancang.
 7. Perubahan UX wajib diverifikasi pada mobile dan desktop.
+8. Setelah menyimpan atau membatalkan edit dari catalog manager, admin kembali ke konteks daftar sebelumnya selama masih valid, termasuk page, search, filter, dan sort; alur kerja berulang tidak boleh selalu di-reset ke halaman pertama.
 
 ## Non-goals program saat ini
 

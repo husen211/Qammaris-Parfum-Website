@@ -13,9 +13,9 @@ class ProductMediaStorage
     public function store(UploadedFile $file): string
     {
         $path = $file->store($this->directory(), $this->diskName());
-        $path = $this->normalizeLocalPath($path);
+        $path = $this->normalizeProductPath($path);
 
-        if ($path === null || ! $this->disk()->exists($path)) {
+        if ($path === null || ! $this->exists($path)) {
             throw new RuntimeException('Uploaded product image could not be verified on storage.');
         }
 
@@ -101,6 +101,31 @@ class ProductMediaStorage
         }
 
         return $path;
+    }
+
+    public function normalizeProductPath(mixed $storedPath): ?string
+    {
+        $path = $this->normalizeLocalPath($storedPath);
+        $prefix = $this->directory().'/';
+
+        return $path !== null && str_starts_with($path, $prefix) ? $path : null;
+    }
+
+    public function exists(string $storedPath): bool
+    {
+        $path = $this->normalizeProductPath($storedPath);
+
+        if ($path === null) {
+            return false;
+        }
+
+        try {
+            return $this->disk()->exists($path);
+        } catch (Throwable $error) {
+            report($error);
+
+            return false;
+        }
     }
 
     public function diskName(): string
