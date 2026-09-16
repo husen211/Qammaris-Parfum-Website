@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BlogPostStoreRequest;
 use App\Http\Requests\Admin\BlogPostUpdateRequest;
 use App\Models\BlogPost;
+use App\Support\BlogHtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -57,9 +58,10 @@ class AdminBlogPostController extends Controller
         return view('admin.blog-posts.create', compact('categories'));
     }
 
-    public function store(BlogPostStoreRequest $request)
+    public function store(BlogPostStoreRequest $request, BlogHtmlSanitizer $sanitizer)
     {
         $payload = $request->validated();
+        $payload['content'] = $sanitizer->sanitize($payload['content']);
 
         if ($request->hasFile('featured_image')) {
             $path = $request->file('featured_image')->store('blog', 'public');
@@ -87,9 +89,14 @@ class AdminBlogPostController extends Controller
         return view('admin.blog-posts.edit', compact('blogPost', 'categories'));
     }
 
-    public function update(BlogPostUpdateRequest $request, BlogPost $blogPost)
+    public function update(
+        BlogPostUpdateRequest $request,
+        BlogPost $blogPost,
+        BlogHtmlSanitizer $sanitizer
+    )
     {
         $payload = $request->validated();
+        $payload['content'] = $sanitizer->sanitize($payload['content']);
 
         if ($request->hasFile('featured_image')) {
             $this->deleteFeaturedImage($blogPost);

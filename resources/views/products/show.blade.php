@@ -1,7 +1,42 @@
 @extends('layouts.app')
 
-@section('title', $product->name . ' - ' . $product->brand->name)
-@section('meta_description', Str::limit($product->description, 160))
+@php
+    $brandName = $product->brand?->name ?? 'Brand';
+    $minVariantPrice = $product->variants->min('price');
+    $displayPrice = $minVariantPrice ?? $product->base_price;
+    $descriptionText = $product->description ?? '';
+    $productJsonLd = [
+        chr(64).'context' => 'https://schema.org',
+        chr(64).'type' => 'Product',
+        'name' => $product->name,
+        'description' => Str::limit($descriptionText, 200),
+        'image' => $product->primaryImage?->image_url ?? asset('images/logo.png'),
+        'brand' => [
+            chr(64).'type' => 'Brand',
+            'name' => $brandName,
+        ],
+    ];
+
+    if ($displayPrice !== null) {
+        $productJsonLd['offers'] = [
+            chr(64).'type' => 'Offer',
+            'priceCurrency' => 'IDR',
+            'price' => $displayPrice,
+            'url' => route('products.show', $product->slug),
+        ];
+    }
+
+    $productJsonLdFlags = JSON_UNESCAPED_SLASHES
+        | JSON_UNESCAPED_UNICODE
+        | JSON_HEX_TAG
+        | JSON_HEX_AMP
+        | JSON_HEX_APOS
+        | JSON_HEX_QUOT
+        | JSON_THROW_ON_ERROR;
+@endphp
+
+@section('title', $product->name . ' - ' . $brandName)
+@section('meta_description', Str::limit($descriptionText, 160))
 @section('og_type', 'product')
 @section('og_image', $product->primaryImage?->image_url ?? asset('images/logo.png'))
 
@@ -15,7 +50,11 @@
             <span>/</span>
             <a href="{{ route('products.index') }}" class="hover:text-brand-black transition-colors">Katalog</a>
             <span>/</span>
-            <a href="{{ route('products.index', ['brand' => $product->brand_id]) }}" class="hover:text-brand-black transition-colors">{{ $product->brand->name }}</a>
+            @if($product->brand_id)
+                <a href="{{ route('products.index', ['brand' => $product->brand_id]) }}" class="hover:text-brand-black transition-colors">{{ $brandName }}</a>
+            @else
+                <span class="text-gray-400">{{ $brandName }}</span>
+            @endif
             <span>/</span>
             <span class="text-brand-black font-bold border-b border-brand-black pb-0.5">{{ $product->name }}</span>
         </nav>
@@ -27,7 +66,7 @@
                 <div class="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible hide-scrollbar w-full lg:w-20 shrink-0 pb-2 lg:pb-0">
                     {{-- Primary thumbnail (first) --}}
                     <button onclick="changeMainImage('{{ $product->primaryImage?->image_url ?? $product->primaryImageSafe?->image_url }}')" class="w-16 h-16 lg:w-full lg:h-20 aspect-square border border-gray-200 hover:border-brand-black p-1 transition-all shrink-0 bg-white">
-                        <img src="{{ $product->primaryImage?->image_url ?? ($product->primaryImageSafe?->image_url ?? 'https://placehold.co/400x500/F5F5F5/333?text=' . urlencode($product->brand->name)) }}" class="w-full h-full object-cover" alt="{{ $product->name }} thumbnail">
+                        <img src="{{ $product->primaryImage?->image_url ?? ($product->primaryImageSafe?->image_url ?? 'https://placehold.co/400x500/F5F5F5/333?text=' . urlencode($brandName)) }}" class="w-full h-full object-cover" alt="{{ $product->name }} thumbnail">
                     </button>
 
                     @foreach($product->images as $image)
@@ -55,9 +94,15 @@
             <div class="flex flex-col h-full pt-2">
                 <div class="mb-6">
                     <div class="flex items-center justify-between mb-2">
-                        <a href="{{ route('products.index', ['brand' => $product->brand_id]) }}" class="text-xs font-bold text-brand-emerald uppercase tracking-[0.2em] hover:underline">
-                            {{ $product->brand->name }}
-                        </a>
+                        @if($product->brand_id)
+                            <a href="{{ route('products.index', ['brand' => $product->brand_id]) }}" class="text-xs font-bold text-brand-emerald uppercase tracking-[0.2em] hover:underline">
+                                {{ $brandName }}
+                            </a>
+                        @else
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">
+                                {{ $brandName }}
+                            </span>
+                        @endif
                     </div>
                     
                     <h1 class="font-mayluxa text-3xl lg:text-5xl text-brand-black mb-4 leading-tight">
@@ -65,13 +110,13 @@
                     </h1>
                     
                     <div class="flex items-end gap-3">
-                        @if ($product->compare_at_price && $product->compare_at_price > $product->variants->min('price'))
+                        @if ($product->compare_at_price && $displayPrice && $product->compare_at_price > $displayPrice)
                             <div class="text-xs md:text-sm text-gray-400 line-through" id="compareAtPrice" data-compare-at="{{ $product->compare_at_price }}">
                                 {{ format_rupiah($product->compare_at_price) }}
                             </div>
                         @endif
                         <div class="text-2xl lg:text-3xl font-medium text-brand-black" id="displayPrice">
-                            {{ format_rupiah($product->variants->first()->price) }}
+                            {{ $displayPrice ? format_rupiah($displayPrice) : 'Hubungi kami' }}
                         </div>
                     </div>
                 </div>
@@ -79,7 +124,7 @@
                 <div class="w-full h-px bg-gray-100 my-6"></div>
 
                 <div class="prose prose-sm max-w-none text-gray-600 font-light leading-relaxed mb-8 text-justify">
-                    <p>{{ $product->description }}</p>
+                    <p>{{ $descriptionText }}</p>
                 </div>
 
                 <div class="space-y-8 mb-8">
@@ -91,7 +136,7 @@
                         </div>
                         
                         <div class="flex flex-wrap gap-3">
-                            @foreach($product->variants as $variant)
+                            @forelse($product->variants as $variant)
                             <label class="cursor-pointer group relative">
                                 <input type="radio" name="variant" value="{{ $variant->id }}" 
                                     data-price="{{ $variant->price }}"
@@ -105,7 +150,9 @@
                                     {{ $variant->volume }}ml
                                 </div>
                             </label>
-                            @endforeach
+                            @empty
+                                <span class="text-xs text-gray-400">Varian belum tersedia.</span>
+                            @endforelse
                         </div>
                     </div>
 
@@ -177,7 +224,7 @@
                     </a>
                 </div>
                 <div class="text-center">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">{{ $related->brand->name }}</p>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">{{ $related->brand?->name ?? 'Brand' }}</p>
                     <h3 class="font-mayluxa text-base md:text-lg mb-1 group-hover:text-brand-gold transition-colors">
                         <a href="{{ route('products.show', $related->slug) }}">{{ $related->name }}</a>
                     </h3>
@@ -363,23 +410,6 @@ async function addToCart() {
 
 @push('jsonld')
 <script type="application/ld+json">
-{!! json_encode([
-    '@context' => 'https://schema.org',
-    '@type' => 'Product',
-    'name' => $product->name,
-    'description' => Str::limit($product->description, 200),
-    'image' => $product->primaryImage?->image_url ?? asset('images/logo.png'),
-    'brand' => [
-        '@type' => 'Brand',
-        'name' => $product->brand->name,
-    ],
-    'offers' => [
-        '@type' => 'Offer',
-        'priceCurrency' => 'IDR',
-        'price' => $product->variants->min('price'),
-        'availability' => 'https://schema.org/InStock',
-        'url' => route('products.show', $product->slug),
-    ],
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+{!! json_encode($productJsonLd, $productJsonLdFlags) !!}
 </script>
 @endpush

@@ -138,30 +138,33 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div class="flex justify-between items-center mb-5 pb-2 border-b border-gray-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900">Variants & Pricing</h3>
-                            <p class="text-xs text-gray-500 mt-1">Add at least one size and price.</p>
-                        </div>
-                        <button type="button" onclick="addVariant()" class="text-xs bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded transition shadow-sm">+ Add Variant</button>
+                    <div class="mb-5 pb-2 border-b border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-900">Ukuran & Harga</h3>
+                        <p class="text-xs text-gray-500 mt-1">Satu produk katalog menggunakan satu ukuran dan satu harga jual.</p>
                     </div>
-                    
-                    <div id="variants-container" class="space-y-3">
-                        {{-- Default first variant --}}
-                        <div class="variant-row grid grid-cols-1 sm:grid-cols-7 gap-3 items-end bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Volume (ml)</label>
-                                <input type="number" name="variants[0][volume]" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black" placeholder="100" required>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Price (Rp)</label>
-                                <input type="number" name="variants[0][price]" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black" placeholder="500000" required>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Stock</label>
-                                <input type="number" name="variants[0][stock]" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black" placeholder="10" required>
-                            </div>
-                            <div class="sm:col-span-1"></div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div>
+                            <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) <span class="text-red-500">*</span></label>
+                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" required>
+                            @error('variants.0.volume')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) <span class="text-red-500">*</span></label>
+                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" required>
+                            @error('variants.0.price')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="offer-stock" class="block text-xs font-medium text-gray-600 mb-1">Snapshot Stok <span class="text-red-500">*</span></label>
+                            <input id="offer-stock" type="number" name="variants[0][stock]" value="{{ old('variants.0.stock', 0) }}" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.stock') border-red-500 @enderror" required>
+                            <p class="mt-1 text-xs text-gray-400">Bukan jaminan stok live.</p>
+                            @error('variants.0.stock')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -209,42 +212,6 @@
 </div>
 
 <script>
-    let variantIndex = 1;
-
-    function addVariant() {
-        const container = document.getElementById('variants-container');
-        const html = `
-            <div class="variant-row grid grid-cols-1 sm:grid-cols-7 gap-3 items-end bg-gray-50 p-4 rounded-lg border border-gray-200 animate-fade-in-up relative" id="variant-${variantIndex}">
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Volume (ml)</label>
-                    <input type="number" name="variants[${variantIndex}][volume]" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black" required>
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Price (Rp)</label>
-                    <input type="number" name="variants[${variantIndex}][price]" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black" required>
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Stock</label>
-                    <input type="number" name="variants[${variantIndex}][stock]" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black" required>
-                </div>
-                <div class="sm:col-span-1 flex justify-end sm:justify-center">
-                    <button type="button" onclick="removeVariant(${variantIndex})" class="text-red-400 hover:text-red-600 p-2 rounded hover:bg-red-50 transition focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Remove variant" title="Remove variant">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-        variantIndex++;
-    }
-
-    function removeVariant(index) {
-        const row = document.getElementById(`variant-${index}`);
-        if (row) {
-            row.remove();
-        }
-    }
-
     function previewImages(input) {
         const container = document.getElementById('image-preview-container');
         container.innerHTML = '';

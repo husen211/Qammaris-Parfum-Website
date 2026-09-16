@@ -1,0 +1,955 @@
+# Qammaris Modernization Backlog
+
+## Status workflow
+
+- `BACKLOG`: belum siap dikerjakan.
+- `READY`: scope dan acceptance criteria sudah lengkap.
+- `IN_PROGRESS`: sedang dikerjakan; WIP limit satu item utama.
+- `IN_REVIEW`: implementasi selesai dan menunggu review/verifikasi.
+- `BLOCKED`: blocker dan kebutuhan penyelesaian harus ditulis.
+- `DONE`: acceptance criteria dan verifikasi selesai.
+
+## Program board
+
+| ID | Phase | Status | Dependency | Outcome |
+|---|---|---|---|---|
+| P0 | Discovery & decisions | DONE | — | Baseline lokal, keterbatasan production, dan keputusan domain terdokumentasi |
+| P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
+| P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
+| P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
+| P4 | Media storage | IN_PROGRESS | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
+| P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
+| P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
+| P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
+| P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
+| P9 | Hardening & cutover | BACKLOG | P1–P8 | Production launch dan observation selesai |
+
+## P0 — Discovery & decisions
+
+### P0-01 Production baseline — DONE
+
+Kumpulkan tanpa mengubah production:
+
+- URL/repository/deployed commit.
+- Jenis paket Hostinger dan layout document root.
+- PHP/MySQL/Node versions.
+- Migration status dan schema dump.
+- Jumlah product/variant/image/brand/category.
+- Format path gambar dan jumlah file.
+- Backup/restore capability.
+- Sample export Majoo/Shopee jika tersedia.
+
+*Catatan: Baseline lokal telah selesai dan terverifikasi aman. Audit production ditunda berdasarkan keputusan eksplisit owner (lihat ADR-001). Seluruh unknown pada Hostinger telah didokumentasikan di `CURRENT_STATE.md` sebagai keterbatasan P0-01.*
+
+Definition of Done:
+
+- Semua fakta disimpan di `docs/architecture/CURRENT_STATE.md`.
+- Unknown tetap ditandai unknown; tidak ditebak.
+- Tidak ada credential atau data customer masuk dokumentasi/Git.
+
+### P0-02 Product decisions — DONE
+
+Konfirmasi:
+
+- Required/optional fields produk.
+- Apakah harga selalu ditampilkan.
+- Freshness window availability.
+- Perlakuan produk ukuran berbeda.
+- Publication completeness rules.
+- Kategori/filter customer yang benar-benar berguna.
+
+*Catatan: keputusan telah disetujui owner pada 2026-09-14 dan dicatat pada `BUSINESS_RULES.md` serta `ADR-002-kontrak-produk-katalog.md`.*
+
+Definition of Done:
+
+- `BUSINESS_RULES.md` disetujui owner.
+- Perubahan keputusan dicatat sebagai ADR bila memengaruhi schema/architecture.
+
+## P1 — Safety, backup, staging & Git
+
+### P1-01 Local safety dan verified snapshot — DONE
+
+Outcome:
+
+- Branch kerja `modernization/phase-1-foundation` terpisah dari `main`.
+- Database bisnis, media, perubahan tracked user, dan governance mempunyai snapshot di luar repository.
+- Dump database berhasil direstore ke database sementara dan record count cocok.
+- Seluruh 38 file media cocok berdasarkan SHA-256.
+- `.env` lokal menggunakan mode local dan URL localhost.
+- `public/storage` menunjuk target repository aktif.
+
+Known limitation:
+
+- Tabel runtime lokal `sessions` terindikasi korup dan membuat full dump MariaDB gagal. Tabel runtime dikecualikan dari backup bisnis dan aplikasi lokal memakai file session. Tidak ada repair/drop yang dilakukan.
+
+### P1-02 Reproducible setup dan CI — DONE
+
+Outcome target:
+
+- `.env.example`, runtime version, lockfile, README, dan runbook dapat digunakan dari fresh clone.
+- GitHub CI menjalankan Composer validation, Laravel test, dan frontend build tanpa deployment.
+- Seluruh check wajib hijau sebelum item selesai.
+
+Current verification:
+
+- Composer metadata valid.
+- Frontend build berhasil dengan peringatan bundle besar.
+- Laravel test lulus: 2 test, 3 assertion, termasuk homepage tanpa seeded store information.
+- `composer audit` dan `npm audit` melaporkan 0 advisory/vulnerability setelah lockfile diperbarui dalam constraint yang disetujui.
+- Branch `modernization/phase-1-foundation` telah dipush tanpa mengubah `main`.
+- GitHub Actions run `34871619589` lulus pada commit `e135986`: job PHP 8.2/Laravel dan Node/Vite sama-sama hijau.
+- Workflow hanya melakukan validation, install, test, dan build; tidak memuat langkah deployment.
+
+### P1-03 Staging topology dan hPanel Git — DONE
+
+Outcome target:
+
+- Layout document root Laravel dibuktikan pada staging.
+- hPanel Git terhubung ke branch staging dengan scope minimum.
+- `.env`, database, dan storage staging terpisah.
+- Auto-deploy tetap nonaktif sampai install/build/migration/rollback terbukti aman.
+
+Tidak dieksekusi pada local foundation dan membutuhkan tindakan owner di hPanel.
+
+Current progress:
+
+- Target aman ditetapkan berupa website staging terpisah pada `staging.qammarisparfum.id` atau temporary domain Hostinger, bukan direktori production aktif.
+- Domain utama dan deployment legacy harus tetap hidup sampai staging lulus, backup production terakhir telah diunduh, dan cutover mendapat approval owner.
+- Dokumentasi Hostinger mengonfirmasi GitHub OAuth dapat digunakan tanpa setup SSH key dan target branch/root directory dapat dipilih, tetapi pemasangan atau penggantian repository dapat menimpa direktori target.
+- Website staging terpisah telah dibuat, memakai PHP 8.2, dilindungi HTTP password, dan mempunyai database/user MySQL khusus staging.
+- hPanel Git telah terhubung hanya ke repository Qammaris dan branch `modernization/phase-1-foundation`; deployment manual commit `240f94e` berhasil ke `public_html` tanpa menyentuh production.
+- Build log membuktikan Composer dijalankan otomatis, tetapi Hostinger tidak menyediakan Node/npm. Vite dibangun lokal secara reproducible dan `public/build` diunggah sebagai artefak staging.
+- Root `.htaccess` pada commit `8dc28df` berhasil mengarahkan fixed document root ke `public/`; homepage, katalog, dan asset CSS menghasilkan HTTP `200` setelah asset tersedia.
+- `.env` berpermission `0600`, database kosong khusus staging, 12 migration batch 1, storage link, dan cache Laravel telah dibuat serta diverifikasi.
+- HTTP Basic Auth terverifikasi menghasilkan `401` tanpa credential dan `200` dengan credential. Deploy Git dapat menimpa aturan auth sehingga pemasangan ulang wajib menjadi bagian release procedure.
+- Auto-deploy telah dinonaktifkan. Production tetap tidak disentuh.
+- Workflow manual `Staging release` memverifikasi SHA source yang dipublikasikan hPanel, membangun/mengunggah asset Vite, menjalankan migration additive, memastikan storage link, dan mengoptimalkan Laravel. GitHub Environment `staging` berisi secret SSH dan known-host verification; credential tidak dicatat di repository.
+- Workflow `Staging release #1` berhasil pada 2026-09-15 (43 detik) terhadap SHA `8dc28dfd2567c992b7277e471df6985633ea0891`. Verifikasi server setelah rilis membuktikan `public/build/manifest.json`, symlink `public/storage`, dan seluruh 12 migration batch 1 tersedia. HTTP tanpa credential tetap menghasilkan `401`.
+- Workflow `Staging release #2` berhasil pada 2026-09-15 (35 detik) terhadap SHA yang sama. Tidak ada migration pending setelah release ulang; build, storage link, dan Basic Auth tetap valid. Ini membuktikan release asset/migration yang sama dapat dijalankan ulang pada staging.
+- Rollback asset staging terkontrol telah diuji: build backup dengan manifest berbeda diaktifkan sementara melalui rename, manifest tervalidasi, lalu build aktif dipulihkan. Dua folder rollback asset dipertahankan sebagai bukti; tidak ada data, media, source, atau production yang berubah.
+- Pemeriksaan rollback source menunjukkan checkout hPanel staging detached dan shallow: `git log` hanya berisi commit aktif `8dc28df`. Karena tidak ada history atau branch checkout pada server, rollback source tidak boleh dipaksakan dari filesystem staging.
+- Branch referensi `staging/known-good-8dc28df` telah dipush dan diverifikasi menunjuk tepat ke SHA staging sehat `8dc28dfd2567c992b7277e471df6985633ea0891`. Branch ini belum dipilih di hPanel dan tidak mengubah staging/production; branch tersebut menjadi ref source yang aman untuk recovery release berikutnya.
+- Akses deployment memakai key terpisah yang dapat dicabut. Setelah audit filesystem account Hostinger yang disetujui owner, account tersebut hanya ditemukan memiliki dua domain Qammaris (`qammarisparfum.id` dan `staging.qammarisparfum.id`); pipeline hanya mengarah ke path staging. Production tidak disentuh.
+
+Close-out review:
+
+- Acceptance gate P1-03 dinyatakan lulus pada 2026-09-15: staging terpisah, source revision, environment/database/storage, workflow manual, idempotensi, proteksi akses, dan rollback asset mempunyai bukti verifikasi.
+- Pada release source staging berikutnya, gunakan branch `staging/known-good-8dc28df` sebagai ref recovery bila release baru gagal, lalu jalankan health check autentik penuh. Ini adalah kewajiban operasi release berikutnya, bukan izin mengubah production.
+
+### P1-04 Production backup dan cutover preflight — BACKLOG
+
+Membutuhkan staging hijau, backup production terbaru, recovery evidence, serta approval owner. Tidak boleh dimulai dari development lokal.
+
+## P2 — Tests & catalog safety
+
+### P2-01 Public visibility dan variant ownership — DONE
+
+Outcome:
+
+- Produk nonaktif tidak dapat dibuka langsung atau dimasukkan ke cart.
+- Update produk admin tidak dapat mengubah variant milik produk lain.
+
+In scope:
+
+- Regression test untuk detail produk, cart add/update, dan update variant admin.
+- Guard pada controller/request tanpa mengubah schema atau UI.
+
+Out of scope:
+
+- Publication/availability schema baru.
+- Redesign katalog atau admin.
+- Perubahan harga, data, media, dan production.
+
+Acceptance criteria:
+
+- Detail produk nonaktif menghasilkan `404` tanpa menaikkan view count.
+- Variant nonaktif atau milik produk nonaktif ditolak dari cart.
+- Variant aktif milik produk aktif tetap dapat ditambahkan ke cart.
+- ID variant pada update admin wajib dimiliki produk pada route.
+- Seluruh test Laravel lulus.
+
+Verification:
+
+- Baseline sebelum fix: 4 test gagal dan membuktikan seluruh guard belum tersedia.
+- Setelah fix: seluruh suite lulus, 8 test dan 18 assertion menggunakan SQLite in-memory.
+- PHP syntax check lulus untuk seluruh file PHP yang diubah.
+- Laravel Pint lulus untuk request dan test baru. Controller existing masih mempunyai style debt lama; tidak diformat massal agar diff tetap fokus.
+- GitHub Actions CI run `34955143898` lulus: PHP 8.2/Laravel tests dan Node/Vite build hijau.
+- Tidak ada migration, perubahan schema/data/media, UI, staging, atau production.
+
+### P2-02 Admin product validation boundaries — DONE
+
+Outcome:
+
+- Admin tidak dapat menyimpan data produk yang melanggar batas schema atau keputusan katalog.
+
+In scope:
+
+- Validasi brand aktif, gender, deskripsi/notes, ukuran, harga, stok, compare-at price, dan maksimum tiga gambar.
+- Regression test create/update menggunakan SQLite dan storage fake.
+
+Out of scope:
+
+- Draft/publication schema, external product code, import engine, dan download gambar remote.
+- Perubahan UI, database nyata, staging, atau production.
+
+Acceptance criteria:
+
+- Gender hanya menerima Unisex, Pria, atau Wanita.
+- Ukuran dan harga jual lebih dari nol; stok tidak negatif.
+- Compare-at price kosong atau lebih besar dari harga jual terendah.
+- Produk mempunyai maksimum tiga gambar total.
+- Brand nonaktif ditolak untuk create/update baru.
+- Produk existing tetap dapat mempertahankan brand lama yang kemudian dinonaktifkan.
+- Jalur create valid dengan tiga gambar tetap berhasil.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Seluruh suite lokal lulus: 16 test dan 50 assertion menggunakan SQLite in-memory serta storage fake.
+- Laravel Pint lulus untuk kedua Form Request dan seluruh test P2.
+- PHP syntax check dan `git diff --check` lulus.
+- GitHub Actions CI run `34958077412` lulus untuk PHP 8.2/Laravel tests dan Node/Vite build.
+- Tidak ada migration, perubahan schema/data/media nyata, UI, staging, atau production.
+
+### P2-03 Transaction-safe product image uploads — DONE
+
+Outcome:
+
+- Kegagalan database setelah upload gambar tidak meninggalkan file baru yatim atau perubahan produk setengah jadi.
+
+In scope:
+
+- Verifikasi hasil penyimpanan file gambar pada create/update produk.
+- Cleanup file yang baru diunggah jika transaksi database gagal.
+- Pesan error generik kepada admin dan pelaporan exception internal.
+- Regression test dengan storage fake dan kegagalan model yang disengaja.
+
+Out of scope:
+
+- Penghapusan produk/gambar existing, migrasi storage, dan remote image download.
+- Perubahan schema, UI, staging, atau production.
+
+Acceptance criteria:
+
+- Create yang gagal setelah satu atau lebih upload melakukan rollback database dan membersihkan seluruh file baru.
+- Update yang gagal mempertahankan data/file existing dan membersihkan seluruh file baru.
+- File yang dilaporkan tersimpan wajib terbukti tersedia pada disk.
+- Detail exception tidak ditampilkan kepada admin.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (11 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `18 passed (61 assertions)`.
+- PHP syntax check untuk controller dan regression test lulus.
+- Pint check untuk regression test baru dan `git diff --check` lulus.
+- CI GitHub Actions run `34958515257` lulus untuk commit implementasi `82906c5`.
+- Tidak ada schema, data/media nyata, UI, staging, atau production yang diubah.
+
+### P2-04 Login throttling — DONE
+
+Outcome:
+
+- Endpoint login dilindungi dari percobaan password berulang tanpa mengubah alur autentikasi existing.
+
+In scope:
+
+- Rate limit kegagalan login berdasarkan kombinasi email yang dinormalisasi dan alamat IP.
+- Pesan kegagalan tetap generik dan penghitung dibersihkan setelah login berhasil.
+- Regression test untuk lockout, isolasi identity key, dan pemulihan setelah penghitung dibersihkan.
+
+Out of scope:
+
+- Perubahan UI login, reset password, MFA, permission/role redesign, staging, dan production.
+
+Acceptance criteria:
+
+- Maksimum lima kegagalan login diizinkan dalam jendela satu menit untuk identity key yang sama.
+- Percobaan berikutnya ditolak walaupun password benar sampai window berakhir atau counter dibersihkan.
+- Email berbeda pada IP yang sama tidak menggunakan counter yang sama.
+- Login berhasil membersihkan counter miliknya.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `3 passed (38 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `21 passed (99 assertions)`.
+- Pint, PHP syntax check, dan `git diff --check` lulus untuk file P2-04.
+- CI GitHub Actions run `34958978794` lulus untuk commit implementasi `101088d`.
+- Tidak ada schema, data/media, UI, staging, atau production yang diubah.
+
+### P2-05 Checkout cart integrity — DONE
+
+Outcome:
+
+- Inquiry WhatsApp dibangun dari produk, brand, variant, dan harga terbaru di database; bukan dari snapshot session yang mungkin kedaluwarsa.
+
+In scope:
+
+- Validasi ulang seluruh item cart saat checkout terhadap variant dan produk aktif.
+- Tolak checkout jika variant hilang/nonaktif, produk nonaktif, quantity tidak valid, atau stok existing tidak mencukupi.
+- Gunakan nama, brand, ukuran, dan harga authoritative dari database saat membangun pesan WhatsApp.
+- Regression test untuk item tidak tersedia dan snapshot session kedaluwarsa.
+
+Out of scope:
+
+- Availability schema baru, perubahan jaminan stok, redesign cart, payment checkout, staging, dan production.
+
+Acceptance criteria:
+
+- Produk/variant tidak aktif atau hilang tidak dapat dikirim sebagai inquiry.
+- Checkout tidak mempercayai nama, brand, ukuran, atau harga dari session.
+- Quantity wajib integer positif dan masih mengikuti pengecekan stok existing.
+- Checkout valid tetap mengarah ke WhatsApp dengan data database terbaru.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `3 passed (13 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `24 passed (112 assertions)`.
+- Regression test baru lulus Pint; controller dan test lulus PHP syntax check serta `git diff --check`.
+- `CartController` mempunyai style debt pre-existing di luar diff dan sengaja tidak diformat massal.
+- CI GitHub Actions run `34959341933` lulus untuk commit implementasi `6c21d60`.
+- Tidak ada schema, data/media, UI, staging, atau production yang diubah.
+
+### P2-06 Safe rich-text rendering — DONE
+
+Outcome:
+
+- Konten artikel tetap mendukung rich text dasar tanpa dapat menyisipkan script atau atribut HTML berbahaya ke halaman publik.
+
+In scope:
+
+- Sanitizer HTML allowlist berbasis DOM bawaan PHP tanpa dependency baru.
+- Sanitasi saat admin menyimpan artikel dan sanitasi ulang saat artikel ditampilkan untuk melindungi data legacy.
+- Pertahankan elemen editorial dasar dan batasi atribut/link/image URL.
+- Regression test untuk script, event handler, iframe, dan skema URL berbahaya.
+
+Out of scope:
+
+- Redesign blog/editor, migrasi isi artikel lama, WYSIWYG baru, schema, staging, dan production.
+
+Acceptance criteria:
+
+- Script, embedded executable content, event attributes, dan URL `javascript:` tidak muncul pada respons publik.
+- Paragraph, heading, emphasis, list, quote, code, table, safe link, dan safe image tetap didukung.
+- Konten baru disimpan dalam bentuk tersanitasi; record lama juga aman ketika dirender.
+- Tidak ada dependency baru atau perubahan visual untuk markup yang diizinkan.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (18 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `26 passed (130 assertions)`.
+- Pint lulus untuk sanitizer dan regression test baru.
+- Seluruh file PHP yang diubah lulus syntax check dan `git diff --check`.
+- CI GitHub Actions run `34960008760` lulus untuk commit implementasi `47ca61a`.
+- Tidak ada schema, migrasi data/media, perubahan visual, staging, atau production yang diubah.
+
+### P2-07 Safe global head metadata and JSON-LD — DONE
+
+Outcome:
+
+- Metadata HTML global di-escape pada context atribut/teks dan JSON-LD Organization/WebSite menjadi JSON valid serta aman dari penutupan tag script.
+
+In scope:
+
+- Normalisasi section title, description, robots, Open Graph type, dan image menjadi variabel layout yang di-escape.
+- Serialisasi dua schema JSON-LD global dengan key `@context` yang valid dan JSON hex flags.
+- Regression test memakai metadata hostile serta parsing seluruh JSON-LD global.
+
+Out of scope:
+
+- Product JSON-LD pada `resources/views/products/show.blade.php` karena file tersebut mempunyai perubahan lokal owner yang wajib dipertahankan.
+- Perubahan visual, SEO content strategy, schema/data, staging, dan production.
+
+Acceptance criteria:
+
+- Metadata dari child view tidak dapat keluar dari `<title>` atau atribut `<meta>`.
+- Dua blok JSON-LD global dapat di-decode sebagai JSON dan mempunyai key `@context` yang benar.
+- Output JSON-LD tidak mengandung artefak kompilasi Blade/PHP atau literal `</script>` dari data.
+- Tidak ada perubahan visual dan seluruh test Laravel/CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (15 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `28 passed (145 assertions)`.
+- Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`.
+- Test baru lulus Pint dan PHP syntax check; `git diff --check` lulus.
+- CI GitHub Actions run `34960419263` lulus untuk commit implementasi `d042b4f`.
+- Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
+
+### P2-08 Blog publication visibility — DONE
+
+Outcome:
+
+- Artikel draft, tanpa tanggal publish, atau terjadwal di masa depan tidak dapat dibuka langsung melalui slug publik.
+
+In scope:
+
+- Satukan aturan visibility artikel pada model dan gunakan pada detail publik.
+- Regression test untuk draft, missing date, scheduled, dan published article.
+
+Out of scope:
+
+- Redesign blog/admin, workflow approval editorial, schema/data, staging, dan production.
+
+Acceptance criteria:
+
+- Detail publik menghasilkan `404` untuk draft, artikel tanpa tanggal publish, dan artikel terjadwal.
+- Artikel published dengan waktu yang sudah lewat tetap menghasilkan `200`.
+- Request tidak valid tidak menambah view count.
+- Listing/category/sitemap tetap menggunakan scope publication existing.
+- Seluruh test Laravel dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `4 passed (8 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `32 passed (153 assertions)`.
+- Regression test baru lulus Pint; model/controller/test lulus PHP syntax check serta `git diff --check`.
+- `BlogPost` mempunyai style debt pre-existing di luar diff dan sengaja tidak diformat massal.
+- CI GitHub Actions run `34960611351` lulus untuk commit implementasi `e675601`.
+- Tidak ada schema, data/media, perubahan visual, staging, atau production yang diubah.
+
+### P2-09 Product detail JSON-LD reconciliation — DONE
+
+Outcome:
+
+- Product JSON-LD menjadi valid dan aman tanpa kehilangan perubahan owner pada halaman detail produk.
+
+Dependency:
+
+- Perubahan lokal owner di `resources/views/products/show.blade.php` harus direkonsiliasi tanpa di-stage atau ditimpa oleh agent.
+
+Known issue:
+
+- Inline key `@context` dapat diproses sebagai directive Blade dan serialisasi saat ini belum memakai JSON hex flags.
+
+Acceptance criteria:
+
+- Seluruh perubahan fallback/null-safety owner pada halaman detail dipertahankan.
+- Product JSON-LD dapat di-decode dan mempunyai key `@context`/`@type` yang benar.
+- Nama/deskripsi hostile tidak dapat menutup tag JSON-LD script.
+- Availability tidak diklaim `InStock` sebelum semantics Phase 3 tersedia.
+- Product tanpa variant tetap memakai `base_price`; guard tanpa harga disiapkan untuk draft nullable pada Phase 3.
+- Seluruh test Laravel, kompilasi Blade, dan CI lulus.
+
+Verification:
+
+- Focused regression test lulus: `2 passed (12 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `34 passed (165 assertions)`.
+- Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`.
+- Regression test baru lulus Pint/PHP syntax check dan `git diff --check` lulus.
+- Perubahan fallback/null-safety owner dipertahankan dan kini masuk dalam scope commit atas persetujuan eksplisit owner.
+- CI GitHub Actions run `34971935885` lulus untuk commit implementasi `0b207d9`.
+
+### P2-10 Destructive product/media behavior — DONE
+
+Outcome:
+
+- Penghapusan product/image tidak menyebabkan kehilangan metadata, file hilang yang masih direferensikan, atau orphan media saat salah satu storage/database operation gagal.
+
+Owner decision:
+
+- Tombol hapus produk legacy diubah menjadi archive/nonaktif yang dapat dipulihkan. Hard delete product dan media tidak tersedia dari admin pada tahap ini.
+
+Acceptance criteria:
+
+- Request `DELETE` resource product legacy hanya mengubah `is_active` menjadi `false` dan bersifat idempotent.
+- Product ID, slug, variant, metadata image, dan file media tetap utuh setelah archive.
+- Admin dapat mengaktifkan kembali produk yang sudah diarsipkan.
+- Katalog admin menampilkan status aktif/diarsipkan serta label aksi dan konfirmasi yang menjelaskan dampaknya.
+- Customer/non-admin tidak dapat menjalankan archive atau restore.
+- Endpoint dan kontrol hapus gambar legacy tidak menghapus metadata atau file; penghapusan aman ditunda ke Phase 4.
+
+Implementation:
+
+- Aksi resource `DELETE` product kini mengubah `is_active` menjadi `false`; product, slug, variant, metadata gambar, dan file tidak dihapus.
+- Route `PATCH admin/products/{product}/restore` mengaktifkan kembali produk secara idempotent.
+- Catalog manager legacy menampilkan status `Aktif`/`Diarsipkan`, aksi arsip yang tidak memakai affordance hard delete, serta konfirmasi yang menjelaskan data dan gambar tetap disimpan.
+- Endpoint hapus gambar legacy dipertahankan sebagai no-op terotorisasi dan kontrol hapusnya di editor dihilangkan; admin menerima penjelasan bahwa penggantian/penghapusan aman disiapkan pada Phase 4.
+
+Verification:
+
+- Focused regression test lulus: `7 passed (33 assertions)`.
+- Seluruh Laravel test lulus lokal pada PHP 8.2.12: `41 passed (198 assertions)`.
+- Seluruh Blade template berhasil dikompilasi dengan `artisan view:cache`; production asset build Vite berhasil.
+- Pint untuk controller, route, dan regression test baru lulus; PHP syntax check dan `git diff --check` lulus.
+- Flow browser lokal aktif → arsip → restore berhasil dengan pesan/status yang sesuai.
+- Admin catalog dan product editor diverifikasi pada viewport `1440x900` dan `390x844`; tidak ada page-level horizontal overflow atau browser console error. Table catalog mobile tetap memakai internal horizontal scroll legacy.
+- Data audit sementara dibersihkan; jumlah produk lokal kembali `180`. Tidak ada schema, data/media existing, staging, atau production yang diubah.
+- CI GitHub Actions run `34974320829` lulus untuk commit implementasi `81115c1`.
+
+## P3 — Product domain & migrations
+
+### P3-01 Publication dan availability foundation — DONE
+
+Outcome:
+
+- Publication dan availability menjadi state domain yang terpisah tanpa mengubah ID, slug, harga, variant, media, atau URL existing.
+
+In scope:
+
+- Migration additive untuk `publication_status`, `published_at`, `archived_at`, `availability_status`, `stock_quantity`, `availability_source`, dan `availability_checked_at`.
+- Mapping compatibility `is_active=true` ke `published` dan `is_active=false` ke `archived` untuk data existing.
+- Scope publik eksplisit `published` dengan `is_active` tetap menjadi guard transisi.
+- Freshness rule 36 jam untuk status `available`; `sold_out` tetap eksplisit sampai diperbarui.
+- Archive/restore admin menyinkronkan status baru dan field compatibility lama.
+
+Out of scope:
+
+- Perubahan UI admin/public, filter availability, dan penampilan quantity.
+- Draft dengan field nullable, optional SKU, price authority, external provider mapping, serta reconciliation data.
+- Staging migration dan production deployment.
+
+Acceptance criteria:
+
+- Migration bersifat additive dan mempertahankan seluruh product ID/slug serta record terkait.
+- Hanya produk `published` dengan compatibility guard aktif yang dapat diakses katalog, detail, related products, sitemap, dan cart.
+- Produk draft/archived tidak dapat diakses publik; sold out tidak otomatis diarsipkan.
+- `available` tanpa pemeriksaan atau yang lebih lama dari 36 jam dibaca sebagai `unknown`.
+- Archive/restore idempotent dan menyinkronkan `publication_status`, timestamp, serta `is_active`.
+- Regression test, migration round-trip pada database kosong, seluruh test Laravel, dan CI lulus.
+
+Verification:
+
+- Migration lokal berhasil pada database berisi `180` produk. Jumlah record tetap `180`, seluruh produk legacy aktif terpetakan ke `published`, seluruh availability terinisialisasi `unknown`, dan checksum identitas `id:slug` tetap `75e4cf84ef65227df2fbf74279d689c59a0ff737f893a2c8004da92676f820de` sebelum maupun setelah migration.
+- Migration `up -> down -> up` berhasil pada database SQLite kosong sementara; file database sementara sudah dibersihkan.
+- Seluruh test Laravel lulus: `48 passed (224 assertions)`.
+- `composer validate --strict`, Vite production build, Blade clear/cache, Laravel Pint untuk seluruh file PHP yang diubah, pemeriksaan syntax PHP, dan `git diff --check` lulus. Pint tingkat repository masih mendeteksi formatting legacy pada file di luar scope P3-01. Vite hanya melaporkan warning existing untuk DaisyUI `@property` dan chunk `about-lanyard` yang besar.
+- Tidak ada UI, media, staging, atau production yang diubah. Verifikasi viewport browser tidak berlaku karena item ini tidak mengubah tampilan.
+- CI GitHub Actions untuk commit implementasi `6684f33` lulus pada run `35049913891` (push) dan `35049916555` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+### P3-02 Draft fields, one-offer price authority, dan optional SKU — DONE
+
+Outcome:
+
+- Draft dapat disimpan hanya dengan nama kerja, sedangkan produk lengkap menggunakan tepat satu offer sebagai sumber ukuran dan harga jual.
+
+In scope:
+
+- Membuat brand, kategori, deskripsi, `base_price`, dan gender nullable untuk draft tanpa mengubah nilai record existing.
+- Membuat SKU offer nullable dan menghentikan pembuatan SKU acak.
+- Membatasi satu offer teknis per produk serta mempertahankan ID offer existing ketika diedit.
+- Menyinkronkan `products.base_price` hanya dari harga offer melalui satu application operation.
+- Menyederhanakan bagian ukuran/harga form admin legacy menjadi satu offer tanpa redesign admin panel.
+
+Out of scope:
+
+- Workflow tombol simpan draft/publish dan daftar alasan draft belum publish; masuk Admin Panel V2.
+- Reconciliation 116 produk tanpa offer, enam harga tidak valid, dan 26 konflik harga existing.
+- External provider mapping, bulk import, update harga massal, media, staging, dan production.
+
+Acceptance criteria:
+
+- Draft bernama dapat disimpan pada domain tanpa brand, kategori, deskripsi, gender, harga, offer, atau gambar.
+- Form admin legacy hanya menerima satu offer dengan ukuran dan harga valid.
+- SKU kosong tersimpan sebagai `null`; tidak ada SKU acak baru.
+- Create/update offer menyinkronkan `base_price`, mempertahankan ID offer saat update, dan menolak offer milik produk lain.
+- Migration tidak mengubah ID, slug, harga, SKU, offer, atau media existing dan constraint satu-offer telah dipastikan aman dari audit lokal.
+- Relevant tests, migration round-trip, seluruh test Laravel, browser mobile/desktop, build, dan CI lulus.
+
+Verification:
+
+- Audit pre-migration memastikan `180` produk, `64` offer, tidak ada produk dengan lebih dari satu offer, dan tidak ada SKU duplikat.
+- Migration lokal berhasil tanpa update record. Count tetap `180` produk dan `64` offer; checksum produk `d3f59d5f53d20ae380946c61f7ebbd3dc3b512643ec294a827f14ebef5589532` serta checksum offer `0d91092d3d993d953855e64d22a50eb8964c7563210f7d832ee1742afb5a3511` identik sebelum/sesudah migration.
+- Migration `up -> down -> up` berhasil pada database SQLite sementara dan file sementara sudah dibersihkan.
+- Relevant tests lulus `24 passed (91 assertions)` dan seluruh test Laravel lulus `55 passed (254 assertions)`.
+- Composer strict validation, Blade clear/cache, syntax PHP, Laravel Pint untuk file yang diubah, `git diff --check`, dan Vite production build lulus. Warning existing DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Browser lokal memverifikasi create, edit dengan offer, edit tanpa offer, native required validation, dan urutan keyboard pada `390x844` serta `1440x900`. Lebar dokumen sama dengan viewport pada keduanya, tombol Add Variant berjumlah nol, hanya tiga field offer tampil, dan console tidak memiliki warning/error.
+- Baseline sebelum perubahan diaudit dari implementasi Blade/Git existing; screenshot sebelum tidak tersedia karena akses admin lokal belum tersedia saat baseline. Screenshot sesudah perubahan diverifikasi langsung pada kedua viewport.
+- Akun admin sintetis lokal dibuat khusus verifikasi dan tepat satu record tersebut telah dihapus kembali. Tidak ada produk/media test tersimpan.
+- Tidak ada staging, production, media existing, nilai harga existing, SKU existing, ID, atau slug yang diubah.
+- CI GitHub Actions untuk commit implementasi `b09a284` lulus pada run `35054778566` (push) dan `35054781975` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+### P3-03 External product identity boundary — DONE
+
+Outcome:
+
+- Kode produk Shopee/Majoo dapat dipetakan secara idempotent ke product internal tanpa mengganti ID, slug, atau SKU katalog.
+
+In scope:
+
+- Tabel mapping terpisah untuk provider dan kode produk eksternal.
+- Constraint satu kode eksternal hanya dapat dimiliki satu product dalam provider yang sama.
+- Constraint satu product hanya mempunyai satu identity untuk setiap provider.
+- Operasi domain bersama untuk normalisasi, pencocokan idempotent, dan penolakan konflik mapping.
+- Relasi Eloquent dan regression test untuk isolation antar-provider serta perlindungan identity internal.
+
+Out of scope:
+
+- Upload/import spreadsheet, integrasi API Shopee/Majoo, sinkronisasi stok/harga, pencocokan berdasarkan nama, UI admin, media, staging, dan production.
+
+Dependencies:
+
+- Kontrak identity pada `BUSINESS_RULES.md` dan product ID/slug existing yang wajib dipertahankan.
+
+Risks:
+
+- Rebinding kode provider dapat menggabungkan dua listing berbeda; karena itu mapping existing bersifat immutable dan konflik harus masuk review.
+
+Acceptance criteria:
+
+- Provider dinormalisasi ke lowercase dan kode eksternal di-trim tanpa dicampur dengan SKU offer.
+- Mapping ulang provider/kode/product yang sama bersifat idempotent dan mempertahankan ID mapping.
+- Kode yang sama dapat digunakan provider berbeda, tetapi duplikat dalam provider yang sama ditolak.
+- Product yang sudah mempunyai identity pada sebuah provider tidak dapat di-rebind ke kode baru; listing provider yang dibuat ulang harus menjadi draft baru.
+- Migration additive tidak mengubah record product, variant, media, ID, slug, harga, atau SKU existing.
+- Focused test, migration round-trip, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Migration lokal membuat tabel mapping kosong tanpa mengubah data existing. Count tetap `180` produk, `64` offer, dan `19` image; checksum product `f866dfdd36f21bae071fbce45d44444c0b27b407e323fad88951e5c82d4d1285` serta offer `3a41523458121b2be1db0c1314e909e611880c3a96db0ffb67f7433925623e77` identik sebelum/sesudah migration.
+- Migration `up -> down -> up` berhasil pada database SQLite kosong sementara dan file sementara sudah dibersihkan.
+- Focused regression test lulus: `9 passed (22 assertions)`; seluruh test Laravel lulus: `64 passed (276 assertions)`.
+- Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
+- Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Tidak ada UI, media, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini hanya mengubah domain/schema backend.
+- CI GitHub Actions untuk commit implementasi `6e92e0a` lulus pada run `35055611565` (push) dan `35055613609` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+## P4 — Media storage
+
+### P4-01 Product media storage boundary dan local inventory — DONE
+
+Outcome:
+
+- Upload dan pembacaan gambar produk menggunakan satu boundary Laravel Filesystem yang disk-nya dapat diganti melalui environment tanpa mengubah domain/controller.
+
+In scope:
+
+- Inventory metadata dan file produk lokal tanpa mengubah atau menghapus data/media.
+- Konfigurasi disk serta direktori khusus media produk dengan default compatibility `public`.
+- Service untuk normalisasi object key legacy, upload-terverifikasi, URL resolution, dan rollback cleanup.
+- Mengganti hardcoded disk pada `ProductImage` dan admin upload dengan service bersama.
+- Regression test untuk configurable disk, path legacy, missing file, pencegahan remote hotlink, dan rollback upload.
+
+Out of scope:
+
+- Instalasi adapter S3, pembuatan bucket/R2 credential, copy file ke cloud, perubahan metadata massal, orphan cleanup, UI media, remote image acquisition, staging, dan production.
+
+Dependencies:
+
+- P2-03 transaction-safe upload, P2-10 destructive media guard, dan aturan copy-verify-switch-retain.
+
+Risks:
+
+- Path production belum diaudit penuh; compatibility reader harus tetap mendukung format legacy `storage/` dan `public/` tanpa menulis ulang record.
+
+Acceptance criteria:
+
+- Disk upload/read/delete produk ditentukan oleh `PRODUCT_MEDIA_DISK`, bukan hardcoded `public` pada model/controller.
+- Upload baru menghasilkan object key relatif canonical di direktori `products` dan diverifikasi tersedia sebelum metadata dianggap sukses.
+- Path legacy `storage/...` dan `public/...` tetap dapat dibaca tanpa migrasi data.
+- Path hilang/tidak aman dan URL remote menghasilkan placeholder sehingga halaman publik tidak melakukan hotlink provider.
+- Kegagalan transaksi tetap membersihkan hanya file baru pada disk yang dikonfigurasi.
+- Tidak ada metadata/file existing yang dipindah, ditulis ulang, atau dihapus.
+- Focused test, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Inventory lokal sebelum/sesudah implementasi tetap `19` metadata pada `14` produk, `14` primary image, `20` file pada direktori produk, tanpa metadata yang kehilangan file. Tidak ada metadata atau file yang ditulis ulang/dihapus.
+- Satu kandidat orphan `products/IeCuw7MDgiwWOxJGaJk8j3ZCe5BxKzvpiKwifR4u.jpg` hanya dicatat dan dipertahankan.
+- Seluruh 19 object key existing berhasil di-resolve melalui boundary baru pada disk `public` tanpa placeholder.
+- Focused storage/transaction test lulus: `7 passed (26 assertions)`; seluruh test Laravel lulus: `69 passed (291 assertions)`.
+- Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
+- Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Tidak ada perubahan tampilan, schema, data, media, staging, atau production. Verifikasi browser tidak berlaku karena item ini mengubah boundary storage backend tanpa mengubah markup/UI.
+- CI GitHub Actions untuk commit implementasi `2f3c15f` lulus pada run `35056320507` (push) dan `35056322360` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+### P4-02 Shared media attachment dan primary lifecycle — DONE
+
+Outcome:
+
+- Admin, import, dan API masa depan memakai operasi domain yang sama untuk menambahkan gambar serta memilih primary image tanpa membuat primary ganda atau melewati batas tiga gambar.
+
+In scope:
+
+- Operasi transactional untuk attach metadata gambar dengan maksimum tiga gambar per produk.
+- Gambar pertama otomatis menjadi primary; primary baru menurunkan primary sebelumnya secara atomik.
+- Operasi terpisah untuk memilih primary existing yang wajib dimiliki produk pada scope-nya.
+- Admin product create/update memakai operasi bersama setelah upload file terverifikasi.
+- Regression test untuk invariant primary, idempotency, ownership, batas tiga gambar, dan cleanup ketika attach gagal.
+
+Out of scope:
+
+- Penghapusan/penggantian file lama, reorder UI, redesign media editor, schema constraint baru, R2, remote image acquisition, staging, dan production.
+
+Dependencies:
+
+- P4-01 product media storage boundary dan maksimal tiga gambar pada business rules.
+
+Risks:
+
+- Database lintas MySQL/SQLite tidak menyediakan partial unique constraint portable untuk primary image; invariant dijaga dengan lock product dan operasi domain bersama.
+
+Acceptance criteria:
+
+- Attach pertama selalu menghasilkan tepat satu primary image meskipun caller tidak meminta primary.
+- Metadata baru hanya dapat dibuat untuk object key canonical di direktori produk yang benar-benar tersedia pada disk terkonfigurasi.
+- Attach primary baru mempertahankan metadata/file existing dan memastikan hanya satu primary.
+- Attach keempat ditolak tanpa mengubah metadata existing.
+- Pemilihan primary mempertahankan ID, path, dan urutan serta menolak image milik product lain.
+- Controller tidak membuat `ProductImage` langsung untuk alur create/update.
+- Data/media existing tidak ditulis ulang atau dihapus.
+- Focused test, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Audit lokal sebelum/sesudah tetap `19` metadata pada `14` produk, tanpa produk di atas tiga gambar, tanpa koleksi bergambar yang kehilangan primary, tanpa primary ganda, dan maksimum existing tiga gambar.
+- Focused media/admin regression test lulus: `24 passed (93 assertions)`; seluruh test Laravel lulus: `76 passed (315 assertions)`.
+- Controller create/update tidak lagi membuat `ProductImage` secara langsung; upload terverifikasi diteruskan ke operasi `AttachProductImage`.
+- Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
+- Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Tidak ada schema, metadata/file existing, tampilan, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini mengubah operasi media backend tanpa mengubah markup/UI.
+- Masukan owner tentang preservasi page/search/filter/sort setelah edit dicatat pada business rules dan `P5-01`; tidak diselipkan ke scope media.
+- CI GitHub Actions untuk commit implementasi `16d29e1` lulus pada run `35058656237` (push) dan `35058658414` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+### P4-03 R2 copy-verify foundation — DONE
+
+Outcome:
+
+- Media produk dapat disalin secara non-destruktif dari disk aktif ke disk target S3-compatible dengan manifest dan verifikasi checksum sebelum cutover dipertimbangkan.
+
+In scope:
+
+- Adapter Flysystem S3 resmi untuk Laravel.
+- Disk Cloudflare R2 terpisah dengan credential/endpoint hanya dari environment.
+- Command inventory/copy dengan mode dry-run default dan flag apply eksplisit.
+- Hanya object key canonical yang direferensikan metadata produk yang diproses; source tidak pernah dihapus.
+- Target existing diverifikasi; mismatch tidak ditimpa otomatis.
+- Manifest JSON lokal berisi batch ID, disk, mode, checksum, ukuran, status, dan ringkasan tanpa credential.
+- Regression test menggunakan fake disks untuk dry-run, copy+verify, already verified, missing source, mismatch, dan idempotency.
+
+Out of scope:
+
+- Membuat bucket/token Cloudflare, mengisi credential nyata, menjalankan copy ke R2 nyata, mengganti `PRODUCT_MEDIA_DISK`, public delivery URL/domain, orphan cleanup, staging, dan production.
+
+Dependencies:
+
+- P4-01 storage boundary, P4-02 media lifecycle, serta konfigurasi bucket/token R2 milik owner pada tahap berikutnya.
+
+Risks:
+
+- Object storage bukan transaksi database; source harus tetap dipertahankan dan mismatch target wajib direview tanpa overwrite otomatis.
+
+Acceptance criteria:
+
+- Dry-run adalah default dan tidak menulis target.
+- Apply hanya menyalin object yang source-nya valid dan target belum ada.
+- Source dan target diverifikasi dengan SHA-256 serta ukuran setelah copy.
+- Target existing yang cocok menjadi `already_verified`; target mismatch dilaporkan dan tidak ditimpa.
+- Missing/invalid source tidak menghentikan seluruh batch tetapi menghasilkan status gagal dan exit code non-zero.
+- Manifest tidak memuat access key, secret, endpoint credential, atau isi file.
+- Tidak ada database, source media, staging, atau production yang diubah.
+- Focused test, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Adapter `league/flysystem-aws-s3-v3` versi `3.35.3` terpasang dan `composer validate --strict` lulus.
+- Command `product-media:copy-verify` terdaftar pada Artisan; default dry-run dan apply eksplisit dilindungi regression test.
+- Focused test lulus: `7 passed (40 assertions)`.
+- Seluruh test Laravel lulus: `83 passed (355 assertions)`.
+- Build Vite production lulus; warning existing DaisyUI `@property` dan chunk `about-lanyard` tetap dicatat sebagai pekerjaan optimasi terpisah.
+- Audit lokal read-only: 19 metadata `product_images`, 19 referensi unik, 0 referensi file hilang, dan 20 file pada direktori produk.
+- Database, source media, konfigurasi disk aktif, staging, dan production tidak diubah. Bucket/credential serta copy/cutover R2 nyata tetap belum dilakukan.
+- Implementasi tercatat pada commit `81cf3bc` (`feat: add r2 media copy verification`).
+- CI GitHub Actions untuk commit implementasi lulus pada run `35059749288` (push) dan `35059752504` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+### P4-04 R2 staging copy verification — DONE
+
+Outcome:
+
+- Seluruh media produk yang direferensikan metadata tersalin ke bucket R2 khusus Qammaris dan terbukti identik sebelum disk aktif atau URL publik dipertimbangkan untuk dialihkan.
+
+In scope:
+
+- Bucket R2 khusus Qammaris dengan token S3 `Object Read & Write` yang dibatasi hanya ke bucket tersebut.
+- Credential disimpan pada environment operator/staging yang aman, tidak di Git, database, manifest, atau output terminal.
+- Dry-run terhadap source `public` dan target `r2` tanpa mengubah source, database, atau disk aktif.
+- Apply copy, verifikasi SHA-256/ukuran, rerun idempotent, serta review manifest untuk seluruh referenced object.
+- Verifikasi bahwa local source tetap tersedia sebagai rollback source.
+
+Out of scope:
+
+- Mengganti `PRODUCT_MEDIA_DISK`, mengaktifkan upload/read production dari R2, menghubungkan custom domain, public production delivery, cleanup local/orphan file, atau deployment production.
+
+Dependencies:
+
+- Owner mengaktifkan Cloudflare R2, membuat bucket, dan menyediakan credential S3 bucket-scoped melalui channel aman atau memberi izin eksplisit untuk mengontrol dashboard Cloudflare.
+- P4-03 command copy-verify sudah selesai dan teruji.
+
+Risks:
+
+- Pembuatan R2 merupakan perubahan pada layanan eksternal dan dapat melibatkan aktivasi billing; tidak boleh dilakukan tanpa tindakan/izin owner.
+- Secret hanya ditampilkan satu kali saat token dibuat dan tidak boleh ditempel ke chat, Git, dokumentasi, atau log.
+
+Acceptance criteria:
+
+- Preflight credential berhasil tanpa mencetak nilainya.
+- Dry-run selesai tanpa failure/conflict dan merencanakan seluruh referenced object yang belum ada.
+- Apply menghasilkan hanya `copied_verified` atau `already_verified`; source tidak terhapus.
+- Rerun apply menghasilkan `already_verified` untuk seluruh referenced object.
+- Count, ukuran, dan checksum sesuai manifest; credential tidak muncul pada file atau output version control.
+- Database, active product disk, staging public traffic, dan production tidak berubah.
+
+Verification:
+
+- Preflight lokal 2026-09-16 mengonfirmasi disk aktif tetap `public` dan target tetap `r2`.
+- Bucket private `qammaris-website-media-staging` dibuat pada Cloudflare R2 dengan lokasi otomatis Asia Pacific dan standard storage class. Bucket operasional Qammaris App tidak diubah.
+- Token R2 `Object Read & Write` dibuat dengan scope hanya ke bucket `qammaris-website-media-staging`; token account-wide tidak digunakan.
+- GitHub Environment `staging` menyimpan `R2_ACCESS_KEY_ID` dan `R2_SECRET_ACCESS_KEY` sebagai encrypted secrets. Nilai credential tidak dicatat di chat, Git, dokumentasi, database, atau output terminal.
+- GitHub Environment `staging` menyimpan `R2_BUCKET`, `R2_ENDPOINT`, `R2_REGION`, dan `PRODUCT_MEDIA_TARGET_DISK` sebagai environment variables. `PRODUCT_MEDIA_DISK` tidak diubah dan public delivery tidak diaktifkan.
+- Credential dipasang langsung ke `.env` operator lokal yang diabaikan Git melalui bridge localhost sekali pakai; bridge dan tab langsung dibuang setelah penulisan. Pemeriksaan seluruh tracked file menemukan `0` credential leak.
+- Dry-run berhasil dengan `19 planned_copy`, tanpa failure atau conflict; manifest `01M2MGXXYD0ET75X6PFCT0T8XC.json` tidak menulis object target.
+- Apply berhasil dengan `19 copied_verified`; manifest `01M2MGZ47P565TKDDQRHNW1GX6.json`. Source lokal tetap tersedia seluruhnya.
+- Rerun apply berhasil dengan `19 already_verified`; manifest `01M2MGZRVK74Q4Y0Y6YXJAMHBX.json`, membuktikan idempotensi terhadap bucket nyata.
+- Verifikasi manifest terakhir mencatat `19` object, source dan target masing-masing `15.339.002` byte, serta `0` mismatch ukuran/SHA-256. Fingerprint gabungan kedua apply manifest identik.
+- Database lokal tetap `180` products dan `19` product images; `0` referenced source hilang. Disk aktif tetap `public`, target tetap `r2`, bucket tetap private, dan production/staging public traffic tidak berubah.
+- Focused regression test lulus: `7 passed (40 assertions)`. `composer validate --strict`, credential leak scan, dan `git diff --check` lulus.
+
+### P4-05 R2 staging delivery rehearsal — DONE
+
+Outcome:
+
+- Media R2 dapat dibaca melalui public development URL khusus bucket staging dan jalur write/read/delete sintetis terbukti sebelum disk aktif aplikasi dialihkan.
+
+In scope:
+
+- Public development URL `r2.dev` hanya untuk bucket `qammaris-website-media-staging` sebagai fallback staging sementara.
+- Kontrak `R2_URL` untuk URL object publik staging.
+- Verifikasi HTTPS, content type, content length, dan sample object yang sudah lolos copy-verify.
+- Rehearsal upload object sintetis, read/checksum, lalu cleanup object sintetis yang dibuat oleh rehearsal.
+- Bukti rollback dengan mempertahankan `PRODUCT_MEDIA_DISK=public` dan seluruh source lokal.
+
+Out of scope:
+
+- Mengubah production DNS/domain, mengaktifkan bucket Qammaris App, mengganti `PRODUCT_MEDIA_DISK` staging/production, memindahkan database/media source, cleanup 19 object hasil migrasi, atau deployment production.
+
+Dependencies:
+
+- P4-04 selesai dengan 19 object identik pada bucket R2 staging.
+- Public development URL Cloudflare R2 tersedia untuk rehearsal non-production.
+
+Risks:
+
+- Mengaktifkan `r2.dev` membuat seluruh object pada bucket dapat dibaca publik. Hanya media katalog staging yang boleh berada pada bucket ini.
+- `r2.dev` mempunyai rate limit dan tidak menyediakan Cloudflare Cache/WAF sehingga tidak boleh menjadi endpoint production.
+- Resolver DNS lokal saat rehearsal mengembalikan IPv4 non-Cloudflare untuk hostname `r2.dev`; verifikasi deterministik dilakukan ke edge Cloudflare dengan TLS/SNI tetap memakai hostname yang benar. Perbaikan DNS client/jaringan tetap diperlukan sebelum browser lokal dapat memakai URL tanpa override.
+
+Acceptance criteria:
+
+- Public development URL HTTPS berstatus aktif hanya pada bucket staging; custom domain production tetap belum dihubungkan.
+- Sample referenced image merespons `200` dengan MIME gambar dan ukuran yang cocok dengan manifest.
+- Object sintetis dapat ditulis, dibaca ulang dengan checksum identik, diakses melalui delivery URL, lalu dibersihkan tanpa menyentuh 19 object migrasi.
+- Database, disk aktif, source lokal, staging application traffic, dan production tidak berubah.
+- Credential tidak masuk Git, dokumentasi, URL, atau output terminal.
+
+Verification:
+
+- Cloudflare R2 mengaktifkan public development URL `https://pub-f71b3243d61541f5a14dba6a479ded39.r2.dev` hanya untuk bucket `qammaris-website-media-staging`; bucket Qammaris App tidak diubah.
+- GitHub Environment `staging` menyimpan `R2_URL` sebagai non-secret environment variable. Credential tetap berada pada encrypted secrets dan tidak ditampilkan.
+- Sample `products/b9A7Hqhl1hzuv47VovEM0QUWRIr0TmbFlL2eSWn1.jpg` merespons `200`, `image/jpeg`, `304.172` byte, dan SHA-256 `74911ab4f1b07d057bfa6c7a864d164ef71abae1d27df6a75229cd903560d1cc`, identik dengan manifest copy-verify.
+- Object sintetis `rehearsals/p4-05-01M2MJ2G93ECD6B0M3SAJNA4X0.png` berhasil ditulis dan dibaca melalui S3, diakses melalui HTTPS sebagai `image/png` berukuran `68` byte dengan checksum identik, lalu dihapus. Verifikasi akhir menemukan `0` object rehearsal P4-05 tersisa.
+- Database lokal tetap `180` products dan `19` product images; `19` referenced source unik tetap tersedia dan `0` source hilang. Disk aktif tetap `public`, target tetap `r2`.
+- Custom domain belum dapat dipasang karena zone `qammarisparfum.id` belum berada pada account Cloudflare/DNS yang sama. Tidak ada perubahan DNS, staging application traffic, deployment, atau production.
+- Resolver lokal mengarahkan IPv4 hostname `r2.dev` ke `202.169.44.80` dan timeout. Fetch verifikasi memakai edge Cloudflare `104.18.50.34` dengan hostname/TLS asli dan lulus; ini dicatat sebagai keterbatasan jaringan lokal, bukan kegagalan object R2.
+
+### P4-06 R2 staging application cutover rehearsal — IN_PROGRESS
+
+Outcome:
+
+- Aplikasi staging membaca dan menulis media produk melalui R2 dengan health check dan rollback ke disk `public` yang teruji, tanpa mengubah production.
+
+Dependencies:
+
+- P4-05 selesai.
+- DNS client/operator dapat mengakses delivery hostname secara normal atau staging memakai custom domain pada zone Cloudflare yang terkelola.
+- Snapshot database/media staging dan recovery ref tersedia sebelum cutover.
+
+In scope:
+
+- Workflow manual khusus staging yang memverifikasi revision sebelum perubahan.
+- Snapshot `.env` staging dengan permission tetap privat, cutover sementara `PRODUCT_MEDIA_DISK=r2`, serta rollback otomatis ke konfigurasi awal walaupun rehearsal gagal.
+- Verifikasi aplikasi membaca sample existing dan menulis object sintetis melalui `ProductMediaStorage`, boundary yang sama dengan upload admin.
+- Cleanup object sintetis dan verifikasi database/media count sebelum serta sesudah rehearsal.
+
+Out of scope:
+
+- Menambah akun admin staging, mengisi database staging dengan data lokal/production, deployment production, perubahan DNS/system-wide resolver, cleanup 19 object R2, atau menghapus source lokal.
+
+Risks:
+
+- `.env` staging berisi secret sehingga backup, fragment, dan output command tidak boleh dapat dibaca publik atau tercetak di log.
+- Workflow harus selalu memulihkan `.env` awal dan membersihkan object/file sintetis melalui trap/finally bila salah satu verifikasi gagal.
+- Browser operator masih tidak dapat memuat `r2.dev` melalui resolver lokal; validasi delivery dilakukan dari runner/server dan masalah DNS tetap menjadi blocker sebelum R2 dibiarkan aktif permanen.
+
+Acceptance criteria:
+
+- `PRODUCT_MEDIA_DISK=r2` hanya diterapkan pada environment staging setelah preflight dan approval cutover staging.
+- Halaman katalog/detail staging memuat sample existing image melalui delivery URL dan upload admin baru tersimpan di R2.
+- Rollback ke `public` dipraktikkan tanpa kehilangan metadata maupun file.
+- Seluruh source lokal serta 19 object hasil copy tetap dipertahankan; cleanup menjadi pekerjaan terpisah.
+- Production dan DNS production tidak berubah.
+
+## P5 — Admin Panel V2 captured requirements
+
+### P5-01 Preserve catalog working context — BACKLOG
+
+- Catalog manager membawa page, search, filter, dan sort ke product editor melalui return context yang tervalidasi.
+- Setelah simpan atau batal, admin kembali ke konteks daftar sebelumnya dan tidak dipaksa mengulang navigasi dari halaman pertama.
+- Perilaku fallback tetap aman bila context hilang, kedaluwarsa, atau mengarah keluar aplikasi.
+
+## P7 prerequisite — Qammaris UI quality gate
+
+Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
+
+- baca `skills/qammaris-ui-review/SKILL.md`;
+- tetapkan surface public catalog atau admin panel;
+- simpan baseline screenshot pada viewport yang disepakati;
+- definisikan primary user task dan state yang harus diuji;
+- pastikan perubahan tidak membawa framework, dependency, atau estetika baru tanpa alasan produk.
+
+Baseline performance finding: build 2026-09-14 menghasilkan chunk `about-lanyard` sekitar 3,28 MB sebelum gzip. Ukur dampaknya pada mobile dan lakukan code-splitting/removal hanya pada item performance yang disetujui.
+
+## Template backlog item
+
+```md
+### ID — Judul — STATUS
+
+Outcome:
+
+In scope:
+
+Out of scope:
+
+Dependencies:
+
+Risks:
+
+Implementation notes:
+
+Acceptance criteria:
+
+Verification:
+
+Documentation updates:
+
+Final report:
+- files changed
+- schema/data impact
+- tests/checks and results
+- screenshots when UI changed
+- known limitations
+- rollback or forward-fix notes
+- suggested next item, without starting it
+```
+
+## WIP dan transisi
+
+1. Maksimal satu item utama berstatus `IN_PROGRESS`.
+2. Item boleh dipindah ke `IN_PROGRESS` hanya jika scope, dependencies, dan acceptance criteria lengkap.
+3. Agent tidak boleh memulai item berikutnya hanya karena item aktif terlihat selesai.
+4. Reviewer memindahkan item dari `IN_REVIEW` ke `DONE` setelah bukti verifikasi cukup.
+5. Temuan baru dimasukkan ke backlog; jangan memperluas scope diam-diam.
+6. Blocker harus menyebut bukti, dampak, dan input/akses yang dibutuhkan.

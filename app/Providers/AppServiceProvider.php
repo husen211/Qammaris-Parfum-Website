@@ -16,34 +16,38 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($this->app->runningInConsole()) {
+        if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
             return;
         }
 
         try {
-            if (!Schema::hasTable('store_info')) {
+            if (! Schema::hasTable('store_info')) {
                 $this->shareFallbackStoreData();
+
                 return;
             }
         } catch (\Throwable $e) {
             $this->shareFallbackStoreData();
+
             return;
         }
 
         $storeInfo = cache()->remember('store_info', 3600, function () {
-            return StoreInfo::first() ?? new StoreInfo();
+            return StoreInfo::first() ?? new StoreInfo;
         });
 
         view()->share('storeInfo', $storeInfo);
 
         view()->composer('components.footer', function ($view) {
             try {
-                if (!Schema::hasTable('categories')) {
+                if (! Schema::hasTable('categories')) {
                     $view->with('footerCategories', collect());
+
                     return;
                 }
             } catch (\Throwable $e) {
                 $view->with('footerCategories', collect());
+
                 return;
             }
 
@@ -57,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
 
     private function shareFallbackStoreData(): void
     {
-        view()->share('storeInfo', new StoreInfo());
+        view()->share('storeInfo', new StoreInfo);
         view()->composer('components.footer', function ($view) {
             $view->with('footerCategories', collect());
         });

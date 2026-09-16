@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Products\AttachProductImage;
+use App\Actions\Products\SyncSingleOffer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductStoreRequest;
 use App\Http\Requests\Admin\ProductUpdateRequest;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\ProductImage;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductImage;
+use App\Services\ProductMediaStorage;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Throwable;
 
 class AdminProductController extends Controller
 {
@@ -23,7 +27,7 @@ class AdminProductController extends Controller
 
         // Logic Search
         if ($request->filled('search')) {
-            $query->search($request->search); 
+            $query->search($request->search);
         }
 
         // Logic Filter Brand (BARU)
@@ -32,7 +36,7 @@ class AdminProductController extends Controller
         }
 
         $products = $query->latest()->paginate(10);
-        
+
         // Ambil data brand untuk dropdown filter
         $brands = Brand::orderBy('name', 'asc')->get();
 
@@ -41,23 +45,29 @@ class AdminProductController extends Controller
 
     // ... (SISA FUNCTION CREATE, STORE, EDIT, UPDATE, DESTROY TETAP SAMA SEPERTI SEBELUMNYA)
     // Pastikan kamu menyalin function lainnya dari kode sebelumnya jika belum ada.
-    
+
     // Copy function create() sampai destroyImage() dari percakapan sebelumnya ke sini.
     // Kode di bawah hanya referensi function yang diubah (index).
-    
+
     public function create()
     {
         $brands = Brand::where('is_active', true)->get();
         $categories = Category::all();
+
         return view('admin.products.create', compact('brands', 'categories'));
     }
 
-    public function store(ProductStoreRequest $request)
-    {
+    public function store(
+        ProductStoreRequest $request,
+        SyncSingleOffer $syncSingleOffer,
+        AttachProductImage $attachProductImage,
+        ProductMediaStorage $productMediaStorage
+    ) {
         // ... (Gunakan kode STORE dari jawaban sebelumnya)
+        $storedImagePaths = [];
+
         try {
             DB::beginTransaction();
-            $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
             $compareAtPrice = $request->filled('compare_at_price')
                 ? $request->compare_at_price
                 : null;
@@ -68,43 +78,42 @@ class AdminProductController extends Controller
                 'base' => array_map('trim', explode(',', $request->base_notes)),
             ];
 
-            $basePrice = collect($request->variants)->min('price');
-
             $product = Product::create([
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
                 'name' => $request->name,
                 'description' => $request->description,
-                'base_price' => $basePrice,
+                'base_price' => null,
                 'compare_at_price' => $compareAtPrice,
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),
                 'is_active' => true,
+                'publication_status' => Product::PUBLICATION_PUBLISHED,
+                'published_at' => now(),
+                'availability_status' => Product::AVAILABILITY_UNKNOWN,
             ]);
 
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData, $skuPrefix);
-            }
+            $offerData = array_values($request->validated('variants'))[0];
+            $syncSingleOffer->handle($product, $offerData);
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('products', 'public');
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $path,
-                        'is_primary' => $index == 0,
-                        'sort_order' => $index
-                    ]);
+                    $path = $this->storeProductImage($image, $storedImagePaths, $productMediaStorage);
+                    $attachProductImage->handle($product, $path, $index === 0);
                 }
             }
 
             DB::commit();
+
             return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
 
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             DB::rollback();
-            return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
+            $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
+            report($e);
+
+            return back()->with('error', 'Produk gagal disimpan. Silakan coba lagi.')->withInput();
         }
     }
 
@@ -117,14 +126,19 @@ class AdminProductController extends Controller
         return view('admin.products.edit', compact('product', 'brands', 'categories'));
     }
 
-    public function update(ProductUpdateRequest $request, $id)
-    {
+    public function update(
+        ProductUpdateRequest $request,
+        $id,
+        SyncSingleOffer $syncSingleOffer,
+        AttachProductImage $attachProductImage,
+        ProductMediaStorage $productMediaStorage
+    ) {
         // ... (Gunakan kode UPDATE dari jawaban sebelumnya)
-         $product = Product::findOrFail($id);
+        $product = Product::findOrFail($id);
+        $storedImagePaths = [];
 
         try {
             DB::beginTransaction();
-            $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
             $compareAtPrice = $request->filled('compare_at_price')
                 ? $request->compare_at_price
                 : null;
@@ -135,127 +149,102 @@ class AdminProductController extends Controller
                 'base' => array_map('trim', explode(',', $request->base_notes)),
             ];
 
-            $basePrice = collect($request->variants)->min('price');
-
             $product->update([
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
                 'name' => $request->name,
                 'description' => $request->description,
-                'base_price' => $basePrice,
                 'compare_at_price' => $compareAtPrice,
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),
             ]);
 
-            $submittedVariantIds = collect($request->variants)->pluck('id')->filter()->toArray();
-            
-            ProductVariant::where('product_id', $product->id)
-                ->whereNotIn('id', $submittedVariantIds)
-                ->delete();
-
-            foreach ($request->variants as $variantData) {
-                if (isset($variantData['id']) && $variantData['id']) {
-                    ProductVariant::where('id', $variantData['id'])->update([
-                        'volume' => $variantData['volume'],
-                        'price' => $variantData['price'],
-                        'stock' => $variantData['stock'],
-                    ]);
-                } else {
-                    $this->createVariant($product, $variantData, $skuPrefix);
-                }
-            }
+            $offerData = array_values($request->validated('variants'))[0];
+            $syncSingleOffer->handle($product, $offerData);
 
             if ($request->hasFile('new_images')) {
-                $lastSort = $product->images()->max('sort_order') ?? 0;
-                $hasPrimary = $product->images()->where('is_primary', true)->exists();
-
-                foreach ($request->file('new_images') as $index => $image) {
-                    $lastSort++;
-                    $path = $image->store('products', 'public');
-                    $setPrimary = !$hasPrimary && $index === 0;
-
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $path,
-                        'is_primary' => $setPrimary,
-                        'sort_order' => $lastSort
-                    ]);
-
-                    if ($setPrimary) {
-                        $hasPrimary = true;
-                    }
+                foreach ($request->file('new_images') as $image) {
+                    $path = $this->storeProductImage($image, $storedImagePaths, $productMediaStorage);
+                    $attachProductImage->handle($product, $path);
                 }
             }
 
             DB::commit();
+
             return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
 
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             DB::rollback();
-            return back()->with('error', 'Update failed: ' . $e->getMessage());
+            $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
+            report($e);
+
+            return back()->with('error', 'Produk gagal diperbarui. Silakan coba lagi.')->withInput();
         }
     }
 
     public function destroy($id)
     {
-         // ... (Gunakan kode DESTROY dari jawaban sebelumnya)
         $product = Product::findOrFail($id);
-        foreach($product->images as $image) {
-            if(Storage::disk('public')->exists($image->image_path)) {
-                Storage::disk('public')->delete($image->image_path);
-            }
+
+        if ($product->publication_status === Product::PUBLICATION_ARCHIVED && ! $product->is_active) {
+            return back()->with('success', 'Produk ini sudah diarsipkan.');
         }
-        $product->delete();
-        return back()->with('success', 'Product deleted successfully!');
+
+        $product->markArchived();
+
+        return back()->with('success', 'Produk berhasil diarsipkan. Data dan gambar tetap tersimpan.');
+    }
+
+    public function restore($id)
+    {
+        $product = Product::findOrFail($id);
+
+        if ($product->isPublished()) {
+            return back()->with('success', 'Produk ini sudah aktif.');
+        }
+
+        $product->markPublished();
+
+        return back()->with('success', 'Produk berhasil diaktifkan kembali.');
     }
 
     public function destroyImage($id)
     {
-         // ... (Gunakan kode DESTROY IMAGE dari jawaban sebelumnya)
-        $image = ProductImage::findOrFail($id);
-        
-        if (Storage::disk('public')->exists($image->image_path)) {
-            Storage::disk('public')->delete($image->image_path);
-        }
-        
-        $productId = $image->product_id;
-        $isPrimary = $image->is_primary;
-        
-        $image->delete();
+        ProductImage::findOrFail($id);
 
-        if ($isPrimary) {
-            $nextImage = ProductImage::where('product_id', $productId)->first();
-            if ($nextImage) {
-                $nextImage->update(['is_primary' => true]);
+        return back()->with(
+            'error',
+            'Penghapusan gambar dinonaktifkan sementara agar file dan metadata tetap aman.'
+        );
+    }
+
+    private function storeProductImage(
+        UploadedFile $image,
+        array &$storedImagePaths,
+        ProductMediaStorage $productMediaStorage
+    ): string {
+        $path = $productMediaStorage->store($image);
+
+        $storedImagePaths[] = $path;
+
+        return $path;
+    }
+
+    private function cleanupStoredImages(
+        array $storedImagePaths,
+        ProductMediaStorage $productMediaStorage
+    ): void {
+        if ($storedImagePaths === []) {
+            return;
+        }
+
+        try {
+            if (! $productMediaStorage->delete($storedImagePaths)) {
+                report(new RuntimeException('One or more rolled-back product images could not be deleted.'));
             }
+        } catch (Throwable $cleanupError) {
+            report($cleanupError);
         }
-
-        return back()->with('success', 'Image removed.');
-    }
-
-    private function createVariant($product, $data, string $skuPrefix)
-    {
-        ProductVariant::create([
-            'product_id' => $product->id,
-            'volume' => $data['volume'],
-            'price' => $data['price'],
-            'stock' => $data['stock'],
-            'sku' => $skuPrefix . '-' . rand(1000, 9999),
-            'is_active' => true
-        ]);
-    }
-
-    private function resolveSkuPrefix(int $brandId): string
-    {
-        $brandName = Brand::whereKey($brandId)->value('name');
-        $fallback = 'PRD';
-
-        if (!$brandName) {
-            return $fallback;
-        }
-
-        return strtoupper(substr($brandName, 0, 3)) ?: $fallback;
     }
 }

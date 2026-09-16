@@ -91,6 +91,10 @@
                             <div class="ml-4">
                                 <div class="text-sm font-bold text-gray-900 group-hover:text-gold transition-colors">{{ $product->name }}</div>
                                 <div class="text-xs text-gray-500 mt-0.5">{{ $product->gender }} @if($product->is_best_seller) • <span class="text-amber-600 font-bold">Terlaris</span> @endif</div>
+                                <div class="mt-1 flex items-center gap-1.5 text-xs font-medium {{ $product->is_active ? 'text-emerald-700' : 'text-amber-700' }}">
+                                    <span class="h-1.5 w-1.5 rounded-full {{ $product->is_active ? 'bg-emerald-500' : 'bg-amber-500' }}" aria-hidden="true"></span>
+                                    {{ $product->is_active ? 'Aktif' : 'Diarsipkan' }}
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -124,13 +128,23 @@
                             <a href="{{ route('admin.products.edit', $product->id) }}" class="text-gray-500 hover:text-black p-2 rounded-full hover:bg-gray-100 transition-colors" title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                             </a>
-                            <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" class="inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-gray-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors" title="Delete">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </form>
+                            @if($product->is_active)
+                                <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Arsipkan produk ini? Produk akan disembunyikan dari katalog, tetapi data dan gambar tetap tersimpan.');" class="inline-block">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-gray-500 hover:text-amber-700 p-2 rounded-full hover:bg-amber-50 transition-colors" title="Arsipkan produk" aria-label="Arsipkan {{ $product->name }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M10 12h4m-9 8h14a2 2 0 002-2V8l-2-4H5L3 8v10a2 2 0 002 2z"/></svg>
+                                    </button>
+                                </form>
+                            @else
+                                <form action="{{ route('admin.products.restore', $product->id) }}" method="POST" class="inline-block">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-gray-500 hover:text-emerald-700 p-2 rounded-full hover:bg-emerald-50 transition-colors" title="Aktifkan kembali" aria-label="Aktifkan kembali {{ $product->name }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

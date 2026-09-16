@@ -1,15 +1,16 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\BlogController;
-use App\Http\Controllers\StoreController;
-use App\Http\Controllers\Admin\AdminProductController;
+
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\FragranceQuizController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StoreController;
+use Illuminate\Support\Facades\Route;
 
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -26,11 +27,10 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::put('/update/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
-    Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout'); 
-    //cart data for drawer
+    Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
+    // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
 });
-
 
 // Blog
 Route::prefix('blog')->name('blog.')->group(function () {
@@ -50,14 +50,16 @@ Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('
 Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name('quiz.store');
 Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
 
-
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
-    
+
     // Dashboard Admin Sederhana
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // === TAMBAHAN BARU (Untuk fitur hapus gambar saat Edit) ===
     Route::delete('products/image/{productImage}', [AdminProductController::class, 'destroyImage'])->name('products.delete-image');
+
+    // Archive is reversible; product hard deletion is intentionally unavailable in admin.
+    Route::patch('products/{product}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
 
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);
@@ -65,7 +67,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // CRUD Blog Posts
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 });
-
 
 // === ROUTE AUTHENTICATION (MANUAL) ===
 Route::middleware('guest')->group(function () {

@@ -11,6 +11,20 @@ class Product extends Model
 {
     use HasFactory, HasSlug;
 
+    public const PUBLICATION_DRAFT = 'draft';
+
+    public const PUBLICATION_PUBLISHED = 'published';
+
+    public const PUBLICATION_ARCHIVED = 'archived';
+
+    public const AVAILABILITY_UNKNOWN = 'unknown';
+
+    public const AVAILABILITY_AVAILABLE = 'available';
+
+    public const AVAILABILITY_SOLD_OUT = 'sold_out';
+
+    public const AVAILABILITY_FRESH_HOURS = 36;
+
     protected $fillable = [
         'brand_id',
         'category_id',
@@ -23,6 +37,13 @@ class Product extends Model
         'gender',
         'is_best_seller',
         'is_active',
+        'publication_status',
+        'published_at',
+        'archived_at',
+        'availability_status',
+        'stock_quantity',
+        'availability_source',
+        'availability_checked_at',
         'view_count',
         'meta_description',
     ];
@@ -33,6 +54,10 @@ class Product extends Model
         'fragrance_notes' => 'array',
         'is_best_seller' => 'boolean',
         'is_active' => 'boolean',
+        'published_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'stock_quantity' => 'integer',
+        'availability_checked_at' => 'datetime',
         'view_count' => 'integer',
     ];
 
@@ -74,6 +99,14 @@ class Product extends Model
     }
 
     /**
+     * The single active offer used by catalog and cart consumers.
+     */
+    public function activeOffer()
+    {
+        return $this->hasOne(ProductVariant::class)->where('is_active', true);
+    }
+
+    /**
      * Relationship: Product has many Images
      */
     public function images()
@@ -90,11 +123,21 @@ class Product extends Model
     }
 
     /**
+     * Provider-specific identifiers used by imports without replacing the internal ID.
+     */
+    public function externalIdentities()
+    {
+        return $this->hasMany(ProductExternalIdentity::class);
+    }
+
+    /**
      * Accessor: Formatted price in Rupiah
      */
-    public function getFormattedPriceAttribute(): string
+    public function getFormattedPriceAttribute(): ?string
     {
-        return 'Rp ' . number_format($this->base_price, 0, ',', '.');
+        $price = $this->cheapest_price;
+
+        return $price === null ? null : 'Rp '.number_format($price, 0, ',', '.');
     }
 
     /**
@@ -108,10 +151,10 @@ class Product extends Model
         }
 
         if ($this->relationLoaded('variants')) {
-            return $this->variants->min('price') ?? $this->base_price;
+            return $this->variants->where('is_active', true)->min('price') ?? $this->base_price;
         }
 
-        return $this->variants()->min('price') ?? $this->base_price;
+        return $this->variants()->where('is_active', true)->min('price') ?? $this->base_price;
     }
 
     /**
@@ -125,10 +168,10 @@ class Product extends Model
         }
 
         if ($this->relationLoaded('variants')) {
-            return $this->variants->max('price') ?? $this->base_price;
+            return $this->variants->where('is_active', true)->max('price') ?? $this->base_price;
         }
 
-        return $this->variants()->max('price') ?? $this->base_price;
+        return $this->variants()->where('is_active', true)->max('price') ?? $this->base_price;
     }
 
     /**
@@ -139,11 +182,15 @@ class Product extends Model
         $cheapest = $this->cheapest_price;
         $mostExpensive = $this->most_expensive_price;
 
-        if ($cheapest == $mostExpensive) {
-            return 'Rp ' . number_format($cheapest, 0, ',', '.');
+        if ($cheapest === null || $mostExpensive === null) {
+            return 'Harga belum diisi';
         }
 
-        return 'Rp ' . number_format($cheapest, 0, ',', '.') . ' - Rp ' . number_format($mostExpensive, 0, ',', '.');
+        if ($cheapest == $mostExpensive) {
+            return 'Rp '.number_format($cheapest, 0, ',', '.');
+        }
+
+        return 'Rp '.number_format($cheapest, 0, ',', '.').' - Rp '.number_format($mostExpensive, 0, ',', '.');
     }
 
     /**
@@ -151,7 +198,17 @@ class Product extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $this->scopePublished($query);
+    }
+
+    /**
+     * Public visibility during the compatibility transition.
+     */
+    public function scopePublished($query)
+    {
+        return $query
+            ->where('publication_status', self::PUBLICATION_PUBLISHED)
+            ->where('is_active', true);
     }
 
     /**
@@ -185,10 +242,10 @@ class Product extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('name', 'like', "%{$term}%")
-              ->orWhere('description', 'like', "%{$term}%")
-              ->orWhereHas('brand', function ($brandQuery) use ($term) {
-                  $brandQuery->where('name', 'like', "%{$term}%");
-              });
+                ->orWhere('description', 'like', "%{$term}%")
+                ->orWhereHas('brand', function ($brandQuery) use ($term) {
+                    $brandQuery->where('name', 'like', "%{$term}%");
+                });
         });
     }
 
@@ -198,5 +255,62 @@ class Product extends Model
     public function incrementViewCount()
     {
         $this->increment('view_count');
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->publication_status === self::PUBLICATION_PUBLISHED && $this->is_active;
+    }
+
+    public function markArchived(): void
+    {
+        if ($this->publication_status === self::PUBLICATION_ARCHIVED && ! $this->is_active) {
+            return;
+        }
+
+        $this->update([
+            'publication_status' => self::PUBLICATION_ARCHIVED,
+            'archived_at' => now(),
+            'is_active' => false,
+        ]);
+    }
+
+    public function markPublished(): void
+    {
+        if ($this->publication_status === self::PUBLICATION_PUBLISHED && $this->is_active) {
+            return;
+        }
+
+        $this->update([
+            'publication_status' => self::PUBLICATION_PUBLISHED,
+            'published_at' => $this->published_at ?? now(),
+            'archived_at' => null,
+            'is_active' => true,
+        ]);
+    }
+
+    public function getEffectiveAvailabilityAttribute(): string
+    {
+        $status = $this->availability_status ?? self::AVAILABILITY_UNKNOWN;
+
+        if ($status === self::AVAILABILITY_AVAILABLE) {
+            if (! $this->availability_checked_at) {
+                return self::AVAILABILITY_UNKNOWN;
+            }
+
+            if ($this->availability_checked_at->lt(now()->subHours(self::AVAILABILITY_FRESH_HOURS))) {
+                return self::AVAILABILITY_UNKNOWN;
+            }
+        }
+
+        if (! in_array($status, [
+            self::AVAILABILITY_UNKNOWN,
+            self::AVAILABILITY_AVAILABLE,
+            self::AVAILABILITY_SOLD_OUT,
+        ], true)) {
+            return self::AVAILABILITY_UNKNOWN;
+        }
+
+        return $status;
     }
 }
