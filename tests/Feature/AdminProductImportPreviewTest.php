@@ -41,7 +41,7 @@ class AdminProductImportPreviewTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.product-imports.create'))
             ->assertOk()
-            ->assertSee('Preview audit · belum mengubah katalog')
+            ->assertSee('Preview, review, lalu apply ke draft')
             ->assertSee('Unduh template CSV')
             ->assertSee('Belum ada batch preview tersimpan.');
     }

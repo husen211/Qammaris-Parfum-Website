@@ -105,7 +105,14 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 12. Harga CSV ditulis sebagai angka positif tanpa simbol mata uang atau pemisah ribuan. Kode produk selalu diperlakukan sebagai teks agar nol di depan dan digit panjang tidak berubah.
 13. Fragrance notes dalam satu sel dipisahkan dengan `|`. URL gambar hanya menjadi kandidat sumber HTTPS; preview tidak mengunduh, menyimpan, atau menampilkan URL provider sebagai media publik.
 14. Preview read-only terhadap katalog tidak memberi izin apply. Sistem boleh menyimpan fingerprint, hasil normalisasi, issue, actor, dan summary sebagai batch audit immutable tanpa menyimpan file sumber.
-15. Batch preview idempotent untuk kombinasi actor, isi file, versi kontrak, dan state katalog yang sama. Perubahan brand, kategori, product, atau external identity menghasilkan state fingerprint baru dan mewajibkan preview baru sebelum apply.
+15. Batch preview idempotent untuk kombinasi actor, isi file, versi kontrak, dan state katalog yang sama. Perubahan brand, kategori, product, atau external identity menghasilkan state fingerprint baru dan mewajibkan preview baru. Batch terminal stale/invalid/failed boleh menghasilkan satu successor preview deterministic agar file yang sama tidak terkunci selamanya.
+16. Apply hanya boleh dijalankan secara eksplisit oleh admin pada batch persisted yang masih berstatus previewed, versi kontraknya current, fingerprint state katalog masih sama, dan seluruh payload hash valid.
+17. Baris baru yang diterapkan selalu membuat product draft/nonaktif. Apply tidak boleh auto-publish, menandai ready, membuat taxonomy, atau mengunduh gambar.
+18. Mapping ke product existing hanya boleh diperbarui otomatis ketika product masih draft. Mapping ke product published atau archived ditahan untuk review manual tanpa perubahan data.
+19. Pada update draft, nilai CSV kosong mempertahankan nilai existing. Field kosong tidak berarti perintah menghapus data.
+20. Baris error/conflict tidak diterapkan. Baris review dapat diterapkan sebagai draft setelah konfirmasi admin karena kelengkapan publish tetap divalidasi terpisah.
+21. Apply bersifat transactional dan idempotent per batch. Kegagalan unexpected membatalkan seluruh catalog write; request ulang pada batch applied tidak mengulang mutation.
+22. Outcome apply mencatat actor, waktu, product hasil, status created/updated/blocked, pesan, serta snapshot before/after terkontrol per baris.
 
 ## Admin dan automation
 

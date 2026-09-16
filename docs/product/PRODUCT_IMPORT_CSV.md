@@ -1,6 +1,6 @@
 # Kontrak CSV Import Produk Qammaris
 
-Status: Canonical preview contract v1 — 2026-09-16
+Status: Canonical preview + draft apply contract v1 — 2026-09-16
 
 ## Tujuan
 
@@ -11,7 +11,8 @@ Alur yang didukung:
 1. Owner export data produk dari Shopee.
 2. Claude membaca file mentah dan menghasilkan CSV sesuai kontrak ini.
 3. Admin upload CSV ke halaman **Import Produk** untuk preview read-only terhadap katalog dan pencatatan batch audit.
-4. Admin memperbaiki baris error/perlu review. Apply database akan dibuat pada backlog berikutnya.
+4. Admin mereview batch, mencentang konfirmasi, lalu apply kandidat yang aman ke draft.
+5. Admin melengkapi draft, gambar, dan publication secara manual pada alur terpisah.
 
 ## Format file
 
@@ -55,12 +56,14 @@ provider,kode_produk,nama_produk,deskripsi_produk,harga,brand,gender,stok,terlar
 - Pasangan existing menjadi kandidat **Update draft**.
 - Pasangan duplikat dalam satu file menjadi **Error/Tahan**.
 - Nama produk yang sama tanpa mapping hanya menghasilkan peringatan duplikat. Sistem tidak melakukan auto-merge.
+- Mapping ke product draft menjadi kandidat update.
+- Mapping ke product published/archived selalu ditahan untuk review manual dan tidak ditimpa.
 - Produk yang tidak tercantum dalam file tidak dihapus atau diarsipkan.
 
 ## Status preview
 
 - **Valid:** struktur dan nilai file memenuhi kontrak.
-- **Perlu review:** baris masih dapat menjadi draft tetapi belum lengkap untuk publish, taxonomy belum ditemukan/nonaktif, nama mirip existing, atau mapping mengarah ke produk archived.
+- **Perlu review:** baris masih dapat menjadi draft tetapi belum lengkap untuk publish, taxonomy belum ditemukan/nonaktif, nama mirip existing, atau mapping mengarah ke produk published/archived.
 - **Error:** field struktural kosong, controlled value ilegal, angka/URL tidak valid, kolom rusak, atau identity duplikat dalam file.
 
 Status valid bukan izin publish dan bukan jaminan gambar dapat diunduh. Seluruh import masa depan tetap membuat atau memperbarui draft terlebih dahulu.
@@ -84,8 +87,21 @@ Gunakan aturan berikut saat mengubah export provider menjadi CSV Qammaris:
 
 Preview sukses menyimpan metadata dan hasil normalisasi ke `product_import_batches` serta `product_import_rows`. Idempotency ditentukan oleh actor, fingerprint file, versi kontrak, dan fingerprint state katalog. Upload yang identik pada state yang identik menunjuk batch yang sama; perubahan state katalog menghasilkan batch baru.
 
-File CSV asli tidak disimpan. Batch menyimpan nama/ukuran/fingerprint file, actor, summary, normalized data, issue, matched product, candidate action, dan payload hash per baris. Catatan ini bukan izin apply.
+Batch terminal stale/invalid/failed tidak dipakai ulang sebagai sumber apply. Upload ulang file yang sama membuat satu successor preview deterministic, sedangkan upload berulang selama successor masih previewed/applied tetap kembali ke successor yang sama.
+
+File CSV asli tidak disimpan. Batch menyimpan nama/ukuran/fingerprint file, actor, summary, normalized data, issue, matched product, candidate action, dan payload hash per baris. Catatan ini hanya dapat menjadi sumber apply setelah admin memberi konfirmasi eksplisit dan seluruh guard lulus.
+
+## Apply ke draft
+
+- Sistem memverifikasi ulang versi kontrak, fingerprint state katalog, dan hash payload setiap baris sebelum mutation.
+- Satu batch diterapkan dalam satu transaksi. Kegagalan unexpected membatalkan seluruh mutation katalog.
+- Baris `create` membuat product draft/nonaktif dan external identity. Single offer dibuat hanya bila harga dan ukuran sama-sama tersedia.
+- Baris `update` hanya mengubah product draft. Field CSV kosong mempertahankan nilai existing; slug dan publication tidak diubah.
+- Snapshot stok boleh disimpan, tetapi availability tetap `unknown`; nilai tersebut bukan klaim live stock.
+- Baris error/conflict serta mapping published/archived dicatat sebagai blocked.
+- URL gambar tidak diunduh, di-hotlink, atau dibuat menjadi metadata media pada tahap apply ini.
+- Request ulang pada batch yang sudah applied menampilkan hasil existing tanpa membuat mutation kedua.
 
 ## Batas tahap ini
 
-Preview tidak menyimpan file upload, tidak menulis tabel katalog, tidak membuat taxonomy, tidak membuat mapping identity, dan tidak mengunduh gambar. Database write hanya terjadi pada tabel audit import. Apply ke product tetap belum tersedia.
+Belum tersedia conflict resolution per baris, update product published/archived, download gambar, taxonomy auto-create, bulk publish, undo batch, export katalog, queue, staging, atau production apply.

@@ -13,6 +13,11 @@ use Illuminate\Support\Collection;
 
 class ProductImportPreviewer
 {
+    public function catalogStateFingerprint(): string
+    {
+        return $this->lookupContext()['catalog_state_fingerprint'];
+    }
+
     /**
      * @return array{
      *     fingerprint: string,
@@ -267,8 +272,20 @@ class ProductImportPreviewer
             }
         }
 
+        if ($matchedIdentity?->product?->publication_status === Product::PUBLICATION_PUBLISHED) {
+            $issues[] = $this->issue(
+                'review',
+                'kode_produk',
+                'Mapping mengarah ke produk published. Apply akan menahannya untuk review manual.'
+            );
+        }
+
         if ($matchedIdentity?->product?->publication_status === Product::PUBLICATION_ARCHIVED) {
-            $issues[] = $this->issue('review', 'kode_produk', 'Mapping mengarah ke produk yang sedang diarsipkan.');
+            $issues[] = $this->issue(
+                'review',
+                'kode_produk',
+                'Mapping mengarah ke produk archived. Apply akan menahannya untuk review manual.'
+            );
         }
 
         $status = collect($issues)->contains('severity', 'error')
@@ -283,6 +300,7 @@ class ProductImportPreviewer
             'matched_product' => $matchedIdentity?->product ? [
                 'id' => $matchedIdentity->product->id,
                 'name' => $matchedIdentity->product->name,
+                'publication_status' => $matchedIdentity->product->publication_status,
             ] : null,
             'issues' => $issues,
         ];

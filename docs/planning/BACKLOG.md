@@ -1285,6 +1285,59 @@ Documentation updates:
 - Business rules, kontrak CSV, backlog, dan `ADR-012-persistent-immutable-import-preview-batches.md` diperbarui.
 - Kandidat berikutnya adalah `P6-03` explicit draft apply dengan revalidation state/payload, transaction, row outcome, dan aturan ketat untuk produk existing published; belum dimulai pada item ini.
 
+### P6-03 Explicit transactional draft apply — IN_REVIEW
+
+Outcome:
+
+- Admin dapat menerapkan batch preview yang masih current menjadi draft baru atau pembaruan draft existing dengan jejak audit per baris dan tanpa mengubah produk published/archived.
+
+In scope:
+
+- Apply eksplisit dari batch persisted dengan konfirmasi manusia, revalidasi fingerprint state katalog, versi kontrak, serta hash payload setiap baris.
+- Satu transaksi untuk seluruh batch; pengulangan request pada batch yang sudah applied tidak menjalankan mutation kedua kali.
+- Baris create membuat product draft/nonaktif, external identity, dan single offer bila harga+ukuran lengkap.
+- Baris update hanya boleh mengubah product existing berstatus draft dan mempertahankan nilai existing ketika field CSV kosong.
+- Baris error/conflict dan mapping ke product published/archived ditahan serta dicatat sebagai outcome, bukan diterapkan.
+- Audit batch/row menyimpan actor apply, waktu, jumlah applied/blocked, product hasil, pesan outcome, serta snapshot before/after terkontrol.
+- URL gambar tetap hanya kandidat sumber; apply tidak mengunduh atau membuat metadata media.
+
+Out of scope:
+
+- Update product published/archived, conflict resolution per baris, download gambar, taxonomy auto-create, publish massal, undo batch, export katalog, queue, staging, dan production.
+
+Dependencies:
+
+- P6-01 canonical CSV preview dan P6-02 persistent immutable preview batch selesai.
+
+Risks:
+
+- State katalog dapat berubah setelah preview; batch stale harus ditolak sebelum mutation.
+- Payload audit dapat rusak atau dimodifikasi; hash mismatch harus menahan seluruh batch.
+- Identity/provider yang berubah secara concurrent dapat memicu unique conflict; transaction harus rollback tanpa partial catalog write.
+
+Acceptance criteria:
+
+- New row valid/review membuat draft dan tidak pernah publish otomatis.
+- Existing mapped draft dapat diperbarui, sedangkan field kosong mempertahankan nilai existing.
+- Existing mapped published/archived, row error, dan conflict dicatat blocked tanpa perubahan katalog.
+- Fingerprint stale atau payload hash mismatch menghasilkan nol catalog mutation dan status batch yang jelas.
+- Apply kedua pada batch applied bersifat idempotent.
+- Focused/full tests, migration round-trip, Pint, Blade, build, browser desktop/mobile, dan CI lulus.
+
+Verification:
+
+- Migration additive `2026_09_16_150000_add_apply_outcomes_to_product_imports` berhasil melalui siklus lokal `up → down → up` tanpa mengubah jumlah katalog.
+- Focused import regression lulus: `18 test / 190 assertion`. Seluruh suite Laravel lulus: `139 test / 775 assertion`.
+- Targeted Pint, Blade compilation, Composer strict validation, `git diff --check`, dan production asset build lulus. Build hanya mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB.
+- Browser lokal pada `390x844` dan `1440x900` membuktikan upload multipart nyata, preview 1 valid + 1 error, konfirmasi apply, hasil 1 draft dibuat + 1 error ditahan, history status, internal table scroll, nol page overflow, dan nol console warning/error.
+- Produk, offer, identity, batch/row, serta CSV sintetis audit telah dihapus setelah verifikasi. Data lokal kembali 180 products, 65 offers, 0 external identities, 19 images, 0 batches, dan 0 rows.
+- Staging, production, media storage, bucket, DNS, serta project lain tidak disentuh.
+
+Documentation updates:
+
+- Business rules import, kontrak CSV, backlog, dan `ADR-013-transactional-product-import-draft-apply.md` diperbarui.
+- Kandidat berikutnya adalah `P6-04` safe acquisition URL gambar import ke media storage dengan validasi/download/review; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

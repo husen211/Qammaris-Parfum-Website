@@ -10,9 +10,9 @@
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-            <p class="text-sm font-semibold text-amber-700">Preview audit · belum mengubah katalog</p>
+            <p class="text-sm font-semibold text-amber-700">Preview, review, lalu apply ke draft</p>
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Import Produk</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi Claude. Sistem memeriksa data lalu menyimpan hasil normalisasi sebagai batch audit immutable sebelum tahap apply tersedia.</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi Claude. Sistem menyimpan preview immutable; apply hanya membuat draft baru atau memperbarui draft existing yang aman.</p>
         </div>
         <a href="{{ route('admin.product-imports.template') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
             Unduh template CSV
@@ -48,7 +48,7 @@
                 <li><span class="font-semibold text-gray-900">1.</span> Export data produk dari Shopee.</li>
                 <li><span class="font-semibold text-gray-900">2.</span> Claude merapikan ke template Qammaris.</li>
                 <li><span class="font-semibold text-gray-900">3.</span> Admin upload dan review preview.</li>
-                <li><span class="font-semibold text-gray-900">4.</span> Apply akan dibuat pada tahap berikutnya.</li>
+                <li><span class="font-semibold text-gray-900">4.</span> Konfirmasi lalu apply ke draft.</li>
             </ol>
             <div class="mt-5 rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">Jangan upload export Shopee mentah. Nama kolom dan urutannya harus sama dengan template.</div>
         </aside>
@@ -125,7 +125,7 @@
             @endif
 
             <div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="min-w-[70rem] divide-y divide-gray-200 text-left text-sm">
+                <table class="min-w-[78rem] divide-y divide-gray-200 text-left text-sm">
                     <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                         <tr>
                             <th class="px-4 py-3">Baris</th>
@@ -135,6 +135,7 @@
                             <th class="px-4 py-3">Harga / ukuran</th>
                             <th class="px-4 py-3">Brand / kategori</th>
                             <th class="px-4 py-3">Masalah</th>
+                            <th class="px-4 py-3">Hasil apply</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 align-top text-gray-700">
@@ -169,32 +170,86 @@
                                         <span class="text-xs text-emerald-700">Tidak ada masalah.</span>
                                     @endif
                                 </td>
+                                <td class="max-w-xs px-4 py-4">
+                                    @php($applyStatus = $row['apply_status'] ?? 'pending')
+                                    @php($applyLabels = [
+                                        'pending' => 'Belum diterapkan',
+                                        'created' => 'Draft dibuat',
+                                        'updated' => 'Draft diperbarui',
+                                        'blocked_error' => 'Ditahan: error',
+                                        'blocked_protected' => 'Ditahan: protected',
+                                    ])
+                                    @php($applyClasses = [
+                                        'pending' => 'text-gray-500',
+                                        'created' => 'text-emerald-700',
+                                        'updated' => 'text-emerald-700',
+                                        'blocked_error' => 'text-red-700',
+                                        'blocked_protected' => 'text-amber-700',
+                                    ])
+                                    <p class="text-xs font-semibold {{ $applyClasses[$applyStatus] ?? 'text-gray-500' }}">{{ $applyLabels[$applyStatus] ?? $applyStatus }}</p>
+                                    @if($row['apply_message'] ?? null)
+                                        <p class="mt-1 text-xs leading-relaxed text-gray-500">{{ $row['apply_message'] }}</p>
+                                    @endif
+                                    @if($row['applied_product'] ?? null)
+                                        <a href="{{ route('admin.products.edit', $row['applied_product']['id']) }}" class="mt-2 inline-flex text-xs font-semibold text-gray-900 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-900">Buka draft #{{ $row['applied_product']['id'] }}</a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
 
-            <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">Belum ada tombol apply. Batch hanya mencatat audit preview; product, offer, taxonomy, identity, media, dan file sumber tidak berubah.</div>
+            @if($batch->status === \App\Models\ProductImportBatch::STATUS_PREVIEWED)
+                <form method="POST" action="{{ route('admin.product-imports.apply', $batch) }}" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5" aria-labelledby="apply-title">
+                    @csrf
+                    <h3 id="apply-title" class="text-base font-bold text-gray-900">4. Apply batch ke draft</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-gray-700">Baris valid dan perlu review akan diproses. Produk baru selalu menjadi draft. Produk existing published/archived serta baris error/conflict akan ditahan tanpa ditimpa.</p>
+                    <p class="mt-2 text-xs leading-relaxed text-gray-600">Apply tidak membuat taxonomy, tidak mengunduh URL gambar, tidak mengubah availability menjadi ready, dan tidak mempublikasikan produk.</p>
+
+                    <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-amber-200 bg-white p-3 text-sm text-gray-700">
+                        <input name="confirm_apply" value="1" type="checkbox" required class="mt-0.5 h-4 w-4 rounded border-gray-300 text-black focus:ring-black">
+                        <span>Saya sudah mereview batch #{{ $batch->id }} dan menyetujui apply {{ $batch->valid_rows + $batch->review_rows }} kandidat ke draft.</span>
+                    </label>
+                    @error('confirm_apply')
+                        <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p>
+                    @enderror
+
+                    <button type="submit" class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-black px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:w-auto">
+                        Apply batch #{{ $batch->id }}
+                    </button>
+                </form>
+            @elseif($batch->status === \App\Models\ProductImportBatch::STATUS_APPLIED)
+                <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
+                    <p class="font-bold">Batch sudah selesai diterapkan.</p>
+                    <p class="mt-1">{{ $batch->applied_rows }} baris diterapkan dan {{ $batch->blocked_rows }} baris ditahan{{ $batch->appliedBy ? ' oleh '.$batch->appliedBy->name : '' }}.</p>
+                </div>
+            @else
+                <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="alert">
+                    <p class="font-bold">Batch tidak dapat diterapkan.</p>
+                    <p class="mt-1">{{ $batch->failure_message ?? 'Buat preview baru sebelum mencoba lagi.' }}</p>
+                </div>
+            @endif
         </section>
     @endif
 
     <section class="mt-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="history-title">
         <div>
             <h2 id="history-title" class="text-lg font-bold text-gray-900">Preview terbaru</h2>
-            <p class="mt-1 text-sm text-gray-500">Jejak audit read-only. Apply produk belum tersedia pada tahap ini.</p>
+            <p class="mt-1 text-sm text-gray-500">Buka batch untuk melihat preview, hasil apply, dan baris yang ditahan.</p>
         </div>
 
         @if($recentBatches->isEmpty())
             <div class="mt-4 rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">Belum ada batch preview tersimpan.</div>
         @else
             <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-[48rem] divide-y divide-gray-200 text-left text-sm">
+                <table class="min-w-[56rem] divide-y divide-gray-200 text-left text-sm">
                     <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                         <tr>
                             <th class="px-4 py-3">Batch</th>
                             <th class="px-4 py-3">File</th>
                             <th class="px-4 py-3">Ringkasan</th>
+                            <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Actor</th>
                             <th class="px-4 py-3">Waktu</th>
                         </tr>
@@ -202,7 +257,7 @@
                     <tbody class="divide-y divide-gray-100 text-gray-700">
                         @foreach($recentBatches as $recentBatch)
                             <tr>
-                                <td class="px-4 py-3 font-semibold text-gray-900">#{{ $recentBatch->id }}</td>
+                                <td class="px-4 py-3 font-semibold text-gray-900"><a href="{{ route('admin.product-imports.create', ['batch' => $recentBatch->id]) }}" class="underline decoration-gray-300 underline-offset-2 hover:decoration-gray-900">#{{ $recentBatch->id }}</a></td>
                                 <td class="px-4 py-3">
                                     <p class="max-w-xs truncate font-medium text-gray-900">{{ $recentBatch->source_filename }}</p>
                                     <p class="mt-1 font-mono text-[11px] text-gray-500">{{ substr($recentBatch->source_fingerprint, 0, 12) }}… · {{ number_format($recentBatch->source_size / 1024, 1, ',', '.') }} KB</p>
@@ -213,6 +268,13 @@
                                     <span class="text-amber-700">{{ $recentBatch->review_rows }} review</span>
                                     <span class="mx-1 text-gray-300">·</span>
                                     <span class="text-red-700">{{ $recentBatch->error_rows }} error</span>
+                                </td>
+                                <td class="px-4 py-3 text-xs font-semibold">
+                                    @php($batchLabels = ['previewed' => 'Menunggu apply', 'applied' => 'Selesai', 'stale' => 'Stale', 'invalid' => 'Invalid', 'failed' => 'Gagal'])
+                                    <span>{{ $batchLabels[$recentBatch->status] ?? $recentBatch->status }}</span>
+                                    @if($recentBatch->status === 'applied')
+                                        <p class="mt-1 font-normal text-gray-500">{{ $recentBatch->applied_rows }} applied · {{ $recentBatch->blocked_rows }} ditahan</p>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3">{{ $recentBatch->actor?->name ?? 'Akun dihapus' }}</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-xs text-gray-500">{{ $recentBatch->created_at->format('d M Y H:i') }}</td>
