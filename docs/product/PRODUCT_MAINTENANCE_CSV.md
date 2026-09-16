@@ -1,10 +1,10 @@
 # Kontrak CSV Bulk Maintenance Qammaris
 
-Status: Preview-only contract `maintenance-v1` — 2026-09-16
+Status: Preview dan transactional apply contract `maintenance-v1` — 2026-09-16
 
 ## Tujuan
 
-File maintenance membawa usulan perubahan untuk product yang sudah ada. File dibuat dari snapshot katalog v2, dapat dirapikan oleh manusia atau AI, lalu wajib melewati preview deterministik. Versi ini belum mempunyai apply/write.
+File maintenance membawa usulan perubahan untuk product yang sudah ada. File dibuat dari snapshot katalog v2, dapat dirapikan oleh manusia atau AI, lalu wajib melewati preview deterministik sebelum apply eksplisit oleh admin.
 
 ## Alur
 
@@ -13,7 +13,9 @@ File maintenance membawa usulan perubahan untuk product yang sudah ada. File dib
 3. `product_id`, `expected_updated_at`, dan `expected_row_fingerprint` dipertahankan persis.
 4. Data dipindahkan ke template maintenance; field yang tidak ingin diubah dikosongkan.
 5. Admin upload dan mereview perubahan, error, serta stale conflict.
-6. Tidak ada mutation katalog sampai backlog apply transactional terpisah selesai.
+6. Admin mencentang konfirmasi apply pada batch preview yang masih fresh.
+7. Sistem memvalidasi ulang contract, payload, state katalog, timestamp, row fingerprint, taxonomy, dan offer di dalam satu transaksi.
+8. Hanya row valid dengan perubahan yang ditulis; review/no-op dan error dicatat sebagai dilewati atau ditahan.
 
 ## Header tetap
 
@@ -47,13 +49,22 @@ Cell kosong berarti preserve. V1 tidak dapat mengosongkan field existing dan tid
 - **Perlu review:** file valid tetapi tidak menghasilkan perubahan (no-op).
 - **Error:** struktur/value invalid, product hilang/duplikat, taxonomy invalid, offer tidak lengkap, atau stale guard gagal.
 
-Row error tidak menjadi kandidat apply. Missing row dari file tidak mempunyai makna apa pun terhadap product yang tidak dicantumkan.
+Row error tidak menjadi kandidat apply. Row review/no-op juga tidak ditulis. Missing row dari file tidak mempunyai makna apa pun terhadap product yang tidak dicantumkan.
 
 ## Audit dan idempotency
 
 Preview sukses menyimpan batch/row immutable pada tabel audit import existing dengan `contract_version=maintenance-v1`. Query maintenance dan import provider selalu difilter berdasarkan contract version agar kedua flow tidak dapat dibuka silang.
 
 Idempotency menggunakan actor, fingerprint file, contract version, dan fingerprint state katalog. Upload identik pada state identik membuka batch yang sama. File sumber tidak disimpan.
+
+Apply menyimpan actor dan waktu batch, status serta pesan per row, product hasil, dan before/after snapshot. Request ulang pada batch applied tidak mengulang mutation. Batch yang stale, invalid, atau failed bersifat terminal; admin harus membuat preview baru.
+
+## Batas apply
+
+- Seluruh row valid diterapkan dalam satu transaksi; unexpected failure me-rollback semua catalog write.
+- Publication, availability, slug, media, external identity, serta product yang tidak ada di file tidak berubah.
+- `stok_snapshot` hanya memperbarui quantity snapshot; tidak mengubah availability atau freshness status.
+- Tidak ada clear/delete/archive, create product, partial retry, atau undo otomatis pada `maintenance-v1`.
 
 ## Field yang dilarang
 

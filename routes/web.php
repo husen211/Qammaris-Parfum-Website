@@ -81,6 +81,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('product-maintenance', [AdminProductMaintenanceController::class, 'create'])->name('product-maintenance.create');
     Route::get('product-maintenance/template', [AdminProductMaintenanceController::class, 'template'])->name('product-maintenance.template');
     Route::post('product-maintenance/preview', [AdminProductMaintenanceController::class, 'preview'])->name('product-maintenance.preview');
+    Route::post('product-maintenance/{productImportBatch}/apply', [AdminProductMaintenanceController::class, 'apply'])->name('product-maintenance.apply');
 
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);

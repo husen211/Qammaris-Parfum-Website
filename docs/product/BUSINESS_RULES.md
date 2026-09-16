@@ -140,6 +140,12 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 42. Harga dan ukuran wajib diisi bersama. Taxonomy yang diusulkan harus exact case-insensitive dan aktif; missing/nonaktif menjadi error preview.
 43. Missing product, product ID duplikat, stale guard, controlled value ilegal, atau angka invalid ditahan sebagai error. Row tanpa perubahan menjadi review/no-op.
 44. Preview maintenance disimpan sebagai batch audit immutable dan idempotent untuk actor+file+state yang sama, tetapi tidak memberi izin apply. Batch maintenance dan import provider wajib dipisahkan dengan contract version pada seluruh query/route.
+45. Apply maintenance hanya boleh dijalankan admin secara eksplisit pada batch `maintenance-v1` berstatus previewed dengan konfirmasi manusia.
+46. Sebelum mutation, apply memvalidasi ulang contract version, payload hash, catalog-state fingerprint, matched product, timestamp product, row fingerprint, taxonomy aktif, serta pasangan harga+ukuran.
+47. Hanya row valid yang mempunyai perubahan dapat ditulis. Row review/no-op dilewati dan row error/conflict ditahan dengan outcome audit; keduanya tidak boleh mengubah katalog.
+48. Apply maintenance bersifat satu transaksi dan idempotent per batch. Kegagalan unexpected membatalkan seluruh catalog write; request ulang pada batch applied hanya menampilkan hasil tersimpan.
+49. Mutation maintenance terbatas pada allowlist preview. Publication, availability, slug, media, external identity, dan product yang tidak dicantumkan wajib tetap tidak berubah.
+50. Setiap row apply menyimpan outcome, product hasil, waktu, serta before/after snapshot; batch menyimpan actor apply, waktu, jumlah diterapkan, jumlah dilewati/ditahan, dan failure yang aman.
 
 ## Admin dan automation
 

@@ -1606,6 +1606,51 @@ Documentation updates:
 - Business rules, master plan, kontrak snapshot katalog v2, kontrak `PRODUCT_MAINTENANCE_CSV.md`, backlog, dan `ADR-018-internal-id-maintenance-preview.md` diperbarui.
 - Kandidat berikutnya adalah `P6-09` transactional maintenance apply dengan revalidation, explicit confirmation, outcome per row, dan rollback/forward-fix yang terukur; belum dimulai.
 
+### P6-09 Transactional bulk maintenance apply — IN_PROGRESS
+
+Outcome:
+
+- Admin dapat menerapkan baris valid dari preview `maintenance-v1` secara eksplisit, transactional, idempotent, dan auditable tanpa mengubah field di luar kontrak.
+
+In scope:
+
+- Endpoint admin apply dengan checkbox konfirmasi dan contract isolation.
+- Revalidation contract version, payload hash, catalog-state fingerprint, product timestamp, row fingerprint, matched product, taxonomy aktif, dan pasangan harga+ukuran di dalam transaksi.
+- Mutation allowlist untuk nama, deskripsi, brand, gender, stok snapshot, best seller, kategori, satu offer harga+ukuran, serta fragrance notes.
+- Outcome per row dengan before/after snapshot, actor, waktu, status updated/skipped/blocked, serta batch terminal status.
+- UI initial/preview/applying-disabled/success/stale/invalid/failed dan riwayat status maintenance.
+
+Out of scope:
+
+- Create product, clear/delete/archive, publication, availability, slug, media, external identity, taxonomy creation, partial retry, undo otomatis, staging, production, dan deployment.
+
+Dependencies:
+
+- P6-08 preview maintenance berbasis internal ID dan row fingerprint selesai.
+
+Risks:
+
+- Katalog dapat berubah setelah preview; apply wajib berhenti stale sebelum mutation.
+- Kegagalan pada satu mutation unexpected wajib me-rollback seluruh catalog write.
+- Reuse tabel import wajib tetap terisolasi melalui `contract_version` pada route, query, dan action.
+
+Acceptance criteria:
+
+- Hanya admin dengan konfirmasi eksplisit dapat apply batch maintenance previewed.
+- Hanya row valid dengan perubahan yang diterapkan; review/no-op dan error tidak menulis katalog tetapi mempunyai outcome jelas.
+- Apply identik tidak mengulang mutation; batch non-current atau lintas kontrak ditolak.
+- Perubahan katalog setelah preview menghasilkan stale tanpa partial write.
+- Setiap row sukses menyimpan before/after snapshot dan actor batch; publication, availability, slug, media, dan external identity tetap identik.
+- Focused/full tests, Pint, Blade, Composer strict, route audit, build, browser audit mobile/desktop, dan CI lulus.
+
+Verification:
+
+- Belum dijalankan.
+
+Documentation updates:
+
+- Business rules, kontrak maintenance, backlog, dan ADR apply diperbarui setelah verifikasi.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

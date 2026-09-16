@@ -13,7 +13,15 @@ use Throwable;
 
 class ProductMaintenancePreviewer
 {
-    public function __construct(private ProductCatalogRowFingerprint $rowFingerprint) {}
+    public function __construct(
+        private ProductCatalogRowFingerprint $rowFingerprint,
+        private ProductMaintenanceProductSnapshot $snapshot,
+    ) {}
+
+    public function catalogStateFingerprint(): string
+    {
+        return $this->lookupContext()['catalog_state_fingerprint'];
+    }
 
     /**
      * @return array{
@@ -185,7 +193,7 @@ class ProductMaintenancePreviewer
         $this->normalizeAndValidateTaxonomy($data, $context, $issues);
         $this->normalizeNotes($data);
 
-        $currentSnapshot = $product ? $this->snapshot($product) : null;
+        $currentSnapshot = $product ? $this->snapshot->capture($product) : null;
         $changes = collect($issues)->contains('severity', 'error') || ! $product
             ? []
             : $this->changes($product, $data);
@@ -487,35 +495,6 @@ class ProductMaintenancePreviewer
     private function change(string $field, string $label, mixed $current, mixed $proposed): array
     {
         return compact('field', 'label', 'current', 'proposed');
-    }
-
-    /** @return array<string, mixed> */
-    private function snapshot(Product $product): array
-    {
-        $offer = $product->variants->where('is_active', true)->sortBy('id')->first();
-
-        return [
-            'product' => [
-                'id' => $product->getKey(),
-                'updated_at' => $product->updated_at?->toIso8601String(),
-                'brand_id' => $product->brand_id,
-                'category_id' => $product->category_id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'fragrance_notes' => $product->fragrance_notes,
-                'gender' => $product->gender,
-                'stock_quantity' => $product->stock_quantity,
-                'is_best_seller' => $product->is_best_seller,
-                'publication_status' => $product->publication_status,
-                'availability_status' => $product->availability_status,
-            ],
-            'offer' => $offer ? [
-                'id' => $offer->getKey(),
-                'volume' => $offer->volume,
-                'price' => $offer->price,
-                'is_active' => $offer->is_active,
-            ] : null,
-        ];
     }
 
     /** @return array<string, mixed> */

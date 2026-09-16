@@ -49,8 +49,8 @@ class AdminProductMaintenancePreviewTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.product-maintenance.create'))
             ->assertOk()
-            ->assertSee('Preview bulk maintenance')
-            ->assertSee('Preview ini tidak mempunyai tombol apply.')
+            ->assertSee('Bulk maintenance katalog')
+            ->assertSee('Apply hanya tersedia untuk batch preview yang masih fresh.')
             ->assertSee('Belum ada batch maintenance tersimpan.');
 
         $this->actingAs($this->admin)
@@ -102,7 +102,8 @@ class AdminProductMaintenancePreviewTest extends TestCase
             ->assertOk()
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
             ->assertDontSee('<script>alert(1)</script>', false)
-            ->assertSee('Preview selesai—katalog belum berubah.');
+            ->assertSee('Konfirmasi apply maintenance')
+            ->assertSee('name="confirm_apply"', false);
 
         $preview = $response->viewData('preview');
         $batch = $response->viewData('batch');

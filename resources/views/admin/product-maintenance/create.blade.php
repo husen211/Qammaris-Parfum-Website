@@ -12,9 +12,9 @@
 
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-            <p class="text-sm font-semibold text-amber-700">Bandingkan dulu, belum ada perubahan data</p>
-            <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Preview bulk maintenance</h1>
-            <p class="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi dari snapshot katalog. Sistem mencocokkan ID internal, mengecek stale data, lalu menunjukkan field yang berubah tanpa menulis ke katalog.</p>
+            <p class="text-sm font-semibold text-amber-700">Preview, review, lalu konfirmasi apply</p>
+            <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Bulk maintenance katalog</h1>
+            <p class="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi dari snapshot katalog. Sistem mencocokkan ID internal, menunjukkan field berubah, lalu menerapkannya hanya setelah konfirmasi admin dan validasi ulang.</p>
         </div>
         <div class="flex flex-col gap-2 sm:flex-row">
             <a href="{{ route('admin.product-imports.catalog-snapshot') }}" class="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">Unduh snapshot terbaru</a>
@@ -23,8 +23,8 @@
     </div>
 
     <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900" role="note">
-        <p class="font-bold">Preview ini tidak mempunyai tombol apply.</p>
-        <p class="mt-1">Cell kosong mempertahankan nilai saat ini. Slug, publication, availability, media, dan external identity tidak dapat diubah lewat file ini.</p>
+        <p class="font-bold">Apply hanya tersedia untuk batch preview yang masih fresh.</p>
+        <p class="mt-1">Cell kosong mempertahankan nilai saat ini. Slug, publication, availability, media, dan external identity tidak dapat diubah lewat file ini. Baris error dan no-op tidak pernah ditulis.</p>
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -127,9 +127,9 @@
             @endif
 
             <div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="min-w-[80rem] divide-y divide-gray-200 text-left text-sm">
+                <table class="min-w-[92rem] divide-y divide-gray-200 text-left text-sm">
                     <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                        <tr><th class="px-4 py-3">Baris</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Produk</th><th class="px-4 py-3">Perubahan</th><th class="px-4 py-3">Masalah / recovery</th></tr>
+                        <tr><th class="px-4 py-3">Baris</th><th class="px-4 py-3">Preview</th><th class="px-4 py-3">Hasil apply</th><th class="px-4 py-3">Produk</th><th class="px-4 py-3">Perubahan</th><th class="px-4 py-3">Masalah / recovery</th></tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 align-top text-gray-700">
                         @foreach($preview['rows'] as $row)
@@ -140,6 +140,15 @@
                                     @php($statusClasses = ['valid' => 'bg-emerald-50 text-emerald-700', 'review' => 'bg-amber-50 text-amber-700', 'error' => 'bg-red-50 text-red-700'])
                                     @php($statusLabels = ['valid' => 'Valid', 'review' => 'Perlu review', 'error' => 'Error'])
                                     <span class="inline-flex rounded px-2 py-1 text-xs font-semibold {{ $statusClasses[$row['status']] }}">{{ $statusLabels[$row['status']] }}</span>
+                                </td>
+                                <td class="max-w-xs px-4 py-4">
+                                    @php($applyStatus = $row['apply_status'] ?? 'pending')
+                                    @php($applyLabels = ['pending' => 'Menunggu', 'updated' => 'Diterapkan', 'skipped_no_changes' => 'Dilewati', 'blocked_error' => 'Ditahan'])
+                                    @php($applyClasses = ['pending' => 'text-gray-500', 'updated' => 'text-emerald-700', 'skipped_no_changes' => 'text-amber-700', 'blocked_error' => 'text-red-700'])
+                                    <p class="text-xs font-semibold {{ $applyClasses[$applyStatus] ?? 'text-gray-500' }}">{{ $applyLabels[$applyStatus] ?? $applyStatus }}</p>
+                                    @if($row['apply_message'] ?? null)
+                                        <p class="mt-1 text-xs leading-relaxed text-gray-500">{{ $row['apply_message'] }}</p>
+                                    @endif
                                 </td>
                                 <td class="max-w-xs px-4 py-4">
                                     @if($row['matched_product'])
@@ -174,7 +183,7 @@
                                             @endforeach
                                         </ul>
                                     @else
-                                        <span class="text-xs text-emerald-700">Siap untuk tahap apply terpisah.</span>
+                                        <span class="text-xs text-emerald-700">Siap diterapkan setelah konfirmasi.</span>
                                     @endif
                                 </td>
                             </tr>
@@ -183,15 +192,44 @@
                 </table>
             </div>
 
-            <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700" role="status">
-                <p class="font-bold">Preview selesai—katalog belum berubah.</p>
-                <p class="mt-1">Tahap apply transactional akan dibuat sebagai backlog terpisah setelah kontrak preview ini terbukti aman.</p>
-            </div>
+            @if($batch->status === \App\Models\ProductImportBatch::STATUS_PREVIEWED && $batch->valid_rows > 0)
+                <form method="POST" action="{{ route('admin.product-maintenance.apply', $batch) }}" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5" aria-labelledby="maintenance-apply-title">
+                    @csrf
+                    <h3 id="maintenance-apply-title" class="text-base font-bold text-gray-900">4. Konfirmasi apply maintenance</h3>
+                    <p class="mt-1 text-sm leading-relaxed text-gray-700">Sistem akan memvalidasi ulang batch dan menerapkan {{ $batch->valid_rows }} baris valid dalam satu transaksi. {{ $batch->review_rows + $batch->error_rows }} baris review/error akan dilewati atau ditahan.</p>
+                    <label class="mt-4 flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border border-amber-300 bg-white p-3 text-sm leading-relaxed text-gray-800">
+                        <input name="confirm_apply" value="1" type="checkbox" required class="mt-0.5 h-5 w-5 shrink-0 rounded border-gray-300 text-black focus:ring-black">
+                        <span>Saya sudah mereview batch #{{ $batch->id }} dan menyetujui apply field yang ditampilkan.</span>
+                    </label>
+                    @error('confirm_apply')
+                        <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p>
+                    @enderror
+                    <button type="submit" class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-black px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:w-auto">Apply {{ $batch->valid_rows }} perubahan</button>
+                </form>
+            @elseif($batch->status === \App\Models\ProductImportBatch::STATUS_APPLIED)
+                <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
+                    <p class="font-bold">Apply maintenance selesai.</p>
+                    <p class="mt-1">{{ $batch->applied_rows }} baris diterapkan dan {{ $batch->blocked_rows }} baris dilewati atau ditahan oleh guard. Request ulang tidak mengulang mutation.</p>
+                    @if($batch->appliedBy)
+                        <p class="mt-1 text-xs">Oleh {{ $batch->appliedBy->name }} · {{ $batch->applied_at?->format('d M Y H:i') }}</p>
+                    @endif
+                </div>
+            @elseif(in_array($batch->status, [\App\Models\ProductImportBatch::STATUS_STALE, \App\Models\ProductImportBatch::STATUS_INVALID, \App\Models\ProductImportBatch::STATUS_FAILED], true))
+                <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="alert">
+                    <p class="font-bold">Batch tidak dapat diterapkan.</p>
+                    <p class="mt-1">{{ $batch->failure_message }}</p>
+                </div>
+            @else
+                <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700" role="status">
+                    <p class="font-bold">Preview selesai—tidak ada baris valid untuk diterapkan.</p>
+                    <p class="mt-1">Perbaiki file berdasarkan hasil review/error, lalu buat preview baru.</p>
+                </div>
+            @endif
         </section>
     @endif
 
     <section class="mt-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="maintenance-history-title">
-        <h2 id="maintenance-history-title" class="text-lg font-bold text-gray-900">Preview maintenance terbaru</h2>
+        <h2 id="maintenance-history-title" class="text-lg font-bold text-gray-900">Riwayat maintenance terbaru</h2>
         <p class="mt-1 text-sm text-gray-500">Riwayat ini terpisah dari batch import provider.</p>
 
         @if($recentBatches->isEmpty())
@@ -199,13 +237,14 @@
         @else
             <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200">
                 <table class="min-w-[50rem] divide-y divide-gray-200 text-left text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500"><tr><th class="px-4 py-3">Batch</th><th class="px-4 py-3">File</th><th class="px-4 py-3">Actor</th><th class="px-4 py-3">Ringkasan</th><th class="px-4 py-3">Waktu</th></tr></thead>
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500"><tr><th class="px-4 py-3">Batch</th><th class="px-4 py-3">File</th><th class="px-4 py-3">Actor</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Ringkasan</th><th class="px-4 py-3">Waktu</th></tr></thead>
                     <tbody class="divide-y divide-gray-100 text-gray-700">
                         @foreach($recentBatches as $recentBatch)
                             <tr>
                                 <td class="px-4 py-3 font-semibold text-gray-900"><a href="{{ route('admin.product-maintenance.create', ['batch' => $recentBatch->id]) }}" class="underline decoration-gray-300 underline-offset-2 hover:decoration-gray-900">#{{ $recentBatch->id }}</a></td>
                                 <td class="max-w-xs px-4 py-3">{{ $recentBatch->source_filename }}</td>
                                 <td class="px-4 py-3">{{ $recentBatch->actor?->name ?? 'Unknown' }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 font-semibold text-gray-900">{{ ucfirst($recentBatch->status) }}</td>
                                 <td class="whitespace-nowrap px-4 py-3">{{ $recentBatch->valid_rows }} valid · {{ $recentBatch->review_rows }} review · {{ $recentBatch->error_rows }} error</td>
                                 <td class="whitespace-nowrap px-4 py-3">{{ $recentBatch->created_at?->format('d M Y H:i') }}</td>
                             </tr>

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Products\ApplyProductMaintenanceBatch;
 use App\Exceptions\InvalidProductImportFile;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ProductMaintenanceApplyRequest;
 use App\Http\Requests\Admin\ProductMaintenancePreviewRequest;
 use App\Imports\Products\ProductMaintenanceCsv;
 use App\Models\ProductImportBatch;
@@ -11,6 +13,7 @@ use App\Services\ProductMaintenanceBatchRecorder;
 use App\Services\ProductMaintenancePreviewer;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminProductMaintenanceController extends Controller
@@ -24,7 +27,12 @@ class AdminProductMaintenanceController extends Controller
             ? null
             : ProductImportBatch::query()
                 ->where('contract_version', ProductMaintenanceCsv::VERSION)
-                ->with(['actor:id,name', 'rows.matchedProduct:id,name,publication_status'])
+                ->with([
+                    'actor:id,name',
+                    'appliedBy:id,name',
+                    'rows.matchedProduct:id,name,publication_status',
+                    'rows.appliedProduct:id,name,publication_status',
+                ])
                 ->findOrFail($batchId);
 
         return view('admin.product-maintenance.create', $this->viewData(
@@ -65,6 +73,38 @@ class AdminProductMaintenanceController extends Controller
         return view('admin.product-maintenance.create', $this->viewData($preview, $batch));
     }
 
+    public function apply(
+        ProductMaintenanceApplyRequest $request,
+        ProductImportBatch $productImportBatch,
+        ApplyProductMaintenanceBatch $applyProductMaintenanceBatch
+    ) {
+        $this->assertMaintenanceBatch($productImportBatch);
+
+        try {
+            $batch = $applyProductMaintenanceBatch->handle($productImportBatch, $request->user());
+        } catch (RuntimeException $exception) {
+            return redirect()
+                ->route('admin.product-maintenance.create', ['batch' => $productImportBatch->getKey()])
+                ->with('error', $exception->getMessage());
+        }
+
+        $message = match ($batch->status) {
+            ProductImportBatch::STATUS_APPLIED => sprintf(
+                'Apply maintenance selesai: %d baris diterapkan dan %d baris dilewati atau ditahan.',
+                $batch->applied_rows,
+                $batch->blocked_rows
+            ),
+            ProductImportBatch::STATUS_STALE,
+            ProductImportBatch::STATUS_INVALID,
+            ProductImportBatch::STATUS_FAILED => $batch->failure_message,
+            default => 'Batch maintenance tidak dapat diterapkan.',
+        };
+
+        return redirect()
+            ->route('admin.product-maintenance.create', ['batch' => $batch->getKey()])
+            ->with($batch->status === ProductImportBatch::STATUS_APPLIED ? 'success' : 'error', $message);
+    }
+
     /**
      * @param  array<string, mixed>|null  $preview
      * @return array<string, mixed>
@@ -99,6 +139,8 @@ class AdminProductMaintenanceController extends Controller
                     'action' => $row->candidate_action,
                     'data' => $data,
                     'changes' => $data['_changes'] ?? [],
+                    'apply_status' => $row->apply_status,
+                    'apply_message' => $row->apply_message,
                     'matched_product' => $row->matchedProduct ? [
                         'id' => $row->matchedProduct->getKey(),
                         'name' => $row->matchedProduct->name,
@@ -115,5 +157,10 @@ class AdminProductMaintenanceController extends Controller
             ],
             'skipped_blank_rows' => $batch->skipped_blank_rows ?? [],
         ];
+    }
+
+    private function assertMaintenanceBatch(ProductImportBatch $batch): void
+    {
+        abort_unless($batch->contract_version === ProductMaintenanceCsv::VERSION, 404);
     }
 }

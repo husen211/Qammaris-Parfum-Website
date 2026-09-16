@@ -12,6 +12,8 @@ class ProductImportRow extends Model
 
     public const APPLY_UPDATED = 'updated';
 
+    public const APPLY_SKIPPED_NO_CHANGES = 'skipped_no_changes';
+
     public const APPLY_BLOCKED_ERROR = 'blocked_error';
 
     public const APPLY_BLOCKED_PROTECTED = 'blocked_protected';
