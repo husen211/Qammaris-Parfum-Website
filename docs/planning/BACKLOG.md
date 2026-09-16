@@ -1285,7 +1285,7 @@ Documentation updates:
 - Business rules, kontrak CSV, backlog, dan `ADR-012-persistent-immutable-import-preview-batches.md` diperbarui.
 - Kandidat berikutnya adalah `P6-03` explicit draft apply dengan revalidation state/payload, transaction, row outcome, dan aturan ketat untuk produk existing published; belum dimulai pada item ini.
 
-### P6-03 Explicit transactional draft apply — IN_REVIEW
+### P6-03 Explicit transactional draft apply — DONE
 
 Outcome:
 
@@ -1332,6 +1332,7 @@ Verification:
 - Browser lokal pada `390x844` dan `1440x900` membuktikan upload multipart nyata, preview 1 valid + 1 error, konfirmasi apply, hasil 1 draft dibuat + 1 error ditahan, history status, internal table scroll, nol page overflow, dan nol console warning/error.
 - Produk, offer, identity, batch/row, serta CSV sintetis audit telah dihapus setelah verifikasi. Data lokal kembali 180 products, 65 offers, 0 external identities, 19 images, 0 batches, dan 0 rows.
 - Staging, production, media storage, bucket, DNS, serta project lain tidak disentuh.
+- GitHub Actions CI untuk commit `64dd18a` lulus pada PHP 8.2/Laravel tests dan Node/Vite build: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35096096685`.
 
 Documentation updates:
 
