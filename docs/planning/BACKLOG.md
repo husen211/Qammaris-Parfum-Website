@@ -16,7 +16,7 @@
 | P0 | Discovery & decisions | DONE | — | Baseline lokal, keterbatasan production, dan keputusan domain terdokumentasi |
 | P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
 | P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
-| P3 | Product domain & migrations | IN_PROGRESS | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
+| P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | BACKLOG | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
@@ -563,7 +563,7 @@ Verification:
 - Tidak ada staging, production, media existing, nilai harga existing, SKU existing, ID, atau slug yang diubah.
 - CI GitHub Actions untuk commit implementasi `b09a284` lulus pada run `35054778566` (push) dan `35054781975` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P3-03 External product identity boundary — IN_REVIEW
+### P3-03 External product identity boundary — DONE
 
 Outcome:
 
@@ -606,7 +606,7 @@ Verification:
 - Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
 - Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
 - Tidak ada UI, media, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini hanya mengubah domain/schema backend.
-- CI GitHub Actions menunggu commit implementasi.
+- CI GitHub Actions untuk commit implementasi `6e92e0a` lulus pada run `35055611565` (push) dan `35055613609` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
