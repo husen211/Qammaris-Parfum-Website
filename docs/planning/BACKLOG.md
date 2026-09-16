@@ -561,7 +561,7 @@ Verification:
 - Baseline sebelum perubahan diaudit dari implementasi Blade/Git existing; screenshot sebelum tidak tersedia karena akses admin lokal belum tersedia saat baseline. Screenshot sesudah perubahan diverifikasi langsung pada kedua viewport.
 - Akun admin sintetis lokal dibuat khusus verifikasi dan tepat satu record tersebut telah dihapus kembali. Tidak ada produk/media test tersimpan.
 - Tidak ada staging, production, media existing, nilai harga existing, SKU existing, ID, atau slug yang diubah.
-- Bukti CI GitHub Actions dicatat setelah commit implementasi tersedia di remote.
+- CI GitHub Actions untuk commit implementasi `b09a284` lulus pada run `35054778566` (push) dan `35054781975` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
 ### P3-03 External product identity boundary — BACKLOG
 
