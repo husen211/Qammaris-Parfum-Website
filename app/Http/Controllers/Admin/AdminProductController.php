@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\ProductMediaStorage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,10 @@ class AdminProductController extends Controller
         // Logic Filter Brand (BARU)
         if (isset($catalogContext['brand_id'])) {
             $query->where('brand_id', $catalogContext['brand_id']);
+        }
+
+        if (isset($catalogContext['availability'])) {
+            $this->applyAvailabilityFilter($query, $catalogContext['availability']);
         }
 
         match ($catalogContext['sort'] ?? 'latest') {
@@ -189,6 +194,19 @@ class AdminProductController extends Controller
                 'is_best_seller' => $request->has('is_best_seller'),
             ]);
 
+            if ($request->has('availability_status')) {
+                $availabilityStatus = $request->validated('availability_status');
+
+                if ($availabilityStatus !== $product->availability_status
+                    || $request->boolean('availability_confirmed')) {
+                    $product->update([
+                        'availability_status' => $availabilityStatus,
+                        'availability_source' => 'manual',
+                        'availability_checked_at' => now(),
+                    ]);
+                }
+            }
+
             $offerData = array_values($request->validated('variants'))[0];
             $syncSingleOffer->handle($product, $offerData);
 
@@ -305,6 +323,15 @@ class AdminProductController extends Controller
             $context['brand_id'] = $brandId;
         }
 
+        $availability = $query['availability'] ?? null;
+        if (is_string($availability) && in_array($availability, [
+            Product::AVAILABILITY_UNKNOWN,
+            Product::AVAILABILITY_AVAILABLE,
+            Product::AVAILABILITY_SOLD_OUT,
+        ], true)) {
+            $context['availability'] = $availability;
+        }
+
         $sort = $query['sort'] ?? null;
         if (is_string($sort) && in_array($sort, self::CATALOG_SORTS, true) && $sort !== 'latest') {
             $context['sort'] = $sort;
@@ -337,6 +364,41 @@ class AdminProductController extends Controller
         parse_str($parts['query'] ?? '', $query);
 
         return route('admin.products.index', $this->normalizeCatalogContext($query), false);
+    }
+
+    private function applyAvailabilityFilter(Builder $query, string $availability): void
+    {
+        if ($availability === Product::AVAILABILITY_AVAILABLE) {
+            $query
+                ->where('availability_status', Product::AVAILABILITY_AVAILABLE)
+                ->whereNotNull('availability_checked_at')
+                ->where('availability_checked_at', '>=', now()->subHours(Product::AVAILABILITY_FRESH_HOURS));
+
+            return;
+        }
+
+        if ($availability === Product::AVAILABILITY_SOLD_OUT) {
+            $query->where('availability_status', Product::AVAILABILITY_SOLD_OUT);
+
+            return;
+        }
+
+        $freshnessThreshold = now()->subHours(Product::AVAILABILITY_FRESH_HOURS);
+
+        $query->where(function (Builder $availabilityQuery) use ($freshnessThreshold): void {
+            $availabilityQuery
+                ->whereNull('availability_status')
+                ->orWhere('availability_status', Product::AVAILABILITY_UNKNOWN)
+                ->orWhere(function (Builder $staleAvailableQuery) use ($freshnessThreshold): void {
+                    $staleAvailableQuery
+                        ->where('availability_status', Product::AVAILABILITY_AVAILABLE)
+                        ->where(function (Builder $checkedAtQuery) use ($freshnessThreshold): void {
+                            $checkedAtQuery
+                                ->whereNull('availability_checked_at')
+                                ->orWhere('availability_checked_at', '<', $freshnessThreshold);
+                        });
+                });
+        });
     }
 
     private function positiveInteger(mixed $value): ?int

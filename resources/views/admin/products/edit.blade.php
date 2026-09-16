@@ -122,6 +122,55 @@
                                 </label>
                             </div>
                         </div>
+
+                        <div class="border-t border-gray-100 pt-5">
+                            <div class="mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900">Ketersediaan katalog</h4>
+                                <p class="mt-1 text-xs leading-relaxed text-gray-500">
+                                    Bukan stok live. Status tersedia kembali menjadi belum dikonfirmasi setelah 36 jam; sold out tetap sampai diperbarui.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                                <div>
+                                    <label for="availability-status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <select id="availability-status" name="availability_status" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('availability_status') border-red-500 @enderror" @error('availability_status') aria-describedby="availability-status-error" aria-invalid="true" @enderror>
+                                        <option value="unknown" {{ old('availability_status', $product->availability_status ?? 'unknown') === 'unknown' ? 'selected' : '' }}>Belum dikonfirmasi</option>
+                                        <option value="available" {{ old('availability_status', $product->availability_status) === 'available' ? 'selected' : '' }}>Tersedia</option>
+                                        <option value="sold_out" {{ old('availability_status', $product->availability_status) === 'sold_out' ? 'selected' : '' }}>Sold out</option>
+                                    </select>
+                                    @error('availability_status')
+                                    <p id="availability-status-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <label class="flex items-start gap-3 rounded-lg border border-gray-200 p-3 text-sm text-gray-700">
+                                    <input type="hidden" name="availability_confirmed" value="0">
+                                    <input type="checkbox" name="availability_confirmed" value="1" class="mt-0.5 rounded border-gray-300 text-black shadow-sm focus:border-black focus:ring focus:ring-black" {{ old('availability_confirmed') ? 'checked' : '' }}>
+                                    <span>
+                                        <span class="block font-medium text-gray-900">Konfirmasi ulang sekarang</span>
+                                        <span class="mt-0.5 block text-xs leading-relaxed text-gray-500">Perbarui waktu pengecekan walaupun status tidak berubah.</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <p class="mt-3 text-xs text-gray-500">
+                                Efektif saat ini:
+                                <span class="font-semibold text-gray-700">
+                                    {{ match ($product->effective_availability) {
+                                        'available' => 'Tersedia',
+                                        'sold_out' => 'Sold out',
+                                        default => 'Belum dikonfirmasi',
+                                    } }}
+                                </span>
+                                @if($product->availability_checked_at)
+                                    · diperiksa {{ $product->availability_checked_at->format('d M Y, H:i') }}
+                                    @if($product->availability_source)
+                                        melalui {{ $product->availability_source }}
+                                    @endif
+                                @endif
+                            </p>
+                        </div>
                     </div>
                 </div>
 

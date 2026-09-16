@@ -39,6 +39,16 @@ class ProductUpdateRequest extends FormRequest
             'description' => ['required', 'string', 'max:20000'],
             'compare_at_price' => ['nullable', 'numeric', 'gt:0', 'max:99999999.99'],
             'gender' => ['required', Rule::in(['Unisex', 'Pria', 'Wanita'])],
+            'availability_status' => [
+                'sometimes',
+                'required',
+                Rule::in([
+                    Product::AVAILABILITY_UNKNOWN,
+                    Product::AVAILABILITY_AVAILABLE,
+                    Product::AVAILABILITY_SOLD_OUT,
+                ]),
+            ],
+            'availability_confirmed' => ['sometimes', 'boolean'],
             'top_notes' => ['nullable', 'string', 'max:1000'],
             'middle_notes' => ['nullable', 'string', 'max:1000'],
             'base_notes' => ['nullable', 'string', 'max:1000'],

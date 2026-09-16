@@ -958,6 +958,43 @@ Verification:
 - Akun admin audit lokal sementara dibuat hanya untuk browser desktop dan telah dihapus setelah verifikasi. Submit browser memakai nilai produk yang sama; tidak ada perubahan nilai bisnis produk, schema, media, staging, atau production.
 - Commit implementasi `1e1ddd8` lulus GitHub Actions CI run `35073801793` dalam 25 detik.
 
+### P5-02 Manual availability control and truthful admin status — IN_PROGRESS
+
+Outcome:
+
+- Admin dapat menandai produk sebagai belum dikonfirmasi, tersedia, atau sold out secara eksplisit tanpa menyamakan snapshot quantity dengan status live.
+
+In scope:
+
+- Filter availability pada catalog manager dengan semantics effective availability dan context yang tetap terbawa selama pagination/edit.
+- Tampilan availability yang jujur pada daftar admin, termasuk waktu pengecekan dan perlakuan available yang melewati freshness window 36 jam sebagai unknown.
+- Kontrol availability manual pada product editor; perubahan status atau konfirmasi ulang menyimpan source `manual` dan checked time baru tanpa mengubah publication.
+- Perbaikan layout baris katalog pada mobile agar identitas, harga, availability, edit, dan archive/restore dapat diakses tanpa horizontal overflow.
+- Regression test dan verifikasi browser untuk populated, filtered, empty, validation, success, stale, mobile, dan desktop states.
+
+Out of scope:
+
+- Perubahan availability pada public catalog, sinkronisasi Majoo/Shopee/AI, bulk availability update, publication/draft workflow, quantity reconciliation, audit log, staging, dan production.
+
+Dependencies:
+
+- P3 availability domain foundation dan P5-01 catalog working context selesai.
+
+Risks:
+
+- Menurunkan status dari variant stock dapat memberi klaim sold out/available yang salah; UI dan query harus memakai availability metadata.
+- Edit biasa tidak boleh memperpanjang freshness status available kecuali status berubah atau admin memilih konfirmasi ulang.
+- Availability tidak boleh mengubah publication/archive state.
+
+Acceptance criteria:
+
+- Snapshot quantity `0` dengan availability unknown tidak ditampilkan sebagai sold out.
+- Filter available hanya memuat konfirmasi available yang masih fresh; available stale masuk filter unknown; sold out tetap sold out tanpa expiry.
+- Status manual yang berubah atau dikonfirmasi ulang menyimpan `availability_source=manual` dan `availability_checked_at`, tetapi edit biasa mempertahankan timestamp lama.
+- Context filter availability dipertahankan pada pagination, edit, cancel, validation error, dan update sukses.
+- Catalog manager mobile tidak mempunyai horizontal overflow untuk operasi utama dan desktop tetap mempertahankan density tabel.
+- Focused tests, seluruh test Laravel, Blade compilation, build, quality checks, browser mobile/desktop, dan CI lulus.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
