@@ -1394,6 +1394,59 @@ Documentation updates:
 - Business rules media/import, kontrak CSV, master plan, `ADR-014-safe-imported-image-acquisition.md`, dan `PRODUCT_IMPORT_IMAGE_QUEUE.md` telah diperbarui.
 - Kandidat berikutnya adalah `P6-05` conflict resolution manual untuk mapping product published/archived dan baris ambigu; belum dimulai.
 
+### P6-05 Manual protected-product import resolution — DONE
+
+Outcome:
+
+- Admin dapat mereview baris import yang ditahan karena mapping mengarah ke produk published/archived, memilih field yang benar-benar disetujui, lalu menerapkannya tanpa mengubah status publikasi atau availability produk.
+
+In scope:
+
+- Panel resolusi per baris setelah batch applied, berisi perbandingan nilai katalog saat ini dan kandidat import.
+- Pilihan field eksplisit untuk nama, deskripsi, brand, kategori, gender, terlaris, stok, fragrance notes, serta pasangan harga/ukuran.
+- Konfirmasi manusia, audit actor/waktu/field/snapshot sebelum-sesudah, one-time idempotency, dan optimistic stale guard.
+- Published/archived tetap published/archived; slug, availability status, identity, media, dan field kosong tidak ditimpa.
+- Error/conflict struktural diberi recovery copy yang jelas: perbaiki CSV dan buat preview baru, tanpa override berisiko.
+
+Out of scope:
+
+- Auto-resolve konflik, fuzzy matching, mengubah identity/provider, auto-create taxonomy, auto-publish, mengubah availability status, akuisisi gambar protected row, undo, staging, production, dan deployment.
+
+Dependencies:
+
+- P6-03 transactional apply dan P6-04 safe image acquisition selesai.
+
+Risks:
+
+- Produk dapat berubah setelah apply; resolusi harus ditolak bila snapshot katalog tidak lagi sama.
+- Update parsial terhadap produk published/archived berisiko mengubah halaman publik; hanya field terpilih yang boleh dimutasi dan status publikasi wajib dipertahankan.
+- Harga dan ukuran adalah satu offer; keduanya harus diterapkan sebagai satu pilihan atomik.
+
+Acceptance criteria:
+
+- Hanya row `blocked_protected` dari batch applied yang dapat diresolusi dan harus berasal dari batch pada URL.
+- Admin wajib memilih minimal satu field dan memberi konfirmasi eksplisit.
+- Nilai kosong/taxonomy tidak aktif tidak dapat menimpa katalog; harga+ukuran diterapkan bersama.
+- Resolusi kedua tidak melakukan mutation ulang, dan perubahan katalog sejak snapshot menahan resolusi dengan pesan recovery.
+- Actor, waktu, selected fields, pesan, dan snapshot before/after tersimpan; UI menunjukkan state unresolved/resolved.
+- UI usable pada `390x844` dan `1440x900`, keyboard/touch jelas, tidak overflow, dan console bersih.
+- Focused/full tests, migration round-trip, Pint, Blade, build, quality checks, browser verification, dan CI lulus.
+
+Verification:
+
+- Migration additive `2026_09_16_170000_add_manual_resolution_to_product_import_rows` lulus siklus lokal `up → down → up` tanpa mengubah baseline katalog.
+- Focused regression import lulus: 29 test / 263 assertion. Seluruh suite Laravel lulus: 150 test / 848 assertion.
+- Pint dirty, Blade clear/cache, `git diff --check`, dan Vite production build lulus. Build hanya mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB.
+- Browser end-to-end pada row published membuktikan perbandingan field, pemilihan nama + offer, konfirmasi, state resolved, actor/waktu, dan status publikasi/availability yang tetap terlindungi.
+- Audit mobile `390x844` dan desktop `1440x900` lulus: document width sama dengan viewport, layout card terbaca, kontrol minimal 44 px, state success jelas, dan console tanpa warning/error.
+- Product, offer, identity, batch, dan row sintetis audit dibersihkan presisi. Data lokal kembali ke 180 products, 65 offers, 19 images, 0 identities, 0 batches, dan 0 rows.
+- Staging, production, DNS, bucket, dan project lain tidak disentuh.
+
+Documentation updates:
+
+- Business rules, kontrak CSV, backlog, dan `ADR-015-manual-protected-import-resolution.md` diperbarui.
+- Kandidat berikutnya adalah P6-06 batch report/export untuk kebutuhan audit operasional; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

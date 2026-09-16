@@ -281,10 +281,86 @@
                     <p class="mt-1">{{ $batch->applied_rows }} baris diterapkan dan {{ $batch->blocked_rows }} baris ditahan{{ $batch->appliedBy ? ' oleh '.$batch->appliedBy->name : '' }}.</p>
                 </div>
 
+                @if($protectedResolutions->isNotEmpty())
+                    <section class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm sm:p-5" aria-labelledby="protected-resolution-title">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wide text-amber-700">Keputusan manusia diperlukan</p>
+                            <h3 id="protected-resolution-title" class="mt-1 text-lg font-bold text-gray-900">5. Review update produk published/archived</h3>
+                            <p class="mt-2 max-w-3xl text-sm leading-relaxed text-gray-700">Pilih hanya field yang memang ingin diterapkan. Status publikasi, availability, slug, identity, dan media tidak akan berubah.</p>
+                        </div>
+
+                        <div class="mt-4 space-y-4">
+                            @foreach($protectedResolutions as $resolution)
+                                @php($resolutionRow = $resolution['row'])
+                                <article id="protected-resolution-{{ $resolutionRow->id }}" class="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4 sm:p-5">
+                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                        <div>
+                                            <p class="text-xs font-semibold text-gray-500">Baris {{ $resolutionRow->line_number }} · {{ $resolutionRow->provider }} / {{ $resolutionRow->external_product_id }}</p>
+                                            <h4 class="mt-1 text-base font-bold text-gray-900">{{ $resolution['product']->name }}</h4>
+                                            <p class="mt-1 text-xs text-amber-700">Produk {{ $resolution['product']->publication_status }} dilindungi dari bulk overwrite.</p>
+                                        </div>
+                                        <a href="{{ route('admin.products.edit', $resolution['product']) }}" class="inline-flex min-h-11 items-center text-sm font-semibold text-gray-900 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-900">Buka produk #{{ $resolution['product']->id }}</a>
+                                    </div>
+
+                                    @if($resolutionRow->resolution_status === \App\Actions\Products\ResolveProtectedProductImportRow::STATUS_RESOLVED)
+                                        <div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
+                                            <p class="font-bold">Sudah direview dan diterapkan manual.</p>
+                                            <p class="mt-1">{{ count($resolutionRow->resolution_fields ?? []) }} field diterapkan{{ $resolutionRow->resolvedBy ? ' oleh '.$resolutionRow->resolvedBy->name : '' }} pada {{ $resolutionRow->resolved_at?->format('d M Y H:i') }}.</p>
+                                            <p class="mt-1 text-xs">{{ $resolutionRow->resolution_message }}</p>
+                                        </div>
+                                    @else
+                                        <form method="POST" action="{{ route('admin.product-imports.resolve-protected', [$batch, $resolutionRow]) }}" class="mt-4">
+                                            @csrf
+                                            <fieldset>
+                                                <legend class="text-sm font-bold text-gray-900">Bandingkan dan pilih field</legend>
+                                                <div class="mt-3 space-y-3">
+                                                    @foreach($resolution['fields'] as $field)
+                                                        <label class="grid gap-3 rounded-lg border border-gray-200 p-3 {{ $field['available'] ? 'cursor-pointer hover:border-gray-400' : 'bg-gray-50 opacity-65' }} sm:grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)]">
+                                                            <input type="checkbox" name="fields[]" value="{{ $field['key'] }}" {{ $field['available'] ? '' : 'disabled' }} class="mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black">
+                                                            <span class="min-w-0">
+                                                                <span class="block text-xs font-bold uppercase tracking-wide text-gray-500">Saat ini · {{ $field['label'] }}</span>
+                                                                <span class="mt-1 block break-words text-sm text-gray-800">{{ filled($field['current']) ? $field['current'] : 'Kosong' }}</span>
+                                                            </span>
+                                                            <span class="min-w-0 sm:border-l sm:border-gray-200 sm:pl-3">
+                                                                <span class="block text-xs font-bold uppercase tracking-wide {{ $field['available'] ? 'text-amber-700' : 'text-gray-400' }}">Hasil import</span>
+                                                                <span class="mt-1 block break-words text-sm font-medium text-gray-900">{{ filled($field['import']) ? $field['import'] : 'Tidak tersedia' }}</span>
+                                                            </span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            </fieldset>
+
+                                            @if($errors->has('fields') || $errors->has('fields.*'))
+                                                <p class="mt-3 text-sm text-red-700" role="alert">{{ $errors->first('fields') ?: $errors->first('fields.*') }}</p>
+                                            @endif
+
+                                            <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-gray-700">
+                                                <input name="confirm_resolution" value="1" type="checkbox" required class="mt-0.5 h-4 w-4 rounded border-gray-300 text-black focus:ring-black">
+                                                <span>Saya sudah membandingkan nilai dan menyetujui field terpilih diterapkan ke produk {{ $resolution['product']->publication_status }} ini.</span>
+                                            </label>
+                                            @error('confirm_resolution')
+                                                <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p>
+                                            @enderror
+
+                                            <button type="submit" class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-black px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:w-auto">
+                                                Terapkan field terpilih
+                                            </button>
+                                        </form>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
+
+                        @if($batch->rows->where('apply_status', \App\Models\ProductImportRow::APPLY_BLOCKED_ERROR)->isNotEmpty())
+                            <p class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">Baris error/conflict struktural tidak dapat dipaksa dari halaman ini. Perbaiki CSV, lalu buat preview baru agar mapping tetap dapat diaudit.</p>
+                        @endif
+                    </section>
+                @endif
+
                 <section class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="image-acquisition-title">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
-                            <h3 id="image-acquisition-title" class="text-base font-bold text-gray-900">5. Simpan gambar ke storage Qammaris</h3>
+                            <h3 id="image-acquisition-title" class="text-base font-bold text-gray-900">{{ $protectedResolutions->isNotEmpty() ? '6' : '5' }}. Simpan gambar ke storage Qammaris</h3>
                             <p class="mt-1 max-w-3xl text-sm leading-relaxed text-gray-600">Proses berjalan per produk melalui antrean. URL provider divalidasi, file diperiksa, lalu disimpan ke disk media aktif. Halaman publik tidak memakai hotlink.</p>
                         </div>
                         @if($imageAcquisition['queued'] || $imageAcquisition['processing'])

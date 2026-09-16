@@ -115,6 +115,16 @@ File CSV asli tidak disimpan. Batch menyimpan nama/ukuran/fingerprint file, acto
 - Kegagalan satu kandidat dicatat tanpa membatalkan draft. Retry hanya memproses kandidat non-success dan kandidat yang sudah tersimpan tidak diunduh ulang.
 - Product yang berubah menjadi published/archived sebelum job berjalan ditahan tanpa network request atau storage write.
 
+## Resolusi manual produk protected
+
+- Setelah batch applied, row `blocked_protected` menampilkan perbandingan nilai katalog saat ini dengan kandidat import.
+- Admin memilih field secara eksplisit. Field yang tersedia: nama, deskripsi, brand, kategori, gender, terlaris, stok snapshot, fragrance notes, serta pasangan harga+ukuran.
+- Publication status, availability status, slug, identity provider, dan media selalu dipertahankan. Field kosong tidak dapat dipilih untuk menghapus data.
+- Brand/kategori hanya diterapkan bila taxonomy aktif dengan nama exact tersedia. Harga dan ukuran diterapkan sebagai satu offer atomik.
+- Snapshot before saat row ditahan dibandingkan kembali dengan state product. Perubahan manual yang lebih baru menghentikan resolusi dan mewajibkan preview baru.
+- Resolusi sukses menyimpan actor, waktu, field terpilih, pesan, dan snapshot before/after. Submit ulang tidak menjalankan mutation kedua.
+- Row error/conflict struktural tidak mempunyai override. Admin memperbaiki file sumber lalu membuat preview baru.
+
 ## Batas tahap ini
 
-Belum tersedia conflict resolution per baris, update product published/archived, taxonomy auto-create, bulk publish, undo batch, export katalog, staging, atau production apply. Deployment worker antrean tetap pekerjaan environment/cutover; lihat runbook `PRODUCT_IMPORT_IMAGE_QUEUE.md`.
+Belum tersedia fuzzy/automatic conflict resolution, perubahan identity, taxonomy auto-create, bulk publish, undo batch, export katalog, staging, atau production apply. Akuisisi gambar untuk protected row tetap tidak tersedia. Deployment worker antrean tetap pekerjaan environment/cutover; lihat runbook `PRODUCT_IMPORT_IMAGE_QUEUE.md`.

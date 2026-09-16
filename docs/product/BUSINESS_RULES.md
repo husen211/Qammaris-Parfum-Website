@@ -121,6 +121,11 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 23. Download gambar adalah tahap terpisah setelah apply. Hanya row `created/updated`, batch `applied`, dan product yang masih draft yang eligible; apply sendiri tetap tidak melakukan network request atau storage write.
 24. Dispatch akuisisi gambar harus eksplisit dan auditable. Rerun hanya memproses kandidat non-success; kandidat sukses tetap final dan dihitung dalam kapasitas maksimum tiga gambar.
 25. Host sumber import dikelola melalui environment allowlist. Menambah host adalah keputusan operasional terpisah dan tidak boleh berasal dari nilai CSV.
+26. Row `blocked_protected` hanya dapat diubah melalui resolusi manual setelah batch applied. Admin wajib membandingkan nilai current/import, memilih minimal satu field, dan memberi konfirmasi eksplisit.
+27. Resolusi protected bersifat field-level dan one-time idempotent. Publication status, availability status, slug, external identity, serta media tidak boleh berubah sebagai efek resolusi.
+28. Harga dan ukuran adalah satu pilihan atomik. Nilai import kosong tidak boleh menghapus nilai existing dan taxonomy hanya dapat dipilih bila record aktif exact tersedia.
+29. Snapshot produk saat apply menjadi optimistic concurrency guard. Bila katalog berubah setelah row ditahan, resolusi ditolak dan admin harus membuat preview baru dari state terkini.
+30. Actor, waktu, field terpilih, pesan, serta snapshot before/after resolusi disimpan pada import row. Error/conflict struktural tetap tidak dapat dipaksa dan harus diperbaiki pada CSV.
 
 ## Admin dan automation
 

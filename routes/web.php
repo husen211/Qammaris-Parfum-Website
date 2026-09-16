@@ -73,6 +73,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('product-imports/preview', [AdminProductImportController::class, 'preview'])->name('product-imports.preview');
     Route::post('product-imports/{productImportBatch}/apply', [AdminProductImportController::class, 'apply'])->name('product-imports.apply');
     Route::post('product-imports/{productImportBatch}/images', [AdminProductImportController::class, 'acquireImages'])->name('product-imports.images');
+    Route::post('product-imports/{productImportBatch}/rows/{productImportRow}/resolve-protected', [AdminProductImportController::class, 'resolveProtected'])->name('product-imports.resolve-protected');
 
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);

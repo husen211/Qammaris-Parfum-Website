@@ -244,6 +244,118 @@ class AdminProductImportApplyTest extends TestCase
         ], ProductImportRow::query()->orderBy('line_number')->pluck('apply_status')->all());
     }
 
+    public function test_admin_can_resolve_selected_fields_on_a_protected_product_without_changing_status(): void
+    {
+        Brand::create(['name' => 'Afnan', 'is_active' => true]);
+        Category::create(['name' => 'Eau de Parfum (EDP)', 'is_active' => true]);
+        $product = $this->mappedProduct('Published Original', 'PUB-RESOLVE', Product::PUBLICATION_PUBLISHED, true);
+        $product->forceFill([
+            'description' => 'Deskripsi lama tetap aman.',
+            'availability_status' => Product::AVAILABILITY_SOLD_OUT,
+        ])->save();
+        $originalSlug = $product->slug;
+
+        $data = $this->completeRow();
+        $data['kode_produk'] = 'PUB-RESOLVE';
+        $data['nama_produk'] = 'Published Selected Update';
+        $batch = $this->preview([$data]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.apply', $batch), ['confirm_apply' => '1'])
+            ->assertRedirect();
+
+        $row = ProductImportRow::sole();
+        $this->actingAs($this->admin)
+            ->get(route('admin.product-imports.create', ['batch' => $batch->id]))
+            ->assertOk()
+            ->assertSee('Review update produk published/archived')
+            ->assertSee('Published Selected Update');
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.resolve-protected', [$batch, $row]), [
+                'fields' => ['name', 'stock_quantity', 'offer'],
+                'confirm_resolution' => '1',
+            ])
+            ->assertRedirect(route('admin.product-imports.create', ['batch' => $batch->id]))
+            ->assertSessionHas('success', 'Baris 2 selesai direview: 3 field diterapkan manual.');
+
+        $product->refresh();
+        $this->assertSame('Published Selected Update', $product->name);
+        $this->assertSame('Deskripsi lama tetap aman.', $product->description);
+        $this->assertSame($originalSlug, $product->slug);
+        $this->assertSame(Product::PUBLICATION_PUBLISHED, $product->publication_status);
+        $this->assertSame(Product::AVAILABILITY_SOLD_OUT, $product->availability_status);
+        $this->assertSame(5, $product->stock_quantity);
+        $this->assertSame('599000.00', ProductVariant::sole()->price);
+
+        $row->refresh();
+        $this->assertSame('resolved', $row->resolution_status);
+        $this->assertSame(['name', 'stock_quantity', 'offer'], $row->resolution_fields);
+        $this->assertSame($this->admin->id, $row->resolved_by);
+        $this->assertNotNull($row->resolution_before_snapshot);
+        $this->assertSame('Published Selected Update', $row->resolution_after_snapshot['product']['name']);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.resolve-protected', [$batch, $row]), [
+                'fields' => ['description'],
+                'confirm_resolution' => '1',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('Deskripsi lama tetap aman.', $product->fresh()->description);
+        $this->assertSame(['name', 'stock_quantity', 'offer'], $row->fresh()->resolution_fields);
+    }
+
+    public function test_protected_resolution_requires_fields_confirmation_and_matching_batch(): void
+    {
+        Brand::create(['name' => 'Afnan', 'is_active' => true]);
+        Category::create(['name' => 'Eau de Parfum (EDP)', 'is_active' => true]);
+        $this->mappedProduct('Published Original', 'PUB-VALIDATE', Product::PUBLICATION_PUBLISHED, true);
+        $data = $this->completeRow();
+        $data['kode_produk'] = 'PUB-VALIDATE';
+        $batch = $this->preview([$data]);
+        $this->actingAs($this->admin)->post(route('admin.product-imports.apply', $batch), ['confirm_apply' => '1']);
+        $row = ProductImportRow::sole();
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.resolve-protected', [$batch, $row]))
+            ->assertSessionHasErrors(['fields', 'confirm_resolution']);
+
+        $otherBatch = $this->preview([$this->completeRow()]);
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.resolve-protected', [$otherBatch, $row]), [
+                'fields' => ['name'],
+                'confirm_resolution' => '1',
+            ])
+            ->assertSessionHas('error', 'Baris import tidak berasal dari batch ini.');
+
+        $this->assertNull($row->fresh()->resolution_status);
+    }
+
+    public function test_protected_resolution_stops_when_product_changed_after_apply(): void
+    {
+        Brand::create(['name' => 'Afnan', 'is_active' => true]);
+        Category::create(['name' => 'Eau de Parfum (EDP)', 'is_active' => true]);
+        $product = $this->mappedProduct('Published Original', 'PUB-STALE', Product::PUBLICATION_PUBLISHED, true);
+        $data = $this->completeRow();
+        $data['kode_produk'] = 'PUB-STALE';
+        $batch = $this->preview([$data]);
+        $this->actingAs($this->admin)->post(route('admin.product-imports.apply', $batch), ['confirm_apply' => '1']);
+        $row = ProductImportRow::sole();
+
+        $product->forceFill(['description' => 'Perubahan admin terbaru.'])->save();
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.resolve-protected', [$batch, $row]), [
+                'fields' => ['name'],
+                'confirm_resolution' => '1',
+            ])
+            ->assertSessionHas('error', 'Produk berubah setelah batch diterapkan. Review perubahan terbaru lalu buat preview baru.');
+
+        $this->assertSame('Published Original', $product->fresh()->name);
+        $this->assertNull($row->fresh()->resolution_status);
+    }
+
     public function test_stale_catalog_state_aborts_before_catalog_mutation(): void
     {
         Brand::create(['name' => 'Afnan', 'is_active' => true]);

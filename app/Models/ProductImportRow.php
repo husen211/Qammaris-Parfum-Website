@@ -47,6 +47,13 @@ class ProductImportRow extends Model
         'image_acquisition_requested_at',
         'image_acquisition_completed_at',
         'image_acquisition_outcomes',
+        'resolution_status',
+        'resolution_fields',
+        'resolved_by',
+        'resolved_at',
+        'resolution_message',
+        'resolution_before_snapshot',
+        'resolution_after_snapshot',
     ];
 
     protected function casts(): array
@@ -61,6 +68,10 @@ class ProductImportRow extends Model
             'image_acquisition_requested_at' => 'datetime',
             'image_acquisition_completed_at' => 'datetime',
             'image_acquisition_outcomes' => 'array',
+            'resolution_fields' => 'array',
+            'resolved_at' => 'datetime',
+            'resolution_before_snapshot' => 'array',
+            'resolution_after_snapshot' => 'array',
         ];
     }
 
@@ -82,5 +93,10 @@ class ProductImportRow extends Model
     public function imageAcquisitionRequestedBy()
     {
         return $this->belongsTo(User::class, 'image_acquisition_requested_by');
+    }
+
+    public function resolvedBy()
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
     }
 }

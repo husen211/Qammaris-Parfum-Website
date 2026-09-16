@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\ApplyProductImportBatch;
 use App\Actions\Products\QueueProductImportImages;
+use App\Actions\Products\ResolveProtectedProductImportRow;
 use App\Exceptions\InvalidProductImportFile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductImportApplyRequest;
 use App\Http\Requests\Admin\ProductImportImageAcquisitionRequest;
 use App\Http\Requests\Admin\ProductImportPreviewRequest;
+use App\Http\Requests\Admin\ProductImportResolutionRequest;
 use App\Imports\Products\CanonicalProductCsv;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
@@ -35,8 +37,12 @@ class AdminProductImportController extends Controller
                     'actor:id,name',
                     'appliedBy:id,name',
                     'rows.matchedProduct:id,name,publication_status',
-                    'rows.appliedProduct:id,name,publication_status',
+                    'rows.appliedProduct:id,brand_id,category_id,name,slug,description,fragrance_notes,gender,is_best_seller,publication_status,availability_status,stock_quantity',
                     'rows.imageAcquisitionRequestedBy:id,name',
+                    'rows.resolvedBy:id,name',
+                    'rows.appliedProduct.brand:id,name',
+                    'rows.appliedProduct.category:id,name',
+                    'rows.appliedProduct.variants:id,product_id,volume,price,stock',
                 ])
                 ->findOrFail($batchId);
 
@@ -135,6 +141,34 @@ class AdminProductImportController extends Controller
         ));
     }
 
+    public function resolveProtected(
+        ProductImportResolutionRequest $request,
+        ProductImportBatch $productImportBatch,
+        ProductImportRow $productImportRow,
+        ResolveProtectedProductImportRow $resolver
+    ): RedirectResponse {
+        try {
+            $row = $resolver->handle(
+                $productImportBatch,
+                $productImportRow,
+                $request->user(),
+                $request->validated('fields')
+            );
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('admin.product-imports.create', ['batch' => $productImportBatch->getKey()])
+                ->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.product-imports.create', ['batch' => $productImportBatch->getKey()])
+            ->with('success', sprintf(
+                'Baris %d selesai direview: %d field diterapkan manual.',
+                $row->line_number,
+                count($row->resolution_fields ?? [])
+            ));
+    }
+
     /**
      * @param  array<string, mixed>|null  $preview
      * @return array<string, mixed>
@@ -151,6 +185,7 @@ class AdminProductImportController extends Controller
                 ->limit(10)
                 ->get(),
             'imageAcquisition' => $batch ? $this->imageAcquisitionSummary($batch) : null,
+            'protectedResolutions' => $batch ? $this->protectedResolutionData($batch) : collect(),
         ];
     }
 
@@ -182,6 +217,7 @@ class AdminProductImportController extends Controller
                 ] : null,
                 'image_acquisition_status' => $row->image_acquisition_status,
                 'image_acquisition_outcomes' => $row->image_acquisition_outcomes ?? [],
+                'resolution_status' => $row->resolution_status,
             ])->all(),
             'summary' => [
                 'total' => $batch->total_rows,
@@ -220,5 +256,53 @@ class AdminProductImportController extends Controller
             'retryable' => $eligibleRows->where('image_acquisition_status', ProductImportRow::IMAGE_COMPLETED_WITH_ERRORS)->isNotEmpty(),
             'has_sources' => $sourceCount > 0,
         ];
+    }
+
+    private function protectedResolutionData(ProductImportBatch $batch)
+    {
+        return $batch->rows
+            ->where('apply_status', ProductImportRow::APPLY_BLOCKED_PROTECTED)
+            ->map(function (ProductImportRow $row): array {
+                $product = $row->appliedProduct;
+                $data = $row->normalized_data ?? [];
+                $offer = $product?->variants->first();
+
+                $fields = [
+                    ['key' => 'name', 'label' => 'Nama', 'current' => $product?->name, 'import' => $data['nama_produk'] ?? null, 'available' => trim((string) ($data['nama_produk'] ?? '')) !== ''],
+                    ['key' => 'description', 'label' => 'Deskripsi', 'current' => $product?->description, 'import' => $data['deskripsi_produk'] ?? null, 'available' => trim((string) ($data['deskripsi_produk'] ?? '')) !== ''],
+                    ['key' => 'brand', 'label' => 'Brand', 'current' => $product?->brand?->name, 'import' => $data['brand'] ?? null, 'available' => trim((string) ($data['brand'] ?? '')) !== ''],
+                    ['key' => 'category', 'label' => 'Kategori', 'current' => $product?->category?->name, 'import' => $data['kategori'] ?? null, 'available' => trim((string) ($data['kategori'] ?? '')) !== ''],
+                    ['key' => 'gender', 'label' => 'Gender', 'current' => $product?->gender, 'import' => $data['gender'] ?? null, 'available' => trim((string) ($data['gender'] ?? '')) !== ''],
+                    ['key' => 'is_best_seller', 'label' => 'Terlaris', 'current' => $product?->is_best_seller ? 'Ya' : 'Tidak', 'import' => ($data['terlaris'] ?? false) ? 'Ya' : 'Tidak', 'available' => true],
+                    ['key' => 'stock_quantity', 'label' => 'Stok snapshot', 'current' => $product?->stock_quantity, 'import' => $data['stok'] ?? null, 'available' => ($data['stok'] ?? '') !== ''],
+                    ['key' => 'fragrance_notes', 'label' => 'Fragrance notes', 'current' => $this->formatNotes($product?->fragrance_notes), 'import' => $this->formatImportNotes($data), 'available' => collect(['top_notes', 'middle_notes', 'base_notes'])->contains(fn (string $key): bool => ($data[$key] ?? []) !== [])],
+                    ['key' => 'offer', 'label' => 'Harga + ukuran', 'current' => $offer ? sprintf('Rp %s · %s ml', number_format((float) $offer->price, 0, ',', '.'), $offer->volume) : 'Belum ada', 'import' => ($data['harga'] ?? '') !== '' && ($data['ukuran_ml'] ?? '') !== '' ? sprintf('Rp %s · %s ml', number_format((float) $data['harga'], 0, ',', '.'), $data['ukuran_ml']) : null, 'available' => ($data['harga'] ?? '') !== '' && ($data['ukuran_ml'] ?? '') !== ''],
+                ];
+
+                return [
+                    'row' => $row,
+                    'product' => $product,
+                    'fields' => $fields,
+                ];
+            })->values();
+    }
+
+    private function formatNotes(?array $notes): string
+    {
+        if (! $notes) {
+            return 'Belum ada';
+        }
+
+        return collect(['top', 'middle', 'base'])
+            ->map(fn (string $group): string => ucfirst($group).': '.implode(', ', $notes[$group] ?? []))
+            ->implode(' · ');
+    }
+
+    private function formatImportNotes(array $data): string
+    {
+        return collect(['top' => 'top_notes', 'middle' => 'middle_notes', 'base' => 'base_notes'])
+            ->filter(fn (string $field): bool => ($data[$field] ?? []) !== [])
+            ->map(fn (string $field, string $group): string => ucfirst($group).': '.implode(', ', $data[$field]))
+            ->implode(' · ');
     }
 }

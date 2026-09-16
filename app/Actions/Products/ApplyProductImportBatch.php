@@ -12,6 +12,7 @@ use App\Models\ProductImportRow;
 use App\Models\User;
 use App\Services\ProductImportPayloadHasher;
 use App\Services\ProductImportPreviewer;
+use App\Services\ProductImportProductSnapshot;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -24,6 +25,7 @@ class ApplyProductImportBatch
         private ProductImportPayloadHasher $payloadHasher,
         private MapExternalProductIdentity $mapExternalIdentity,
         private SyncSingleOffer $syncSingleOffer,
+        private ProductImportProductSnapshot $snapshot,
     ) {}
 
     public function handle(ProductImportBatch $batch, User $actor): ProductImportBatch
@@ -187,7 +189,7 @@ class ApplyProductImportBatch
             'applied_product_id' => $product->getKey(),
             'apply_message' => 'Draft baru dibuat. URL gambar belum diunduh.',
             'before_snapshot' => null,
-            'after_snapshot' => $this->snapshot($product),
+            'after_snapshot' => $this->snapshot->capture($product),
             'applied_at' => $appliedAt,
         ]);
     }
@@ -205,7 +207,7 @@ class ApplyProductImportBatch
         }
 
         $product = Product::query()->lockForUpdate()->findOrFail($identity->product_id);
-        $before = $this->snapshot($product);
+        $before = $this->snapshot->capture($product);
 
         if ($product->publication_status !== Product::PUBLICATION_DRAFT) {
             $this->blockRow(
@@ -258,7 +260,7 @@ class ApplyProductImportBatch
             'applied_product_id' => $product->getKey(),
             'apply_message' => 'Draft existing diperbarui; field CSV kosong dipertahankan.',
             'before_snapshot' => $before,
-            'after_snapshot' => $this->snapshot($product),
+            'after_snapshot' => $this->snapshot->capture($product),
             'applied_at' => $appliedAt,
         ]);
 
@@ -363,44 +365,6 @@ class ApplyProductImportBatch
         }
 
         return $changed ? $notes : null;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function snapshot(Product $product): array
-    {
-        $product->refresh();
-        $offer = $product->variants()->lockForUpdate()->first();
-
-        return [
-            'product' => [
-                'id' => $product->getKey(),
-                'brand_id' => $product->brand_id,
-                'category_id' => $product->category_id,
-                'name' => $product->name,
-                'slug' => $product->slug,
-                'description' => $product->description,
-                'base_price' => $product->base_price,
-                'fragrance_notes' => $product->fragrance_notes,
-                'gender' => $product->gender,
-                'is_best_seller' => $product->is_best_seller,
-                'is_active' => $product->is_active,
-                'publication_status' => $product->publication_status,
-                'availability_status' => $product->availability_status,
-                'stock_quantity' => $product->stock_quantity,
-                'availability_source' => $product->availability_source,
-                'availability_checked_at' => $product->availability_checked_at?->toJSON(),
-            ],
-            'offer' => $offer ? [
-                'id' => $offer->getKey(),
-                'volume' => $offer->volume,
-                'price' => $offer->price,
-                'stock' => $offer->stock,
-                'sku' => $offer->sku,
-                'is_active' => $offer->is_active,
-            ] : null,
-        ];
     }
 
     private function loadResult(ProductImportBatch $batch): ProductImportBatch
