@@ -14,6 +14,7 @@ use App\Http\Requests\Admin\ProductImportResolutionRequest;
 use App\Imports\Products\CanonicalProductCsv;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
+use App\Services\ProductCatalogSnapshotCsv;
 use App\Services\ProductImportBatchCsvReport;
 use App\Services\ProductImportBatchRecorder;
 use App\Services\ProductImportPreviewer;
@@ -64,6 +65,19 @@ class AdminProductImportController extends Controller
         }, 'template-import-produk-qammaris.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Cache-Control' => 'no-store, private',
+        ]);
+    }
+
+    public function catalogSnapshot(ProductCatalogSnapshotCsv $snapshot): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($snapshot): void {
+            $stream = fopen('php://output', 'wb');
+            $snapshot->write($stream);
+            fclose($stream);
+        }, 'qammaris-catalog-snapshot-'.now()->format('Ymd-His').'.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store, private',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 

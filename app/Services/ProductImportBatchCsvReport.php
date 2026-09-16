@@ -7,6 +7,8 @@ use App\Models\ProductImportRow;
 
 class ProductImportBatchCsvReport
 {
+    public function __construct(private SpreadsheetSafeCell $safeCell) {}
+
     public const VERSION = 'qammaris-import-audit-v1';
 
     public const HEADERS = [
@@ -57,7 +59,7 @@ class ProductImportBatchCsvReport
             ->get()
             ->each(function (ProductImportRow $row) use ($batch, $stream): void {
                 fputcsv($stream, array_map(
-                    fn (mixed $value): string => $this->safeCell($value),
+                    fn (mixed $value): string => $this->safeCell->sanitize($value),
                     $this->row($batch, $row)
                 ), escape: '');
             });
@@ -116,24 +118,5 @@ class ProductImportBatchCsvReport
                 $issue['message'] ?? null,
             ], fn (mixed $value): bool => $value !== null && $value !== '')))
             ->implode(' | ');
-    }
-
-    private function safeCell(mixed $value): string
-    {
-        if ($value === null) {
-            return '';
-        }
-
-        $value = str_replace(["\r\n", "\r"], "\n", (string) $value);
-        $trimmed = ltrim($value);
-
-        if ($value !== '' && (
-            in_array($value[0], ["\t", "\r", "\n"], true)
-            || preg_match('/^[=+\-@]/u', $trimmed) === 1
-        )) {
-            return "'".$value;
-        }
-
-        return $value;
     }
 }

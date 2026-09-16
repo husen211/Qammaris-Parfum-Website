@@ -177,7 +177,7 @@ Membangun catalog manager, product editor, draft/publish, brand/category CRUD, m
 
 ### Phase 6 — Bulk import/export dan audit
 
-Menambahkan file contract, mapping, preview, conflict resolution, idempotent draft apply, akuisisi gambar aman melalui antrean, batch history, dan audit log.
+Menambahkan file contract, mapping, preview, conflict resolution, idempotent draft apply, akuisisi gambar aman melalui antrean, batch history, audit log, dan snapshot katalog read-only untuk rekonsiliasi maintenance.
 
 ### Phase 7 — Public catalog UX
 

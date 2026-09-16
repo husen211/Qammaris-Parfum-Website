@@ -128,6 +128,10 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 30. Actor, waktu, field terpilih, pesan, serta snapshot before/after resolusi disimpan pada import row. Error/conflict struktural tetap tidak dapat dipaksa dan harus diperbaiki pada CSV.
 31. Laporan audit batch adalah export read-only dari record persisted, satu row per import row. Report tidak boleh mengubah katalog, membuat file permanen, atau mengklaim sebagai export katalog terkini.
 32. Report audit memakai kolom allowlist, BOM UTF-8, urutan line source, dan sanitasi formula spreadsheet. URL gambar sumber, deskripsi panjang, serta snapshot before/after internal tidak diexport.
+33. Snapshot katalog adalah export read-only seluruh product dalam urutan ID internal dan mencakup status draft, published, serta archived. Snapshot bukan file import dan tidak memberi izin write-back.
+34. Harga dan ukuran snapshot berasal dari satu offer aktif; bila offer aktif tidak ada, nilainya kosong dan tidak diisi dari `base_price`. External identity diurutkan dan diagregasi tanpa menggantikan ID internal.
+35. Snapshot media hanya memuat jumlah gambar aktif dan keberadaan primary image. Object key, path storage, URL publik, serta URL sumber provider tidak diexport.
+36. Semua cell snapshot disanitasi terhadap formula spreadsheet, response tidak disimpan server-side, dan timestamp product dipakai sebagai konteks freshness—bukan jaminan file masih current saat dibuka.
 
 ## Admin dan automation
 

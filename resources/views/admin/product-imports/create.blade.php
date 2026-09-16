@@ -14,9 +14,17 @@
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Import Produk</h1>
             <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi Claude. Sistem menyimpan preview immutable; apply hanya membuat draft baru atau memperbarui draft existing yang aman.</p>
         </div>
-        <a href="{{ route('admin.product-imports.template') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-            Unduh template CSV
-        </a>
+        <div class="sm:max-w-sm">
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a href="{{ route('admin.product-imports.template') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                    Unduh template CSV
+                </a>
+                <a href="{{ route('admin.product-imports.catalog-snapshot') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-900 bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                    Unduh snapshot katalog
+                </a>
+            </div>
+            <p class="mt-2 text-xs leading-relaxed text-gray-500 sm:text-right">Snapshot bersifat read-only dan tidak dapat langsung diimport.</p>
+        </div>
     </div>
 
     <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">

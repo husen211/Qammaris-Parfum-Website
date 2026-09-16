@@ -1500,6 +1500,51 @@ Documentation updates:
 - Business rules, kontrak CSV/report, backlog, dan `ADR-016-import-batch-audit-csv-report.md` diperbarui.
 - Kandidat berikutnya adalah P6-07 canonical catalog export untuk kebutuhan bulk maintenance; belum dimulai.
 
+### P6-07 Read-only catalog maintenance snapshot — IN_PROGRESS
+
+Outcome:
+
+- Admin dapat mengunduh snapshot CSV seluruh katalog untuk rekonsiliasi dan persiapan bulk maintenance tanpa mengubah data atau membentuk jalur write-back tersembunyi.
+
+In scope:
+
+- Export CSV UTF-8 BOM, satu baris per product dalam urutan ID internal, mencakup draft, published, dan archived.
+- Kontrak versioned berisi ID/slug stabil, publication, availability recorded/effective, taxonomy, single offer, stok snapshot, best seller, fragrance notes, external identity agregat, serta ringkasan kelengkapan media.
+- Harga dan ukuran dibaca dari offer aktif; identity diurutkan deterministik; media hanya diexport sebagai jumlah aktif dan penanda primary tanpa path/URL.
+- Sanitasi formula injection pada semua cell, response streaming `no-store`, filename aman, admin authorization, serta empty-state header-only.
+- Tombol download dan copy read-only yang jelas pada halaman Import Produk, diverifikasi mobile dan desktop.
+
+Out of scope:
+
+- Re-import langsung, bulk update/write, XLSX/PDF, export binary/path/URL media, data customer, staging, production, deployment, dan perubahan schema.
+
+Dependencies:
+
+- P3 single-offer authority, P4 media boundary, dan P6-06 safe CSV report selesai.
+
+Risks:
+
+- Snapshot dapat menjadi stale segera setelah download; timestamp per product disertakan dan file dinyatakan read-only.
+- Data legacy dapat belum mempunyai offer atau external identity; cell dibiarkan kosong dan tidak ditebak dari nama/SKU.
+- Spreadsheet dapat mengeksekusi nilai formula; setiap cell wajib melewati sanitizer yang sama dengan report audit import.
+
+Acceptance criteria:
+
+- Hanya admin terautentikasi dapat mengunduh snapshot; non-admin ditolak.
+- Header/version tetap, BOM UTF-8, satu row per product dalam urutan ID, dan database kosong menghasilkan header saja.
+- Semua publication status tercakup; harga/ukuran berasal dari offer aktif; external identity teragregasi deterministik.
+- Formula-like values aman dan tidak ada image path, provider image URL, secret, atau mutation katalog.
+- UI menjelaskan snapshot tidak dapat langsung diimport, usable pada `390x844` dan `1440x900`, tidak overflow, keyboard/touch jelas, dan console bersih.
+- Focused/full tests, Pint, Blade, Composer strict, route audit, build, browser download, dan CI lulus.
+
+Verification:
+
+- Belum dijalankan.
+
+Documentation updates:
+
+- Business rules, kontrak snapshot, backlog, dan ADR keputusan export akan diperbarui setelah verifikasi.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
