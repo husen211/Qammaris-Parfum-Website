@@ -19,7 +19,7 @@
 | P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | DONE | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
-| P6 | Import/export & audit | IN_PROGRESS | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
+| P6 | Import/export & audit | DONE | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
 | P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
 | P9 | Hardening & cutover | BACKLOG | P1–P8 | Production launch dan observation selesai |
@@ -1606,7 +1606,7 @@ Documentation updates:
 - Business rules, master plan, kontrak snapshot katalog v2, kontrak `PRODUCT_MAINTENANCE_CSV.md`, backlog, dan `ADR-018-internal-id-maintenance-preview.md` diperbarui.
 - Kandidat berikutnya adalah `P6-09` transactional maintenance apply dengan revalidation, explicit confirmation, outcome per row, dan rollback/forward-fix yang terukur; belum dimulai.
 
-### P6-09 Transactional bulk maintenance apply — IN_PROGRESS
+### P6-09 Transactional bulk maintenance apply — DONE
 
 Outcome:
 
@@ -1645,11 +1645,19 @@ Acceptance criteria:
 
 Verification:
 
-- Belum dijalankan.
+- Focused maintenance preview/apply tests lulus: 14 test / 139 assertion, termasuk auth, explicit confirmation, contract isolation, allowlist mutation, protected-field preservation, no-op/error outcome, idempotency, stale state, tampered payload, dan full transaction rollback.
+- Full Laravel suite lulus: 171 test / 1.064 assertion.
+- Pint targeted, Blade compile/cache, Composer strict validation, route audit empat endpoint maintenance, `git diff --check`, dan production Vite build lulus. Build tetap mempunyai warning existing DaisyUI `@property` dan chunk `about-lanyard` sekitar 3,28 MB.
+- Browser audit nyata berhasil menjalankan upload CSV, preview, checkbox confirmation, apply, reload batch, outcome row, dan history pada desktop `1280x720`; document width sama dengan viewport dan console bersih.
+- Render browser mobile nyata melalui frame `390x844` mempunyai `clientWidth=390`, `scrollWidth=390`, tiga action utama setinggi 44 px, success state terbaca, dan console bersih. Baseline awal juga direkam sebelum perubahan pada surface maintenance lokal.
+- Produk #263, batch #8, brand #23, kategori #7, CSV, dan wrapper viewport sintetis dihapus secara terarah setelah audit. Baseline lokal kembali menjadi 180 products, 65 offers, 19 images, 0 identities, 0 batches, dan 0 rows.
+- Tidak ada migration, data/media production, staging, credential, deployment, atau repository lain yang disentuh.
+- Commit implementasi `bf2bd28` lulus GitHub Actions CI pada PHP 8.2/Laravel tests dan Node/Vite build: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35117849699`.
 
 Documentation updates:
 
-- Business rules, kontrak maintenance, backlog, dan ADR apply diperbarui setelah verifikasi.
+- Business rules, master plan, kontrak `PRODUCT_MAINTENANCE_CSV.md`, backlog, dan `ADR-019-transactional-maintenance-apply.md` diperbarui.
+- Phase 6 selesai. Kandidat berikutnya adalah `P7-01` audit dan kontrak UX discovery katalog publik mobile-first; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
