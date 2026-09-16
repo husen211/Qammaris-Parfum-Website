@@ -1500,7 +1500,7 @@ Documentation updates:
 - Business rules, kontrak CSV/report, backlog, dan `ADR-016-import-batch-audit-csv-report.md` diperbarui.
 - Kandidat berikutnya adalah P6-07 canonical catalog export untuk kebutuhan bulk maintenance; belum dimulai.
 
-### P6-07 Read-only catalog maintenance snapshot — IN_PROGRESS
+### P6-07 Read-only catalog maintenance snapshot — DONE
 
 Outcome:
 
@@ -1539,11 +1539,18 @@ Acceptance criteria:
 
 Verification:
 
-- Belum dijalankan.
+- Focused snapshot/report regression lulus: 7 test / 76 assertion. Seluruh suite Laravel lulus: 157 test / 924 assertion.
+- Pint targeted, Blade clear/cache, Composer strict validation, route audit, `git diff --check`, dan Vite production build lulus. Build mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB.
+- Browser localhost membuktikan tombol snapshot, copy read-only, dan download CSV nyata pada mobile `390x844` serta desktop `1440x900`.
+- Kedua viewport mempunyai document width sama dengan viewport, tombol download setinggi 44 px, halaman tetap berada pada route import setelah download, dan console tanpa warning/error.
+- Tidak ada migration atau mutation katalog. Database lokal tetap 180 products, 65 offers, 19 images, 0 identities, 0 import batches, dan 0 import rows.
+- Staging, production, DNS, bucket, media object, dan project lain tidak disentuh.
+- Commit implementasi `1aa6a77` lulus GitHub Actions CI pada PHP 8.2/Laravel tests dan Node/Vite build: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35111807230`.
 
 Documentation updates:
 
-- Business rules, kontrak snapshot, backlog, dan ADR keputusan export akan diperbarui setelah verifikasi.
+- Business rules, master plan, kontrak `PRODUCT_CATALOG_SNAPSHOT.md`, backlog, dan `ADR-017-read-only-catalog-maintenance-snapshot.md` diperbarui.
+- Kandidat berikutnya adalah `P6-08` kontrak preview bulk maintenance berbasis ID internal dengan stale/conflict guard; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
