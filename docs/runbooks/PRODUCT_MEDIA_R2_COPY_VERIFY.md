@@ -1,6 +1,19 @@
 # Product Media R2 Copy-Verify Runbook
 
-Status: foundation lokal; bucket/credential R2 nyata dan cutover belum dijalankan.
+Status: bucket dan credential staging tersedia; copy-verify media nyata dan cutover belum dijalankan.
+
+## Environment staging yang sudah disiapkan
+
+Pada 2026-09-16, setup berikut telah diverifikasi tanpa mencatat nilai credential:
+
+- bucket private Cloudflare R2 `qammaris-website-media-staging` memakai lokasi otomatis Asia Pacific dan standard storage class;
+- token S3 mempunyai permission `Object Read & Write` dan dibatasi hanya ke bucket tersebut;
+- GitHub Environment `staging` menyimpan `R2_ACCESS_KEY_ID` dan `R2_SECRET_ACCESS_KEY` sebagai encrypted secrets;
+- `R2_BUCKET`, `R2_ENDPOINT`, `R2_REGION`, dan `PRODUCT_MEDIA_TARGET_DISK` disimpan sebagai environment variables pada environment yang sama;
+- `PRODUCT_MEDIA_DISK` tetap tidak diarahkan ke `r2`, `R2_URL` tidak diaktifkan, dan bucket tetap private;
+- bucket operasional Qammaris App tidak diubah.
+
+GitHub secrets tidak dapat dibaca kembali oleh runtime lokal. Sebelum menjalankan dry-run terhadap media lokal, credential harus disediakan ke environment operator melalui channel aman. Jangan memindahkan secret melalui chat, commit, dokumentasi, command-line argument, atau shell history.
 
 ## Batas keamanan
 

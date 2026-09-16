@@ -756,7 +756,7 @@ Verification:
 - Implementasi tercatat pada commit `81cf3bc` (`feat: add r2 media copy verification`).
 - CI GitHub Actions untuk commit implementasi lulus pada run `35059749288` (push) dan `35059752504` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P4-04 R2 staging copy verification — BLOCKED
+### P4-04 R2 staging copy verification — IN_PROGRESS
 
 Outcome:
 
@@ -796,10 +796,12 @@ Acceptance criteria:
 Verification:
 
 - Preflight lokal 2026-09-16 mengonfirmasi disk aktif tetap `public` dan target tetap `r2`.
-- `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT`, dan `R2_URL` belum tersedia pada environment lokal.
-- GitHub Environment `staging` hanya mempunyai secret deployment SSH; belum mempunyai secret R2.
-- Tidak ada koneksi, bucket creation, copy, cutover, atau perubahan data/media yang dijalankan.
-- Blocker: owner perlu mengaktifkan R2 dan membuat bucket/token bucket-scoped, atau membuka dashboard Cloudflare dan memberi izin eksplisit untuk setup tersebut.
+- Bucket private `qammaris-website-media-staging` dibuat pada Cloudflare R2 dengan lokasi otomatis Asia Pacific dan standard storage class. Bucket operasional Qammaris App tidak diubah.
+- Token R2 `Object Read & Write` dibuat dengan scope hanya ke bucket `qammaris-website-media-staging`; token account-wide tidak digunakan.
+- GitHub Environment `staging` menyimpan `R2_ACCESS_KEY_ID` dan `R2_SECRET_ACCESS_KEY` sebagai encrypted secrets. Nilai credential tidak dicatat di chat, Git, dokumentasi, database, atau output terminal.
+- GitHub Environment `staging` menyimpan `R2_BUCKET`, `R2_ENDPOINT`, `R2_REGION`, dan `PRODUCT_MEDIA_TARGET_DISK` sebagai environment variables. `PRODUCT_MEDIA_DISK` tidak diubah dan public delivery tidak diaktifkan.
+- Secret belum dipasang ke environment operator lokal, sehingga dry-run/copy terhadap 19 object yang direferensikan database lokal belum dijalankan. Staging Hostinger masih tidak mempunyai dataset/media sumber yang setara untuk menggantikan verifikasi lokal ini.
+- Remaining gate: sediakan credential pada runtime operator yang mempunyai 19 source media, lalu jalankan dry-run, apply, dan rerun idempotent sesuai runbook tanpa mencetak secret.
 
 ## P5 — Admin Panel V2 captured requirements
 
