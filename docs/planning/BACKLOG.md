@@ -906,7 +906,7 @@ Verification:
 
 ## P5 — Admin Panel V2 captured requirements
 
-### P5-01 Preserve catalog working context — IN_PROGRESS
+### P5-01 Preserve catalog working context — DONE
 
 Outcome:
 
@@ -942,6 +942,21 @@ Acceptance criteria:
 - Context external, path selain catalog, parameter asing, nilai sort ilegal, dan page tidak valid tidak digunakan sebagai tujuan redirect.
 - UI tetap dapat digunakan pada viewport `390x844` dan `1440x900` tanpa overflow baru atau console error.
 - Focused tests, seluruh test Laravel, Blade compilation, build, quality checks, dan CI lulus.
+
+Implementation notes:
+
+- Controller merekonstruksi context catalog hanya dari `page`, `search`, `brand_id`, dan `sort`; nilai brand harus ada, sort dibatasi allowlist, dan return path harus tepat menuju `/admin/products` tanpa scheme, host, credential, port, atau fragment.
+- Link edit membawa return context tersebut ke editor. Breadcrumb, cancel, hidden form field, dan redirect update sukses memakai hasil normalisasi yang sama.
+- Pagination menggunakan context hasil normalisasi dan page yang melewati hasil terakhir diarahkan ke page terakhir yang masih valid.
+- Catalog manager sekarang mempunyai sort eksplisit `Terbaru`, `Nama A–Z`, dan `Nama Z–A` serta label aksesibel untuk search/filter/sort.
+
+Verification:
+
+- Focused regression test lulus: `5 passed (27 assertions)`; regression admin/catalog terkait lulus: `25 passed (102 assertions)`; seluruh test Laravel lulus: `92 passed (392 assertions)`.
+- Composer validation, Blade compilation/cache, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus. Warning existing DaisyUI `@property` dan chunk `about-lanyard` besar tidak diperluas oleh item ini.
+- Browser nyata memverifikasi catalog admin responsive pada surface mobile dan desktop: sort `Nama A–Z`, pagination page 2, link edit, cancel, serta update sukses seluruhnya kembali ke `/admin/products?page=2&sort=name_asc`; tidak ditemukan console error.
+- Akun admin audit lokal sementara dibuat hanya untuk browser desktop dan telah dihapus setelah verifikasi. Submit browser memakai nilai produk yang sama; tidak ada perubahan nilai bisnis produk, schema, media, staging, atau production.
+- Commit implementasi `1e1ddd8` lulus GitHub Actions CI run `35073801793` dalam 25 detik.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
