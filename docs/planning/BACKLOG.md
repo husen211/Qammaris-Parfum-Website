@@ -18,7 +18,7 @@
 | P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
 | P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
-| P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
+| P5 | Admin Panel V2 | IN_PROGRESS | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
 | P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
@@ -906,11 +906,42 @@ Verification:
 
 ## P5 — Admin Panel V2 captured requirements
 
-### P5-01 Preserve catalog working context — BACKLOG
+### P5-01 Preserve catalog working context — IN_PROGRESS
 
-- Catalog manager membawa page, search, filter, dan sort ke product editor melalui return context yang tervalidasi.
-- Setelah simpan atau batal, admin kembali ke konteks daftar sebelumnya dan tidak dipaksa mengulang navigasi dari halaman pertama.
-- Perilaku fallback tetap aman bila context hilang, kedaluwarsa, atau mengarah keluar aplikasi.
+Outcome:
+
+- Admin dapat mengedit produk berulang dari catalog manager tanpa kehilangan page, search, filter brand, dan sort yang sedang digunakan.
+
+In scope:
+
+- Normalisasi query catalog untuk `page`, `search`, `brand_id`, dan `sort` dengan allowlist server-side.
+- Sort eksplisit terbaru, nama A–Z, dan nama Z–A pada catalog manager.
+- Return context relatif yang tervalidasi pada link edit, breadcrumb, cancel, dan redirect update sukses.
+- Fallback ke catalog default untuk context hilang/tidak valid/external dan koreksi page yang melewati hasil terakhir.
+- Regression test serta verifikasi browser mobile/desktop pada alur daftar → edit → batal/simpan.
+
+Out of scope:
+
+- Redesign visual menyeluruh catalog manager/product editor, filter status baru, bulk actions, draft/publish workflow, brand/category CRUD, staging, dan production.
+
+Dependencies:
+
+- P3 product domain dan P4 media storage selesai.
+- Business rule UX preservasi context telah disetujui owner.
+
+Risks:
+
+- Return URL yang dipercaya mentah dapat menjadi open redirect; hanya path catalog internal dan parameter allowlist yang boleh direkonstruksi server.
+- Perubahan nama/brand dapat mengeluarkan produk dari hasil filter; context tetap dipertahankan dan page kedaluwarsa harus dikoreksi ke page terakhir yang valid.
+
+Acceptance criteria:
+
+- Catalog manager mempertahankan query yang tervalidasi selama pagination dan saat membuka editor.
+- Breadcrumb dan cancel kembali ke context catalog yang sama.
+- Update sukses kembali ke context yang sama dengan pesan sukses; validation error tetap berada pada editor dan mempertahankan return context.
+- Context external, path selain catalog, parameter asing, nilai sort ilegal, dan page tidak valid tidak digunakan sebagai tujuan redirect.
+- UI tetap dapat digunakan pada viewport `390x844` dan `1440x900` tanpa overflow baru atau console error.
+- Focused tests, seluruh test Laravel, Blade compilation, build, quality checks, dan CI lulus.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

@@ -5,7 +5,7 @@
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
             <li class="inline-flex items-center">
-                <a href="{{ route('admin.products.index') }}" class="text-sm text-gray-500 hover:text-black">Products</a>
+                <a href="{{ $catalogReturnPath }}" class="text-sm text-gray-500 hover:text-black">Products</a>
             </li>
             <li>
                 <div class="flex items-center">
@@ -18,7 +18,7 @@
 
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-gray-900">Edit Product</h1>
-        <a href="{{ route('admin.products.index') }}" class="text-sm font-medium text-gray-500 hover:text-black transition-colors">
+        <a href="{{ $catalogReturnPath }}" class="text-sm font-medium text-gray-500 hover:text-black transition-colors">
             &larr; Cancel
         </a>
     </div>
@@ -47,6 +47,7 @@
     <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+        <input type="hidden" name="return_to" value="{{ $catalogReturnPath }}">
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">

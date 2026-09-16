@@ -27,21 +27,23 @@
         
         <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
     <div class="relative w-full md:w-80 group">
+        <label for="catalog-search" class="sr-only">Cari produk</label>
         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
             <svg class="h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
         </div>
-        <input type="text" name="search" value="{{ request('search') }}" 
+        <input id="catalog-search" type="search" name="search" value="{{ $catalogContext['search'] ?? '' }}"
             class="block w-full pl-11 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-sm transition-shadow placeholder-gray-400"
             placeholder="Search by name, SKU...">
     </div>
 
     <div class="w-full md:w-56 relative">
-        <select name="brand_id" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+        <label for="catalog-brand" class="sr-only">Filter brand</label>
+        <select id="catalog-brand" name="brand_id" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
             <option value="">All Brands</option>
             @foreach($brands as $brand)
-                <option value="{{ $brand->id }}" {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
+                <option value="{{ $brand->id }}" {{ ($catalogContext['brand_id'] ?? null) === $brand->id ? 'selected' : '' }}>
                     {{ $brand->name }}
                 </option>
             @endforeach
@@ -51,7 +53,19 @@
         </div>
     </div>
 
-    @if(request('search') || request('brand_id'))
+    <div class="w-full md:w-44 relative">
+        <label for="catalog-sort" class="sr-only">Urutkan produk</label>
+        <select id="catalog-sort" name="sort" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+            <option value="latest" {{ ! isset($catalogContext['sort']) ? 'selected' : '' }}>Terbaru</option>
+            <option value="name_asc" {{ ($catalogContext['sort'] ?? null) === 'name_asc' ? 'selected' : '' }}>Nama A–Z</option>
+            <option value="name_desc" {{ ($catalogContext['sort'] ?? null) === 'name_desc' ? 'selected' : '' }}>Nama Z–A</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+    </div>
+
+    @if(isset($catalogContext['search']) || isset($catalogContext['brand_id']) || isset($catalogContext['sort']))
         <a href="{{ route('admin.products.index') }}" class="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">
             Reset
         </a>
@@ -125,7 +139,7 @@
                     </td>
                     <td class="px-6 py-4 text-right text-sm font-medium">
                         <div class="flex justify-end items-center gap-2">
-                            <a href="{{ route('admin.products.edit', $product->id) }}" class="text-gray-500 hover:text-black p-2 rounded-full hover:bg-gray-100 transition-colors" title="Edit">
+                            <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => $catalogReturnPath]) }}" class="text-gray-500 hover:text-black p-2 rounded-full hover:bg-gray-100 transition-colors" title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                             </a>
                             @if($product->is_active)
@@ -164,7 +178,7 @@
     </div>
     @if($products->hasPages())
     <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-        {{ $products->appends(request()->query())->links('pagination::tailwind') }}
+        {{ $products->links('pagination::tailwind') }}
     </div>
     @endif
 </div>
