@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -13,13 +13,13 @@ class ProductController extends Controller
     {
         $query = Product::with(['brand', 'category', 'primaryImage'])
             ->withMin('variants', 'price')
-            ->active();
-            
+            ->published();
+
         // Search
         if ($request->filled('search')) {
             $query->search($request->search);
         }
-        
+
         // Filter by brand
         if ($request->filled('brand')) {
             $brands = (array) $request->brand;
@@ -29,17 +29,17 @@ class ProductController extends Controller
                 $query->byBrand($brands[0]);
             }
         }
-        
+
         // Filter by category
         if ($request->filled('category')) {
             $query->byCategory($request->category);
         }
-        
+
         // Filter by gender
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
         }
-        
+
         // Sort
         $sort = $request->get('sort', 'latest');
         switch ($sort) {
@@ -55,29 +55,29 @@ class ProductController extends Controller
             default:
                 $query->latest();
         }
-        
+
         $products = $query->paginate(10);
         $brands = Brand::active()->get();
         $categories = Category::all();
-        
+
         return view('products.index', compact('products', 'brands', 'categories'));
     }
-    
+
     public function show(Product $product)
     {
-        abort_unless($product->is_active, 404);
+        abort_unless($product->isPublished(), 404);
 
         $product->load(['brand', 'category', 'images', 'variants.product']);
         $product->incrementViewCount();
-        
+
         $relatedProducts = Product::with(['brand', 'primaryImage'])
             ->withMin('variants', 'price')
-            ->active()
+            ->published()
             ->where('brand_id', $product->brand_id)
             ->where('id', '!=', $product->id)
             ->take(4)
             ->get();
-            
+
         return view('products.show', compact('product', 'relatedProducts'));
     }
 }

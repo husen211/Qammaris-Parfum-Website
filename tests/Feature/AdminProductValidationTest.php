@@ -166,6 +166,10 @@ class AdminProductValidationTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertDatabaseCount('products', 1);
+        $this->assertDatabaseHas('products', [
+            'publication_status' => Product::PUBLICATION_PUBLISHED,
+            'availability_status' => Product::AVAILABILITY_UNKNOWN,
+        ]);
         $this->assertDatabaseCount('product_variants', 1);
         $this->assertDatabaseCount('product_images', 3);
         $this->assertDatabaseHas('product_images', ['is_primary' => true]);

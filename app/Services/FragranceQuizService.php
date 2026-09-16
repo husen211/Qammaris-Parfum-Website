@@ -50,7 +50,7 @@ class FragranceQuizService
 
     private function rankProducts(array $topTags, array $tagScores, array $answers)
     {
-        $query = Product::with(['brand', 'primaryImage'])->active();
+        $query = Product::with(['brand', 'primaryImage'])->published();
 
         $genderMap = config('fragrance_quiz.gender_map', []);
         $genderKey = $answers['gender'] ?? 'all';
@@ -62,7 +62,7 @@ class FragranceQuizService
         $products = $query->get();
 
         if ($products->isEmpty()) {
-            $products = Product::with(['brand', 'primaryImage'])->active()->get();
+            $products = Product::with(['brand', 'primaryImage'])->published()->get();
         }
 
         $keywords = config('fragrance_quiz.tag_keywords', []);
@@ -91,7 +91,7 @@ class FragranceQuizService
 
         if (! $hasMatches) {
             return Product::with(['brand', 'primaryImage'])
-                ->active()
+                ->published()
                 ->bestSellers()
                 ->take($maxRecommendations)
                 ->get();
@@ -121,7 +121,7 @@ class FragranceQuizService
 
     private function matchesKeyword(string $text, string $keyword): bool
     {
-        $pattern = '/\b' . preg_quote($keyword, '/') . '\b/';
+        $pattern = '/\b'.preg_quote($keyword, '/').'\b/';
 
         return preg_match($pattern, $text) === 1;
     }

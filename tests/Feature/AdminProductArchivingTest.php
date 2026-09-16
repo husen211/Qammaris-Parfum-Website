@@ -80,6 +80,7 @@ class AdminProductArchivingTest extends TestCase
             'id' => $productId,
             'slug' => $slug,
             'is_active' => false,
+            'publication_status' => Product::PUBLICATION_ARCHIVED,
         ]);
         $this->assertDatabaseHas('product_variants', ['id' => $this->variant->id]);
         $this->assertDatabaseHas('product_images', ['id' => $this->image->id]);
@@ -89,7 +90,7 @@ class AdminProductArchivingTest extends TestCase
 
     public function test_archiving_an_inactive_product_is_idempotent(): void
     {
-        $this->product->update(['is_active' => false]);
+        $this->product->markArchived();
 
         $this->actingAs($this->admin)
             ->delete(route('admin.products.destroy', $this->product->id))
@@ -115,6 +116,7 @@ class AdminProductArchivingTest extends TestCase
         $this->assertDatabaseHas('products', [
             'id' => $this->product->id,
             'is_active' => true,
+            'publication_status' => Product::PUBLICATION_PUBLISHED,
         ]);
         $this->get(route('products.show', $this->product))->assertOk();
     }

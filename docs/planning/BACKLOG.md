@@ -16,7 +16,7 @@
 | P0 | Discovery & decisions | DONE | — | Baseline lokal, keterbatasan production, dan keputusan domain terdokumentasi |
 | P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
 | P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
-| P3 | Product domain & migrations | BACKLOG | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
+| P3 | Product domain & migrations | IN_PROGRESS | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | BACKLOG | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
@@ -480,6 +480,54 @@ Verification:
 - Admin catalog dan product editor diverifikasi pada viewport `1440x900` dan `390x844`; tidak ada page-level horizontal overflow atau browser console error. Table catalog mobile tetap memakai internal horizontal scroll legacy.
 - Data audit sementara dibersihkan; jumlah produk lokal kembali `180`. Tidak ada schema, data/media existing, staging, atau production yang diubah.
 - CI GitHub Actions run `34974320829` lulus untuk commit implementasi `81115c1`.
+
+## P3 — Product domain & migrations
+
+### P3-01 Publication dan availability foundation — DONE
+
+Outcome:
+
+- Publication dan availability menjadi state domain yang terpisah tanpa mengubah ID, slug, harga, variant, media, atau URL existing.
+
+In scope:
+
+- Migration additive untuk `publication_status`, `published_at`, `archived_at`, `availability_status`, `stock_quantity`, `availability_source`, dan `availability_checked_at`.
+- Mapping compatibility `is_active=true` ke `published` dan `is_active=false` ke `archived` untuk data existing.
+- Scope publik eksplisit `published` dengan `is_active` tetap menjadi guard transisi.
+- Freshness rule 36 jam untuk status `available`; `sold_out` tetap eksplisit sampai diperbarui.
+- Archive/restore admin menyinkronkan status baru dan field compatibility lama.
+
+Out of scope:
+
+- Perubahan UI admin/public, filter availability, dan penampilan quantity.
+- Draft dengan field nullable, optional SKU, price authority, external provider mapping, serta reconciliation data.
+- Staging migration dan production deployment.
+
+Acceptance criteria:
+
+- Migration bersifat additive dan mempertahankan seluruh product ID/slug serta record terkait.
+- Hanya produk `published` dengan compatibility guard aktif yang dapat diakses katalog, detail, related products, sitemap, dan cart.
+- Produk draft/archived tidak dapat diakses publik; sold out tidak otomatis diarsipkan.
+- `available` tanpa pemeriksaan atau yang lebih lama dari 36 jam dibaca sebagai `unknown`.
+- Archive/restore idempotent dan menyinkronkan `publication_status`, timestamp, serta `is_active`.
+- Regression test, migration round-trip pada database kosong, seluruh test Laravel, dan CI lulus.
+
+Verification:
+
+- Migration lokal berhasil pada database berisi `180` produk. Jumlah record tetap `180`, seluruh produk legacy aktif terpetakan ke `published`, seluruh availability terinisialisasi `unknown`, dan checksum identitas `id:slug` tetap `75e4cf84ef65227df2fbf74279d689c59a0ff737f893a2c8004da92676f820de` sebelum maupun setelah migration.
+- Migration `up -> down -> up` berhasil pada database SQLite kosong sementara; file database sementara sudah dibersihkan.
+- Seluruh test Laravel lulus: `48 passed (224 assertions)`.
+- `composer validate --strict`, Vite production build, Blade clear/cache, Laravel Pint untuk seluruh file PHP yang diubah, pemeriksaan syntax PHP, dan `git diff --check` lulus. Pint tingkat repository masih mendeteksi formatting legacy pada file di luar scope P3-01. Vite hanya melaporkan warning existing untuk DaisyUI `@property` dan chunk `about-lanyard` yang besar.
+- Tidak ada UI, media, staging, atau production yang diubah. Verifikasi viewport browser tidak berlaku karena item ini tidak mengubah tampilan.
+- Bukti CI GitHub Actions dicatat setelah commit implementasi tersedia di remote.
+
+### P3-02 Draft fields, one-offer price authority, dan optional SKU — BACKLOG
+
+- Membuat field draft yang disetujui menjadi nullable secara additive, menghentikan SKU acak, dan menetapkan sinkronisasi harga dari satu offer aktif.
+
+### P3-03 External product identity boundary — BACKLOG
+
+- Menambahkan mapping provider terpisah untuk kode Shopee/Majoo tanpa mengganti ID internal atau mencampurnya dengan SKU katalog.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

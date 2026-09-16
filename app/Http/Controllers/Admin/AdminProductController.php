@@ -86,6 +86,9 @@ class AdminProductController extends Controller
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),
                 'is_active' => true,
+                'publication_status' => Product::PUBLICATION_PUBLISHED,
+                'published_at' => now(),
+                'availability_status' => Product::AVAILABILITY_UNKNOWN,
             ]);
 
             foreach ($request->variants as $variantData) {
@@ -216,11 +219,11 @@ class AdminProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if (! $product->is_active) {
+        if ($product->publication_status === Product::PUBLICATION_ARCHIVED && ! $product->is_active) {
             return back()->with('success', 'Produk ini sudah diarsipkan.');
         }
 
-        $product->update(['is_active' => false]);
+        $product->markArchived();
 
         return back()->with('success', 'Produk berhasil diarsipkan. Data dan gambar tetap tersimpan.');
     }
@@ -229,11 +232,11 @@ class AdminProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if ($product->is_active) {
+        if ($product->isPublished()) {
             return back()->with('success', 'Produk ini sudah aktif.');
         }
 
-        $product->update(['is_active' => true]);
+        $product->markPublished();
 
         return back()->with('success', 'Produk berhasil diaktifkan kembali.');
     }

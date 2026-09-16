@@ -23,6 +23,7 @@ Do not assume production facts that are marked unknown.
 
 - Work on one approved backlog item only.
 - Do not begin the next phase automatically.
+- The owner has pre-approved routine, reversible cleanup and implementation inside Qammaris Website without another clarification, including archive-over-delete safety changes, formatting, tests, documentation, commits, and pushes. This does not authorize production deployment, destructive data work, credential/permission changes, cross-project work, or material business-rule decisions.
 - Record unrelated findings in the backlog; do not fix them unless they block the active item.
 - Prefer the smallest change that meets the acceptance criteria.
 - Avoid speculative abstractions, generic repositories over Eloquent, microservices, SPA rewrites, event buses, and new dependencies without a demonstrated requirement.
