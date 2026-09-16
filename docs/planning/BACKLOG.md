@@ -519,7 +519,7 @@ Verification:
 - Seluruh test Laravel lulus: `48 passed (224 assertions)`.
 - `composer validate --strict`, Vite production build, Blade clear/cache, Laravel Pint untuk seluruh file PHP yang diubah, pemeriksaan syntax PHP, dan `git diff --check` lulus. Pint tingkat repository masih mendeteksi formatting legacy pada file di luar scope P3-01. Vite hanya melaporkan warning existing untuk DaisyUI `@property` dan chunk `about-lanyard` yang besar.
 - Tidak ada UI, media, staging, atau production yang diubah. Verifikasi viewport browser tidak berlaku karena item ini tidak mengubah tampilan.
-- Bukti CI GitHub Actions dicatat setelah commit implementasi tersedia di remote.
+- CI GitHub Actions untuk commit implementasi `6684f33` lulus pada run `35049913891` (push) dan `35049916555` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
 ### P3-02 Draft fields, one-offer price authority, dan optional SKU — BACKLOG
 
