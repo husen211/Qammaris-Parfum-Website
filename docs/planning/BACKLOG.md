@@ -1060,6 +1060,64 @@ Completion evidence:
 - Browser lokal diverifikasi pada viewport mobile compact dan desktop wide untuk draft minimal, publish ditolak, readiness reasons, populated/empty filter, serta context-preserving update. Tidak ada horizontal overflow dan console browser bersih.
 - Produk draft dan akun admin audit lokal sementara telah dihapus setelah verifikasi. Tidak ada data bisnis existing, schema, media existing, staging, atau production yang diubah.
 
+### P5-04 Brand and category management — DONE
+
+Outcome:
+
+- Admin dapat mengelola brand dan kategori tanpa phpMyAdmin, sambil menjaga relasi produk dan URL existing tetap utuh.
+
+In scope:
+
+- Halaman admin terpisah untuk daftar, pencarian, membuat, dan mengedit brand serta kategori.
+- Status aktif/nonaktif yang reversible untuk kedua taxonomy; hard delete tidak disediakan.
+- Jumlah produk per taxonomy dan status aktif ditampilkan agar dampak perubahan terlihat sebelum admin bertindak.
+- Migration additive `categories.is_active` dengan default aktif sehingga seluruh kategori existing tetap tersedia.
+- Slug brand/kategori tidak berubah saat nama diedit untuk mencegah identifier dan URL lama berubah tanpa sengaja.
+- Pilihan taxonomy pada product editor hanya menawarkan data aktif, tetapi tetap mempertahankan pilihan current yang sudah nonaktif untuk edit korektif.
+- Publish/restore produk menolak brand atau kategori nonaktif; filter kategori publik dan footer hanya menampilkan kategori aktif.
+- Navigasi admin desktop/mobile menuju Brands dan Categories, beserta state populated, search, empty, validation, success, dan responsive.
+
+Out of scope:
+
+- Hard delete, merge, reassign massal, hierarchy kategori, bulk taxonomy import, logo brand upload, audit log, redesign public catalog, staging, dan production.
+
+Dependencies:
+
+- P3 product domain, P5-01 catalog context, dan P5-03 publication readiness selesai.
+- Business rule taxonomy nonaktif tidak boleh menghapus produk atau memutus URL telah disetujui owner.
+
+Risks:
+
+- Menonaktifkan taxonomy yang masih dipakai dapat menghilangkannya dari pilihan baru dan filter publik; relasi produk existing harus tetap tersimpan dan produk published legacy tidak boleh otomatis turun status.
+- Regenerasi slug saat rename dapat memutus identifier existing; slug harus stabil setelah record dibuat.
+- Migration category harus additive dengan default aktif agar data existing tidak berubah makna.
+
+Acceptance criteria:
+
+- Admin dapat mencari, membuat, mengedit, mengaktifkan, dan menonaktifkan brand/kategori dari UI tanpa route delete.
+- Nama wajib unik, deskripsi opsional, slug unik dibuat saat create dan tidak berubah saat rename.
+- Menonaktifkan taxonomy tidak menghapus atau memindahkan produk; jumlah relasi tetap sama dan operasi dapat dibalik.
+- Semua kategori existing menjadi aktif setelah migration dan ID/slug existing tidak berubah.
+- Create product hanya menampilkan taxonomy aktif; editor mempertahankan current taxonomy nonaktif, sedangkan publish/restore menolaknya dengan alasan spesifik.
+- Filter kategori publik dan footer tidak menampilkan kategori nonaktif tanpa menghapus produk atau URL produk.
+- UI usable pada viewport mobile compact dan desktop wide tanpa horizontal overflow atau console error.
+- Focused tests, seluruh test Laravel, migration round-trip, Blade compilation, production build, quality checks, browser verification, dan CI lulus.
+
+Verification:
+
+- Admin mempunyai halaman Brand dan Kategori terpisah untuk search, create, edit, status aktif/nonaktif, jumlah produk, populated state, dan empty state. Route hard-delete tidak tersedia.
+- Migration category diuji `up → down → up` pada database lokal: kelima ID/slug kategori tetap identik, jumlah tetap `5`, dan setelah re-apply seluruh `5` kategori berstatus aktif.
+- Product create hanya memuat taxonomy aktif; editor mempertahankan current taxonomy nonaktif untuk koreksi, sedangkan publish/restore memakai gate brand/kategori aktif. Filter kategori publik dan footer hanya memuat kategori aktif.
+- Slug brand/kategori stabil saat nama diedit. Browser audit membuktikan perubahan nama audit tidak mengubah slug.
+- Focused regression tests lulus: taxonomy `8 test / 50 assertion` dan publication `7 test / 53 assertion`. Seluruh suite Laravel lulus: `112 test / 537 assertion`.
+- Laravel Pint, Blade view cache, Composer validation strict, `git diff --check`, dan Vite production build lulus. Warning existing DaisyUI `@property` dan chunk `about-lanyard` sekitar 3,28 MB tidak diperluas oleh item ini.
+- Browser lokal diverifikasi pada viewport `390x844` dan desktop `1536 px`: navigasi mobile, create, duplicate validation berbahasa Indonesia, edit, slug stability, search, empty state, activate/deactivate, product taxonomy options, dan success states bekerja tanpa horizontal overflow atau console warning/error.
+- Akun admin serta brand/kategori audit sintetis telah dihapus setelah verifikasi. Tidak ada product/media bisnis, staging, production, atau bucket yang diubah.
+
+Documentation updates:
+
+- Backlog diperbarui dengan scope, acceptance criteria, implementasi, dan bukti verifikasi. Business rules existing sudah mencakup larangan cascade delete, preservasi URL, serta status nonaktif reversible sehingga tidak memerlukan duplikasi aturan.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

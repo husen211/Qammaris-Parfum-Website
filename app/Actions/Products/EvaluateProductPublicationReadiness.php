@@ -30,8 +30,8 @@ class EvaluateProductPublicationReadiness
             $blockers['brand'] = 'Brand belum dipilih atau sudah nonaktif.';
         }
 
-        if (! $product->category) {
-            $blockers['category'] = 'Kategori belum dipilih.';
+        if (! $product->category || ! $product->category->is_active) {
+            $blockers['category'] = 'Kategori belum dipilih atau sudah nonaktif.';
         }
 
         if (trim((string) $product->description) === '') {

@@ -60,7 +60,7 @@ class ProductController extends Controller
 
         $products = $query->paginate(10);
         $brands = Brand::active()->get();
-        $categories = Category::all();
+        $categories = Category::active()->get();
 
         return view('products.index', compact('products', 'brands', 'categories'));
     }

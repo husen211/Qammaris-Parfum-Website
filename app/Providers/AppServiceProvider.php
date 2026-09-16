@@ -52,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $footerCategories = cache()->remember('footer_categories', 3600, function () {
-                return Category::query()->take(4)->get();
+                return Category::active()->take(4)->get();
             });
 
             $view->with('footerCategories', $footerCategories);

@@ -107,7 +107,7 @@ class AdminProductPublicationTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee('Brand belum dipilih atau sudah nonaktif.')
-            ->assertSee('Kategori belum dipilih.')
+            ->assertSee('Kategori belum dipilih atau sudah nonaktif.')
             ->assertSee('Produk harus mempunyai tepat satu ukuran dan harga aktif.')
             ->assertSee('Produk harus mempunyai tepat satu foto utama.')
             ->assertSee('name="return_to" value="'.e($returnPath).'"', false);

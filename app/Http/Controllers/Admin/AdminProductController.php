@@ -92,7 +92,7 @@ class AdminProductController extends Controller
     public function create()
     {
         $brands = Brand::where('is_active', true)->orderBy('name')->get();
-        $categories = Category::all();
+        $categories = Category::active()->orderBy('name')->get();
 
         return view('admin.products.create', compact('brands', 'categories'));
     }
@@ -181,7 +181,10 @@ class AdminProductController extends Controller
             ->orWhere('id', $product->brand_id)
             ->orderBy('name')
             ->get();
-        $categories = Category::all();
+        $categories = Category::active()
+            ->orWhere('id', $product->category_id)
+            ->orderBy('name')
+            ->get();
         $catalogReturnPath = $this->catalogReturnPath($request->query('return_to'));
         $publicationBlockers = $evaluatePublicationReadiness->handle($product);
 

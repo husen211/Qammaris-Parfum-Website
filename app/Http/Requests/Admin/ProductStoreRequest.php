@@ -31,7 +31,11 @@ class ProductStoreRequest extends FormRequest
                 'nullable',
                 Rule::exists('brands', 'id')->where('is_active', true),
             ],
-            'category_id' => [Rule::requiredIf($publishing), 'nullable', 'exists:categories,id'],
+            'category_id' => [
+                Rule::requiredIf($publishing),
+                'nullable',
+                Rule::exists('categories', 'id')->where('is_active', true),
+            ],
             'description' => [Rule::requiredIf($publishing), 'nullable', 'string', 'max:20000'],
             'compare_at_price' => ['nullable', 'numeric', 'gt:0', 'max:99999999.99'],
             'gender' => [Rule::requiredIf($publishing), 'nullable', Rule::in(['Unisex', 'Pria', 'Wanita'])],

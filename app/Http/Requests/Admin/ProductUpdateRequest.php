@@ -21,6 +21,7 @@ class ProductUpdateRequest extends FormRequest
         $productId = is_object($product) ? $product->getKey() : $product;
         $currentProduct = $product instanceof Product ? $product : Product::find($productId);
         $currentBrandId = $currentProduct?->brand_id;
+        $currentCategoryId = $currentProduct?->category_id;
         $offerId = $this->input('variants.0.id');
         $publishing = $this->input('publication_action') === Product::PUBLICATION_PUBLISHED;
         $requiresCompleteProduct = $publishing || $currentProduct?->isPublished();
@@ -39,7 +40,17 @@ class ProductUpdateRequest extends FormRequest
                     }
                 }),
             ],
-            'category_id' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'exists:categories,id'],
+            'category_id' => [
+                Rule::requiredIf($requiresCompleteProduct),
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($currentCategoryId, $publishing): void {
+                    $query->where('is_active', true);
+
+                    if (! $publishing && $currentCategoryId) {
+                        $query->orWhere('id', $currentCategoryId);
+                    }
+                }),
+            ],
             'description' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'string', 'max:20000'],
             'compare_at_price' => ['nullable', 'numeric', 'gt:0', 'max:99999999.99'],
             'gender' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', Rule::in(['Unisex', 'Pria', 'Wanita'])],

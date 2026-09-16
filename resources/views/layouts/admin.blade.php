@@ -34,6 +34,16 @@
                     Products
                 </a>
 
+                <a href="{{ route('admin.brands.index') }}" class="{{ request()->routeIs('admin.brands*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M3 11l8.586-8.586A2 2 0 0113 2h6a2 2 0 012 2v6a2 2 0 01-.586 1.414L11.828 20a2 2 0 01-2.828 0l-6-6a2 2 0 010-2.828z"/></svg>
+                    Brand
+                </a>
+
+                <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                    Kategori
+                </a>
+
                 <a href="{{ route('admin.blog-posts.index') }}" class="{{ request()->routeIs('admin.blog-posts*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 5H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2zM7 9h10M7 13h10M7 17h6"/></svg>
                     Blog Posts
@@ -57,9 +67,18 @@
         </aside>
 
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-            <header class="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+            <header class="relative md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
                 <span class="font-bold tracking-widest">QAMMARIS</span>
-                <button>Menu</button>
+                <details class="group">
+                    <summary class="cursor-pointer list-none rounded border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700">Menu</summary>
+                    <nav class="absolute right-4 top-14 z-50 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-xl">
+                        <a href="{{ route('admin.dashboard') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.dashboard') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Dashboard</a>
+                        <a href="{{ route('admin.products.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Products</a>
+                        <a href="{{ route('admin.brands.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.brands*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Brand</a>
+                        <a href="{{ route('admin.categories.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.categories*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Kategori</a>
+                        <a href="{{ route('admin.blog-posts.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.blog-posts*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Blog Posts</a>
+                    </nav>
+                </details>
             </header>
 
             <div class="container mx-auto px-6 py-8">

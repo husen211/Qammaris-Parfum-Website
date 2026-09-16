@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBlogPostController;
+use App\Http\Controllers\Admin\AdminBrandController;
+use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\AuthController;
@@ -63,6 +65,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);
+
+    // Taxonomy records are never hard-deleted; status changes are reversible.
+    Route::patch('brands/{brand}/status', [AdminBrandController::class, 'updateStatus'])->name('brands.status');
+    Route::resource('brands', AdminBrandController::class)->except(['show', 'destroy']);
+    Route::patch('categories/{category}/status', [AdminCategoryController::class, 'updateStatus'])->name('categories.status');
+    Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
 
     // CRUD Blog Posts
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
