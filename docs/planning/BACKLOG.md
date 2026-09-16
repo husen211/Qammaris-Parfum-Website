@@ -657,7 +657,7 @@ Verification:
 - Tidak ada perubahan tampilan, schema, data, media, staging, atau production. Verifikasi browser tidak berlaku karena item ini mengubah boundary storage backend tanpa mengubah markup/UI.
 - CI GitHub Actions untuk commit implementasi `2f3c15f` lulus pada run `35056320507` (push) dan `35056322360` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P4-02 Shared media attachment dan primary lifecycle — IN_REVIEW
+### P4-02 Shared media attachment dan primary lifecycle — DONE
 
 Outcome:
 
@@ -703,7 +703,7 @@ Verification:
 - Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
 - Tidak ada schema, metadata/file existing, tampilan, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini mengubah operasi media backend tanpa mengubah markup/UI.
 - Masukan owner tentang preservasi page/search/filter/sort setelah edit dicatat pada business rules dan `P5-01`; tidak diselipkan ke scope media.
-- CI GitHub Actions menunggu commit implementasi.
+- CI GitHub Actions untuk commit implementasi `16d29e1` lulus pada run `35058656237` (push) dan `35058658414` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
 ## P5 — Admin Panel V2 captured requirements
 
