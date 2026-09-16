@@ -1552,7 +1552,7 @@ Documentation updates:
 - Business rules, master plan, kontrak `PRODUCT_CATALOG_SNAPSHOT.md`, backlog, dan `ADR-017-read-only-catalog-maintenance-snapshot.md` diperbarui.
 - Kandidat berikutnya adalah `P6-08` kontrak preview bulk maintenance berbasis ID internal dengan stale/conflict guard; belum dimulai.
 
-### P6-08 Internal-ID bulk maintenance preview — IN_PROGRESS
+### P6-08 Internal-ID bulk maintenance preview — DONE
 
 Outcome:
 
@@ -1560,7 +1560,7 @@ Outcome:
 
 In scope:
 
-- Kontrak CSV `maintenance-v1` berisi `product_id`, `expected_updated_at`, dan allowlist field produk yang aman untuk direview.
+- Kontrak CSV `maintenance-v1` berisi `product_id`, `expected_updated_at`, `expected_row_fingerprint`, dan allowlist field produk yang aman untuk direview.
 - Preview memvalidasi header/encoding/ukuran/jumlah row, ID product, duplicate row, optimistic timestamp, taxonomy aktif, controlled values, angka, notes, serta pasangan harga+ukuran.
 - Cell kosong berarti pertahankan nilai current; tidak ada semantics clear/delete pada v1.
 - Perbandingan current vs kandidat menghasilkan daftar field berubah, status valid/review/error, issue, product match, fingerprint, actor, dan batch audit immutable.
@@ -1577,7 +1577,7 @@ Dependencies:
 
 Risks:
 
-- Product atau offer dapat berubah setelah snapshot; `expected_updated_at` dan catalog-state fingerprint wajib menghasilkan stale/conflict, bukan overwrite.
+- Product atau offer dapat berubah setelah snapshot; `expected_updated_at`, `expected_row_fingerprint`, dan catalog-state fingerprint wajib menghasilkan stale/conflict, bukan overwrite.
 - Reuse tabel audit dapat mencampur flow; seluruh query dan route harus membatasi contract version secara eksplisit.
 - Input hasil olahan AI tetap tidak tepercaya; validation dan escaping server-side wajib.
 
@@ -1593,11 +1593,18 @@ Acceptance criteria:
 
 Verification:
 
-- Belum dijalankan.
+- Focused feature tests lulus: 24 test / 230 assertion untuk maintenance preview, snapshot, report, dan provider import preview; suite khusus maintenance terakhir lulus 8 test / 71 assertion.
+- Full Laravel suite lulus: 165 test / 996 assertion.
+- Pint targeted, Blade compile/cache, Composer strict validation, route audit, `git diff --check`, dan production Vite build lulus. Build tetap menampilkan warning existing untuk DaisyUI `@property` dan chunk `about-lanyard` sekitar 3,28 MB.
+- Browser audit upload multipart nyata lulus pada `390x844` dan `1440x900`: preview menghasilkan 1 row valid dan 1 row error, batch/history dapat direload, template dapat diunduh, tabel hasil memakai overflow internal, action button minimal 44 px, tidak ada document overflow, dan console bersih.
+- Batch browser audit sintetis dan file CSV sementara sudah dihapus secara terarah setelah verifikasi. Baseline lokal tetap: 180 products, 65 offers, 19 images, 0 identities, 0 import batches, dan 0 import rows.
+- Tidak ada migration, mutation katalog/media/taxonomy, staging, production access, atau deployment.
+- Commit implementasi `bbeac30` lulus GitHub Actions CI pada PHP 8.2/Laravel tests dan Node/Vite build: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35115120096`.
 
 Documentation updates:
 
-- Business rules, kontrak maintenance, backlog, dan ADR akan diperbarui setelah verifikasi.
+- Business rules, master plan, kontrak snapshot katalog v2, kontrak `PRODUCT_MAINTENANCE_CSV.md`, backlog, dan `ADR-018-internal-id-maintenance-preview.md` diperbarui.
+- Kandidat berikutnya adalah `P6-09` transactional maintenance apply dengan revalidation, explicit confirmation, outcome per row, dan rollback/forward-fix yang terukur; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
