@@ -22,23 +22,27 @@ class ProductUpdateRequest extends FormRequest
         $currentProduct = $product instanceof Product ? $product : Product::find($productId);
         $currentBrandId = $currentProduct?->brand_id;
         $offerId = $this->input('variants.0.id');
+        $publishing = $this->input('publication_action') === Product::PUBLICATION_PUBLISHED;
+        $requiresCompleteProduct = $publishing || $currentProduct?->isPublished();
 
         return [
+            'publication_action' => ['sometimes', Rule::in(['save', Product::PUBLICATION_PUBLISHED])],
             'name' => ['required', 'string', 'max:255'],
             'brand_id' => [
-                'required',
-                Rule::exists('brands', 'id')->where(function ($query) use ($currentBrandId): void {
+                Rule::requiredIf($requiresCompleteProduct),
+                'nullable',
+                Rule::exists('brands', 'id')->where(function ($query) use ($currentBrandId, $publishing): void {
                     $query->where('is_active', true);
 
-                    if ($currentBrandId) {
+                    if (! $publishing && $currentBrandId) {
                         $query->orWhere('id', $currentBrandId);
                     }
                 }),
             ],
-            'category_id' => ['required', 'exists:categories,id'],
-            'description' => ['required', 'string', 'max:20000'],
+            'category_id' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'exists:categories,id'],
+            'description' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'string', 'max:20000'],
             'compare_at_price' => ['nullable', 'numeric', 'gt:0', 'max:99999999.99'],
-            'gender' => ['required', Rule::in(['Unisex', 'Pria', 'Wanita'])],
+            'gender' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', Rule::in(['Unisex', 'Pria', 'Wanita'])],
             'availability_status' => [
                 'sometimes',
                 'required',
@@ -52,7 +56,7 @@ class ProductUpdateRequest extends FormRequest
             'top_notes' => ['nullable', 'string', 'max:1000'],
             'middle_notes' => ['nullable', 'string', 'max:1000'],
             'base_notes' => ['nullable', 'string', 'max:1000'],
-            'variants' => ['required', 'array', 'size:1'],
+            'variants' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'array', 'max:1'],
             'variants.*.id' => [
                 'nullable',
                 'integer',
@@ -60,9 +64,9 @@ class ProductUpdateRequest extends FormRequest
                 Rule::exists('product_variants', 'id')
                     ->where(fn ($query) => $query->where('product_id', $productId)),
             ],
-            'variants.*.volume' => ['required', 'integer', 'min:1', 'max:10000'],
-            'variants.*.price' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
-            'variants.*.stock' => ['required', 'integer', 'min:0', 'max:999999'],
+            'variants.*.volume' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'required_with:variants.*.price', 'integer', 'min:1', 'max:10000'],
+            'variants.*.price' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'required_with:variants.*.volume', 'numeric', 'gt:0', 'max:99999999.99'],
+            'variants.*.stock' => ['nullable', 'integer', 'min:0', 'max:999999'],
             'variants.*.sku' => [
                 'nullable',
                 'string',
@@ -75,12 +79,29 @@ class ProductUpdateRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'brand_id.required' => 'Pilih brand sebelum mempublikasikan produk.',
+            'category_id.required' => 'Pilih kategori sebelum mempublikasikan produk.',
+            'description.required' => 'Isi deskripsi sebelum mempublikasikan produk.',
+            'gender.required' => 'Pilih gender/audience sebelum mempublikasikan produk.',
+            'variants.required' => 'Isi satu ukuran dan harga sebelum mempublikasikan produk.',
+            'variants.*.volume.required' => 'Isi ukuran produk sebelum mempublikasikan produk.',
+            'variants.*.price.required' => 'Isi harga jual sebelum mempublikasikan produk.',
+        ];
+    }
+
     public function after(): array
     {
         return [
             function (Validator $validator): void {
                 $this->validateCompareAtPrice($validator);
                 $this->validateImageLimit($validator);
+                $this->validatePrimaryImageForPublish($validator);
             },
         ];
     }
@@ -95,7 +116,16 @@ class ProductUpdateRequest extends FormRequest
             ->pluck('price')
             ->filter(fn ($price) => is_numeric($price) && (float) $price > 0);
 
-        if ($prices->isNotEmpty() && (float) $this->input('compare_at_price') <= (float) $prices->min()) {
+        if ($prices->isEmpty()) {
+            $validator->errors()->add(
+                'compare_at_price',
+                'Isi harga jual sebelum menambahkan harga coret.'
+            );
+
+            return;
+        }
+
+        if ((float) $this->input('compare_at_price') <= (float) $prices->min()) {
             $validator->errors()->add(
                 'compare_at_price',
                 'Harga coret harus lebih besar dari harga jual terendah.'
@@ -119,6 +149,26 @@ class ProductUpdateRequest extends FormRequest
             $validator->errors()->add(
                 'new_images',
                 'Produk hanya boleh memiliki maksimum tiga gambar.'
+            );
+        }
+    }
+
+    private function validatePrimaryImageForPublish(Validator $validator): void
+    {
+        if ($this->input('publication_action') !== Product::PUBLICATION_PUBLISHED) {
+            return;
+        }
+
+        $product = $this->route('product');
+        $productId = $product instanceof Product ? $product->getKey() : $product;
+        $hasPrimaryImage = Product::whereKey($productId)
+            ->whereHas('primaryImage')
+            ->exists();
+
+        if (! $hasPrimaryImage && count($this->file('new_images', [])) === 0) {
+            $validator->errors()->add(
+                'new_images',
+                'Tambahkan foto utama sebelum mempublikasikan produk.'
             );
         }
     }

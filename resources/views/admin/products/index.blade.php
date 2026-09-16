@@ -25,7 +25,7 @@
 <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
     <form action="{{ route('admin.products.index') }}" method="GET" class="space-y-4">
         
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.5fr)_minmax(11rem,1fr)_minmax(11rem,1fr)_minmax(9rem,0.8fr)_auto] xl:items-center">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(14rem,1.4fr)_minmax(9rem,0.8fr)_minmax(10rem,0.9fr)_minmax(10rem,0.9fr)_minmax(8rem,0.7fr)_auto] xl:items-center">
     <div class="relative w-full group">
         <label for="catalog-search" class="sr-only">Cari produk</label>
         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -36,6 +36,19 @@
         <input id="catalog-search" type="search" name="search" value="{{ $catalogContext['search'] ?? '' }}"
             class="block w-full pl-11 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-sm transition-shadow placeholder-gray-400"
             placeholder="Cari nama produk atau brand...">
+    </div>
+
+    <div class="w-full relative">
+        <label for="catalog-publication" class="sr-only">Filter publikasi</label>
+        <select id="catalog-publication" name="publication" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+            <option value="">Semua status</option>
+            <option value="draft" {{ ($catalogContext['publication'] ?? null) === 'draft' ? 'selected' : '' }}>Draft</option>
+            <option value="published" {{ ($catalogContext['publication'] ?? null) === 'published' ? 'selected' : '' }}>Tayang</option>
+            <option value="archived" {{ ($catalogContext['publication'] ?? null) === 'archived' ? 'selected' : '' }}>Diarsipkan</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
     </div>
 
     <div class="w-full relative">
@@ -78,7 +91,7 @@
         </div>
     </div>
 
-    @if(isset($catalogContext['search']) || isset($catalogContext['brand_id']) || isset($catalogContext['availability']) || isset($catalogContext['sort']))
+    @if(isset($catalogContext['search']) || isset($catalogContext['brand_id']) || isset($catalogContext['availability']) || isset($catalogContext['publication']) || isset($catalogContext['sort']))
         <a href="{{ route('admin.products.index') }}" class="inline-flex min-h-10 items-center justify-center px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">
             Reset
         </a>
@@ -118,9 +131,8 @@
                             <div class="ml-4 min-w-0 flex-1">
                                 <div class="whitespace-normal text-sm font-bold text-gray-900 group-hover:text-gold transition-colors">{{ $product->name }}</div>
                                 <div class="text-xs text-gray-500 mt-0.5">{{ $product->gender }} @if($product->is_best_seller) • <span class="text-amber-600 font-bold">Terlaris</span> @endif</div>
-                                <div class="mt-1 flex items-center gap-1.5 text-xs font-medium {{ $product->is_active ? 'text-emerald-700' : 'text-amber-700' }}">
-                                    <span class="h-1.5 w-1.5 rounded-full {{ $product->is_active ? 'bg-emerald-500' : 'bg-amber-500' }}" aria-hidden="true"></span>
-                                    {{ $product->is_active ? 'Aktif' : 'Diarsipkan' }}
+                                <div class="mt-1">
+                                    @include('admin.products._publication', ['product' => $product])
                                 </div>
 
                                 <div class="mt-3 space-y-3 md:hidden">

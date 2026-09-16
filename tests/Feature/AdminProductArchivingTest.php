@@ -106,7 +106,7 @@ class AdminProductArchivingTest extends TestCase
 
     public function test_admin_can_restore_an_archived_product(): void
     {
-        $this->product->update(['is_active' => false]);
+        $this->product->markArchived();
 
         $this->actingAs($this->admin)
             ->patch(route('admin.products.restore', $this->product->id))
@@ -169,14 +169,14 @@ class AdminProductArchivingTest extends TestCase
         $activeHtml = $this->actingAs($this->admin)
             ->get(route('admin.products.index'))
             ->assertOk()
-            ->assertSee('Aktif')
+            ->assertSee('Tayang')
             ->assertSee('Arsipkan produk')
             ->assertDontSee('Delete')
             ->getContent();
 
         $this->assertStringContainsString('data dan gambar tetap tersimpan', $activeHtml);
 
-        $this->product->update(['is_active' => false]);
+        $this->product->markArchived();
 
         $this->actingAs($this->admin)
             ->get(route('admin.products.index'))

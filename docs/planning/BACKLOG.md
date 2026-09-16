@@ -1011,6 +1011,55 @@ Verification:
 - Produk dan akun audit lokal sementara telah dihapus setelah verifikasi. Tidak ada schema, media, staging, atau production yang diubah.
 - Commit implementasi `b2b1764` lulus GitHub Actions CI run `35075494855` dalam 26 detik.
 
+### P5-03 Draft/publish workflow and publication readiness — DONE
+
+Outcome:
+
+- Admin dapat menyimpan produk parsial sebagai draft, melihat alasan produk belum siap tayang, dan mem-publish hanya setelah seluruh syarat katalog terpenuhi.
+
+In scope:
+
+- Operasi publication readiness bersama yang memeriksa brand, nama/slug, kategori, deskripsi, gender, tepat satu offer aktif dengan ukuran/harga valid, dan tepat satu primary image.
+- Product create dapat menyimpan draft hanya dengan nama kerja atau langsung publish jika lengkap.
+- Product editor untuk draft/archived menampilkan alasan belum siap, menyimpan perubahan parsial, dan menyediakan publish action yang dilindungi gate; published existing tetap dapat diedit tanpa status berubah otomatis.
+- Filter dan status publication pada catalog manager dengan context yang tetap terbawa selama pagination/edit/update.
+- Restore archived memakai publish gate sehingga produk tidak kembali tayang dalam keadaan belum lengkap.
+- Regression test dan browser verification untuk draft minimal, publish ditolak, publish sukses, filtered/empty state, context preservation, mobile, dan desktop.
+
+Out of scope:
+
+- Mengubah status 180 produk legacy secara massal, reconciliation offer/harga/gambar existing, bulk publish, approval workflow multi-user, audit log, media delete/reorder, public catalog redesign, staging, dan production.
+
+Dependencies:
+
+- P3 publication/draft foundation, P4 primary-image lifecycle, P5-01 catalog context, dan P5-02 responsive catalog manager selesai.
+
+Risks:
+
+- Data lokal legacy berisi produk published yang belum memenuhi kontrak baru; item ini tidak boleh otomatis unpublish atau memblokir edit korektif pada produk tersebut.
+- Draft tidak boleh menjadi public hanya karena availability berubah atau form biasa disimpan.
+- Publish dan restore harus atomik terhadap perubahan produk, offer, serta image baru; kegagalan tidak boleh meninggalkan state atau file parsial.
+
+Acceptance criteria:
+
+- Draft baru dapat disimpan hanya dengan nama kerja, berstatus `draft`, `is_active=false`, tidak mempunyai offer/gambar buatan, dan tidak dapat diakses publik.
+- Publish baru atau draft/archived existing ditolak dengan alasan spesifik bila field wajib, offer, atau primary image belum lengkap; state sebelumnya tetap aman.
+- Produk lengkap dapat dipublish dengan `published_at`, `publication_status=published`, dan `is_active=true` tanpa mengubah availability.
+- Published existing yang diedit tetap published dan tidak dipaksa turun status karena kekurangan legacy; field form yang sebelumnya wajib tetap dijaga pada jalur ini.
+- Catalog manager dapat memfilter draft/published/archived, menampilkan status publication yang jujur, dan mempertahankan filter pada edit/cancel/update.
+- UI create/edit menjelaskan perbedaan simpan draft dan publish, menampilkan readiness reasons, serta tetap usable tanpa overflow pada mobile/desktop.
+- Focused tests, seluruh test Laravel, Blade compilation, build, quality checks, browser mobile/desktop, dan CI lulus.
+
+Completion evidence:
+
+- Publication readiness dipusatkan pada action domain yang memeriksa identitas produk, brand aktif, kategori, deskripsi, gender, tepat satu offer aktif, serta tepat satu primary image dengan file storage yang benar-benar tersedia.
+- Create mendukung draft minimal hanya dengan nama kerja dan direct publish tetap kompatibel untuk client lama, tetapi dilindungi validasi lengkap. Edit draft/archived dapat disimpan parsial atau dipublish secara eksplisit; edit produk legacy published tidak otomatis menurunkan statusnya.
+- Restore archived memakai publish gate yang sama. Kegagalan publish/restore menjaga state sebelumnya dan menampilkan alasan spesifik dalam bahasa Indonesia.
+- Catalog manager mempunyai filter Draft/Tayang/Diarsipkan, status publication yang jujur, empty state, dan context `publication` yang tetap terbawa pada edit, cancel, serta update.
+- Focused regression suite lulus, diikuti seluruh suite Laravel: 104 test dan 487 assertion. Laravel Pint, Blade view cache, Composer validation, production Vite build, dan `git diff --check` lulus. Build hanya melaporkan warning existing DaisyUI `@property` dan chunk `about-lanyard` yang besar.
+- Browser lokal diverifikasi pada viewport mobile compact dan desktop wide untuk draft minimal, publish ditolak, readiness reasons, populated/empty filter, serta context-preserving update. Tidak ada horizontal overflow dan console browser bersih.
+- Produk draft dan akun admin audit lokal sementara telah dihapus setelah verifikasi. Tidak ada data bisnis existing, schema, media existing, staging, atau production yang diubah.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

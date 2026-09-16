@@ -17,9 +17,12 @@
     </nav>
 
     <div class="flex items-center justify-between mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Add New Product</h1>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Tambah Produk</h1>
+            <p class="mt-1 text-sm text-gray-500">Simpan nama kerja sebagai draft, lalu lengkapi sebelum produk ditayangkan.</p>
+        </div>
         <a href="{{ route('admin.products.index') }}" class="text-sm font-medium text-gray-500 hover:text-black transition-colors">
-            &larr; Cancel & Back
+            &larr; Batal
         </a>
     </div>
 
@@ -27,7 +30,7 @@
     <div class="bg-red-50 border border-red-200 p-4 mb-6 rounded-lg">
         <div class="flex">
             <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                <h3 class="text-sm font-medium text-red-800">Periksa kembali data produk</h3>
                 <ul class="mt-2 list-disc list-inside text-sm text-red-700">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -45,11 +48,11 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900 mb-5 pb-2 border-b border-gray-100">Basic Information</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mb-5 pb-2 border-b border-gray-100">Informasi Dasar</h3>
                     
                     <div class="space-y-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Produk <span class="text-red-500">*</span></label>
                             <input type="text" name="name" value="{{ old('name') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="e.g. Afnan 9 PM" required @error('name') aria-describedby="name-error" aria-invalid="true" @enderror>
                             @error('name')
                             <p id="name-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -58,8 +61,9 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
                                 <select name="brand_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('brand_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('brand_id') aria-describedby="brand-error" aria-invalid="true" @enderror>
+                                    <option value="">Pilih brand</option>
                                     @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}" {{ old('brand_id') == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
                                     @endforeach
@@ -69,8 +73,9 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
                                 <select name="category_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('category_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('category_id') aria-describedby="category-error" aria-invalid="true" @enderror>
+                                    <option value="">Pilih kategori</option>
                                     @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                     @endforeach
@@ -82,8 +87,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
-                            <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Short story about the scent profile, longevity, and sillage." required @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description') }}</textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
+                            <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description') }}</textarea>
                             @error('description')
                             <p id="description-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -100,8 +105,9 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
                                 <select name="gender" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm">
+                                    <option value="">Pilih gender</option>
                                     <option value="Unisex" {{ old('gender') == 'Unisex' ? 'selected' : '' }}>Unisex</option>
                                     <option value="Pria" {{ old('gender') == 'Pria' ? 'selected' : '' }}>Pria</option>
                                     <option value="Wanita" {{ old('gender') == 'Wanita' ? 'selected' : '' }}>Wanita</option>
@@ -140,27 +146,27 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div class="mb-5 pb-2 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-900">Ukuran & Harga</h3>
-                        <p class="text-xs text-gray-500 mt-1">Satu produk katalog menggunakan satu ukuran dan satu harga jual.</p>
+                        <p class="text-xs text-gray-500 mt-1">Opsional untuk draft; satu ukuran dan harga wajib sebelum publish.</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <div>
-                            <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) <span class="text-red-500">*</span></label>
-                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" required>
+                            <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) <span class="text-gray-400">Wajib saat publish</span></label>
+                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100">
                             @error('variants.0.volume')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
-                            <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) <span class="text-red-500">*</span></label>
-                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" required>
+                            <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) <span class="text-gray-400">Wajib saat publish</span></label>
+                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000">
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
-                            <label for="offer-stock" class="block text-xs font-medium text-gray-600 mb-1">Snapshot Stok <span class="text-red-500">*</span></label>
-                            <input id="offer-stock" type="number" name="variants[0][stock]" value="{{ old('variants.0.stock', 0) }}" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.stock') border-red-500 @enderror" required>
+                            <label for="offer-stock" class="block text-xs font-medium text-gray-600 mb-1">Snapshot Stok <span class="text-gray-400">Opsional</span></label>
+                            <input id="offer-stock" type="number" name="variants[0][stock]" value="{{ old('variants.0.stock', 0) }}" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.stock') border-red-500 @enderror">
                             <p class="mt-1 text-xs text-gray-400">Bukan jaminan stok live.</p>
                             @error('variants.0.stock')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -172,11 +178,11 @@
 
             <div class="space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Images</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Foto Produk</h3>
                     
-                    <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Images <span class="text-red-500">*</span></label>
+                    <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Foto <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
                     <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors group focus-within:ring-2 focus-within:ring-black">
-                        <input id="images" name="images[]" type="file" multiple accept="image/*" required
+                        <input id="images" name="images[]" type="file" multiple accept="image/*"
                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             onchange="previewImages(this)" @error('images') aria-describedby="images-error" aria-invalid="true" @enderror>
                             
@@ -199,12 +205,27 @@
                     <div id="image-preview-container" class="grid grid-cols-3 gap-2 mt-4 hidden"></div>
                 </div>
 
-                <div class="sticky top-6">
-                    <button type="submit" class="w-full bg-black text-white text-lg font-bold uppercase tracking-widest py-4 rounded-xl shadow-xl hover:bg-gray-800 transform hover:-translate-y-1 transition-all duration-200 flex justify-center items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Save Product
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-base font-bold text-gray-900">Syarat publish</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-gray-500">Draft hanya membutuhkan nama kerja. Sebelum tayang, lengkapi:</p>
+                    <ul class="mt-3 space-y-2 text-xs text-gray-600">
+                        @foreach(['Brand dan kategori', 'Deskripsi dan gender', 'Satu ukuran dan harga valid', 'Satu foto utama'] as $requirement)
+                            <li class="flex items-start gap-2">
+                                <span class="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-gray-400" aria-hidden="true"></span>
+                                <span>{{ $requirement }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <div class="sticky top-6 space-y-3">
+                    <button type="submit" name="publication_action" value="draft" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                        Simpan sebagai draft
                     </button>
-                    <p class="text-xs text-center text-gray-500 mt-3">Double check all details before saving.</p>
+                    <button type="submit" name="publication_action" value="published" class="w-full rounded-xl bg-black px-4 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                        Publish produk
+                    </button>
+                    <p class="text-center text-xs leading-relaxed text-gray-500">Publish akan ditolak bila syarat katalog belum lengkap.</p>
                 </div>
             </div>
         </div>

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\AttachProductImage;
+use App\Actions\Products\EvaluateProductPublicationReadiness;
+use App\Actions\Products\PublishProduct;
 use App\Actions\Products\SyncSingleOffer;
+use App\Exceptions\ProductNotReadyForPublication;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductStoreRequest;
 use App\Http\Requests\Admin\ProductUpdateRequest;
@@ -41,6 +44,10 @@ class AdminProductController extends Controller
 
         if (isset($catalogContext['availability'])) {
             $this->applyAvailabilityFilter($query, $catalogContext['availability']);
+        }
+
+        if (isset($catalogContext['publication'])) {
+            $query->where('publication_status', $catalogContext['publication']);
         }
 
         match ($catalogContext['sort'] ?? 'latest') {
@@ -84,7 +91,7 @@ class AdminProductController extends Controller
 
     public function create()
     {
-        $brands = Brand::where('is_active', true)->get();
+        $brands = Brand::where('is_active', true)->orderBy('name')->get();
         $categories = Category::all();
 
         return view('admin.products.create', compact('brands', 'categories'));
@@ -94,6 +101,7 @@ class AdminProductController extends Controller
         ProductStoreRequest $request,
         SyncSingleOffer $syncSingleOffer,
         AttachProductImage $attachProductImage,
+        PublishProduct $publishProduct,
         ProductMediaStorage $productMediaStorage
     ) {
         // ... (Gunakan kode STORE dari jawaban sebelumnya)
@@ -105,11 +113,7 @@ class AdminProductController extends Controller
                 ? $request->compare_at_price
                 : null;
 
-            $fragranceNotes = [
-                'top' => array_map('trim', explode(',', $request->top_notes)),
-                'middle' => array_map('trim', explode(',', $request->middle_notes)),
-                'base' => array_map('trim', explode(',', $request->base_notes)),
-            ];
+            $fragranceNotes = $this->normalizeFragranceNotes($request);
 
             $product = Product::create([
                 'brand_id' => $request->brand_id,
@@ -121,14 +125,16 @@ class AdminProductController extends Controller
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),
-                'is_active' => true,
-                'publication_status' => Product::PUBLICATION_PUBLISHED,
-                'published_at' => now(),
+                'is_active' => false,
+                'publication_status' => Product::PUBLICATION_DRAFT,
+                'published_at' => null,
                 'availability_status' => Product::AVAILABILITY_UNKNOWN,
             ]);
 
-            $offerData = array_values($request->validated('variants'))[0];
-            $syncSingleOffer->handle($product, $offerData);
+            $offerData = $this->completeOfferData($request->validated('variants', []));
+            if ($offerData !== null) {
+                $syncSingleOffer->handle($product, $offerData);
+            }
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
@@ -137,10 +143,25 @@ class AdminProductController extends Controller
                 }
             }
 
+            $publicationAction = $request->input('publication_action', Product::PUBLICATION_PUBLISHED);
+            if ($publicationAction === Product::PUBLICATION_PUBLISHED) {
+                $publishProduct->handle($product);
+            }
+
             DB::commit();
+
+            if ($publicationAction === Product::PUBLICATION_DRAFT) {
+                return redirect()->route('admin.products.edit', $product->id)
+                    ->with('success', 'Draft berhasil disimpan. Lengkapi data sebelum dipublikasikan.');
+            }
 
             return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
 
+        } catch (ProductNotReadyForPublication $e) {
+            DB::rollback();
+            $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
+
+            return back()->withErrors($this->publicationErrors($e))->withInput();
         } catch (Throwable $e) {
             DB::rollback();
             $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
@@ -150,14 +171,27 @@ class AdminProductController extends Controller
         }
     }
 
-    public function edit(Request $request, $id)
-    {
+    public function edit(
+        Request $request,
+        $id,
+        EvaluateProductPublicationReadiness $evaluatePublicationReadiness
+    ) {
         $product = Product::with(['variants', 'images', 'brand', 'category'])->findOrFail($id);
-        $brands = Brand::where('is_active', true)->get();
+        $brands = Brand::where('is_active', true)
+            ->orWhere('id', $product->brand_id)
+            ->orderBy('name')
+            ->get();
         $categories = Category::all();
         $catalogReturnPath = $this->catalogReturnPath($request->query('return_to'));
+        $publicationBlockers = $evaluatePublicationReadiness->handle($product);
 
-        return view('admin.products.edit', compact('product', 'brands', 'categories', 'catalogReturnPath'));
+        return view('admin.products.edit', compact(
+            'product',
+            'brands',
+            'categories',
+            'catalogReturnPath',
+            'publicationBlockers'
+        ));
     }
 
     public function update(
@@ -165,6 +199,7 @@ class AdminProductController extends Controller
         $id,
         SyncSingleOffer $syncSingleOffer,
         AttachProductImage $attachProductImage,
+        PublishProduct $publishProduct,
         ProductMediaStorage $productMediaStorage
     ) {
         // ... (Gunakan kode UPDATE dari jawaban sebelumnya)
@@ -177,11 +212,7 @@ class AdminProductController extends Controller
                 ? $request->compare_at_price
                 : null;
 
-            $fragranceNotes = [
-                'top' => array_map('trim', explode(',', $request->top_notes)),
-                'middle' => array_map('trim', explode(',', $request->middle_notes)),
-                'base' => array_map('trim', explode(',', $request->base_notes)),
-            ];
+            $fragranceNotes = $this->normalizeFragranceNotes($request);
 
             $product->update([
                 'brand_id' => $request->brand_id,
@@ -207,8 +238,10 @@ class AdminProductController extends Controller
                 }
             }
 
-            $offerData = array_values($request->validated('variants'))[0];
-            $syncSingleOffer->handle($product, $offerData);
+            $offerData = $this->completeOfferData($request->validated('variants', []));
+            if ($offerData !== null) {
+                $syncSingleOffer->handle($product, $offerData);
+            }
 
             if ($request->hasFile('new_images')) {
                 foreach ($request->file('new_images') as $image) {
@@ -217,11 +250,20 @@ class AdminProductController extends Controller
                 }
             }
 
+            if ($request->input('publication_action') === Product::PUBLICATION_PUBLISHED) {
+                $publishProduct->handle($product);
+            }
+
             DB::commit();
 
             return redirect()->to($this->catalogReturnPath($request->input('return_to')))
                 ->with('success', 'Product updated successfully!');
 
+        } catch (ProductNotReadyForPublication $e) {
+            DB::rollback();
+            $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
+
+            return back()->withErrors($this->publicationErrors($e))->withInput();
         } catch (Throwable $e) {
             DB::rollback();
             $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
@@ -244,17 +286,25 @@ class AdminProductController extends Controller
         return back()->with('success', 'Produk berhasil diarsipkan. Data dan gambar tetap tersimpan.');
     }
 
-    public function restore($id)
+    public function restore(Request $request, $id, PublishProduct $publishProduct)
     {
         $product = Product::findOrFail($id);
+        $catalogReturnPath = $this->catalogReturnPath($request->input('return_to'));
 
         if ($product->isPublished()) {
-            return back()->with('success', 'Produk ini sudah aktif.');
+            return redirect()->to($catalogReturnPath)->with('success', 'Produk ini sudah aktif.');
         }
 
-        $product->markPublished();
+        try {
+            $publishProduct->handle($product);
+        } catch (ProductNotReadyForPublication $e) {
+            return redirect()->route('admin.products.edit', [
+                'product' => $product->id,
+                'return_to' => $catalogReturnPath,
+            ])->withErrors($this->publicationErrors($e));
+        }
 
-        return back()->with('success', 'Produk berhasil diaktifkan kembali.');
+        return redirect()->to($catalogReturnPath)->with('success', 'Produk berhasil diaktifkan kembali.');
     }
 
     public function destroyImage($id)
@@ -330,6 +380,15 @@ class AdminProductController extends Controller
             Product::AVAILABILITY_SOLD_OUT,
         ], true)) {
             $context['availability'] = $availability;
+        }
+
+        $publication = $query['publication'] ?? null;
+        if (is_string($publication) && in_array($publication, [
+            Product::PUBLICATION_DRAFT,
+            Product::PUBLICATION_PUBLISHED,
+            Product::PUBLICATION_ARCHIVED,
+        ], true)) {
+            $context['publication'] = $publication;
         }
 
         $sort = $query['sort'] ?? null;
@@ -412,5 +471,46 @@ class AdminProductController extends Controller
         ]);
 
         return $integer === false ? null : $integer;
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $variants
+     * @return array<string, mixed>|null
+     */
+    private function completeOfferData(array $variants): ?array
+    {
+        $offerData = array_values($variants)[0] ?? null;
+
+        if (! is_array($offerData)
+            || ! isset($offerData['volume'], $offerData['price'])
+            || $offerData['volume'] === ''
+            || $offerData['price'] === '') {
+            return null;
+        }
+
+        return $offerData;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function publicationErrors(ProductNotReadyForPublication $exception): array
+    {
+        return ['publication' => array_values($exception->blockers())];
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function normalizeFragranceNotes(Request $request): array
+    {
+        return collect(['top', 'middle', 'base'])->mapWithKeys(function (string $group) use ($request): array {
+            $notes = array_filter(
+                array_map('trim', explode(',', (string) $request->input("{$group}_notes", ''))),
+                fn (string $note): bool => $note !== ''
+            );
+
+            return [$group => array_values($notes)];
+        })->all();
     }
 }

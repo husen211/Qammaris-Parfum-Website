@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
+@php($editingPublished = $product->isPublished())
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -17,7 +18,10 @@
     </nav>
 
     <div class="flex items-center justify-between mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Edit Product</h1>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Edit Produk</h1>
+            <div class="mt-1">@include('admin.products._publication', ['product' => $product])</div>
+        </div>
         <a href="{{ $catalogReturnPath }}" class="text-sm font-medium text-gray-500 hover:text-black transition-colors">
             &larr; Cancel
         </a>
@@ -27,7 +31,7 @@
     <div class="bg-red-50 border border-red-200 p-4 mb-6 rounded-lg">
         <div class="flex">
             <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                <h3 class="text-sm font-medium text-red-800">Periksa kembali data produk</h3>
                 <ul class="mt-2 list-disc list-inside text-sm text-red-700">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -53,11 +57,11 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900 mb-5 pb-2 border-b border-gray-100">Basic Information</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mb-5 pb-2 border-b border-gray-100">Informasi Dasar</h3>
                     
                     <div class="space-y-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Produk <span class="text-red-500">*</span></label>
                             <input type="text" name="name" value="{{ old('name', $product->name) }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="e.g. Afnan 9 PM" required @error('name') aria-describedby="name-error" aria-invalid="true" @enderror>
                             @error('name')
                             <p id="name-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -66,8 +70,9 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
                                 <select name="brand_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('brand_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('brand_id') aria-describedby="brand-error" aria-invalid="true" @enderror>
+                                    <option value="">Pilih brand</option>
                                     @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
                                     @endforeach
@@ -77,8 +82,9 @@
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
                                 <select name="category_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('category_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('category_id') aria-describedby="category-error" aria-invalid="true" @enderror>
+                                    <option value="">Pilih kategori</option>
                                     @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                     @endforeach
@@ -90,8 +96,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
-                            <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Short story about the scent profile, longevity, and sillage." required @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description', $product->description) }}</textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
+                            <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @if($editingPublished) required @endif @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description', $product->description) }}</textarea>
                             @error('description')
                             <p id="description-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -108,8 +114,9 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
                                 <select name="gender" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm">
+                                    <option value="">Pilih gender</option>
                                     <option value="Unisex" {{ old('gender', $product->gender) == 'Unisex' ? 'selected' : '' }}>Unisex</option>
                                     <option value="Pria" {{ old('gender', $product->gender) == 'Pria' ? 'selected' : '' }}>Pria</option>
                                     <option value="Wanita" {{ old('gender', $product->gender) == 'Wanita' ? 'selected' : '' }}>Wanita</option>
@@ -174,15 +181,13 @@
                     </div>
                 </div>
 
-                @php
-                    $notes = (array) ($product->fragrance_notes ?? []);
-                    $topNotes = $notes['top'] ?? '';
-                    $middleNotes = $notes['middle'] ?? '';
-                    $baseNotes = $notes['base'] ?? '';
-                    $top = is_array($topNotes) ? implode(', ', $topNotes) : $topNotes;
-                    $middle = is_array($middleNotes) ? implode(', ', $middleNotes) : $middleNotes;
-                    $base = is_array($baseNotes) ? implode(', ', $baseNotes) : $baseNotes;
-                @endphp
+                @php($notes = (array) ($product->fragrance_notes ?? []))
+                @php($topNotes = $notes['top'] ?? '')
+                @php($middleNotes = $notes['middle'] ?? '')
+                @php($baseNotes = $notes['base'] ?? '')
+                @php($top = is_array($topNotes) ? implode(', ', $topNotes) : $topNotes)
+                @php($middle = is_array($middleNotes) ? implode(', ', $middleNotes) : $middleNotes)
+                @php($base = is_array($baseNotes) ? implode(', ', $baseNotes) : $baseNotes)
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-900 mb-5 pb-2 border-b border-gray-100">Fragrance Notes</h3>
                     <div class="space-y-4">
@@ -205,7 +210,7 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div class="mb-5 pb-2 border-b border-gray-100">
                         <h3 class="text-lg font-bold text-gray-900">Ukuran & Harga</h3>
-                        <p class="text-xs text-gray-500 mt-1">Satu produk katalog menggunakan satu ukuran dan satu harga jual.</p>
+                        <p class="text-xs text-gray-500 mt-1">Draft boleh belum mempunyai offer; satu ukuran dan harga wajib sebelum publish.</p>
                     </div>
 
                     @php($offer = $product->variants->first())
@@ -215,22 +220,22 @@
                         @endif
 
                         <div>
-                            <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) <span class="text-red-500">*</span></label>
-                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume', $offer?->volume) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" required>
+                            <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
+                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume', $offer?->volume) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" @if($editingPublished) required @endif>
                             @error('variants.0.volume')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
-                            <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) <span class="text-red-500">*</span></label>
-                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ old('variants.0.price', $offer?->price) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" required>
+                            <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
+                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ old('variants.0.price', $offer?->price) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
-                            <label for="offer-stock" class="block text-xs font-medium text-gray-600 mb-1">Snapshot Stok <span class="text-red-500">*</span></label>
-                            <input id="offer-stock" type="number" name="variants[0][stock]" value="{{ old('variants.0.stock', $offer?->stock ?? 0) }}" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.stock') border-red-500 @enderror" required>
+                            <label for="offer-stock" class="block text-xs font-medium text-gray-600 mb-1">Snapshot Stok <span class="text-gray-400">Opsional</span></label>
+                            <input id="offer-stock" type="number" name="variants[0][stock]" value="{{ old('variants.0.stock', $offer?->stock ?? 0) }}" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.stock') border-red-500 @enderror">
                             <p class="mt-1 text-xs text-gray-400">Bukan jaminan stok live.</p>
                             @error('variants.0.stock')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -241,6 +246,35 @@
             </div>
 
             <div class="space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="text-base font-bold text-gray-900">Kesiapan publish</h3>
+                        @include('admin.products._publication', ['product' => $product])
+                    </div>
+
+                    @if($publicationBlockers === [])
+                        <div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                            Semua syarat katalog sudah lengkap.
+                        </div>
+                    @else
+                        <p class="mt-3 text-xs leading-relaxed text-gray-500">
+                            @if($editingPublished)
+                                Produk legacy ini tetap tayang. Lengkapi kekurangannya secara bertahap.
+                            @else
+                                Lengkapi hal berikut sebelum produk dapat ditayangkan.
+                            @endif
+                        </p>
+                        <ul class="mt-3 space-y-2 text-xs text-amber-800">
+                            @foreach($publicationBlockers as $blocker)
+                                <li class="flex items-start gap-2">
+                                    <span class="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-amber-500" aria-hidden="true"></span>
+                                    <span>{{ $blocker }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Current Images</h3>
                     <div class="grid grid-cols-2 gap-2 mb-4">
@@ -264,10 +298,17 @@
                     </div>
                 </div>
 
-                <div class="sticky top-6">
-                    <button type="submit" class="w-full bg-black text-white text-lg font-bold uppercase tracking-widest py-4 rounded-xl shadow-xl hover:bg-gray-800 transform hover:-translate-y-1 transition-all duration-200">
-                        Update Product
+                <div class="sticky top-6 space-y-3">
+                    <button type="submit" name="publication_action" value="save" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                        {{ $editingPublished ? 'Simpan perubahan' : ($product->publication_status === 'draft' ? 'Simpan draft' : 'Simpan perubahan') }}
                     </button>
+
+                    @if(! $editingPublished)
+                        <button type="submit" name="publication_action" value="published" class="w-full rounded-xl bg-black px-4 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                            {{ $product->publication_status === 'archived' ? 'Publish kembali' : 'Publish produk' }}
+                        </button>
+                        <p class="text-center text-xs leading-relaxed text-gray-500">Publish akan ditolak bila syarat katalog belum lengkap.</p>
+                    @endif
                 </div>
             </div>
         </div>
