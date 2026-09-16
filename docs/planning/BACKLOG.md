@@ -521,9 +521,47 @@ Verification:
 - Tidak ada UI, media, staging, atau production yang diubah. Verifikasi viewport browser tidak berlaku karena item ini tidak mengubah tampilan.
 - CI GitHub Actions untuk commit implementasi `6684f33` lulus pada run `35049913891` (push) dan `35049916555` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P3-02 Draft fields, one-offer price authority, dan optional SKU — BACKLOG
+### P3-02 Draft fields, one-offer price authority, dan optional SKU — DONE
 
-- Membuat field draft yang disetujui menjadi nullable secara additive, menghentikan SKU acak, dan menetapkan sinkronisasi harga dari satu offer aktif.
+Outcome:
+
+- Draft dapat disimpan hanya dengan nama kerja, sedangkan produk lengkap menggunakan tepat satu offer sebagai sumber ukuran dan harga jual.
+
+In scope:
+
+- Membuat brand, kategori, deskripsi, `base_price`, dan gender nullable untuk draft tanpa mengubah nilai record existing.
+- Membuat SKU offer nullable dan menghentikan pembuatan SKU acak.
+- Membatasi satu offer teknis per produk serta mempertahankan ID offer existing ketika diedit.
+- Menyinkronkan `products.base_price` hanya dari harga offer melalui satu application operation.
+- Menyederhanakan bagian ukuran/harga form admin legacy menjadi satu offer tanpa redesign admin panel.
+
+Out of scope:
+
+- Workflow tombol simpan draft/publish dan daftar alasan draft belum publish; masuk Admin Panel V2.
+- Reconciliation 116 produk tanpa offer, enam harga tidak valid, dan 26 konflik harga existing.
+- External provider mapping, bulk import, update harga massal, media, staging, dan production.
+
+Acceptance criteria:
+
+- Draft bernama dapat disimpan pada domain tanpa brand, kategori, deskripsi, gender, harga, offer, atau gambar.
+- Form admin legacy hanya menerima satu offer dengan ukuran dan harga valid.
+- SKU kosong tersimpan sebagai `null`; tidak ada SKU acak baru.
+- Create/update offer menyinkronkan `base_price`, mempertahankan ID offer saat update, dan menolak offer milik produk lain.
+- Migration tidak mengubah ID, slug, harga, SKU, offer, atau media existing dan constraint satu-offer telah dipastikan aman dari audit lokal.
+- Relevant tests, migration round-trip, seluruh test Laravel, browser mobile/desktop, build, dan CI lulus.
+
+Verification:
+
+- Audit pre-migration memastikan `180` produk, `64` offer, tidak ada produk dengan lebih dari satu offer, dan tidak ada SKU duplikat.
+- Migration lokal berhasil tanpa update record. Count tetap `180` produk dan `64` offer; checksum produk `d3f59d5f53d20ae380946c61f7ebbd3dc3b512643ec294a827f14ebef5589532` serta checksum offer `0d91092d3d993d953855e64d22a50eb8964c7563210f7d832ee1742afb5a3511` identik sebelum/sesudah migration.
+- Migration `up -> down -> up` berhasil pada database SQLite sementara dan file sementara sudah dibersihkan.
+- Relevant tests lulus `24 passed (91 assertions)` dan seluruh test Laravel lulus `55 passed (254 assertions)`.
+- Composer strict validation, Blade clear/cache, syntax PHP, Laravel Pint untuk file yang diubah, `git diff --check`, dan Vite production build lulus. Warning existing DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Browser lokal memverifikasi create, edit dengan offer, edit tanpa offer, native required validation, dan urutan keyboard pada `390x844` serta `1440x900`. Lebar dokumen sama dengan viewport pada keduanya, tombol Add Variant berjumlah nol, hanya tiga field offer tampil, dan console tidak memiliki warning/error.
+- Baseline sebelum perubahan diaudit dari implementasi Blade/Git existing; screenshot sebelum tidak tersedia karena akses admin lokal belum tersedia saat baseline. Screenshot sesudah perubahan diverifikasi langsung pada kedua viewport.
+- Akun admin sintetis lokal dibuat khusus verifikasi dan tepat satu record tersebut telah dihapus kembali. Tidak ada produk/media test tersimpan.
+- Tidak ada staging, production, media existing, nilai harga existing, SKU existing, ID, atau slug yang diubah.
+- Bukti CI GitHub Actions dicatat setelah commit implementasi tersedia di remote.
 
 ### P3-03 External product identity boundary — BACKLOG
 

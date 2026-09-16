@@ -12,7 +12,9 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with(['brand', 'category', 'primaryImage'])
-            ->withMin('variants', 'price')
+            ->withMin([
+                'variants as variants_min_price' => fn ($variantQuery) => $variantQuery->where('is_active', true),
+            ], 'price')
             ->published();
 
         // Search
@@ -67,11 +69,19 @@ class ProductController extends Controller
     {
         abort_unless($product->isPublished(), 404);
 
-        $product->load(['brand', 'category', 'images', 'variants.product']);
+        $product->load([
+            'brand',
+            'category',
+            'images',
+            'variants' => fn ($variantQuery) => $variantQuery->where('is_active', true),
+            'variants.product',
+        ]);
         $product->incrementViewCount();
 
         $relatedProducts = Product::with(['brand', 'primaryImage'])
-            ->withMin('variants', 'price')
+            ->withMin([
+                'variants as variants_min_price' => fn ($variantQuery) => $variantQuery->where('is_active', true),
+            ], 'price')
             ->published()
             ->where('brand_id', $product->brand_id)
             ->where('id', '!=', $product->id)

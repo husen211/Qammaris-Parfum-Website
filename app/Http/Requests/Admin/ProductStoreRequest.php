@@ -28,10 +28,11 @@ class ProductStoreRequest extends FormRequest
             'top_notes' => ['nullable', 'string', 'max:1000'],
             'middle_notes' => ['nullable', 'string', 'max:1000'],
             'base_notes' => ['nullable', 'string', 'max:1000'],
-            'variants' => ['required', 'array', 'min:1'],
+            'variants' => ['required', 'array', 'size:1'],
             'variants.*.volume' => ['required', 'integer', 'min:1', 'max:10000'],
             'variants.*.price' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
             'variants.*.stock' => ['required', 'integer', 'min:0', 'max:999999'],
+            'variants.*.sku' => ['nullable', 'string', 'max:255', 'distinct', 'unique:product_variants,sku'],
             'images' => ['required', 'array', 'min:1', 'max:3'],
             'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];

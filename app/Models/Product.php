@@ -99,6 +99,14 @@ class Product extends Model
     }
 
     /**
+     * The single active offer used by catalog and cart consumers.
+     */
+    public function activeOffer()
+    {
+        return $this->hasOne(ProductVariant::class)->where('is_active', true);
+    }
+
+    /**
      * Relationship: Product has many Images
      */
     public function images()
@@ -117,9 +125,11 @@ class Product extends Model
     /**
      * Accessor: Formatted price in Rupiah
      */
-    public function getFormattedPriceAttribute(): string
+    public function getFormattedPriceAttribute(): ?string
     {
-        return 'Rp '.number_format($this->base_price, 0, ',', '.');
+        $price = $this->cheapest_price;
+
+        return $price === null ? null : 'Rp '.number_format($price, 0, ',', '.');
     }
 
     /**
@@ -133,10 +143,10 @@ class Product extends Model
         }
 
         if ($this->relationLoaded('variants')) {
-            return $this->variants->min('price') ?? $this->base_price;
+            return $this->variants->where('is_active', true)->min('price') ?? $this->base_price;
         }
 
-        return $this->variants()->min('price') ?? $this->base_price;
+        return $this->variants()->where('is_active', true)->min('price') ?? $this->base_price;
     }
 
     /**
@@ -150,10 +160,10 @@ class Product extends Model
         }
 
         if ($this->relationLoaded('variants')) {
-            return $this->variants->max('price') ?? $this->base_price;
+            return $this->variants->where('is_active', true)->max('price') ?? $this->base_price;
         }
 
-        return $this->variants()->max('price') ?? $this->base_price;
+        return $this->variants()->where('is_active', true)->max('price') ?? $this->base_price;
     }
 
     /**
@@ -163,6 +173,10 @@ class Product extends Model
     {
         $cheapest = $this->cheapest_price;
         $mostExpensive = $this->most_expensive_price;
+
+        if ($cheapest === null || $mostExpensive === null) {
+            return 'Harga belum diisi';
+        }
 
         if ($cheapest == $mostExpensive) {
             return 'Rp '.number_format($cheapest, 0, ',', '.');

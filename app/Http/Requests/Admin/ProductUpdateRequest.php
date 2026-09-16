@@ -20,6 +20,7 @@ class ProductUpdateRequest extends FormRequest
         $productId = is_object($product) ? $product->getKey() : $product;
         $currentProduct = $product instanceof Product ? $product : Product::find($productId);
         $currentBrandId = $currentProduct?->brand_id;
+        $offerId = $this->input('variants.0.id');
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -40,7 +41,7 @@ class ProductUpdateRequest extends FormRequest
             'top_notes' => ['nullable', 'string', 'max:1000'],
             'middle_notes' => ['nullable', 'string', 'max:1000'],
             'base_notes' => ['nullable', 'string', 'max:1000'],
-            'variants' => ['required', 'array', 'min:1'],
+            'variants' => ['required', 'array', 'size:1'],
             'variants.*.id' => [
                 'nullable',
                 'integer',
@@ -51,6 +52,13 @@ class ProductUpdateRequest extends FormRequest
             'variants.*.volume' => ['required', 'integer', 'min:1', 'max:10000'],
             'variants.*.price' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
             'variants.*.stock' => ['required', 'integer', 'min:0', 'max:999999'],
+            'variants.*.sku' => [
+                'nullable',
+                'string',
+                'max:255',
+                'distinct',
+                Rule::unique('product_variants', 'sku')->ignore($offerId),
+            ],
             'new_images' => ['nullable', 'array', 'max:3'],
             'new_images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];

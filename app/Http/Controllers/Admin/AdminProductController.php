@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Products\SyncSingleOffer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductStoreRequest;
 use App\Http\Requests\Admin\ProductUpdateRequest;
@@ -9,7 +10,6 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
-use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -55,14 +55,13 @@ class AdminProductController extends Controller
         return view('admin.products.create', compact('brands', 'categories'));
     }
 
-    public function store(ProductStoreRequest $request)
+    public function store(ProductStoreRequest $request, SyncSingleOffer $syncSingleOffer)
     {
         // ... (Gunakan kode STORE dari jawaban sebelumnya)
         $storedImagePaths = [];
 
         try {
             DB::beginTransaction();
-            $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
             $compareAtPrice = $request->filled('compare_at_price')
                 ? $request->compare_at_price
                 : null;
@@ -73,14 +72,12 @@ class AdminProductController extends Controller
                 'base' => array_map('trim', explode(',', $request->base_notes)),
             ];
 
-            $basePrice = collect($request->variants)->min('price');
-
             $product = Product::create([
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
                 'name' => $request->name,
                 'description' => $request->description,
-                'base_price' => $basePrice,
+                'base_price' => null,
                 'compare_at_price' => $compareAtPrice,
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
@@ -91,9 +88,8 @@ class AdminProductController extends Controller
                 'availability_status' => Product::AVAILABILITY_UNKNOWN,
             ]);
 
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData, $skuPrefix);
-            }
+            $offerData = array_values($request->validated('variants'))[0];
+            $syncSingleOffer->handle($product, $offerData);
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
@@ -129,7 +125,7 @@ class AdminProductController extends Controller
         return view('admin.products.edit', compact('product', 'brands', 'categories'));
     }
 
-    public function update(ProductUpdateRequest $request, $id)
+    public function update(ProductUpdateRequest $request, $id, SyncSingleOffer $syncSingleOffer)
     {
         // ... (Gunakan kode UPDATE dari jawaban sebelumnya)
         $product = Product::findOrFail($id);
@@ -137,7 +133,6 @@ class AdminProductController extends Controller
 
         try {
             DB::beginTransaction();
-            $skuPrefix = $this->resolveSkuPrefix($request->brand_id);
             $compareAtPrice = $request->filled('compare_at_price')
                 ? $request->compare_at_price
                 : null;
@@ -148,37 +143,19 @@ class AdminProductController extends Controller
                 'base' => array_map('trim', explode(',', $request->base_notes)),
             ];
 
-            $basePrice = collect($request->variants)->min('price');
-
             $product->update([
                 'brand_id' => $request->brand_id,
                 'category_id' => $request->category_id,
                 'name' => $request->name,
                 'description' => $request->description,
-                'base_price' => $basePrice,
                 'compare_at_price' => $compareAtPrice,
                 'fragrance_notes' => $fragranceNotes,
                 'gender' => $request->gender,
                 'is_best_seller' => $request->has('is_best_seller'),
             ]);
 
-            $submittedVariantIds = collect($request->variants)->pluck('id')->filter()->toArray();
-
-            ProductVariant::where('product_id', $product->id)
-                ->whereNotIn('id', $submittedVariantIds)
-                ->delete();
-
-            foreach ($request->variants as $variantData) {
-                if (isset($variantData['id']) && $variantData['id']) {
-                    $product->variants()->whereKey($variantData['id'])->firstOrFail()->update([
-                        'volume' => $variantData['volume'],
-                        'price' => $variantData['price'],
-                        'stock' => $variantData['stock'],
-                    ]);
-                } else {
-                    $this->createVariant($product, $variantData, $skuPrefix);
-                }
-            }
+            $offerData = array_values($request->validated('variants'))[0];
+            $syncSingleOffer->handle($product, $offerData);
 
             if ($request->hasFile('new_images')) {
                 $lastSort = $product->images()->max('sort_order') ?? 0;
@@ -249,30 +226,6 @@ class AdminProductController extends Controller
             'error',
             'Penghapusan gambar dinonaktifkan sementara agar file dan metadata tetap aman.'
         );
-    }
-
-    private function createVariant($product, $data, string $skuPrefix)
-    {
-        ProductVariant::create([
-            'product_id' => $product->id,
-            'volume' => $data['volume'],
-            'price' => $data['price'],
-            'stock' => $data['stock'],
-            'sku' => $skuPrefix.'-'.rand(1000, 9999),
-            'is_active' => true,
-        ]);
-    }
-
-    private function resolveSkuPrefix(int $brandId): string
-    {
-        $brandName = Brand::whereKey($brandId)->value('name');
-        $fallback = 'PRD';
-
-        if (! $brandName) {
-            return $fallback;
-        }
-
-        return strtoupper(substr($brandName, 0, 3)) ?: $fallback;
     }
 
     private function storeProductImage($image, array &$storedImagePaths): string

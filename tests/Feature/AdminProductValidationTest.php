@@ -71,6 +71,22 @@ class AdminProductValidationTest extends TestCase
         $this->assertDatabaseCount('products', 0);
     }
 
+    public function test_store_rejects_more_than_one_offer(): void
+    {
+        $payload = $this->validStorePayload();
+        $payload['variants'][] = [
+            'volume' => 50,
+            'price' => 75000,
+            'stock' => 0,
+        ];
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.products.store'), $payload)
+            ->assertSessionHasErrors('variants');
+
+        $this->assertDatabaseCount('products', 0);
+    }
+
     public function test_store_rejects_inactive_brand(): void
     {
         $this->brand->update(['is_active' => false]);
@@ -158,6 +174,31 @@ class AdminProductValidationTest extends TestCase
         ]);
     }
 
+    public function test_update_syncs_offer_price_without_replacing_offer_or_sku(): void
+    {
+        $product = $this->createExistingProduct();
+        $offer = $product->variants()->firstOrFail();
+        $payload = $this->validUpdatePayload($product);
+        $payload['variants'][0]['price'] = 225000;
+        $payload['compare_at_price'] = 250000;
+
+        $this->actingAs($this->admin)
+            ->put(route('admin.products.update', $product->id), $payload)
+            ->assertRedirect(route('admin.products.index'));
+
+        $this->assertDatabaseHas('product_variants', [
+            'id' => $offer->id,
+            'product_id' => $product->id,
+            'price' => 225000,
+            'sku' => 'EXISTING-001',
+        ]);
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'base_price' => 225000,
+        ]);
+        $this->assertDatabaseCount('product_variants', 1);
+    }
+
     public function test_store_accepts_valid_product_with_three_images(): void
     {
         $this->actingAs($this->admin)
@@ -171,6 +212,11 @@ class AdminProductValidationTest extends TestCase
             'availability_status' => Product::AVAILABILITY_UNKNOWN,
         ]);
         $this->assertDatabaseCount('product_variants', 1);
+        $this->assertDatabaseHas('product_variants', [
+            'price' => 100000,
+            'sku' => null,
+        ]);
+        $this->assertDatabaseHas('products', ['base_price' => 100000]);
         $this->assertDatabaseCount('product_images', 3);
         $this->assertDatabaseHas('product_images', ['is_primary' => true]);
         $this->assertCount(3, Storage::disk('public')->allFiles('products'));
