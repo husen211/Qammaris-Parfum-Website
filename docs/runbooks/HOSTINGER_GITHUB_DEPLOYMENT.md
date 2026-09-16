@@ -106,6 +106,19 @@ Tidak ada source, migration, data, media, atau konfigurasi production yang diuba
 
 Workflow `Staging release #2` kemudian dijalankan ulang untuk SHA yang sama dan berhasil dalam 35 detik. Setelahnya, migration pending berjumlah nol dan manifest build, symlink storage, serta respons anonim `401` tetap valid. Untuk membuktikan recovery asset, folder build backup dengan manifest berbeda diaktifkan sementara melalui rename atomik, tervalidasi, lalu build aktif dipulihkan. Dua folder rollback asset dipertahankan; tidak ada folder dihapus dan tidak ada source, database, media, atau production yang diubah.
 
+### Bukti rehearsal storage R2
+
+Pada 2026-09-16, hPanel mempublikasikan commit `11aed38f63b762aef8b8987e5fa6317e538a3805` hanya ke staging dengan auto-deploy tetap nonaktif. Workflow `Staging release #4` run `35071927012` kemudian sukses dan membuktikan alur cutover sementara berikut:
+
+- permission `.env` dikunci ke `0600`, backup disimpan privat, dan konfigurasi awal terbukti memakai disk `public`;
+- `PRODUCT_MEDIA_DISK=r2` aktif hanya selama rehearsal;
+- sample existing dari 19 object migrasi lolos verifikasi ukuran, checksum, HTTPS `200`, dan MIME;
+- upload PNG sintetis melalui `ProductMediaStorage` lolos read/public-delivery lalu dibersihkan;
+- database staging tetap `0 products : 0 product_images` dan jumlah object produk tetap `19`;
+- `.env` asli dipulihkan dengan hash identik dan disk aktif akhir terverifikasi kembali `public`.
+
+Percobaan sebelumnya, run `35071287366`, gagal pada guard permission sebelum backup/cutover dibuat. Guard diperbaiki menjadi normalisasi permission yang portable dan cleanup trap dipertegas tanpa mencetak secret. Production, DNS production, dan bucket operasional Qammaris App tidak disentuh.
+
 **Batas rollback source yang ditemukan:** checkout Git hPanel di staging berada pada detached, shallow snapshot; `git log` server hanya memuat SHA aktif `8dc28df`. Jangan menjalankan `git checkout`, `reset`, atau rollback source dari filesystem staging. Recovery source harus memakai riwayat deployment/ref yang terbukti tersedia di hPanel, atau branch/tag rollback sementara yang disetujui dan dipublikasikan melalui prosedur hPanel yang sama.
 
 Untuk menyediakan ref recovery yang eksplisit, branch `staging/known-good-8dc28df` telah dipush dan diverifikasi menunjuk ke SHA staging sehat `8dc28dfd2567c992b7277e471df6985633ea0891`. Branch itu belum dipilih pada konfigurasi hPanel dan tidak memicu deployment. Pada release source berikutnya, branch tersebut dapat dipilih/dipublikasikan kembali melalui hPanel jika recovery diperlukan; lalu wajib menjalankan workflow asset yang sesuai SHA dan health check staging.

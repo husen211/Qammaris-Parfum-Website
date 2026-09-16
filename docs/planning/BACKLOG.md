@@ -17,7 +17,7 @@
 | P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
 | P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
 | P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
-| P4 | Media storage | IN_PROGRESS | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
+| P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
@@ -855,7 +855,7 @@ Verification:
 - Custom domain belum dapat dipasang karena zone `qammarisparfum.id` belum berada pada account Cloudflare/DNS yang sama. Tidak ada perubahan DNS, staging application traffic, deployment, atau production.
 - Resolver lokal mengarahkan IPv4 hostname `r2.dev` ke `202.169.44.80` dan timeout. Fetch verifikasi memakai edge Cloudflare `104.18.50.34` dengan hostname/TLS asli dan lulus; ini dicatat sebagai keterbatasan jaringan lokal, bukan kegagalan object R2.
 
-### P4-06 R2 staging application cutover rehearsal — IN_PROGRESS
+### P4-06 R2 staging application cutover rehearsal — DONE
 
 Outcome:
 
@@ -891,6 +891,18 @@ Acceptance criteria:
 - Rollback ke `public` dipraktikkan tanpa kehilangan metadata maupun file.
 - Seluruh source lokal serta 19 object hasil copy tetap dipertahankan; cleanup menjadi pekerjaan terpisah.
 - Production dan DNS production tidak berubah.
+
+Verification:
+
+- Command `product-media:rehearse-r2` membatasi eksekusi ke `staging`/`testing`, mewajibkan disk aktif `r2`, memverifikasi sample existing melalui S3 dan public HTTPS, menulis PNG sintetis melalui `ProductMediaStorage`, lalu membersihkannya melalui `finally`.
+- Empat regression test command lulus untuk jalur sukses, checksum mismatch, kegagalan public delivery, cleanup, dan penolakan disk non-R2. Seluruh suite lokal lulus: `87 passed (365 assertions)`; `composer validate --strict` dan `git diff --check` lulus.
+- Percobaan workflow pertama pada run `35071287366` berhenti di guard permission `.env` sebelum backup/cutover dibuat. Workflow kemudian dinormalkan agar mengunci permission ke `0600`, memberi checkpoint tanpa secret, dan menjalankan rollback cleanup dengan exit status asli tetap dipertahankan.
+- hPanel mempublikasikan commit `11aed38f63b762aef8b8987e5fa6317e538a3805` hanya ke `staging.qammarisparfum.id`; auto-deploy tetap nonaktif.
+- GitHub Actions `Staging release #4` run `35071927012` sukses dalam 53 detik. Preflight membuktikan disk awal `public`, cutover sementara mengaktifkan `r2`, dan rollback akhir membuktikan disk kembali `public` serta hash `.env` identik.
+- Sample existing `products/b9A7Hqhl1hzuv47VovEM0QUWRIr0TmbFlL2eSWn1.jpg` tervalidasi dengan ukuran `304.172` byte, SHA-256 yang diharapkan, HTTPS `200`, dan MIME `image/jpeg`.
+- Upload sintetis berukuran `68` byte tervalidasi melalui S3 dan HTTPS `200` dengan MIME `image/png`; `cleanup_verified=true`. Jumlah object produk setelah cleanup tetap `19`.
+- Count database staging sebelum/sesudah tetap `0 products : 0 product_images`. Karena P4-06 sengaja tidak menambah akun atau data staging, verifikasi halaman katalog/admin tidak berlaku pada database kosong; command menguji boundary storage yang sama dengan upload admin tanpa membuat data semu.
+- Source lokal dan seluruh 19 object R2 dipertahankan. Tidak ada perubahan DNS, bucket Qammaris App, database/media production, maupun deployment production.
 
 ## P5 — Admin Panel V2 captured requirements
 

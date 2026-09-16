@@ -1,6 +1,6 @@
 # Product Media R2 Copy-Verify Runbook
 
-Status: copy-verify dan public delivery rehearsal staging selesai; application cutover belum dijalankan.
+Status: copy-verify, public delivery, dan application cutover rehearsal staging selesai; disk staging dikembalikan ke `public`.
 
 ## Environment staging yang sudah disiapkan
 
@@ -81,7 +81,28 @@ Referensi resmi: [Cloudflare R2 public buckets](https://developers.cloudflare.co
 
 ### Catatan DNS lokal
 
-Pada mesin operator saat rehearsal, resolver IPv4 mengembalikan `202.169.44.80` untuk hostname `r2.dev` dan koneksi timeout. Verifikasi deterministik berhasil saat koneksi diarahkan ke edge Cloudflare `104.18.50.34` sementara hostname TLS/SNI tetap memakai hostname `r2.dev` yang benar. Sebelum application cutover staging, perbaiki resolver/jaringan dan ulangi fetch normal tanpa override. Jangan hardcode IP edge ke aplikasi atau environment.
+Pada mesin operator saat rehearsal, resolver IPv4 mengembalikan `202.169.44.80` untuk hostname `r2.dev` dan koneksi timeout. Verifikasi deterministik berhasil saat koneksi diarahkan ke edge Cloudflare `104.18.50.34` sementara hostname TLS/SNI tetap memakai hostname `r2.dev` yang benar. Sebelum R2 dibiarkan aktif permanen atau diverifikasi melalui browser operator, perbaiki resolver/jaringan dan ulangi fetch normal tanpa override. Jangan hardcode IP edge ke aplikasi atau environment.
+
+## Application cutover rehearsal staging 2026-09-16
+
+Workflow manual `Staging release` menyediakan input `rehearse_media`. Saat input ini aktif, workflow hanya pada environment `staging` akan:
+
+1. memverifikasi SHA source yang sudah dipublikasikan hPanel;
+2. memastikan disk media awal `public`;
+3. menyimpan backup `.env` privat, mengaktifkan `PRODUCT_MEDIA_DISK=r2` sementara, dan membersihkan cache konfigurasi;
+4. menjalankan `product-media:rehearse-r2` untuk sample existing dan upload sintetis melalui `ProductMediaStorage`;
+5. membuktikan count database serta 19 object produk tidak berubah;
+6. membersihkan object sintetis, memulihkan `.env` asli, dan membuktikan disk aktif kembali `public`, termasuk pada jalur gagal.
+
+Rehearsal sukses tercatat pada GitHub Actions run `35071927012` untuk commit `11aed38f63b762aef8b8987e5fa6317e538a3805`:
+
+- sample existing: `304.172` byte, SHA-256 cocok, HTTPS `200`, `image/jpeg`;
+- upload sintetis: `68` byte, HTTPS `200`, `image/png`, `cleanup_verified=true`;
+- object produk sesudah cleanup: `19`;
+- database staging sebelum/sesudah: `0 products : 0 product_images`;
+- rollback: hash `.env` cocok dan disk akhir `public`.
+
+Database staging memang kosong dan P4-06 tidak membuat akun/data semu. Karena itu verifikasi visual katalog/detail dan form admin tidak digunakan sebagai bukti tahap ini; command memanggil storage boundary yang sama dengan upload admin. Aktivasi R2 permanen tetap memerlukan delivery domain production, data staging representatif, health check UI, dan approval cutover terpisah.
 
 ## Dry-run
 
@@ -119,6 +140,6 @@ Status yang memerlukan review:
 1. Seluruh referenced object berstatus `copied_verified` atau `already_verified` pada apply run terakhir.
 2. Count referenced object, ukuran, dan checksum sesuai manifest.
 3. Sample public URL/mobile/desktop diverifikasi pada staging.
-4. Upload baru ke target diuji dan rollback ke `public` dipraktikkan.
+4. Upload baru ke target diuji dan rollback ke `public` dipraktikkan. Gate ini lulus pada staging run `35071927012`.
 5. Baru setelah approval terpisah, `PRODUCT_MEDIA_DISK` dapat diarahkan ke `r2`.
 6. Local source tetap dipertahankan selama rollback window. Cleanup menjadi pekerjaan terpisah.
