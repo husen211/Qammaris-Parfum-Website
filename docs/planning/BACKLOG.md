@@ -705,7 +705,7 @@ Verification:
 - Masukan owner tentang preservasi page/search/filter/sort setelah edit dicatat pada business rules dan `P5-01`; tidak diselipkan ke scope media.
 - CI GitHub Actions untuk commit implementasi `16d29e1` lulus pada run `35058656237` (push) dan `35058658414` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P4-03 R2 copy-verify foundation — IN_REVIEW
+### P4-03 R2 copy-verify foundation — DONE
 
 Outcome:
 
@@ -753,7 +753,8 @@ Verification:
 - Build Vite production lulus; warning existing DaisyUI `@property` dan chunk `about-lanyard` tetap dicatat sebagai pekerjaan optimasi terpisah.
 - Audit lokal read-only: 19 metadata `product_images`, 19 referensi unik, 0 referensi file hilang, dan 20 file pada direktori produk.
 - Database, source media, konfigurasi disk aktif, staging, dan production tidak diubah. Bucket/credential serta copy/cutover R2 nyata tetap belum dilakukan.
-- CI GitHub Actions menunggu commit implementasi.
+- Implementasi tercatat pada commit `81cf3bc` (`feat: add r2 media copy verification`).
+- CI GitHub Actions untuk commit implementasi lulus pada run `35059749288` (push) dan `35059752504` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
 ## P5 — Admin Panel V2 captured requirements
 
