@@ -96,14 +96,19 @@
 
     @if($preview)
         <section class="mt-6" aria-labelledby="preview-title">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <p class="text-sm font-semibold text-emerald-700">Batch audit #{{ $batch->id }} tersimpan</p>
                     <h2 id="preview-title" class="mt-1 text-2xl font-bold text-gray-900">3. Hasil preview</h2>
                 </div>
-                <div class="space-y-1 text-right font-mono text-[11px] text-gray-500">
-                    <p class="break-all">File: {{ $preview['fingerprint'] }}</p>
-                    <p class="break-all">State: {{ $preview['catalog_state_fingerprint'] }}</p>
+                <div class="flex flex-col gap-3 sm:items-end">
+                    <div class="space-y-1 font-mono text-[11px] text-gray-500 sm:text-right">
+                        <p class="break-all">File: {{ $preview['fingerprint'] }}</p>
+                        <p class="break-all">State: {{ $preview['catalog_state_fingerprint'] }}</p>
+                    </div>
+                    <a href="{{ route('admin.product-imports.report', $batch) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                        Unduh laporan batch CSV
+                    </a>
                 </div>
             </div>
 
@@ -422,7 +427,7 @@
                             <th class="px-4 py-3">Ringkasan</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Actor</th>
-                            <th class="px-4 py-3">Waktu</th>
+                            <th class="px-4 py-3">Waktu / laporan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-700">
@@ -448,7 +453,10 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">{{ $recentBatch->actor?->name ?? 'Akun dihapus' }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-xs text-gray-500">{{ $recentBatch->created_at->format('d M Y H:i') }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-xs text-gray-500">
+                                    <p>{{ $recentBatch->created_at->format('d M Y H:i') }}</p>
+                                    <a href="{{ route('admin.product-imports.report', $recentBatch) }}" class="mt-2 inline-flex min-h-11 items-center font-semibold text-gray-900 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">Unduh CSV</a>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

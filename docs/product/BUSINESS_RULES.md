@@ -126,6 +126,8 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 28. Harga dan ukuran adalah satu pilihan atomik. Nilai import kosong tidak boleh menghapus nilai existing dan taxonomy hanya dapat dipilih bila record aktif exact tersedia.
 29. Snapshot produk saat apply menjadi optimistic concurrency guard. Bila katalog berubah setelah row ditahan, resolusi ditolak dan admin harus membuat preview baru dari state terkini.
 30. Actor, waktu, field terpilih, pesan, serta snapshot before/after resolusi disimpan pada import row. Error/conflict struktural tetap tidak dapat dipaksa dan harus diperbaiki pada CSV.
+31. Laporan audit batch adalah export read-only dari record persisted, satu row per import row. Report tidak boleh mengubah katalog, membuat file permanen, atau mengklaim sebagai export katalog terkini.
+32. Report audit memakai kolom allowlist, BOM UTF-8, urutan line source, dan sanitasi formula spreadsheet. URL gambar sumber, deskripsi panjang, serta snapshot before/after internal tidak diexport.
 
 ## Admin dan automation
 

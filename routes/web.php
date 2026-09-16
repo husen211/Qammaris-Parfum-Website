@@ -70,6 +70,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     Route::get('product-imports', [AdminProductImportController::class, 'create'])->name('product-imports.create');
     Route::get('product-imports/template', [AdminProductImportController::class, 'template'])->name('product-imports.template');
+    Route::get('product-imports/{productImportBatch}/report.csv', [AdminProductImportController::class, 'report'])->name('product-imports.report');
     Route::post('product-imports/preview', [AdminProductImportController::class, 'preview'])->name('product-imports.preview');
     Route::post('product-imports/{productImportBatch}/apply', [AdminProductImportController::class, 'apply'])->name('product-imports.apply');
     Route::post('product-imports/{productImportBatch}/images', [AdminProductImportController::class, 'acquireImages'])->name('product-imports.images');

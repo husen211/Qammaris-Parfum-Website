@@ -1448,6 +1448,57 @@ Documentation updates:
 - Business rules, kontrak CSV, backlog, dan `ADR-015-manual-protected-import-resolution.md` diperbarui.
 - Kandidat berikutnya adalah P6-06 batch report/export untuk kebutuhan audit operasional; belum dimulai.
 
+### P6-06 Import batch audit report and CSV export — DONE
+
+Outcome:
+
+- Admin dapat membuka jejak batch import dan mengunduh laporan CSV per baris untuk review/arsip operasional tanpa mengubah katalog atau menyimpan ulang file sumber.
+
+In scope:
+
+- Export CSV UTF-8 BOM per batch dari audit persisted, satu baris laporan untuk setiap import row.
+- Kolom laporan mencakup identitas batch/baris, kandidat, outcome apply, product hasil, resolusi manual, outcome gambar agregat, issue, actor, dan timestamp.
+- Sanitasi formula injection untuk semua cell; deskripsi panjang, snapshot internal, URL sumber gambar, dan data rahasia tidak diexport.
+- Tombol download pada detail batch dan riwayat batch dengan copy/status yang jelas pada mobile dan desktop.
+- Admin authorization, safe filename, response no-store, serta regression test isi dan boundary export.
+
+Out of scope:
+
+- Export katalog produk, XLSX/PDF, mengunduh file sumber asli, menyertakan before/after snapshot penuh, retention/hard delete audit, background export, email/share, staging, production, dan deployment.
+
+Dependencies:
+
+- P6-02 persisted preview, P6-03 apply outcomes, P6-04 image outcomes, dan P6-05 manual resolution audit selesai.
+
+Risks:
+
+- Nilai import adalah input tidak tepercaya dan dapat memicu formula spreadsheet; setiap cell wajib disanitasi.
+- Snapshot/URL mentah dapat memperbesar file atau membocorkan detail yang tidak dibutuhkan; report memakai allowlist kolom operasional.
+- Batch hingga 1.000 baris harus distream tanpa membangun file permanen atau mengubah data.
+
+Acceptance criteria:
+
+- Hanya admin terautentikasi yang dapat mengunduh report batch existing; batch tidak ada menghasilkan 404.
+- CSV memakai BOM UTF-8, header/version tetap, nama file aman, dan satu row per audit row dalam urutan line number.
+- Formula-like values tidak dieksekusi saat dibuka di spreadsheet dan URL gambar/snapshot internal tidak muncul.
+- Outcome created/updated/blocked, resolution, image aggregate, issue, actor, serta waktu dapat dibaca tanpa membuka database.
+- UI initial/empty/populated tetap usable pada `390x844` dan `1440x900`, download dapat dicapai dengan keyboard/touch, tidak overflow, dan console bersih.
+- Focused/full tests, Pint, Blade, build, quality checks, browser download verification, dan CI lulus.
+
+Verification:
+
+- Focused import regression lulus: 32 test / 299 assertion. Seluruh suite Laravel lulus: 153 test / 884 assertion.
+- Pint dirty, Blade clear/cache, Composer strict validation, route audit, `git diff --check`, dan Vite production build lulus. Build hanya mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB.
+- Browser localhost membuktikan detail batch + history menampilkan link report, klik memicu download CSV nyata, dan state populated/empty dapat dibaca.
+- Audit mobile `390x844` dan desktop `1440x900` lulus: document width sama dengan viewport, tabel memakai scroll horizontal internal, tombol download setinggi minimum 44 px, dan console tanpa warning/error.
+- Product, batch, serta dua row sintetis audit dihapus presisi. Data lokal kembali ke 180 products, 65 offers, 19 images, 0 identities, 0 batches, dan 0 rows.
+- Tidak ada migration atau perubahan schema. Staging, production, DNS, bucket, dan project lain tidak disentuh.
+
+Documentation updates:
+
+- Business rules, kontrak CSV/report, backlog, dan `ADR-016-import-batch-audit-csv-report.md` diperbarui.
+- Kandidat berikutnya adalah P6-07 canonical catalog export untuk kebutuhan bulk maintenance; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

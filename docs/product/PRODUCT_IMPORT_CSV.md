@@ -125,6 +125,17 @@ File CSV asli tidak disimpan. Batch menyimpan nama/ukuran/fingerprint file, acto
 - Resolusi sukses menyimpan actor, waktu, field terpilih, pesan, dan snapshot before/after. Submit ulang tidak menjalankan mutation kedua.
 - Row error/conflict struktural tidak mempunyai override. Admin memperbaiki file sumber lalu membuat preview baru.
 
+## Laporan audit batch
+
+Admin dapat mengunduh CSV audit dari detail atau riwayat batch. Report ini bukan export katalog dan tidak dapat diimport ulang sebagai data produk.
+
+- Contract version: `qammaris-import-audit-v1`.
+- Encoding: UTF-8 dengan BOM; satu row per import row dalam urutan `line_number`.
+- Isi: batch/source identity, status row/kandidat, provider+kode, nama produk, outcome apply, product/status publikasi hasil, resolusi, agregat gambar, issue, actor, dan timestamp.
+- Seluruh cell disanitasi dari spreadsheet formula injection, termasuk nilai yang diawali `=`, `+`, `-`, `@`, tab, atau carriage return.
+- Report sengaja tidak membawa deskripsi produk, URL gambar provider, normalized payload penuh, maupun snapshot before/after.
+- Download bersifat read-only, `no-store`, dan hanya tersedia untuk admin pada batch existing.
+
 ## Batas tahap ini
 
-Belum tersedia fuzzy/automatic conflict resolution, perubahan identity, taxonomy auto-create, bulk publish, undo batch, export katalog, staging, atau production apply. Akuisisi gambar untuk protected row tetap tidak tersedia. Deployment worker antrean tetap pekerjaan environment/cutover; lihat runbook `PRODUCT_IMPORT_IMAGE_QUEUE.md`.
+Belum tersedia fuzzy/automatic conflict resolution, perubahan identity, taxonomy auto-create, bulk publish, undo batch, export katalog produk, staging, atau production apply. Akuisisi gambar untuk protected row tetap tidak tersedia. Deployment worker antrean tetap pekerjaan environment/cutover; lihat runbook `PRODUCT_IMPORT_IMAGE_QUEUE.md`.

@@ -14,6 +14,7 @@ use App\Http\Requests\Admin\ProductImportResolutionRequest;
 use App\Imports\Products\CanonicalProductCsv;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
+use App\Services\ProductImportBatchCsvReport;
 use App\Services\ProductImportBatchRecorder;
 use App\Services\ProductImportPreviewer;
 use DomainException;
@@ -63,6 +64,25 @@ class AdminProductImportController extends Controller
         }, 'template-import-produk-qammaris.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Cache-Control' => 'no-store, private',
+        ]);
+    }
+
+    public function report(
+        ProductImportBatch $productImportBatch,
+        ProductImportBatchCsvReport $report
+    ): StreamedResponse {
+        return response()->streamDownload(function () use ($productImportBatch, $report): void {
+            $stream = fopen('php://output', 'wb');
+            $report->write($productImportBatch, $stream);
+            fclose($stream);
+        }, sprintf(
+            'qammaris-import-batch-%d-%s.csv',
+            $productImportBatch->getKey(),
+            $productImportBatch->created_at->format('Ymd-His')
+        ), [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store, private',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
