@@ -1337,9 +1337,9 @@ Verification:
 Documentation updates:
 
 - Business rules import, kontrak CSV, backlog, dan `ADR-013-transactional-product-import-draft-apply.md` diperbarui.
-- Kandidat berikutnya adalah `P6-04` safe acquisition URL gambar import ke media storage dengan validasi/download/review; belum dimulai.
+- `P6-04` safe acquisition URL gambar import telah dilanjutkan sebagai item berikutnya dan selesai pada commit `43c450f`.
 
-### P6-04 Safe imported image acquisition — IN_PROGRESS
+### P6-04 Safe imported image acquisition — DONE
 
 Outcome:
 
@@ -1380,11 +1380,19 @@ Acceptance criteria:
 
 Verification:
 
-- Belum dijalankan.
+- Migration additive `2026_09_16_160000_add_image_acquisition_to_product_import_rows` berhasil melalui siklus lokal `up → down → up`. Count katalog tetap 180 products, 65 offers, 19 images, 0 external identities, 0 import batches, dan 0 import rows setelah data audit dibersihkan.
+- Focused regression import/media lulus: 40 test / 291 assertion. Seluruh suite Laravel lulus: 147 test / 814 assertion.
+- Targeted Pint, lima route import, Blade clear/cache, Composer strict validation, `git diff --check`, dan Vite production build lulus. Build hanya mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB.
+- Browser end-to-end memakai upload CSV nyata, apply dua draft, lalu akuisisi satu PNG valid dan penolakan satu host di luar allowlist. UI menampilkan 1 tersimpan + 1 gagal/ditahan; retry tidak menambah gambar sukses kedua.
+- Audit mobile `390x844` dan desktop `1440x900` lulus: document width sama dengan viewport, tabel memakai scroll horizontal internal, tombol utama setinggi 44 px, state recovery jelas, dan console tanpa warning/error.
+- Dua product, satu image/object, dua identity, satu batch, dua row, CSV, serta allowlist audit sementara telah dihapus secara presisi. Browser dikembalikan ke halaman import bersih dan data lokal kembali ke baseline.
+- Staging, production, DNS, bucket production, dan project lain tidak disentuh. Worker deployed belum dipasang sesuai out-of-scope dan dicatat pada runbook.
+- Commit implementasi `43c450f` lulus GitHub Actions CI: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35101961541`.
 
 Documentation updates:
 
-- Backlog aktif. Business rules, kontrak CSV, architecture/ADR, dan runbook queue akan diperbarui setelah implementasi terverifikasi.
+- Business rules media/import, kontrak CSV, master plan, `ADR-014-safe-imported-image-acquisition.md`, dan `PRODUCT_IMPORT_IMAGE_QUEUE.md` telah diperbarui.
+- Kandidat berikutnya adalah `P6-05` conflict resolution manual untuk mapping product published/archived dan baris ambigu; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
