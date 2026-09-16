@@ -104,7 +104,8 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 11. Field `provider`, `kode_produk`, dan `nama_produk` wajib secara struktural. Field publish yang belum tersedia dibiarkan kosong dan ditandai perlu review; aplikasi maupun AI tidak boleh mengarang nilainya.
 12. Harga CSV ditulis sebagai angka positif tanpa simbol mata uang atau pemisah ribuan. Kode produk selalu diperlakukan sebagai teks agar nol di depan dan digit panjang tidak berubah.
 13. Fragrance notes dalam satu sel dipisahkan dengan `|`. URL gambar hanya menjadi kandidat sumber HTTPS; preview tidak mengunduh, menyimpan, atau menampilkan URL provider sebagai media publik.
-14. Preview read-only tidak memberi izin apply. Apply masa depan wajib memakai fingerprint dan hasil validasi yang sama, lalu dibatalkan atau di-preview ulang bila file atau state database berubah.
+14. Preview read-only terhadap katalog tidak memberi izin apply. Sistem boleh menyimpan fingerprint, hasil normalisasi, issue, actor, dan summary sebagai batch audit immutable tanpa menyimpan file sumber.
+15. Batch preview idempotent untuk kombinasi actor, isi file, versi kontrak, dan state katalog yang sama. Perubahan brand, kategori, product, atau external identity menghasilkan state fingerprint baru dan mewajibkan preview baru sebelum apply.
 
 ## Admin dan automation
 

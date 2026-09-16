@@ -1245,6 +1245,46 @@ Documentation updates:
 - Backlog, business rules import, `docs/product/PRODUCT_IMPORT_CSV.md`, dan `ADR-011-canonical-product-csv-preview-boundary.md` diperbarui.
 - Kandidat item berikutnya adalah `P6-02` untuk persistence batch, immutable preview result, idempotency, conflict handling, dan apply draft yang eksplisit; belum dimulai pada item ini.
 
+### P6-02 Persistent immutable preview batches — DONE
+
+Outcome:
+
+- Setiap preview CSV yang berhasil diparsing mempunyai batch audit immutable dan dapat dibuka ulang tanpa menyimpan file sumber atau mengubah katalog.
+
+In scope:
+
+- Batch ID, actor, nama/ukuran/fingerprint file, versi kontrak, fingerprint state katalog, summary, baris normalisasi, candidate action, matched product, issue, dan timestamp.
+- Idempotency key untuk actor + file + state katalog + versi kontrak yang sama.
+- Riwayat batch terbaru dan penanda batch pada hasil preview admin.
+- Produk, offer, taxonomy, external identity, media, dan file upload tetap tidak berubah.
+
+Out of scope:
+
+- Apply ke product, approval workflow, update produk published, download gambar, rollback mutation, export existing data, queue, staging, dan production.
+
+Acceptance criteria:
+
+- Preview sukses membuat tepat satu batch dan row audit; upload identik pada state katalog identik memakai batch yang sama.
+- Perubahan state katalog menghasilkan batch baru walau file sama, sehingga preview lama tidak dapat dianggap current.
+- File upload tidak disimpan dan payload preview tersimpan sebagai normalized JSON yang escaped saat dirender.
+- Structural failure sebelum preview tidak membuat batch kosong.
+- Admin dapat melihat batch ID serta daftar preview terbaru; non-admin tetap ditolak.
+- Focused/full tests, migration round-trip, Pint, Blade, build, browser desktop/mobile, dan CI lulus.
+
+Verification:
+
+- Migration `2026_09_16_140000_create_product_import_batches_table` berhasil diterapkan pada database lokal dan tercatat batch 8; tabel katalog tidak diubah.
+- Focused `AdminProductImportPreviewTest`: 10 test / 90 assertion lulus, termasuk persistence batch/row, payload normalized, idempotency pada file+actor+state identik, batch baru setelah state katalog berubah, dan structural failure tanpa batch kosong.
+- Seluruh suite Laravel: 131 test / 675 assertion lulus. Targeted Pint, Blade compilation, Composer strict validation, `git diff --check`, dan production asset build lulus; warning existing DaisyUI/chunk 3D tetap tidak berasal dari item ini.
+- Browser audit initial, populated batch, reload idempotent, dan recent history lulus pada `1440x900` serta `390x844`; page tidak overflow horizontal, ketiga tabel memakai container scroll internal, dan console tanpa warning/error.
+- Browser evidence menampilkan batch #1 dengan 3 row (1 valid, 1 review, 1 error), dua fingerprint, actor, filename, size, dan timestamp. Reload tetap menampilkan satu row riwayat untuk batch yang sama.
+- Data katalog lokal sebelum/sesudah identik: 180 products, 65 offers, 0 external identities, 19 images. Batch/row sintetis, route audit, dan CSV sementara sudah dihapus; tabel audit kembali 0 batch / 0 row.
+
+Documentation updates:
+
+- Business rules, kontrak CSV, backlog, dan `ADR-012-persistent-immutable-import-preview-batches.md` diperbarui.
+- Kandidat berikutnya adalah `P6-03` explicit draft apply dengan revalidation state/payload, transaction, row outcome, dan aturan ketat untuk produk existing published; belum dimulai pada item ini.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

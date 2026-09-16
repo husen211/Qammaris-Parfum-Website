@@ -10,7 +10,7 @@ Alur yang didukung:
 
 1. Owner export data produk dari Shopee.
 2. Claude membaca file mentah dan menghasilkan CSV sesuai kontrak ini.
-3. Admin upload CSV ke halaman **Import Produk** untuk preview read-only.
+3. Admin upload CSV ke halaman **Import Produk** untuk preview read-only terhadap katalog dan pencatatan batch audit.
 4. Admin memperbaiki baris error/perlu review. Apply database akan dibuat pada backlog berikutnya.
 
 ## Format file
@@ -80,6 +80,12 @@ Gunakan aturan berikut saat mengubah export provider menjadi CSV Qammaris:
 9. Keluarkan tepat satu baris untuk satu produk/satu ukuran. Ukuran berbeda menjadi baris terpisah.
 10. Jangan menambah, menghapus, mengganti nama, atau mengubah urutan header canonical.
 
+## Batch audit
+
+Preview sukses menyimpan metadata dan hasil normalisasi ke `product_import_batches` serta `product_import_rows`. Idempotency ditentukan oleh actor, fingerprint file, versi kontrak, dan fingerprint state katalog. Upload yang identik pada state yang identik menunjuk batch yang sama; perubahan state katalog menghasilkan batch baru.
+
+File CSV asli tidak disimpan. Batch menyimpan nama/ukuran/fingerprint file, actor, summary, normalized data, issue, matched product, candidate action, dan payload hash per baris. Catatan ini bukan izin apply.
+
 ## Batas tahap ini
 
-Preview tidak menyimpan file upload, tidak menulis database, tidak membuat taxonomy, tidak membuat mapping identity, dan tidak mengunduh gambar. Fingerprint SHA-256 hanya ditampilkan sebagai identitas isi file untuk fondasi batch berikutnya.
+Preview tidak menyimpan file upload, tidak menulis tabel katalog, tidak membuat taxonomy, tidak membuat mapping identity, dan tidak mengunduh gambar. Database write hanya terjadi pada tabel audit import. Apply ke product tetap belum tersedia.

@@ -4,6 +4,8 @@ namespace App\Imports\Products;
 
 class CanonicalProductCsv
 {
+    public const VERSION = 'v1';
+
     public const MAX_ROWS = 1000;
 
     public const HEADERS = [

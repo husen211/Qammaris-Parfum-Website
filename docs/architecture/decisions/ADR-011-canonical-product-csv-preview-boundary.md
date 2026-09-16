@@ -1,6 +1,6 @@
 # ADR-011 — Canonical Product CSV dan Preview Read-only
 
-Status: Accepted — 2026-09-16
+Status: Accepted — 2026-09-16; persistence audit diperluas oleh ADR-012
 
 ## Context
 
@@ -13,7 +13,7 @@ Laravel saat ini tidak mempunyai dependency pembaca XLSX. Menambahkan parser XLS
 1. Boundary tahap awal menggunakan canonical UTF-8 CSV dengan 17 header berurutan dan terdokumentasi.
 2. Export XLSX provider tidak diterima langsung. Claude atau proses kurasi lain mengubahnya ke CSV canonical tanpa mengarang fakta.
 3. Preview membaca maksimum 5 MB dan 1.000 baris, menghitung SHA-256 dari file asli, memvalidasi struktur/nilai, lalu membuang upload setelah request.
-4. Preview sama sekali tidak menulis product, offer, external identity, taxonomy, media, file storage, atau batch history.
+4. P6-01 preview sama sekali tidak menulis product, offer, external identity, taxonomy, media, file storage, atau batch history. ADR-012 kemudian mengizinkan write terisolasi hanya ke tabel audit import tanpa mengubah boundary katalog.
 5. Pencocokan update hanya memakai provider dan external product code. Nama sama hanya menjadi peringatan; tidak ada fuzzy auto-merge.
 6. Taxonomy dicocokkan exact case-insensitive terhadap record existing dan tidak dibuat otomatis.
 7. URL gambar hanya divalidasi sebagai HTTPS candidate source. Download, checksum, storage, dan attach media berada pada backlog terpisah.

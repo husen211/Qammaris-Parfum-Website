@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductExternalIdentity;
+use App\Models\ProductImportBatch;
+use App\Models\ProductImportRow;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -39,8 +41,9 @@ class AdminProductImportPreviewTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.product-imports.create'))
             ->assertOk()
-            ->assertSee('Preview saja · belum menulis data')
-            ->assertSee('Unduh template CSV');
+            ->assertSee('Preview audit · belum mengubah katalog')
+            ->assertSee('Unduh template CSV')
+            ->assertSee('Belum ada batch preview tersimpan.');
     }
 
     public function test_admin_can_download_the_exact_utf8_csv_contract(): void
@@ -69,18 +72,50 @@ class AdminProductImportPreviewTest extends TestCase
                 'product_file' => $this->csvUpload([$this->completeRow()]),
             ])
             ->assertOk()
-            ->assertSee('File berhasil dibaca')
+            ->assertSee('Batch audit #')
             ->assertSee('Preview Product')
             ->assertSee('Buat draft')
             ->assertSee('Tidak ada masalah.')
-            ->assertSee('SHA-256:');
+            ->assertSee('File:')
+            ->assertSee('State:');
 
         $preview = $response->viewData('preview');
+        $batch = $response->viewData('batch');
         $this->assertSame(['total' => 1, 'valid' => 1, 'review' => 0, 'error' => 0], $preview['summary']);
         $this->assertSame('valid', $preview['rows'][0]['status']);
         $this->assertSame('create', $preview['rows'][0]['action']);
         $this->assertSame(['Bergamot', 'Lemon'], $preview['rows'][0]['data']['top_notes']);
+        $this->assertSame($preview['fingerprint'], $batch->source_fingerprint);
+        $this->assertSame($preview['catalog_state_fingerprint'], $batch->catalog_state_fingerprint);
+        $this->assertSame('Preview Product', ProductImportRow::sole()->normalized_data['nama_produk']);
+        $this->assertDatabaseCount('product_import_batches', 1);
+        $this->assertDatabaseCount('product_import_rows', 1);
         $this->assertSame($countsBefore, $this->dataCounts());
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.preview'), [
+                'product_file' => $this->csvUpload([$this->completeRow()]),
+            ])
+            ->assertOk()
+            ->assertSee('Batch audit #'.$batch->id.' tersimpan');
+
+        $this->assertDatabaseCount('product_import_batches', 1);
+        $this->assertDatabaseCount('product_import_rows', 1);
+
+        Category::create(['name' => 'State Fingerprint Marker', 'is_active' => true]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.product-imports.preview'), [
+                'product_file' => $this->csvUpload([$this->completeRow()]),
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseCount('product_import_batches', 2);
+        $this->assertDatabaseCount('product_import_rows', 2);
+        $this->assertNotSame(
+            ProductImportBatch::query()->oldest('id')->value('catalog_state_fingerprint'),
+            ProductImportBatch::query()->latest('id')->value('catalog_state_fingerprint')
+        );
     }
 
     public function test_preview_marks_incomplete_draft_data_for_review_without_inventing_values(): void
@@ -233,6 +268,8 @@ class AdminProductImportPreviewTest extends TestCase
             ->assertViewHas('errors', fn ($errors): bool => $errors->has('product_file'))
             ->assertSee('File tidak mempunyai baris produk untuk dipreview.');
 
+        $this->assertDatabaseCount('product_import_batches', 0);
+
         $content = $this->csvContent([$this->completeRow()]);
         $content .= "shopee,hanya-dua-kolom\n";
 
@@ -271,6 +308,8 @@ class AdminProductImportPreviewTest extends TestCase
                 'product_file' => UploadedFile::fake()->create('large.csv', 5121, 'text/csv'),
             ])
             ->assertSessionHasErrors(['product_file']);
+
+        $this->assertDatabaseCount('product_import_batches', 0);
     }
 
     /**

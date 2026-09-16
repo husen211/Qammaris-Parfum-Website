@@ -10,9 +10,9 @@
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-            <p class="text-sm font-semibold text-amber-700">Preview saja · belum menulis data</p>
+            <p class="text-sm font-semibold text-amber-700">Preview audit · belum mengubah katalog</p>
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Import Produk</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi Claude. Sistem memeriksa struktur, data produk, taxonomy, dan mapping kode provider sebelum tahap apply tersedia.</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi Claude. Sistem memeriksa data lalu menyimpan hasil normalisasi sebagai batch audit immutable sebelum tahap apply tersedia.</p>
         </div>
         <a href="{{ route('admin.product-imports.template') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
             Unduh template CSV
@@ -22,7 +22,7 @@
     <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="upload-title">
             <h2 id="upload-title" class="text-lg font-bold text-gray-900">1. Pilih file untuk preview</h2>
-            <p class="mt-1 text-sm text-gray-500">CSV UTF-8, maksimum 5 MB dan 1.000 baris. File tidak disimpan setelah request selesai.</p>
+            <p class="mt-1 text-sm text-gray-500">CSV UTF-8, maksimum 5 MB dan 1.000 baris. File sumber tidak disimpan; hanya fingerprint dan hasil preview terstruktur yang dicatat.</p>
 
             <form method="POST" action="{{ route('admin.product-imports.preview') }}" enctype="multipart/form-data" class="mt-5 space-y-4">
                 @csrf
@@ -97,10 +97,13 @@
         <section class="mt-6" aria-labelledby="preview-title">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="text-sm font-semibold text-emerald-700">File berhasil dibaca</p>
+                    <p class="text-sm font-semibold text-emerald-700">Batch audit #{{ $batch->id }} tersimpan</p>
                     <h2 id="preview-title" class="mt-1 text-2xl font-bold text-gray-900">3. Hasil preview</h2>
                 </div>
-                <p class="break-all font-mono text-[11px] text-gray-500">SHA-256: {{ $preview['fingerprint'] }}</p>
+                <div class="space-y-1 text-right font-mono text-[11px] text-gray-500">
+                    <p class="break-all">File: {{ $preview['fingerprint'] }}</p>
+                    <p class="break-all">State: {{ $preview['catalog_state_fingerprint'] }}</p>
+                </div>
             </div>
 
             <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -172,8 +175,53 @@
                 </table>
             </div>
 
-            <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">Belum ada tombol apply. Preview ini tidak mengubah database atau media.</div>
+            <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">Belum ada tombol apply. Batch hanya mencatat audit preview; product, offer, taxonomy, identity, media, dan file sumber tidak berubah.</div>
         </section>
     @endif
+
+    <section class="mt-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="history-title">
+        <div>
+            <h2 id="history-title" class="text-lg font-bold text-gray-900">Preview terbaru</h2>
+            <p class="mt-1 text-sm text-gray-500">Jejak audit read-only. Apply produk belum tersedia pada tahap ini.</p>
+        </div>
+
+        @if($recentBatches->isEmpty())
+            <div class="mt-4 rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">Belum ada batch preview tersimpan.</div>
+        @else
+            <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-[48rem] divide-y divide-gray-200 text-left text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th class="px-4 py-3">Batch</th>
+                            <th class="px-4 py-3">File</th>
+                            <th class="px-4 py-3">Ringkasan</th>
+                            <th class="px-4 py-3">Actor</th>
+                            <th class="px-4 py-3">Waktu</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                        @foreach($recentBatches as $recentBatch)
+                            <tr>
+                                <td class="px-4 py-3 font-semibold text-gray-900">#{{ $recentBatch->id }}</td>
+                                <td class="px-4 py-3">
+                                    <p class="max-w-xs truncate font-medium text-gray-900">{{ $recentBatch->source_filename }}</p>
+                                    <p class="mt-1 font-mono text-[11px] text-gray-500">{{ substr($recentBatch->source_fingerprint, 0, 12) }}… · {{ number_format($recentBatch->source_size / 1024, 1, ',', '.') }} KB</p>
+                                </td>
+                                <td class="px-4 py-3 text-xs">
+                                    <span class="text-emerald-700">{{ $recentBatch->valid_rows }} valid</span>
+                                    <span class="mx-1 text-gray-300">·</span>
+                                    <span class="text-amber-700">{{ $recentBatch->review_rows }} review</span>
+                                    <span class="mx-1 text-gray-300">·</span>
+                                    <span class="text-red-700">{{ $recentBatch->error_rows }} error</span>
+                                </td>
+                                <td class="px-4 py-3">{{ $recentBatch->actor?->name ?? 'Akun dihapus' }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-xs text-gray-500">{{ $recentBatch->created_at->format('d M Y H:i') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </section>
 </div>
 @endsection

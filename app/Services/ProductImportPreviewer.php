@@ -16,6 +16,7 @@ class ProductImportPreviewer
     /**
      * @return array{
      *     fingerprint: string,
+     *     catalog_state_fingerprint: string,
      *     rows: array<int, array<string, mixed>>,
      *     summary: array{total: int, valid: int, review: int, error: int},
      *     skipped_blank_rows: array<int, int>
@@ -95,7 +96,7 @@ class ProductImportPreviewer
             throw new InvalidProductImportFile('File tidak mempunyai baris produk untuk dipreview.');
         }
 
-        $context = $this->lookupContext($rawRows);
+        $context = $this->lookupContext();
         $seenIdentities = [];
         $rows = [];
 
@@ -105,6 +106,7 @@ class ProductImportPreviewer
 
         return [
             'fingerprint' => $fingerprint,
+            'catalog_state_fingerprint' => $context['catalog_state_fingerprint'],
             'rows' => $rows,
             'summary' => [
                 'total' => count($rows),
@@ -146,27 +148,63 @@ class ProductImportPreviewer
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $rawRows
-     * @return array<string, Collection<string, mixed>>
+     * @return array<string, mixed>
      */
-    private function lookupContext(array $rawRows): array
+    private function lookupContext(): array
     {
+        $brands = Brand::query()->orderBy('id')->get();
+        $categories = Category::query()->orderBy('id')->get();
+        $products = Product::query()
+            ->orderBy('id')
+            ->get(['id', 'name', 'publication_status', 'updated_at']);
+        $identities = ProductExternalIdentity::query()
+            ->with('product:id,name,publication_status')
+            ->orderBy('id')
+            ->get();
+
+        $state = [
+            'brands' => $brands->map(fn (Brand $brand): array => [
+                $brand->id,
+                $brand->name,
+                $brand->is_active,
+                $brand->updated_at?->toJSON(),
+            ])->all(),
+            'categories' => $categories->map(fn (Category $category): array => [
+                $category->id,
+                $category->name,
+                $category->is_active,
+                $category->updated_at?->toJSON(),
+            ])->all(),
+            'products' => $products->map(fn (Product $product): array => [
+                $product->id,
+                $product->name,
+                $product->publication_status,
+                $product->updated_at?->toJSON(),
+            ])->all(),
+            'identities' => $identities->map(fn (ProductExternalIdentity $identity): array => [
+                $identity->id,
+                $identity->product_id,
+                $identity->provider,
+                $identity->external_product_id,
+                $identity->updated_at?->toJSON(),
+            ])->all(),
+        ];
+
         return [
-            'brands' => Brand::query()->get()->keyBy(fn (Brand $brand): string => $this->key($brand->name)),
-            'categories' => Category::query()->get()->keyBy(fn (Category $category): string => $this->key($category->name)),
-            'identities' => ProductExternalIdentity::query()
-                ->with('product:id,name,publication_status')
-                ->get()
-                ->keyBy(fn (ProductExternalIdentity $identity): string => $identity->provider.'|'.$identity->external_product_id),
-            'product_names' => Product::query()
-                ->get(['id', 'name'])
-                ->groupBy(fn (Product $product): string => $this->key($product->name)),
+            'brands' => $brands->keyBy(fn (Brand $brand): string => $this->key($brand->name)),
+            'categories' => $categories->keyBy(fn (Category $category): string => $this->key($category->name)),
+            'identities' => $identities->keyBy(fn (ProductExternalIdentity $identity): string => $identity->provider.'|'.$identity->external_product_id),
+            'product_names' => $products->groupBy(fn (Product $product): string => $this->key($product->name)),
+            'catalog_state_fingerprint' => hash(
+                'sha256',
+                json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
+            ),
         ];
     }
 
     /**
      * @param  array<string, mixed>  $rawRow
-     * @param  array<string, Collection<string, mixed>>  $context
+     * @param  array<string, mixed>  $context
      * @param  array<string, int>  $seenIdentities
      * @return array<string, mixed>
      */
