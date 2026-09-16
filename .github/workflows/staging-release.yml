@@ -7,6 +7,11 @@ on:
         description: 'Commit penuh yang sudah selesai dipublikasikan oleh hPanel Git ke staging'
         required: true
         type: string
+      rehearse_media:
+        description: 'Jalankan cutover sementara R2 dan rollback otomatis setelah release'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -43,6 +48,42 @@ jobs:
           npm run build
           test -f public/build/manifest.json
           tar -C public -czf staging-build.tar.gz build
+
+      - name: Prepare protected R2 environment fragment
+        if: ${{ inputs.rehearse_media }}
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_REGION: ${{ vars.R2_REGION }}
+          R2_URL: ${{ vars.R2_URL }}
+          PRODUCT_MEDIA_TARGET_DISK: ${{ vars.PRODUCT_MEDIA_TARGET_DISK }}
+        run: |
+          umask 077
+          python3 <<'PY' > staging-r2.env
+          import json
+          import os
+
+          keys = [
+              "R2_ACCESS_KEY_ID",
+              "R2_SECRET_ACCESS_KEY",
+              "R2_BUCKET",
+              "R2_ENDPOINT",
+              "R2_REGION",
+              "R2_URL",
+              "PRODUCT_MEDIA_TARGET_DISK",
+          ]
+
+          for key in keys:
+              value = os.environ.get(key, "")
+              if not value:
+                  raise SystemExit(f"Missing required staging environment value: {key}")
+              print(f"{key}={json.dumps(value)}")
+
+          print('PRODUCT_MEDIA_DISK="r2"')
+          PY
+          chmod 600 staging-r2.env
 
       - name: Configure constrained SSH access
         env:
@@ -115,4 +156,75 @@ jobs:
           php artisan optimize
           test -f public/build/manifest.json
           test -L public/storage
+          REMOTE_SCRIPT
+
+      - name: Rehearse R2 cutover and automatic rollback
+        if: ${{ inputs.rehearse_media }}
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          STAGING_SSH_USERNAME: ${{ secrets.STAGING_SSH_USERNAME }}
+          STAGING_PATH: ${{ vars.STAGING_PATH }}
+        run: |
+          scp -i ~/.ssh/id_ed25519 -P "$STAGING_SSH_PORT" staging-r2.env "$STAGING_SSH_USERNAME@$STAGING_SSH_HOST:$STAGING_PATH/.p4-06-r2.env"
+          ssh -i ~/.ssh/id_ed25519 -p "$STAGING_SSH_PORT" "$STAGING_SSH_USERNAME@$STAGING_SSH_HOST" "STAGING_PATH='$STAGING_PATH' bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          cd "$STAGING_PATH"
+
+          fragment="$STAGING_PATH/.p4-06-r2.env"
+          backup="$STAGING_PATH/storage/app/private/.env.p4-06.backup"
+          candidate="$STAGING_PATH/.env.p4-06.candidate"
+          original_hash=""
+
+          restore_environment() {
+            if [ -f "$backup" ]; then
+              cp "$backup" .env
+              chmod 600 .env
+              rm -f "$backup"
+            fi
+            rm -f "$fragment" "$candidate"
+            php artisan config:clear --no-interaction >/dev/null
+            php artisan optimize --no-interaction >/dev/null
+          }
+
+          trap restore_environment EXIT
+          test -f .env
+          test -f "$fragment"
+          test ! -e "$backup"
+          test "$(stat -c '%a' .env)" = "600"
+          chmod 600 "$fragment"
+          original_hash="$(sha256sum .env | awk '{print $1}')"
+          php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); if (config("media.product_disk") !== "public") { fwrite(STDERR, "Staging did not start on the rollback-safe public disk.\n"); exit(1); }'
+          install -m 600 .env "$backup"
+
+          grep -vE '^(R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|R2_BUCKET|R2_ENDPOINT|R2_REGION|R2_URL|PRODUCT_MEDIA_TARGET_DISK|PRODUCT_MEDIA_DISK)=' .env > "$candidate" || true
+          cat "$fragment" >> "$candidate"
+          chmod 600 "$candidate"
+          mv "$candidate" .env
+          rm -f "$fragment"
+
+          php artisan config:clear --no-interaction >/dev/null
+          php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); if (config("media.product_disk") !== "r2") { fwrite(STDERR, "R2 cutover configuration was not activated.\n"); exit(1); }'
+
+          before_counts="$(php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo App\Models\Product::query()->count().":".App\Models\ProductImage::query()->count();')"
+
+          php artisan product-media:rehearse-r2 \
+            --sample-path=products/b9A7Hqhl1hzuv47VovEM0QUWRIr0TmbFlL2eSWn1.jpg \
+            --expected-size=304172 \
+            --expected-sha256=74911ab4f1b07d057bfa6c7a864d164ef71abae1d27df6a75229cd903560d1cc \
+            --apply \
+            --no-interaction
+
+          after_counts="$(php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo App\Models\Product::query()->count().":".App\Models\ProductImage::query()->count();')"
+          test "$before_counts" = "$after_counts"
+          php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $files=Illuminate\Support\Facades\Storage::disk("r2")->files("products"); if (count($files) !== 19) { fwrite(STDERR, "Unexpected R2 product object count after rehearsal.\n"); exit(1); }'
+
+          restore_environment
+          trap - EXIT
+
+          restored_hash="$(sha256sum .env | awk '{print $1}')"
+          test "$restored_hash" = "$original_hash"
+          php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); if (config("media.product_disk") !== "public") { fwrite(STDERR, "Staging media disk rollback was not verified.\n"); exit(1); }'
+          printf 'Database counts preserved: %s\n' "$after_counts"
+          printf '%s\n' 'Staging media disk rollback verified: public'
           REMOTE_SCRIPT
