@@ -1,6 +1,6 @@
 # Product Media R2 Copy-Verify Runbook
 
-Status: bucket dan credential staging tersedia; copy-verify media nyata dan cutover belum dijalankan.
+Status: copy-verify media nyata selesai; public delivery dan cutover belum dijalankan.
 
 ## Environment staging yang sudah disiapkan
 
@@ -13,7 +13,21 @@ Pada 2026-09-16, setup berikut telah diverifikasi tanpa mencatat nilai credentia
 - `PRODUCT_MEDIA_DISK` tetap tidak diarahkan ke `r2`, `R2_URL` tidak diaktifkan, dan bucket tetap private;
 - bucket operasional Qammaris App tidak diubah.
 
-GitHub secrets tidak dapat dibaca kembali oleh runtime lokal. Sebelum menjalankan dry-run terhadap media lokal, credential harus disediakan ke environment operator melalui channel aman. Jangan memindahkan secret melalui chat, commit, dokumentasi, command-line argument, atau shell history.
+GitHub secrets tidak dapat dibaca kembali oleh runtime lokal. Credential operator lokal disimpan pada `.env` yang diabaikan Git dan nilainya tidak boleh dipindahkan melalui chat, commit, dokumentasi, command-line argument, atau shell history.
+
+## Hasil copy-verify 2026-09-16
+
+Copy dilakukan dari disk `public` lokal ke disk `r2` tanpa mengubah database atau disk aktif:
+
+| Tahap | Manifest | Hasil |
+| --- | --- | --- |
+| Dry-run | `01M2MGXXYD0ET75X6PFCT0T8XC.json` | `19 planned_copy` |
+| Apply | `01M2MGZ47P565TKDDQRHNW1GX6.json` | `19 copied_verified` |
+| Rerun apply | `01M2MGZRVK74Q4Y0Y6YXJAMHBX.json` | `19 already_verified` |
+
+Manifest terakhir membuktikan `19` object source dan target mempunyai total ukuran identik `15.339.002` byte serta `0` mismatch SHA-256. Seluruh referenced source masih tersedia. Database lokal tetap berisi `180` products dan `19` product images; disk aktif tetap `public`, target tetap `r2`, bucket tetap private, dan tidak ada staging/production traffic yang dialihkan.
+
+Pemeriksaan keamanan menemukan `0` nilai credential pada tracked file. Bridge localhost sementara yang dipakai untuk menulis `.env` telah dihentikan dan dihapus setelah berhasil.
 
 ## Batas keamanan
 

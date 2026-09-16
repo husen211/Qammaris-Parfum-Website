@@ -756,7 +756,7 @@ Verification:
 - Implementasi tercatat pada commit `81cf3bc` (`feat: add r2 media copy verification`).
 - CI GitHub Actions untuk commit implementasi lulus pada run `35059749288` (push) dan `35059752504` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P4-04 R2 staging copy verification — IN_PROGRESS
+### P4-04 R2 staging copy verification — DONE
 
 Outcome:
 
@@ -800,8 +800,13 @@ Verification:
 - Token R2 `Object Read & Write` dibuat dengan scope hanya ke bucket `qammaris-website-media-staging`; token account-wide tidak digunakan.
 - GitHub Environment `staging` menyimpan `R2_ACCESS_KEY_ID` dan `R2_SECRET_ACCESS_KEY` sebagai encrypted secrets. Nilai credential tidak dicatat di chat, Git, dokumentasi, database, atau output terminal.
 - GitHub Environment `staging` menyimpan `R2_BUCKET`, `R2_ENDPOINT`, `R2_REGION`, dan `PRODUCT_MEDIA_TARGET_DISK` sebagai environment variables. `PRODUCT_MEDIA_DISK` tidak diubah dan public delivery tidak diaktifkan.
-- Secret belum dipasang ke environment operator lokal, sehingga dry-run/copy terhadap 19 object yang direferensikan database lokal belum dijalankan. Staging Hostinger masih tidak mempunyai dataset/media sumber yang setara untuk menggantikan verifikasi lokal ini.
-- Remaining gate: sediakan credential pada runtime operator yang mempunyai 19 source media, lalu jalankan dry-run, apply, dan rerun idempotent sesuai runbook tanpa mencetak secret.
+- Credential dipasang langsung ke `.env` operator lokal yang diabaikan Git melalui bridge localhost sekali pakai; bridge dan tab langsung dibuang setelah penulisan. Pemeriksaan seluruh tracked file menemukan `0` credential leak.
+- Dry-run berhasil dengan `19 planned_copy`, tanpa failure atau conflict; manifest `01M2MGXXYD0ET75X6PFCT0T8XC.json` tidak menulis object target.
+- Apply berhasil dengan `19 copied_verified`; manifest `01M2MGZ47P565TKDDQRHNW1GX6.json`. Source lokal tetap tersedia seluruhnya.
+- Rerun apply berhasil dengan `19 already_verified`; manifest `01M2MGZRVK74Q4Y0Y6YXJAMHBX.json`, membuktikan idempotensi terhadap bucket nyata.
+- Verifikasi manifest terakhir mencatat `19` object, source dan target masing-masing `15.339.002` byte, serta `0` mismatch ukuran/SHA-256. Fingerprint gabungan kedua apply manifest identik.
+- Database lokal tetap `180` products dan `19` product images; `0` referenced source hilang. Disk aktif tetap `public`, target tetap `r2`, bucket tetap private, dan production/staging public traffic tidak berubah.
+- Focused regression test lulus: `7 passed (40 assertions)`. `composer validate --strict`, credential leak scan, dan `git diff --check` lulus.
 
 ## P5 — Admin Panel V2 captured requirements
 
