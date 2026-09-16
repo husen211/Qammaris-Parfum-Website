@@ -610,7 +610,7 @@ Verification:
 
 ## P4 — Media storage
 
-### P4-01 Product media storage boundary dan local inventory — IN_REVIEW
+### P4-01 Product media storage boundary dan local inventory — DONE
 
 Outcome:
 
@@ -655,7 +655,7 @@ Verification:
 - Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
 - Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
 - Tidak ada perubahan tampilan, schema, data, media, staging, atau production. Verifikasi browser tidak berlaku karena item ini mengubah boundary storage backend tanpa mengubah markup/UI.
-- CI GitHub Actions menunggu commit implementasi.
+- CI GitHub Actions untuk commit implementasi `2f3c15f` lulus pada run `35056320507` (push) dan `35056322360` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
