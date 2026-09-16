@@ -855,7 +855,7 @@ Verification:
 - Custom domain belum dapat dipasang karena zone `qammarisparfum.id` belum berada pada account Cloudflare/DNS yang sama. Tidak ada perubahan DNS, staging application traffic, deployment, atau production.
 - Resolver lokal mengarahkan IPv4 hostname `r2.dev` ke `202.169.44.80` dan timeout. Fetch verifikasi memakai edge Cloudflare `104.18.50.34` dengan hostname/TLS asli dan lulus; ini dicatat sebagai keterbatasan jaringan lokal, bukan kegagalan object R2.
 
-### P4-06 R2 staging application cutover rehearsal — BACKLOG
+### P4-06 R2 staging application cutover rehearsal — IN_PROGRESS
 
 Outcome:
 
@@ -866,6 +866,23 @@ Dependencies:
 - P4-05 selesai.
 - DNS client/operator dapat mengakses delivery hostname secara normal atau staging memakai custom domain pada zone Cloudflare yang terkelola.
 - Snapshot database/media staging dan recovery ref tersedia sebelum cutover.
+
+In scope:
+
+- Workflow manual khusus staging yang memverifikasi revision sebelum perubahan.
+- Snapshot `.env` staging dengan permission tetap privat, cutover sementara `PRODUCT_MEDIA_DISK=r2`, serta rollback otomatis ke konfigurasi awal walaupun rehearsal gagal.
+- Verifikasi aplikasi membaca sample existing dan menulis object sintetis melalui `ProductMediaStorage`, boundary yang sama dengan upload admin.
+- Cleanup object sintetis dan verifikasi database/media count sebelum serta sesudah rehearsal.
+
+Out of scope:
+
+- Menambah akun admin staging, mengisi database staging dengan data lokal/production, deployment production, perubahan DNS/system-wide resolver, cleanup 19 object R2, atau menghapus source lokal.
+
+Risks:
+
+- `.env` staging berisi secret sehingga backup, fragment, dan output command tidak boleh dapat dibaca publik atau tercetak di log.
+- Workflow harus selalu memulihkan `.env` awal dan membersihkan object/file sintetis melalui trap/finally bila salah satu verifikasi gagal.
+- Browser operator masih tidak dapat memuat `r2.dev` melalui resolver lokal; validasi delivery dilakukan dari runner/server dan masalah DNS tetap menjadi blocker sebelum R2 dibiarkan aktif permanen.
 
 Acceptance criteria:
 
