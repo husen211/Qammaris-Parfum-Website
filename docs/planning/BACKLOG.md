@@ -705,6 +705,56 @@ Verification:
 - Masukan owner tentang preservasi page/search/filter/sort setelah edit dicatat pada business rules dan `P5-01`; tidak diselipkan ke scope media.
 - CI GitHub Actions untuk commit implementasi `16d29e1` lulus pada run `35058656237` (push) dan `35058658414` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
+### P4-03 R2 copy-verify foundation — IN_REVIEW
+
+Outcome:
+
+- Media produk dapat disalin secara non-destruktif dari disk aktif ke disk target S3-compatible dengan manifest dan verifikasi checksum sebelum cutover dipertimbangkan.
+
+In scope:
+
+- Adapter Flysystem S3 resmi untuk Laravel.
+- Disk Cloudflare R2 terpisah dengan credential/endpoint hanya dari environment.
+- Command inventory/copy dengan mode dry-run default dan flag apply eksplisit.
+- Hanya object key canonical yang direferensikan metadata produk yang diproses; source tidak pernah dihapus.
+- Target existing diverifikasi; mismatch tidak ditimpa otomatis.
+- Manifest JSON lokal berisi batch ID, disk, mode, checksum, ukuran, status, dan ringkasan tanpa credential.
+- Regression test menggunakan fake disks untuk dry-run, copy+verify, already verified, missing source, mismatch, dan idempotency.
+
+Out of scope:
+
+- Membuat bucket/token Cloudflare, mengisi credential nyata, menjalankan copy ke R2 nyata, mengganti `PRODUCT_MEDIA_DISK`, public delivery URL/domain, orphan cleanup, staging, dan production.
+
+Dependencies:
+
+- P4-01 storage boundary, P4-02 media lifecycle, serta konfigurasi bucket/token R2 milik owner pada tahap berikutnya.
+
+Risks:
+
+- Object storage bukan transaksi database; source harus tetap dipertahankan dan mismatch target wajib direview tanpa overwrite otomatis.
+
+Acceptance criteria:
+
+- Dry-run adalah default dan tidak menulis target.
+- Apply hanya menyalin object yang source-nya valid dan target belum ada.
+- Source dan target diverifikasi dengan SHA-256 serta ukuran setelah copy.
+- Target existing yang cocok menjadi `already_verified`; target mismatch dilaporkan dan tidak ditimpa.
+- Missing/invalid source tidak menghentikan seluruh batch tetapi menghasilkan status gagal dan exit code non-zero.
+- Manifest tidak memuat access key, secret, endpoint credential, atau isi file.
+- Tidak ada database, source media, staging, atau production yang diubah.
+- Focused test, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Adapter `league/flysystem-aws-s3-v3` versi `3.35.3` terpasang dan `composer validate --strict` lulus.
+- Command `product-media:copy-verify` terdaftar pada Artisan; default dry-run dan apply eksplisit dilindungi regression test.
+- Focused test lulus: `7 passed (40 assertions)`.
+- Seluruh test Laravel lulus: `83 passed (355 assertions)`.
+- Build Vite production lulus; warning existing DaisyUI `@property` dan chunk `about-lanyard` tetap dicatat sebagai pekerjaan optimasi terpisah.
+- Audit lokal read-only: 19 metadata `product_images`, 19 referensi unik, 0 referensi file hilang, dan 20 file pada direktori produk.
+- Database, source media, konfigurasi disk aktif, staging, dan production tidak diubah. Bucket/credential serta copy/cutover R2 nyata tetap belum dilakukan.
+- CI GitHub Actions menunggu commit implementasi.
+
 ## P5 — Admin Panel V2 captured requirements
 
 ### P5-01 Preserve catalog working context — BACKLOG
