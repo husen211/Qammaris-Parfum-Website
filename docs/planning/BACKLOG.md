@@ -17,7 +17,7 @@
 | P1 | Safety, backup, staging & Git | IN_PROGRESS | P0 | Deployment repeatable dan recovery teruji |
 | P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
 | P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
-| P4 | Media storage | BACKLOG | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
+| P4 | Media storage | IN_PROGRESS | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | BACKLOG | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
@@ -607,6 +607,55 @@ Verification:
 - Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
 - Tidak ada UI, media, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini hanya mengubah domain/schema backend.
 - CI GitHub Actions untuk commit implementasi `6e92e0a` lulus pada run `35055611565` (push) dan `35055613609` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
+
+## P4 — Media storage
+
+### P4-01 Product media storage boundary dan local inventory — IN_REVIEW
+
+Outcome:
+
+- Upload dan pembacaan gambar produk menggunakan satu boundary Laravel Filesystem yang disk-nya dapat diganti melalui environment tanpa mengubah domain/controller.
+
+In scope:
+
+- Inventory metadata dan file produk lokal tanpa mengubah atau menghapus data/media.
+- Konfigurasi disk serta direktori khusus media produk dengan default compatibility `public`.
+- Service untuk normalisasi object key legacy, upload-terverifikasi, URL resolution, dan rollback cleanup.
+- Mengganti hardcoded disk pada `ProductImage` dan admin upload dengan service bersama.
+- Regression test untuk configurable disk, path legacy, missing file, pencegahan remote hotlink, dan rollback upload.
+
+Out of scope:
+
+- Instalasi adapter S3, pembuatan bucket/R2 credential, copy file ke cloud, perubahan metadata massal, orphan cleanup, UI media, remote image acquisition, staging, dan production.
+
+Dependencies:
+
+- P2-03 transaction-safe upload, P2-10 destructive media guard, dan aturan copy-verify-switch-retain.
+
+Risks:
+
+- Path production belum diaudit penuh; compatibility reader harus tetap mendukung format legacy `storage/` dan `public/` tanpa menulis ulang record.
+
+Acceptance criteria:
+
+- Disk upload/read/delete produk ditentukan oleh `PRODUCT_MEDIA_DISK`, bukan hardcoded `public` pada model/controller.
+- Upload baru menghasilkan object key relatif canonical di direktori `products` dan diverifikasi tersedia sebelum metadata dianggap sukses.
+- Path legacy `storage/...` dan `public/...` tetap dapat dibaca tanpa migrasi data.
+- Path hilang/tidak aman dan URL remote menghasilkan placeholder sehingga halaman publik tidak melakukan hotlink provider.
+- Kegagalan transaksi tetap membersihkan hanya file baru pada disk yang dikonfigurasi.
+- Tidak ada metadata/file existing yang dipindah, ditulis ulang, atau dihapus.
+- Focused test, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Inventory lokal sebelum/sesudah implementasi tetap `19` metadata pada `14` produk, `14` primary image, `20` file pada direktori produk, tanpa metadata yang kehilangan file. Tidak ada metadata atau file yang ditulis ulang/dihapus.
+- Satu kandidat orphan `products/IeCuw7MDgiwWOxJGaJk8j3ZCe5BxKzvpiKwifR4u.jpg` hanya dicatat dan dipertahankan.
+- Seluruh 19 object key existing berhasil di-resolve melalui boundary baru pada disk `public` tanpa placeholder.
+- Focused storage/transaction test lulus: `7 passed (26 assertions)`; seluruh test Laravel lulus: `69 passed (291 assertions)`.
+- Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
+- Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Tidak ada perubahan tampilan, schema, data, media, staging, atau production. Verifikasi browser tidak berlaku karena item ini mengubah boundary storage backend tanpa mengubah markup/UI.
+- CI GitHub Actions menunggu commit implementasi.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

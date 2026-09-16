@@ -10,9 +10,10 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ProductMediaStorage;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
 
@@ -55,8 +56,11 @@ class AdminProductController extends Controller
         return view('admin.products.create', compact('brands', 'categories'));
     }
 
-    public function store(ProductStoreRequest $request, SyncSingleOffer $syncSingleOffer)
-    {
+    public function store(
+        ProductStoreRequest $request,
+        SyncSingleOffer $syncSingleOffer,
+        ProductMediaStorage $productMediaStorage
+    ) {
         // ... (Gunakan kode STORE dari jawaban sebelumnya)
         $storedImagePaths = [];
 
@@ -93,7 +97,7 @@ class AdminProductController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
-                    $path = $this->storeProductImage($image, $storedImagePaths);
+                    $path = $this->storeProductImage($image, $storedImagePaths, $productMediaStorage);
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $path,
@@ -109,7 +113,7 @@ class AdminProductController extends Controller
 
         } catch (Throwable $e) {
             DB::rollback();
-            $this->cleanupStoredImages($storedImagePaths);
+            $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
             report($e);
 
             return back()->with('error', 'Produk gagal disimpan. Silakan coba lagi.')->withInput();
@@ -125,8 +129,12 @@ class AdminProductController extends Controller
         return view('admin.products.edit', compact('product', 'brands', 'categories'));
     }
 
-    public function update(ProductUpdateRequest $request, $id, SyncSingleOffer $syncSingleOffer)
-    {
+    public function update(
+        ProductUpdateRequest $request,
+        $id,
+        SyncSingleOffer $syncSingleOffer,
+        ProductMediaStorage $productMediaStorage
+    ) {
         // ... (Gunakan kode UPDATE dari jawaban sebelumnya)
         $product = Product::findOrFail($id);
         $storedImagePaths = [];
@@ -163,7 +171,7 @@ class AdminProductController extends Controller
 
                 foreach ($request->file('new_images') as $index => $image) {
                     $lastSort++;
-                    $path = $this->storeProductImage($image, $storedImagePaths);
+                    $path = $this->storeProductImage($image, $storedImagePaths, $productMediaStorage);
                     $setPrimary = ! $hasPrimary && $index === 0;
 
                     ProductImage::create([
@@ -185,7 +193,7 @@ class AdminProductController extends Controller
 
         } catch (Throwable $e) {
             DB::rollback();
-            $this->cleanupStoredImages($storedImagePaths);
+            $this->cleanupStoredImages($storedImagePaths, $productMediaStorage);
             report($e);
 
             return back()->with('error', 'Produk gagal diperbarui. Silakan coba lagi.')->withInput();
@@ -228,27 +236,28 @@ class AdminProductController extends Controller
         );
     }
 
-    private function storeProductImage($image, array &$storedImagePaths): string
-    {
-        $path = $image->store('products', 'public');
-
-        if (! is_string($path) || $path === '' || ! Storage::disk('public')->exists($path)) {
-            throw new RuntimeException('Uploaded product image could not be verified on storage.');
-        }
+    private function storeProductImage(
+        UploadedFile $image,
+        array &$storedImagePaths,
+        ProductMediaStorage $productMediaStorage
+    ): string {
+        $path = $productMediaStorage->store($image);
 
         $storedImagePaths[] = $path;
 
         return $path;
     }
 
-    private function cleanupStoredImages(array $storedImagePaths): void
-    {
+    private function cleanupStoredImages(
+        array $storedImagePaths,
+        ProductMediaStorage $productMediaStorage
+    ): void {
         if ($storedImagePaths === []) {
             return;
         }
 
         try {
-            if (! Storage::disk('public')->delete($storedImagePaths)) {
+            if (! $productMediaStorage->delete($storedImagePaths)) {
                 report(new RuntimeException('One or more rolled-back product images could not be deleted.'));
             }
         } catch (Throwable $cleanupError) {

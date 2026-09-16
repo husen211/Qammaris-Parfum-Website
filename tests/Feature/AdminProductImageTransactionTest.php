@@ -29,7 +29,8 @@ class AdminProductImageTransactionTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('public');
+        config(['media.product_disk' => 'product-media-test']);
+        Storage::fake('product-media-test');
         $this->admin = User::factory()->create();
         $this->admin->forceFill(['role' => 'admin'])->save();
         $this->brand = Brand::create([
@@ -51,13 +52,13 @@ class AdminProductImageTransactionTest extends TestCase
         $this->assertDatabaseCount('products', 0);
         $this->assertDatabaseCount('product_variants', 0);
         $this->assertDatabaseCount('product_images', 0);
-        $this->assertSame([], Storage::disk('public')->allFiles('products'));
+        $this->assertSame([], Storage::disk('product-media-test')->allFiles('products'));
     }
 
     public function test_failed_update_preserves_existing_state_and_cleans_new_images(): void
     {
         $product = $this->createExistingProduct();
-        Storage::disk('public')->put('products/existing.png', 'existing-image');
+        Storage::disk('product-media-test')->put('products/existing.png', 'existing-image');
         ProductImage::create([
             'product_id' => $product->id,
             'image_path' => 'products/existing.png',
@@ -89,7 +90,7 @@ class AdminProductImageTransactionTest extends TestCase
         ]);
         $this->assertSame(
             ['products/existing.png'],
-            Storage::disk('public')->allFiles('products')
+            Storage::disk('product-media-test')->allFiles('products')
         );
     }
 
