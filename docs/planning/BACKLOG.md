@@ -19,7 +19,7 @@
 | P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | DONE | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
-| P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
+| P6 | Import/export & audit | IN_PROGRESS | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
 | P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
 | P9 | Hardening & cutover | BACKLOG | P1–P8 | Production launch dan observation selesai |
@@ -1182,6 +1182,68 @@ Documentation updates:
 
 - Backlog, business rules media, dan `ADR-010-product-media-archive-and-ordering.md` diperbarui.
 - Kandidat pekerjaan berikutnya adalah mendefinisikan `P6-01` kontrak file bulk import/export dan preview; belum dimulai pada item ini.
+
+## P6 — Import/export dan audit
+
+### P6-01 Canonical product CSV contract and read-only preview — DONE
+
+Outcome:
+
+- Admin dapat mengunduh kontrak CSV Qammaris, mengunggah hasil kurasi Claude, dan melihat preview deterministik per baris tanpa satu pun perubahan database atau media.
+
+In scope:
+
+- Kontrak canonical UTF-8 CSV dengan header tetap untuk provider, kode produk, nama, deskripsi, harga, brand, gender, snapshot stok, best seller, kategori, ukuran, fragrance notes, dan maksimal tiga URL gambar sumber.
+- Download template CSV dari admin dengan satu baris contoh yang jelas dan aman dibuka di spreadsheet umum.
+- Upload `.csv` maksimum 5 MB dan maksimum 1.000 baris data; file kosong, encoding selain UTF-8, header berubah/duplikat, jumlah kolom tidak konsisten, dan baris kosong ditangani eksplisit.
+- Parser bounded tanpa dependency baru, fingerprint SHA-256, dan normalisasi nilai yang tidak mengarang data.
+- Preview read-only berbahasa Indonesia dengan summary valid/perlu review/error, nomor baris sumber, action candidate create/update/conflict, serta issue spesifik.
+- Pencocokan update hanya melalui `provider + kode_produk` pada `product_external_identities`; nama/brand mirip tidak pernah dipakai sebagai auto-match.
+- Lookup brand/kategori exact case-insensitive untuk preview; taxonomy kosong/tidak ditemukan/nonaktif menjadi review, bukan dibuat otomatis.
+- URL gambar hanya divalidasi sebagai URL HTTPS sumber dan tidak diunduh pada item ini.
+- Navigasi admin serta state initial, validation, structural error, populated preview, dan responsive.
+
+Out of scope:
+
+- Membaca XLSX mentah Shopee, menyimpan batch/import rows, apply/write database, membuat/memperbarui product, mengunduh gambar, conflict resolution UI, riwayat batch, audit mutation, export data existing, queue, staging, dan production.
+
+Dependencies:
+
+- P3 product domain/external identity foundation dan P5 Admin Panel V2 selesai.
+- Dataset input adalah hasil kurasi/normalisasi Claude, bukan export Shopee mentah.
+
+Risks:
+
+- Formula injection dan encoding spreadsheet dapat menyamarkan nilai; parser memperlakukan seluruh input sebagai data tidak tepercaya dan output preview tetap escaped.
+- Kode produk panjang atau berawalan nol tidak boleh berubah menjadi angka; canonical contract memperlakukannya sebagai teks.
+- Preview yang tidak dipersist dapat berubah bila database berubah sebelum apply; karena apply belum tersedia, fingerprint dan hasil preview hanya menjadi evidence untuk tahap berikutnya.
+- File besar atau baris rusak dapat menghabiskan memori; parsing dibatasi dan dihentikan dengan error terkontrol.
+
+Acceptance criteria:
+
+- Template memakai header exact dan dapat diunduh tanpa dependency spreadsheet baru.
+- Upload valid menghasilkan fingerprint, summary, dan preview maksimal 1.000 baris tanpa menulis product, offer, identity, image, maupun file storage.
+- Duplicate `provider + kode_produk` dalam file menjadi error per baris; mapping existing menghasilkan candidate update; identity conflict/ambiguous tidak ditulis.
+- Required structural fields `provider`, `kode_produk`, dan `nama_produk` divalidasi; field publikasi yang kosong menghasilkan review karena import masa depan selalu draft.
+- Nilai angka, boolean, controlled gender/provider, notes, taxonomy, dan maksimum tiga HTTPS image URL dinormalisasi atau diberi issue spesifik.
+- Header hilang/lebih/duplikat, CSV invalid, non-UTF-8, lebih dari 1.000 baris, dan file di atas 5 MB ditolak secara aman.
+- Halaman usable pada `390x844` dan `1440x900`, tanpa horizontal page overflow atau console error; tabel preview memakai container scroll horizontal terkontrol.
+- Focused tests, seluruh test Laravel, Blade compilation, production build, quality checks, dan CI lulus.
+
+Verification:
+
+- Focused test `AdminProductImportPreviewTest`: 10 test / 73 assertion lulus, termasuk auth admin, template BOM UTF-8, create/update candidate, duplicate identity, taxonomy case-insensitive tanpa auto-create, missing publish data, escaping input tidak tepercaya, structural error, non-UTF-8, batas 1.000 baris, dan batas 5 MB.
+- Seluruh suite Laravel: 131 test / 658 assertion lulus.
+- `artisan route:list --name=admin.product-imports` mengonfirmasi tiga route production: halaman, template, dan preview.
+- `artisan view:cache`, `composer validate --strict`, targeted Pint, dan `npm run build` lulus. Build hanya mempertahankan warning existing DaisyUI `@property` dan chunk 3D besar yang tidak berasal dari item ini.
+- Browser audit initial dan populated preview lulus pada `1440x900` serta `390x844`: summary 3 baris menampilkan 1 valid, 1 perlu review, 1 error; page width sama dengan viewport; tabel kontrak/preview memakai scroll horizontal internal terkontrol; console tanpa warning/error.
+- State populated dirender melalui parser dan view production menggunakan route audit lokal sementara karena file chooser browser automation menolak path lokal; route, CSV, akun admin audit, dan seluruh salinan file sementara telah dihapus setelah verifikasi. Multipart upload tetap diverifikasi oleh feature test production route.
+- Jumlah data lokal sebelum dan sesudah preview identik: 180 products, 65 offers, 0 external identities, dan 19 product images. Tidak ada product, offer, identity, media, atau uploaded CSV yang disimpan.
+
+Documentation updates:
+
+- Backlog, business rules import, `docs/product/PRODUCT_IMPORT_CSV.md`, dan `ADR-011-canonical-product-csv-preview-boundary.md` diperbarui.
+- Kandidat item berikutnya adalah `P6-02` untuk persistence batch, immutable preview result, idempotency, conflict handling, dan apply draft yang eksplisit; belum dimulai pada item ini.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

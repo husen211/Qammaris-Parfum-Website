@@ -100,6 +100,11 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 7. File Shopee adalah bahan mentah. Dataset yang dapat diimport adalah template Qammaris hasil kurasi/normalisasi, tetapi seluruh field tetap divalidasi secara deterministik oleh aplikasi.
 8. AI boleh membersihkan teks dan mengekstrak fragrance notes dari deskripsi, tetapi tidak boleh mengarang fakta yang tidak tersedia; nilai yang tidak ditemukan dibiarkan kosong atau ditandai untuk review.
 9. Kode produk provider dapat dipakai untuk mencocokkan update dalam provider yang sama, tetapi tidak menggantikan ID internal. Kode baru pada produk yang dihapus/dibuat ulang diperlakukan sebagai draft baru dan kemiripan nama/brand hanya menghasilkan peringatan duplikat.
+10. Kontrak file tahap awal adalah UTF-8 CSV hasil kurasi dengan header dan urutan kolom tetap. XLSX mentah provider harus dikurasi/diubah ke kontrak ini sebelum preview.
+11. Field `provider`, `kode_produk`, dan `nama_produk` wajib secara struktural. Field publish yang belum tersedia dibiarkan kosong dan ditandai perlu review; aplikasi maupun AI tidak boleh mengarang nilainya.
+12. Harga CSV ditulis sebagai angka positif tanpa simbol mata uang atau pemisah ribuan. Kode produk selalu diperlakukan sebagai teks agar nol di depan dan digit panjang tidak berubah.
+13. Fragrance notes dalam satu sel dipisahkan dengan `|`. URL gambar hanya menjadi kandidat sumber HTTPS; preview tidak mengunduh, menyimpan, atau menampilkan URL provider sebagai media publik.
+14. Preview read-only tidak memberi izin apply. Apply masa depan wajib memakai fingerprint dan hasil validasi yang sama, lalu dibatalkan atau di-preview ulang bila file atau state database berubah.
 
 ## Admin dan automation
 

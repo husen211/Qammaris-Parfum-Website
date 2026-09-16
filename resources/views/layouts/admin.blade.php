@@ -44,6 +44,11 @@
                     Kategori
                 </a>
 
+                <a href="{{ route('admin.product-imports.create') }}" class="{{ request()->routeIs('admin.product-imports*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.9A5 5 0 0115.9 6H16a5 5 0 011 9.9M12 12v9m0-9l-3 3m3-3l3 3"/></svg>
+                    Import Produk
+                </a>
+
                 <a href="{{ route('admin.blog-posts.index') }}" class="{{ request()->routeIs('admin.blog-posts*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 5H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2zM7 9h10M7 13h10M7 17h6"/></svg>
                     Blog Posts
@@ -76,6 +81,7 @@
                         <a href="{{ route('admin.products.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Products</a>
                         <a href="{{ route('admin.brands.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.brands*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Brand</a>
                         <a href="{{ route('admin.categories.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.categories*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Kategori</a>
+                        <a href="{{ route('admin.product-imports.create') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.product-imports*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Import Produk</a>
                         <a href="{{ route('admin.blog-posts.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.blog-posts*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Blog Posts</a>
                     </nav>
                 </details>

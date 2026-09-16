@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
+use App\Http\Controllers\Admin\AdminProductImportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -66,6 +67,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('products/{product}/images/{productImage}/primary', [AdminProductImageController::class, 'primary'])->name('products.images.primary');
     Route::patch('products/{product}/images/{productImage}/move', [AdminProductImageController::class, 'move'])->name('products.images.move');
     Route::delete('products/{product}/images/{productImage}', [AdminProductImageController::class, 'destroy'])->name('products.images.destroy');
+
+    Route::get('product-imports', [AdminProductImportController::class, 'create'])->name('product-imports.create');
+    Route::get('product-imports/template', [AdminProductImportController::class, 'template'])->name('product-imports.template');
+    Route::post('product-imports/preview', [AdminProductImportController::class, 'preview'])->name('product-imports.preview');
 
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);
