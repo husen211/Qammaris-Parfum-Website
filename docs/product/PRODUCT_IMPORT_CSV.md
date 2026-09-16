@@ -1,6 +1,6 @@
 # Kontrak CSV Import Produk Qammaris
 
-Status: Canonical preview + draft apply contract v1 — 2026-09-16
+Status: Canonical preview + draft apply + safe image acquisition contract v1 — 2026-09-16
 
 ## Tujuan
 
@@ -12,7 +12,8 @@ Alur yang didukung:
 2. Claude membaca file mentah dan menghasilkan CSV sesuai kontrak ini.
 3. Admin upload CSV ke halaman **Import Produk** untuk preview read-only terhadap katalog dan pencatatan batch audit.
 4. Admin mereview batch, mencentang konfirmasi, lalu apply kandidat yang aman ke draft.
-5. Admin melengkapi draft, gambar, dan publication secara manual pada alur terpisah.
+5. Admin menjalankan akuisisi gambar secara eksplisit untuk memindahkan kandidat yang aman ke storage Qammaris melalui antrean.
+6. Admin mereview kegagalan gambar, melengkapi draft, dan melakukan publication melalui alur terpisah.
 
 ## Format file
 
@@ -102,6 +103,18 @@ File CSV asli tidak disimpan. Batch menyimpan nama/ukuran/fingerprint file, acto
 - URL gambar tidak diunduh, di-hotlink, atau dibuat menjadi metadata media pada tahap apply ini.
 - Request ulang pada batch yang sudah applied menampilkan hasil existing tanpa membuat mutation kedua.
 
+## Akuisisi gambar setelah apply
+
+- Aksi ini terpisah dari apply dan hanya tersedia untuk batch `applied`, row `created/updated`, serta product hasil apply yang masih draft.
+- Maksimum tiga kandidat URL per row diproses oleh satu job antrean. Kapasitas tiga gambar tetap menghitung media existing pada product.
+- URL harus HTTPS dan host-nya harus cocok exact dengan `PRODUCT_IMPORT_IMAGE_ALLOWED_HOSTS`. CSV tidak dapat menambah atau melewati allowlist.
+- Downloader menolak URL ber-credential, port selain 443, alamat IP, redirect, respons gagal, file di atas batas byte, MIME selain JPEG/PNG/WebP, serta dimensi di atas batas konfigurasi.
+- MIME dan dimensi diperiksa dari isi file, bukan hanya extension atau header provider. Checksum SHA-256 dicatat pada outcome kandidat.
+- File yang lolos disimpan melalui `ProductMediaStorage` dan metadata dibuat melalui operasi domain `AttachProductImage`; halaman publik tidak memakai URL provider.
+- Primary existing tidak diganti. Kandidat sukses pertama menjadi primary hanya bila draft belum mempunyai gambar aktif.
+- Kegagalan satu kandidat dicatat tanpa membatalkan draft. Retry hanya memproses kandidat non-success dan kandidat yang sudah tersimpan tidak diunduh ulang.
+- Product yang berubah menjadi published/archived sebelum job berjalan ditahan tanpa network request atau storage write.
+
 ## Batas tahap ini
 
-Belum tersedia conflict resolution per baris, update product published/archived, download gambar, taxonomy auto-create, bulk publish, undo batch, export katalog, queue, staging, atau production apply.
+Belum tersedia conflict resolution per baris, update product published/archived, taxonomy auto-create, bulk publish, undo batch, export katalog, staging, atau production apply. Deployment worker antrean tetap pekerjaan environment/cutover; lihat runbook `PRODUCT_IMPORT_IMAGE_QUEUE.md`.

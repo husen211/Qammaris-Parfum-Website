@@ -13,9 +13,14 @@ class ProductMediaStorage
     public function store(UploadedFile $file): string
     {
         $path = $file->store($this->directory(), $this->diskName());
+        $storedPath = is_string($path) ? $this->normalizeLocalPath($path) : null;
         $path = $this->normalizeProductPath($path);
 
         if ($path === null || ! $this->exists($path)) {
+            if ($storedPath !== null) {
+                $this->disk()->delete($storedPath);
+            }
+
             throw new RuntimeException('Uploaded product image could not be verified on storage.');
         }
 

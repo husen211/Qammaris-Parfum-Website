@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\ApplyProductImportBatch;
+use App\Actions\Products\QueueProductImportImages;
 use App\Exceptions\InvalidProductImportFile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductImportApplyRequest;
+use App\Http\Requests\Admin\ProductImportImageAcquisitionRequest;
 use App\Http\Requests\Admin\ProductImportPreviewRequest;
 use App\Imports\Products\CanonicalProductCsv;
 use App\Models\ProductImportBatch;
+use App\Models\ProductImportRow;
 use App\Services\ProductImportBatchRecorder;
 use App\Services\ProductImportPreviewer;
+use DomainException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +36,7 @@ class AdminProductImportController extends Controller
                     'appliedBy:id,name',
                     'rows.matchedProduct:id,name,publication_status',
                     'rows.appliedProduct:id,name,publication_status',
+                    'rows.imageAcquisitionRequestedBy:id,name',
                 ])
                 ->findOrFail($batchId);
 
@@ -104,6 +109,32 @@ class AdminProductImportController extends Controller
         };
     }
 
+    public function acquireImages(
+        ProductImportImageAcquisitionRequest $request,
+        ProductImportBatch $productImportBatch,
+        QueueProductImportImages $queueProductImportImages
+    ): RedirectResponse {
+        try {
+            $result = $queueProductImportImages->handle($productImportBatch, $request->user());
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('admin.product-imports.create', ['batch' => $productImportBatch->getKey()])
+                ->with('error', $exception->getMessage());
+        }
+
+        $redirect = redirect()->route('admin.product-imports.create', ['batch' => $productImportBatch->getKey()]);
+
+        if ($result['queued_rows'] === 0) {
+            return $redirect->with('success', 'Tidak ada kandidat gambar baru yang perlu diproses.');
+        }
+
+        return $redirect->with('success', sprintf(
+            '%d baris dengan %d kandidat gambar masuk antrean. Draft tetap aman bila salah satu gambar gagal.',
+            $result['queued_rows'],
+            $result['candidate_images']
+        ));
+    }
+
     /**
      * @param  array<string, mixed>|null  $preview
      * @return array<string, mixed>
@@ -119,6 +150,7 @@ class AdminProductImportController extends Controller
                 ->latest('id')
                 ->limit(10)
                 ->get(),
+            'imageAcquisition' => $batch ? $this->imageAcquisitionSummary($batch) : null,
         ];
     }
 
@@ -148,6 +180,8 @@ class AdminProductImportController extends Controller
                     'name' => $row->appliedProduct->name,
                     'publication_status' => $row->appliedProduct->publication_status,
                 ] : null,
+                'image_acquisition_status' => $row->image_acquisition_status,
+                'image_acquisition_outcomes' => $row->image_acquisition_outcomes ?? [],
             ])->all(),
             'summary' => [
                 'total' => $batch->total_rows,
@@ -156,6 +190,35 @@ class AdminProductImportController extends Controller
                 'error' => $batch->error_rows,
             ],
             'skipped_blank_rows' => $batch->skipped_blank_rows ?? [],
+        ];
+    }
+
+    /**
+     * @return array<string, int|bool>
+     */
+    private function imageAcquisitionSummary(ProductImportBatch $batch): array
+    {
+        $eligibleRows = $batch->rows->filter(fn (ProductImportRow $row): bool => in_array(
+            $row->apply_status,
+            [ProductImportRow::APPLY_CREATED, ProductImportRow::APPLY_UPDATED],
+            true
+        ) && $row->applied_product_id !== null);
+        $outcomes = $eligibleRows->flatMap(fn (ProductImportRow $row) => $row->image_acquisition_outcomes ?? []);
+        $sourceCount = $eligibleRows->sum(function (ProductImportRow $row): int {
+            return collect(['foto_utama_url', 'foto_2_url', 'foto_3_url'])
+                ->filter(fn (string $field): bool => trim((string) ($row->normalized_data[$field] ?? '')) !== '')
+                ->count();
+        });
+
+        return [
+            'eligible_rows' => $eligibleRows->count(),
+            'source_count' => $sourceCount,
+            'queued' => $eligibleRows->where('image_acquisition_status', ProductImportRow::IMAGE_QUEUED)->count(),
+            'processing' => $eligibleRows->where('image_acquisition_status', ProductImportRow::IMAGE_PROCESSING)->count(),
+            'stored' => $outcomes->where('status', 'stored')->count(),
+            'failed' => $outcomes->filter(fn (array $outcome): bool => in_array($outcome['status'] ?? null, ['failed', 'blocked'], true))->count(),
+            'retryable' => $eligibleRows->where('image_acquisition_status', ProductImportRow::IMAGE_COMPLETED_WITH_ERRORS)->isNotEmpty(),
+            'has_sources' => $sourceCount > 0,
         ];
     }
 }

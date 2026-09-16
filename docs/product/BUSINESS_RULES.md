@@ -88,6 +88,11 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 11. Mengeluarkan gambar dari galeri admin memakai soft archive metadata. File tetap disimpan untuk recovery; hard delete dan cleanup fisik hanya boleh dilakukan melalui lifecycle retensi terpisah yang terverifikasi.
 12. Mengarsipkan primary image dengan gambar aktif lain harus mempromosikan gambar aktif berikutnya secara atomik dan menormalkan urutan aktif. Foto terakhir produk published tidak boleh diarsipkan.
 13. Batas maksimum tiga gambar hanya menghitung gambar aktif. Record arsip tetap mempertahankan product ID dan object key sebagai jejak recovery.
+14. Akuisisi URL gambar import hanya boleh dimulai melalui aksi admin eksplisit setelah batch selesai di-apply. Satu job bounded dipakai per row; request web tidak mengerjakan seluruh batch secara inline pada environment deployed.
+15. Downloader hanya menerima HTTPS dari exact host allowlist terkonfigurasi, menolak credential, port selain 443, alamat IP, dan redirect, serta membatasi waktu, byte, MIME aktual JPEG/PNG/WebP, dan dimensi sebelum storage write.
+16. Akuisisi hanya boleh menambah media pada product hasil apply yang masih draft. Gambar existing dan primary existing dipertahankan; gambar pertama menjadi primary hanya ketika draft belum mempunyai gambar aktif.
+17. Setiap kandidat menyimpan outcome, checksum, actor/waktu request, product image hasil, atau error aman. Retry hanya memproses kandidat yang belum tersimpan dan tidak boleh membuat metadata/file duplikat untuk kandidat sukses.
+18. File baru wajib dibersihkan bila attachment metadata gagal. Kegagalan satu kandidat tidak membatalkan draft, menghapus media lain, atau memberi izin publish.
 
 ## Import/export
 
@@ -113,6 +118,9 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 20. Baris error/conflict tidak diterapkan. Baris review dapat diterapkan sebagai draft setelah konfirmasi admin karena kelengkapan publish tetap divalidasi terpisah.
 21. Apply bersifat transactional dan idempotent per batch. Kegagalan unexpected membatalkan seluruh catalog write; request ulang pada batch applied tidak mengulang mutation.
 22. Outcome apply mencatat actor, waktu, product hasil, status created/updated/blocked, pesan, serta snapshot before/after terkontrol per baris.
+23. Download gambar adalah tahap terpisah setelah apply. Hanya row `created/updated`, batch `applied`, dan product yang masih draft yang eligible; apply sendiri tetap tidak melakukan network request atau storage write.
+24. Dispatch akuisisi gambar harus eksplisit dan auditable. Rerun hanya memproses kandidat non-success; kandidat sukses tetap final dan dihitung dalam kapasitas maksimum tiga gambar.
+25. Host sumber import dikelola melalui environment allowlist. Menambah host adalah keputusan operasional terpisah dan tidak boleh berasal dari nilai CSV.
 
 ## Admin dan automation
 

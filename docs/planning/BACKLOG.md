@@ -1339,6 +1339,53 @@ Documentation updates:
 - Business rules import, kontrak CSV, backlog, dan `ADR-013-transactional-product-import-draft-apply.md` diperbarui.
 - Kandidat berikutnya adalah `P6-04` safe acquisition URL gambar import ke media storage dengan validasi/download/review; belum dimulai.
 
+### P6-04 Safe imported image acquisition — IN_PROGRESS
+
+Outcome:
+
+- Admin dapat memindahkan maksimal tiga URL gambar dari batch import yang sudah applied ke storage Qammaris melalui antrean terpisah, dengan validasi isi file, audit per kandidat, serta retry yang tidak menduplikasi media berhasil.
+
+In scope:
+
+- Aksi eksplisit setelah apply untuk menyiapkan satu job per baris produk yang mempunyai URL sumber dan product draft hasil apply.
+- Allowlist host HTTPS, larangan redirect, timeout, batas ukuran, pemeriksaan MIME aktual, dimensi, dan checksum sebelum file disimpan.
+- Penyimpanan melalui `ProductMediaStorage` dan attachment melalui `AttachProductImage`; URL provider tidak pernah menjadi URL publik.
+- Audit status per kandidat gambar, actor/waktu request, hasil product image, error aman, ringkasan batch, dan retry hanya untuk kandidat yang belum berhasil.
+- Maksimum tiga gambar aktif, preservasi primary existing, kegagalan gambar tidak membatalkan draft, dan produk yang tidak lagi draft ditahan.
+- UI admin Import Produk untuk initial, queued/processing, success, partial failure, no-source, retry, mobile, dan desktop states.
+
+Out of scope:
+
+- Mengubah produk published/archived, overwrite gambar existing, crop/optimasi gambar, fuzzy deduplication lintas produk, hotlink provider, auto-publish, hard delete media, lifecycle cleanup, staging, production, dan deployment queue worker.
+
+Dependencies:
+
+- P4 storage/attachment boundary dan P6-03 explicit transactional draft apply selesai.
+
+Risks:
+
+- URL eksternal merupakan input tidak tepercaya; request hanya boleh menuju host HTTPS yang dikonfigurasi dan redirect harus ditolak agar tidak menjadi jalur SSRF.
+- Database dan object storage tidak transactional; file baru wajib dibersihkan bila attachment metadata gagal.
+- Job dapat diulang setelah partial success; kandidat berhasil harus dikenali dari audit dan tidak boleh diunduh atau ditautkan dua kali.
+
+Acceptance criteria:
+
+- Hanya batch `applied`, row `created/updated`, dan product yang masih draft dapat masuk antrean.
+- Request tidak menunggu seluruh download; satu job bounded dibuat per row dan dispatch ulang tidak menduplikasi kandidat yang sudah stored.
+- HTTPS/host, status HTTP, redirect, byte limit, MIME aktual JPEG/PNG/WebP, dimensi, serta checksum divalidasi sebelum storage write.
+- Gambar pertama pada draft kosong menjadi primary; media existing tidak diganti dan batas tiga gambar aktif selalu dipatuhi.
+- Kegagalan download/validasi/attach dicatat per kandidat dan tidak menghapus draft atau media lain; retry hanya memproses kandidat non-success.
+- UI tetap usable pada `390x844` dan `1440x900`, tidak overflow, mempunyai copy status/recovery yang jelas, dan console bersih.
+- Focused/full tests, migration round-trip, Pint, Blade, build, quality checks, browser verification, dan CI lulus.
+
+Verification:
+
+- Belum dijalankan.
+
+Documentation updates:
+
+- Backlog aktif. Business rules, kontrak CSV, architecture/ADR, dan runbook queue akan diperbarui setelah implementasi terverifikasi.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

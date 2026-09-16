@@ -49,6 +49,7 @@
                 <li><span class="font-semibold text-gray-900">2.</span> Claude merapikan ke template Qammaris.</li>
                 <li><span class="font-semibold text-gray-900">3.</span> Admin upload dan review preview.</li>
                 <li><span class="font-semibold text-gray-900">4.</span> Konfirmasi lalu apply ke draft.</li>
+                <li><span class="font-semibold text-gray-900">5.</span> Akuisisi gambar ke storage Qammaris.</li>
             </ol>
             <div class="mt-5 rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">Jangan upload export Shopee mentah. Nama kolom dan urutannya harus sama dengan template.</div>
         </aside>
@@ -82,7 +83,7 @@
                                     @case('terlaris') ya/tidak, true/false, atau 1/0 @break
                                     @case('ukuran_ml') Bilangan bulat 1–10000 @break
                                     @case('top_notes') @case('middle_notes') @case('base_notes') Opsional; pisahkan nilai dengan | @break
-                                    @case('foto_utama_url') @case('foto_2_url') @case('foto_3_url') Opsional; URL HTTPS sumber, belum diunduh @break
+                                    @case('foto_utama_url') @case('foto_2_url') @case('foto_3_url') Opsional; URL HTTPS sumber, diunduh terpisah setelah apply @break
                                     @default Teks hasil kurasi; field kosong ditandai perlu review
                                 @endswitch
                             </td>
@@ -125,7 +126,7 @@
             @endif
 
             <div class="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="min-w-[78rem] divide-y divide-gray-200 text-left text-sm">
+                <table class="min-w-[92rem] divide-y divide-gray-200 text-left text-sm">
                     <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                         <tr>
                             <th class="px-4 py-3">Baris</th>
@@ -136,6 +137,7 @@
                             <th class="px-4 py-3">Brand / kategori</th>
                             <th class="px-4 py-3">Masalah</th>
                             <th class="px-4 py-3">Hasil apply</th>
+                            <th class="px-4 py-3">Akuisisi gambar</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 align-top text-gray-700">
@@ -194,6 +196,60 @@
                                         <a href="{{ route('admin.products.edit', $row['applied_product']['id']) }}" class="mt-2 inline-flex text-xs font-semibold text-gray-900 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-900">Buka draft #{{ $row['applied_product']['id'] }}</a>
                                     @endif
                                 </td>
+                                <td class="max-w-sm px-4 py-4">
+                                    @php($imageStatusLabels = [
+                                        null => 'Belum diminta',
+                                        'queued' => 'Dalam antrean',
+                                        'processing' => 'Sedang diproses',
+                                        'completed' => 'Selesai',
+                                        'completed_with_errors' => 'Perlu retry/review',
+                                        'no_sources' => 'Tanpa URL sumber',
+                                    ])
+                                    @php($imageStatusClasses = [
+                                        null => 'text-gray-500',
+                                        'queued' => 'text-blue-700',
+                                        'processing' => 'text-blue-700',
+                                        'completed' => 'text-emerald-700',
+                                        'completed_with_errors' => 'text-amber-700',
+                                        'no_sources' => 'text-gray-500',
+                                    ])
+                                    @php($imageStatus = $row['image_acquisition_status'] ?? null)
+                                    <p class="text-xs font-semibold {{ $imageStatusClasses[$imageStatus] ?? 'text-gray-500' }}">{{ $imageStatusLabels[$imageStatus] ?? $imageStatus }}</p>
+
+                                    @if($row['image_acquisition_outcomes'] ?? [])
+                                        <ul class="mt-2 space-y-2">
+                                            @foreach($row['image_acquisition_outcomes'] ?? [] as $imageOutcome)
+                                                @php($outcomeStatus = $imageOutcome['status'] ?? 'pending')
+                                                @php($outcomeClasses = [
+                                                    'stored' => 'text-emerald-700',
+                                                    'failed' => 'text-red-700',
+                                                    'blocked' => 'text-amber-700',
+                                                    'skipped_duplicate' => 'text-gray-500',
+                                                    'downloading' => 'text-blue-700',
+                                                    'pending' => 'text-gray-500',
+                                                ])
+                                                <li class="text-xs leading-relaxed {{ $outcomeClasses[$outcomeStatus] ?? 'text-gray-500' }}">
+                                                    <span class="font-semibold">{{ $imageOutcome['label'] ?? 'Gambar' }}:</span>
+                                                    {{ [
+                                                        'stored' => 'tersimpan',
+                                                        'failed' => 'gagal',
+                                                        'blocked' => 'ditahan',
+                                                        'skipped_duplicate' => 'duplikat dilewati',
+                                                        'downloading' => 'mengunduh',
+                                                        'pending' => 'menunggu',
+                                                    ][$outcomeStatus] ?? $outcomeStatus }}
+                                                    @if($imageOutcome['message'] ?? null)
+                                                        <span class="block text-gray-500">{{ $imageOutcome['message'] }}</span>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @elseif(collect(['foto_utama_url', 'foto_2_url', 'foto_3_url'])->contains(fn ($field) => !empty($row['data'][$field])))
+                                        <p class="mt-1 text-xs text-gray-500">Kandidat URL akan diproses setelah batch applied.</p>
+                                    @else
+                                        <p class="mt-1 text-xs text-gray-500">Tidak ada URL gambar.</p>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -224,6 +280,45 @@
                     <p class="font-bold">Batch sudah selesai diterapkan.</p>
                     <p class="mt-1">{{ $batch->applied_rows }} baris diterapkan dan {{ $batch->blocked_rows }} baris ditahan{{ $batch->appliedBy ? ' oleh '.$batch->appliedBy->name : '' }}.</p>
                 </div>
+
+                <section class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="image-acquisition-title">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h3 id="image-acquisition-title" class="text-base font-bold text-gray-900">5. Simpan gambar ke storage Qammaris</h3>
+                            <p class="mt-1 max-w-3xl text-sm leading-relaxed text-gray-600">Proses berjalan per produk melalui antrean. URL provider divalidasi, file diperiksa, lalu disimpan ke disk media aktif. Halaman publik tidak memakai hotlink.</p>
+                        </div>
+                        @if($imageAcquisition['queued'] || $imageAcquisition['processing'])
+                            <a href="{{ route('admin.product-imports.create', ['batch' => $batch->id]) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">Refresh status</a>
+                        @endif
+                    </div>
+
+                    <dl class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <div class="rounded-lg bg-gray-50 p-3"><dt class="text-xs text-gray-500">Baris eligible</dt><dd class="mt-1 text-lg font-bold text-gray-900">{{ $imageAcquisition['eligible_rows'] }}</dd></div>
+                        <div class="rounded-lg bg-gray-50 p-3"><dt class="text-xs text-gray-500">URL sumber</dt><dd class="mt-1 text-lg font-bold text-gray-900">{{ $imageAcquisition['source_count'] }}</dd></div>
+                        <div class="rounded-lg bg-emerald-50 p-3"><dt class="text-xs text-emerald-700">Tersimpan</dt><dd class="mt-1 text-lg font-bold text-emerald-800">{{ $imageAcquisition['stored'] }}</dd></div>
+                        <div class="rounded-lg bg-amber-50 p-3"><dt class="text-xs text-amber-700">Gagal/ditahan</dt><dd class="mt-1 text-lg font-bold text-amber-800">{{ $imageAcquisition['failed'] }}</dd></div>
+                    </dl>
+
+                    @if(!$imageAcquisition['has_sources'])
+                        <p class="mt-4 rounded-lg border border-dashed border-gray-300 px-4 py-5 text-sm text-gray-600">Batch ini tidak mempunyai URL gambar sumber pada baris yang berhasil diterapkan. Draft tetap dapat dilengkapi manual dari editor produk.</p>
+                    @elseif($imageAcquisition['queued'] || $imageAcquisition['processing'])
+                        <p class="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800" role="status">Antrean sedang berjalan: {{ $imageAcquisition['queued'] }} menunggu dan {{ $imageAcquisition['processing'] }} diproses. Draft tidak dibatalkan bila gambar gagal.</p>
+                    @else
+                        <form method="POST" action="{{ route('admin.product-imports.images', $batch) }}" class="mt-4">
+                            @csrf
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+                                <input name="confirm_image_acquisition" value="1" type="checkbox" required class="mt-0.5 h-4 w-4 rounded border-gray-300 text-black focus:ring-black">
+                                <span>Saya menyetujui download kandidat dari host yang diizinkan ke storage Qammaris. Gambar berhasil tidak akan diproses ulang.</span>
+                            </label>
+                            @error('confirm_image_acquisition')
+                                <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p>
+                            @enderror
+                            <button type="submit" class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-black px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:w-auto">
+                                {{ $imageAcquisition['retryable'] ? 'Coba ulang gambar gagal' : 'Mulai akuisisi gambar' }}
+                            </button>
+                        </form>
+                    @endif
+                </section>
             @else
                 <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="alert">
                     <p class="font-bold">Batch tidak dapat diterapkan.</p>
