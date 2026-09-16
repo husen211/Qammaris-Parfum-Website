@@ -123,6 +123,14 @@ class Product extends Model
     }
 
     /**
+     * Provider-specific identifiers used by imports without replacing the internal ID.
+     */
+    public function externalIdentities()
+    {
+        return $this->hasMany(ProductExternalIdentity::class);
+    }
+
+    /**
      * Accessor: Formatted price in Rupiah
      */
     public function getFormattedPriceAttribute(): ?string

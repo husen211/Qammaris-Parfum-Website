@@ -563,9 +563,50 @@ Verification:
 - Tidak ada staging, production, media existing, nilai harga existing, SKU existing, ID, atau slug yang diubah.
 - CI GitHub Actions untuk commit implementasi `b09a284` lulus pada run `35054778566` (push) dan `35054781975` (pull request), mencakup test PHP/Laravel serta build Node/Vite.
 
-### P3-03 External product identity boundary — BACKLOG
+### P3-03 External product identity boundary — IN_REVIEW
 
-- Menambahkan mapping provider terpisah untuk kode Shopee/Majoo tanpa mengganti ID internal atau mencampurnya dengan SKU katalog.
+Outcome:
+
+- Kode produk Shopee/Majoo dapat dipetakan secara idempotent ke product internal tanpa mengganti ID, slug, atau SKU katalog.
+
+In scope:
+
+- Tabel mapping terpisah untuk provider dan kode produk eksternal.
+- Constraint satu kode eksternal hanya dapat dimiliki satu product dalam provider yang sama.
+- Constraint satu product hanya mempunyai satu identity untuk setiap provider.
+- Operasi domain bersama untuk normalisasi, pencocokan idempotent, dan penolakan konflik mapping.
+- Relasi Eloquent dan regression test untuk isolation antar-provider serta perlindungan identity internal.
+
+Out of scope:
+
+- Upload/import spreadsheet, integrasi API Shopee/Majoo, sinkronisasi stok/harga, pencocokan berdasarkan nama, UI admin, media, staging, dan production.
+
+Dependencies:
+
+- Kontrak identity pada `BUSINESS_RULES.md` dan product ID/slug existing yang wajib dipertahankan.
+
+Risks:
+
+- Rebinding kode provider dapat menggabungkan dua listing berbeda; karena itu mapping existing bersifat immutable dan konflik harus masuk review.
+
+Acceptance criteria:
+
+- Provider dinormalisasi ke lowercase dan kode eksternal di-trim tanpa dicampur dengan SKU offer.
+- Mapping ulang provider/kode/product yang sama bersifat idempotent dan mempertahankan ID mapping.
+- Kode yang sama dapat digunakan provider berbeda, tetapi duplikat dalam provider yang sama ditolak.
+- Product yang sudah mempunyai identity pada sebuah provider tidak dapat di-rebind ke kode baru; listing provider yang dibuat ulang harus menjadi draft baru.
+- Migration additive tidak mengubah record product, variant, media, ID, slug, harga, atau SKU existing.
+- Focused test, migration round-trip, seluruh test Laravel, quality checks, dan CI lulus.
+
+Verification:
+
+- Migration lokal membuat tabel mapping kosong tanpa mengubah data existing. Count tetap `180` produk, `64` offer, dan `19` image; checksum product `f866dfdd36f21bae071fbce45d44444c0b27b407e323fad88951e5c82d4d1285` serta offer `3a41523458121b2be1db0c1314e909e611880c3a96db0ffb67f7433925623e77` identik sebelum/sesudah migration.
+- Migration `up -> down -> up` berhasil pada database SQLite kosong sementara dan file sementara sudah dibersihkan.
+- Focused regression test lulus: `9 passed (22 assertions)`; seluruh test Laravel lulus: `64 passed (276 assertions)`.
+- Composer strict validation, Blade clear/cache, syntax PHP, scoped Laravel Pint, `git diff --check`, dan Vite production build lulus.
+- Warning Vite existing untuk DaisyUI `@property` serta chunk `about-lanyard` besar tetap tercatat dan tidak diperluas oleh item ini.
+- Tidak ada UI, media, staging, atau production yang diubah. Verifikasi browser tidak berlaku karena item ini hanya mengubah domain/schema backend.
+- CI GitHub Actions menunggu commit implementasi.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
