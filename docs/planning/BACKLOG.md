@@ -1493,6 +1493,7 @@ Verification:
 - Audit mobile `390x844` dan desktop `1440x900` lulus: document width sama dengan viewport, tabel memakai scroll horizontal internal, tombol download setinggi minimum 44 px, dan console tanpa warning/error.
 - Product, batch, serta dua row sintetis audit dihapus presisi. Data lokal kembali ke 180 products, 65 offers, 19 images, 0 identities, 0 batches, dan 0 rows.
 - Tidak ada migration atau perubahan schema. Staging, production, DNS, bucket, dan project lain tidak disentuh.
+- GitHub Actions CI untuk commit `545dc62` lulus pada PHP 8.2/Laravel tests dan Node/Vite build: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35109268873`.
 
 Documentation updates:
 
