@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Services\ProductMediaStorage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductImage extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public const MAX_PER_PRODUCT = 3;
 

@@ -275,28 +275,7 @@
                     @endif
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Current Images</h3>
-                    <div class="grid grid-cols-2 gap-2 mb-4">
-                        @foreach($product->images as $image)
-                        <div class="relative group aspect-square rounded overflow-hidden border border-gray-200">
-                            <img src="{{ $image->image_url }}" alt="{{ $product->name }} image {{ $loop->iteration }}" class="w-full h-full object-cover" loading="lazy">
-                        </div>
-                        @endforeach
-                    </div>
-
-                    @if($product->images->isNotEmpty())
-                        <p class="mb-4 text-xs leading-relaxed text-amber-700">
-                            Penghapusan gambar dinonaktifkan sementara agar file dan metadata tetap aman. Penggantian gambar akan disiapkan pada tahap media berikutnya.
-                        </p>
-                    @endif
-
-                    <div class="border-t pt-4 mt-4">
-                        <label for="new-images" class="block text-sm font-medium text-gray-700 mb-2">Add New Images</label>
-                        <input id="new-images" type="file" name="new_images[]" multiple accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition">
-                        <p class="mt-2 text-xs text-gray-400">You can upload multiple images at once.</p>
-                    </div>
-                </div>
+                @include('admin.products._media')
 
                 <div class="sticky top-6 space-y-3">
                     <button type="submit" name="publication_action" value="save" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
@@ -313,6 +292,7 @@
             </div>
         </div>
     </form>
+    @include('admin.products._media_action_forms')
     
 </div>
 

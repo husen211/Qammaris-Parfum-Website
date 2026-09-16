@@ -85,7 +85,9 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 8. Satu produk menggunakan maksimum tiga gambar total: satu primary/cover dan maksimal dua gambar tambahan.
 9. URL gambar Shopee atau provider lain hanya menjadi sumber akuisisi saat import. File harus diunduh, divalidasi, dan disimpan ke storage Qammaris; halaman publik tidak melakukan hotlink ke URL provider.
 10. Kegagalan download gambar tidak membatalkan data draft yang valid, tetapi produk harus ditandai membutuhkan review gambar dan tidak boleh dipublish tanpa primary image.
-11. Penghapusan gambar dari admin legacy dinonaktifkan sampai lifecycle media aman tersedia; metadata dan file tidak boleh dihapus sebagian.
+11. Mengeluarkan gambar dari galeri admin memakai soft archive metadata. File tetap disimpan untuk recovery; hard delete dan cleanup fisik hanya boleh dilakukan melalui lifecycle retensi terpisah yang terverifikasi.
+12. Mengarsipkan primary image dengan gambar aktif lain harus mempromosikan gambar aktif berikutnya secara atomik dan menormalkan urutan aktif. Foto terakhir produk published tidak boleh diarsipkan.
+13. Batas maksimum tiga gambar hanya menghitung gambar aktif. Record arsip tetap mempertahankan product ID dan object key sebagai jejak recovery.
 
 ## Import/export
 

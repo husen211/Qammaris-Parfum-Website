@@ -195,12 +195,17 @@
                             <div class="text-sm text-gray-600">
                                 <span class="font-bold text-black hover:underline">Click to Upload</span>
                             </div>
-                            <p class="text-xs text-gray-400">PNG, JPG up to 2MB</p>
+                            <p class="text-xs text-gray-400">Maksimum 3 foto · PNG, JPG, atau WebP · 2 MB per foto</p>
                         </div>
                     </div>
                     @error('images')
                     <p id="images-error" class="mt-2 text-xs text-red-600">{{ $message }}</p>
                     @enderror
+                    @error('images.*')
+                    <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p id="image-client-error" class="mt-2 hidden text-xs text-red-600" role="alert"></p>
+                    <p class="mt-2 text-xs text-gray-500">Foto pertama otomatis menjadi cover katalog. Urutan dapat diubah setelah draft disimpan.</p>
 
                     <div id="image-preview-container" class="grid grid-cols-3 gap-2 mt-4 hidden"></div>
                 </div>
@@ -235,16 +240,27 @@
 <script>
     function previewImages(input) {
         const container = document.getElementById('image-preview-container');
+        const error = document.getElementById('image-client-error');
         container.innerHTML = '';
+        error.classList.add('hidden');
+        error.textContent = '';
+
+        if (input.files && input.files.length > 3) {
+            input.value = '';
+            container.classList.add('hidden');
+            error.textContent = 'Pilih maksimal tiga foto.';
+            error.classList.remove('hidden');
+            return;
+        }
         
         if (input.files) {
             container.classList.remove('hidden');
-            Array.from(input.files).forEach(file => {
+            Array.from(input.files).forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const div = document.createElement('div');
                     div.className = 'relative aspect-square rounded-lg overflow-hidden border border-gray-200';
-                    div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                    div.innerHTML = `<img src="${e.target.result}" alt="Preview foto ${index + 1}" class="w-full h-full object-cover"><span class="absolute left-2 top-2 rounded bg-white/95 px-2 py-1 text-xs font-semibold text-gray-800">${index === 0 ? 'Foto utama' : `Foto ${index + 1}`}</span>`;
                     container.appendChild(div);
                 }
                 reader.readAsDataURL(file);

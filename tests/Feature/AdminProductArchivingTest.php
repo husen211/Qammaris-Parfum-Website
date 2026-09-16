@@ -154,12 +154,13 @@ class AdminProductArchivingTest extends TestCase
         Storage::disk('public')->assertExists($this->image->image_path);
     }
 
-    public function test_product_editor_does_not_expose_unsafe_image_deletion(): void
+    public function test_product_editor_exposes_only_safe_image_archiving(): void
     {
         $this->actingAs($this->admin)
             ->get(route('admin.products.edit', $this->product->id))
             ->assertOk()
-            ->assertSee('Penghapusan gambar dinonaktifkan sementara')
+            ->assertSee('Arsipkan foto')
+            ->assertSee('file tetap disimpan untuk recovery')
             ->assertDontSee('deleteImage(')
             ->assertDontSee('Delete image');
     }

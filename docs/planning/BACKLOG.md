@@ -18,7 +18,7 @@
 | P2 | Tests & catalog safety | DONE | P1-01–P1-03 | Perilaku existing aman dan terlindungi regression tests |
 | P3 | Product domain & migrations | DONE | P2 | Struktur data sesuai business rules tanpa kehilangan identitas |
 | P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
-| P5 | Admin Panel V2 | IN_PROGRESS | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
+| P5 | Admin Panel V2 | DONE | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | BACKLOG | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
 | P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
@@ -1117,6 +1117,71 @@ Verification:
 Documentation updates:
 
 - Backlog diperbarui dengan scope, acceptance criteria, implementasi, dan bukti verifikasi. Business rules existing sudah mencakup larangan cascade delete, preservasi URL, serta status nonaktif reversible sehingga tidak memerlukan duplikasi aturan.
+
+### P5-05 Product media management UX — DONE
+
+Outcome:
+
+- Admin dapat memahami dan mengelola maksimal tiga foto produk—primary, urutan, penambahan, dan pengeluaran dari galeri—tanpa membuat primary ganda atau kehilangan file secara tidak dapat dipulihkan.
+
+In scope:
+
+- Panel media product editor berbahasa Indonesia dengan jumlah slot, label foto utama/tambahan, posisi urutan, dan state kosong/penuh.
+- Aksi scoped untuk menjadikan foto existing sebagai primary.
+- Aksi Naik/Turun untuk mengubah urutan foto tanpa drag-and-drop atau dependency baru.
+- Pengeluaran foto dari galeri sebagai soft archive metadata; file storage dipertahankan untuk recovery dan cleanup fisik tetap pekerjaan terpisah.
+- Primary yang diarsipkan otomatis diganti foto aktif berikutnya; foto terakhir produk published tidak dapat diarsipkan.
+- Upload baru tetap memakai `AttachProductImage`, mematuhi maksimum tiga foto aktif, dan menunjukkan sisa slot serta validation error dengan jelas.
+- Return context product catalog dipertahankan setelah aksi media.
+- Regression test dan browser verification untuk populated, empty, full, primary, reorder, archive-blocked, success/error, mobile, dan desktop states.
+
+Out of scope:
+
+- Hard delete file, restore UI untuk arsip foto, crop/editor gambar, remote URL acquisition, bulk media, drag-and-drop, migrasi/cutover R2 baru, staging, dan production.
+
+Dependencies:
+
+- P4-01 storage boundary, P4-02 attach/primary lifecycle, dan P5-03 publication readiness selesai.
+
+Risks:
+
+- Database dan object storage tidak mempunyai transaksi bersama; soft archive mempertahankan file agar kegagalan database tidak menghasilkan metadata aktif yang menunjuk file hilang.
+- Mengarsipkan primary dapat membuat produk tanpa cover; produk published harus selalu mempunyai primary aktif, sedangkan draft/archived boleh kembali incomplete.
+- Aksi media wajib menolak image ID milik produk lain dan perubahan urutan parsial/duplikat.
+
+Acceptance criteria:
+
+- Editor menampilkan maksimal tiga foto aktif dalam urutan deterministic, tepat satu label primary bila koleksi tidak kosong, dan slot upload yang tersisa.
+- Admin dapat memilih primary existing secara idempotent tanpa mengubah ID, path, atau urutan.
+- Naik/Turun hanya menukar posisi valid dan menjaga urutan aktif menjadi `0..n-1`.
+- Arsip foto tidak menghapus file; record soft-deleted tetap menyimpan product ID/path dan tidak dihitung dalam batas tiga foto aktif.
+- Arsip primary memilih primary aktif berikutnya atomik. Arsip foto terakhir produk published ditolak tanpa mengubah metadata/file.
+- Cross-product image ID ditolak pada primary, move, dan archive.
+- Editor mempertahankan catalog return context serta usable pada `390x844` dan `1440x900` tanpa overflow atau console error.
+- Focused tests, seluruh test Laravel, migration round-trip, Blade compilation, production build, quality checks, dan CI lulus.
+
+Verification:
+
+- Migration additive `deleted_at` berhasil dijalankan pada 19 metadata existing tanpa mengubah ID, path, primary, urutan, maupun file. Round-trip `up → down → up` mempertahankan 19 record dengan checksum identik `adfcfbf74a3ed7cc5b6cc6c42f0d4cca8e43b8e04a5abcb57f88a9e53d7808e6` dan nol record terarsip.
+- Focused regression lulus: `23 test / 105 assertion`. Seluruh suite Laravel lulus: `121 test / 585 assertion`.
+- Laravel Pint untuk file P5-05, Blade view cache, Composer validation strict, `git diff --check`, dan Vite production build lulus. Warning existing DaisyUI `@property` dan chunk `about-lanyard` sekitar 3,28 MB tidak diperluas oleh item ini.
+- Browser lokal diverifikasi pada viewport `390x844` dan `1440x900`: gambar termuat dari URL lokal yang benar, tidak ada horizontal overflow, state penuh `3/3`, label primary/tambahan, tombol disabled pada batas urutan, perubahan primary, reorder, toast sukses, serta preservasi `return_to?page=2` bekerja tanpa console warning/error.
+- Produk dan metadata media sintetis untuk browser audit sudah dihapus setelah verifikasi. File existing hanya dibaca dan tetap tersedia; jumlah produk bisnis kembali 180 dan metadata media aktif kembali 19.
+- Tidak ada hard delete file, dependency baru, staging, production, bucket, DNS, maupun project lain yang diubah.
+
+Implementation notes:
+
+- `ProductImage` memakai `SoftDeletes`; query/relationship normal hanya menampilkan media aktif dan batas tiga foto juga hanya menghitung media aktif.
+- `ArchiveProductImage` mempertahankan file, mempromosikan primary berikutnya secara atomik, menormalisasi urutan, dan menolak arsip foto terakhir produk published.
+- `MoveProductImage` hanya menerima arah Naik/Turun, mengunci koleksi per product, menukar tetangga valid, dan menormalisasi urutan `0..n-1`.
+- Endpoint media baru selalu memverifikasi kepemilikan image terhadap product dan kembali ke editor dengan catalog return context yang sama.
+- Editor produk memakai panel berbahasa Indonesia untuk empty/full/primary/order/archive states; form aksi dipisahkan dari form edit utama agar markup tetap valid.
+- `.env` lokal diarahkan ke `http://127.0.0.1:8011` agar URL media sesuai dengan port dev server; perubahan lokal ini tidak dilacak Git.
+
+Documentation updates:
+
+- Backlog, business rules media, dan `ADR-010-product-media-archive-and-ordering.md` diperbarui.
+- Kandidat pekerjaan berikutnya adalah mendefinisikan `P6-01` kontrak file bulk import/export dan preview; belum dimulai pada item ini.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

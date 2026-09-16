@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -62,6 +63,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Archive is reversible; product hard deletion is intentionally unavailable in admin.
     Route::patch('products/{product}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
+    Route::patch('products/{product}/images/{productImage}/primary', [AdminProductImageController::class, 'primary'])->name('products.images.primary');
+    Route::patch('products/{product}/images/{productImage}/move', [AdminProductImageController::class, 'move'])->name('products.images.move');
+    Route::delete('products/{product}/images/{productImage}', [AdminProductImageController::class, 'destroy'])->name('products.images.destroy');
 
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);
