@@ -958,7 +958,7 @@ Verification:
 - Akun admin audit lokal sementara dibuat hanya untuk browser desktop dan telah dihapus setelah verifikasi. Submit browser memakai nilai produk yang sama; tidak ada perubahan nilai bisnis produk, schema, media, staging, atau production.
 - Commit implementasi `1e1ddd8` lulus GitHub Actions CI run `35073801793` dalam 25 detik.
 
-### P5-02 Manual availability control and truthful admin status — IN_PROGRESS
+### P5-02 Manual availability control and truthful admin status — DONE
 
 Outcome:
 
@@ -994,6 +994,22 @@ Acceptance criteria:
 - Context filter availability dipertahankan pada pagination, edit, cancel, validation error, dan update sukses.
 - Catalog manager mobile tidak mempunyai horizontal overflow untuk operasi utama dan desktop tetap mempertahankan density tabel.
 - Focused tests, seluruh test Laravel, Blade compilation, build, quality checks, browser mobile/desktop, dan CI lulus.
+
+Implementation notes:
+
+- Catalog manager sekarang memakai effective availability sebagai sumber tampilan dan filter: `available` hanya berlaku selama konfirmasi masih fresh 36 jam, `sold_out` tidak kedaluwarsa, dan status yang belum/stale ditampilkan sebagai belum dikonfirmasi.
+- Product editor menyediakan kontrol manual `unknown`, `available`, dan `sold_out`, serta opsi konfirmasi ulang. Perubahan availability mencatat source `manual` dan waktu pengecekan tanpa mengubah publication/archive state; edit produk biasa mempertahankan timestamp sebelumnya.
+- Angka snapshot variant stock tidak lagi dipakai sebagai klaim availability pada daftar admin. Produk dengan quantity `0` dan availability unknown tetap ditampilkan sebagai belum dikonfirmasi.
+- Toolbar filter dan baris produk dirapikan responsif. Operasi utama mobile—identitas, harga, availability, edit, dan archive/restore—dapat diakses tanpa horizontal overflow, sedangkan desktop mempertahankan tabel padat.
+
+Verification:
+
+- Focused availability dan catalog-context tests: 10 passed, 69 assertions.
+- Seluruh Laravel test suite: 97 passed, 434 assertions.
+- Laravel Pint untuk controller, request, dan test baru lulus; Blade view cache, production Vite build, Composer validation, dan `git diff --check` lulus. Build hanya melaporkan warning existing DaisyUI `@property` dan chunk `about-lanyard` yang besar.
+- Browser lokal diverifikasi pada permukaan mobile compact dan desktop wide untuk populated, filter available/sold out, empty state, edit, success redirect, context preservation, serta layout tanpa horizontal overflow. Validasi nilai ilegal diverifikasi melalui feature test. Console browser bersih.
+- Produk dan akun audit lokal sementara telah dihapus setelah verifikasi. Tidak ada schema, media, staging, atau production yang diubah.
+- Commit implementasi `b2b1764` lulus GitHub Actions CI run `35075494855` dalam 26 detik.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
