@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Imports\Products\CanonicalProductCsv;
 use App\Models\Product;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
@@ -107,7 +108,7 @@ class AdminProductImportReportTest extends TestCase
             'source_filename' => '=audit.csv',
             'source_size' => 512,
             'source_fingerprint' => hash('sha256', 'report-source'),
-            'contract_version' => 'qammaris-products-v1',
+            'contract_version' => CanonicalProductCsv::VERSION,
             'catalog_state_fingerprint' => hash('sha256', 'report-state'),
             'idempotency_key' => hash('sha256', 'report-idempotency'),
             'status' => ProductImportBatch::STATUS_APPLIED,

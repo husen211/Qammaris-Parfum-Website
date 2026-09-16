@@ -132,6 +132,14 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 34. Harga dan ukuran snapshot berasal dari satu offer aktif; bila offer aktif tidak ada, nilainya kosong dan tidak diisi dari `base_price`. External identity diurutkan dan diagregasi tanpa menggantikan ID internal.
 35. Snapshot media hanya memuat jumlah gambar aktif dan keberadaan primary image. Object key, path storage, URL publik, serta URL sumber provider tidak diexport.
 36. Semua cell snapshot disanitasi terhadap formula spreadsheet, response tidak disimpan server-side, dan timestamp product dipakai sebagai konteks freshness—bukan jaminan file masih current saat dibuka.
+37. Snapshot katalog v2 menambahkan row fingerprint deterministik yang mencakup field maintenance product dan satu offer aktif. Fingerprint bukan credential dan hanya dipakai sebagai optimistic stale guard.
+38. Preview bulk maintenance hanya menerima product existing berdasarkan `product_id`. Nama, slug, SKU, atau external identity tidak boleh menjadi fallback pencocokan.
+39. `expected_updated_at` dan `expected_row_fingerprint` wajib disalin dari snapshot terbaru. Perubahan product atau offer setelah snapshot menahan row tanpa mutation.
+40. Field maintenance v1 yang boleh diusulkan hanya nama, deskripsi, brand, gender, stok snapshot, best seller, kategori, harga+ukuran, serta fragrance notes. Publication, availability, slug, media, dan external identity tidak menjadi input.
+41. Cell maintenance kosong selalu berarti mempertahankan nilai current. Kontrak v1 tidak menyediakan semantics clear/delete.
+42. Harga dan ukuran wajib diisi bersama. Taxonomy yang diusulkan harus exact case-insensitive dan aktif; missing/nonaktif menjadi error preview.
+43. Missing product, product ID duplikat, stale guard, controlled value ilegal, atau angka invalid ditahan sebagai error. Row tanpa perubahan menjadi review/no-op.
+44. Preview maintenance disimpan sebagai batch audit immutable dan idempotent untuk actor+file+state yang sama, tetapi tidak memberi izin apply. Batch maintenance dan import provider wajib dipisahkan dengan contract version pada seluruh query/route.
 
 ## Admin dan automation
 

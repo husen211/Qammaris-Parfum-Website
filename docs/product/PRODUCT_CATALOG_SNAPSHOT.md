@@ -1,6 +1,6 @@
 # Kontrak Snapshot Katalog Qammaris
 
-Status: Read-only snapshot contract v1 — 2026-09-16
+Status: Read-only snapshot contract v2 — 2026-09-16
 
 ## Tujuan
 
@@ -8,7 +8,7 @@ Snapshot membantu owner dan admin merekonsiliasi katalog, menilai kelengkapan da
 
 ## Format dan boundary
 
-- Contract version: `qammaris-catalog-snapshot-v1`.
+- Contract version: `qammaris-catalog-snapshot-v2`.
 - Format: CSV UTF-8 dengan BOM dan delimiter koma.
 - Satu baris per product, diurutkan menaik berdasarkan `product_id`.
 - Draft, published, dan archived selalu disertakan.
@@ -19,7 +19,7 @@ Snapshot membantu owner dan admin merekonsiliasi katalog, menilai kelengkapan da
 ## Header tetap
 
 ```text
-snapshot_version,product_id,slug,publication_status,availability_status,availability_effective,availability_source,availability_checked_at,external_identities,nama_produk,deskripsi_produk,harga,brand,gender,stok_snapshot,terlaris,kategori,ukuran_ml,top_notes,middle_notes,base_notes,active_image_count,has_primary_image,updated_at
+snapshot_version,product_id,slug,publication_status,availability_status,availability_effective,availability_source,availability_checked_at,external_identities,nama_produk,deskripsi_produk,harga,brand,gender,stok_snapshot,terlaris,kategori,ukuran_ml,top_notes,middle_notes,base_notes,active_image_count,has_primary_image,updated_at,row_fingerprint
 ```
 
 ## Semantik penting
@@ -38,6 +38,7 @@ snapshot_version,product_id,slug,publication_status,availability_status,availabi
 | `active_image_count` | Jumlah metadata gambar aktif; record soft-archived tidak dihitung. |
 | `has_primary_image` | `ya` bila primary image aktif tersedia, selain itu `tidak`. |
 | `updated_at` | Waktu update product; relasi dapat mempunyai timestamp sendiri. |
+| `row_fingerprint` | SHA-256 deterministik atas state product yang dapat dimaintain dan offer aktif; stale guard, bukan credential. |
 
 ## Yang sengaja tidak diexport
 
@@ -49,6 +50,8 @@ snapshot_version,product_id,slug,publication_status,availability_status,availabi
 
 ## Hubungan dengan bulk maintenance
 
-Snapshot boleh menjadi bahan kerja manusia atau AI, tetapi hasil olahannya harus masuk melalui kontrak maintenance terpisah yang mempunyai preview, validation, conflict detection, idempotency, dan audit actor. Mengubah header snapshot agar menyerupai template import tidak mengubah boundary ini.
+Snapshot boleh menjadi bahan kerja manusia atau AI, tetapi hasil olahannya harus masuk melalui kontrak `maintenance-v1` yang mempunyai preview, validation, conflict detection, idempotency, dan audit actor. Snapshot utuh tetap tidak dapat diupload langsung karena header dan boundary-nya berbeda.
 
 Jika katalog berubah setelah download, ambil snapshot baru sebelum menyiapkan perubahan. Missing row tidak pernah berarti perintah hapus atau archive.
+
+Snapshot v1 tetap merupakan export read-only historis. V2 menambah `row_fingerprint` karena `updated_at` product saja tidak selalu berubah ketika hanya offer yang berubah.

@@ -146,6 +146,7 @@ class AdminProductCatalogSnapshotTest extends TestCase
         $this->assertSame("'-Citrus|Bergamot", $first['top_notes']);
         $this->assertSame('2', $first['active_image_count']);
         $this->assertSame('ya', $first['has_primary_image']);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $first['row_fingerprint']);
 
         $second = array_combine($rows[0], $rows[2]);
         $this->assertSame((string) $draft->id, $second['product_id']);

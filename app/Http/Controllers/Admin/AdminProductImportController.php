@@ -35,6 +35,7 @@ class AdminProductImportController extends Controller
         $batch = $batchId === false
             ? null
             : ProductImportBatch::query()
+                ->where('contract_version', CanonicalProductCsv::VERSION)
                 ->with([
                     'actor:id,name',
                     'appliedBy:id,name',
@@ -85,6 +86,8 @@ class AdminProductImportController extends Controller
         ProductImportBatch $productImportBatch,
         ProductImportBatchCsvReport $report
     ): StreamedResponse {
+        $this->assertImportBatch($productImportBatch);
+
         return response()->streamDownload(function () use ($productImportBatch, $report): void {
             $stream = fopen('php://output', 'wb');
             $report->write($productImportBatch, $stream);
@@ -122,6 +125,8 @@ class AdminProductImportController extends Controller
         ProductImportBatch $productImportBatch,
         ApplyProductImportBatch $applyProductImportBatch
     ): RedirectResponse {
+        $this->assertImportBatch($productImportBatch);
+
         try {
             $batch = $applyProductImportBatch->handle($productImportBatch, $request->user());
         } catch (RuntimeException $exception) {
@@ -154,6 +159,8 @@ class AdminProductImportController extends Controller
         ProductImportBatch $productImportBatch,
         QueueProductImportImages $queueProductImportImages
     ): RedirectResponse {
+        $this->assertImportBatch($productImportBatch);
+
         try {
             $result = $queueProductImportImages->handle($productImportBatch, $request->user());
         } catch (DomainException $exception) {
@@ -181,6 +188,8 @@ class AdminProductImportController extends Controller
         ProductImportRow $productImportRow,
         ResolveProtectedProductImportRow $resolver
     ): RedirectResponse {
+        $this->assertImportBatch($productImportBatch);
+
         try {
             $row = $resolver->handle(
                 $productImportBatch,
@@ -214,6 +223,7 @@ class AdminProductImportController extends Controller
             'preview' => $preview,
             'batch' => $batch,
             'recentBatches' => ProductImportBatch::query()
+                ->where('contract_version', CanonicalProductCsv::VERSION)
                 ->with(['actor:id,name', 'appliedBy:id,name'])
                 ->latest('id')
                 ->limit(10)
@@ -338,5 +348,10 @@ class AdminProductImportController extends Controller
             ->filter(fn (string $field): bool => ($data[$field] ?? []) !== [])
             ->map(fn (string $field, string $group): string => ucfirst($group).': '.implode(', ', $data[$field]))
             ->implode(' · ');
+    }
+
+    private function assertImportBatch(ProductImportBatch $batch): void
+    {
+        abort_unless($batch->contract_version === CanonicalProductCsv::VERSION, 404);
     }
 }

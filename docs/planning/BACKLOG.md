@@ -1552,6 +1552,53 @@ Documentation updates:
 - Business rules, master plan, kontrak `PRODUCT_CATALOG_SNAPSHOT.md`, backlog, dan `ADR-017-read-only-catalog-maintenance-snapshot.md` diperbarui.
 - Kandidat berikutnya adalah `P6-08` kontrak preview bulk maintenance berbasis ID internal dengan stale/conflict guard; belum dimulai.
 
+### P6-08 Internal-ID bulk maintenance preview — IN_PROGRESS
+
+Outcome:
+
+- Admin dapat mengupload CSV maintenance hasil kurasi dan melihat preview perubahan per produk berbasis ID internal tanpa melakukan mutation katalog.
+
+In scope:
+
+- Kontrak CSV `maintenance-v1` berisi `product_id`, `expected_updated_at`, dan allowlist field produk yang aman untuk direview.
+- Preview memvalidasi header/encoding/ukuran/jumlah row, ID product, duplicate row, optimistic timestamp, taxonomy aktif, controlled values, angka, notes, serta pasangan harga+ukuran.
+- Cell kosong berarti pertahankan nilai current; tidak ada semantics clear/delete pada v1.
+- Perbandingan current vs kandidat menghasilkan daftar field berubah, status valid/review/error, issue, product match, fingerprint, actor, dan batch audit immutable.
+- Batch maintenance memakai tabel audit existing tetapi dipisahkan berdasarkan `contract_version`; riwayat import provider tidak tercampur.
+- Halaman admin maintenance mempunyai template CSV, upload, initial/error/populated/history states, serta link jelas dari pusat Import Produk.
+
+Out of scope:
+
+- Apply/write katalog, clear field, publication/availability/media/external identity mutation, create product, auto-create taxonomy, XLSX, staging, production, dan deployment.
+
+Dependencies:
+
+- P6-07 snapshot katalog read-only dan audit batch P6-02 selesai.
+
+Risks:
+
+- Product atau offer dapat berubah setelah snapshot; `expected_updated_at` dan catalog-state fingerprint wajib menghasilkan stale/conflict, bukan overwrite.
+- Reuse tabel audit dapat mencampur flow; seluruh query dan route harus membatasi contract version secara eksplisit.
+- Input hasil olahan AI tetap tidak tepercaya; validation dan escaping server-side wajib.
+
+Acceptance criteria:
+
+- Hanya admin dapat membuka, mengunduh template, dan menjalankan preview maintenance.
+- File valid menghasilkan batch persisted tanpa mutation product/offer/taxonomy/media; upload identik pada actor+file+state identik memakai batch yang sama.
+- Missing/stale/duplicate product, invalid taxonomy/value/number, dan pair harga+ukuran yang tidak lengkap ditahan dengan recovery copy jelas.
+- Field kosong preserve; row tanpa perubahan ditandai review/no-op; slug, publication, availability, media, dan identity tidak menjadi input.
+- Riwayat maintenance terpisah dari riwayat import provider dan batch ID tidak dapat dibuka silang antar-flow.
+- UI usable pada `390x844` dan `1440x900`, tabel menggunakan overflow internal, kontrol minimal 44 px, dan console bersih.
+- Focused/full tests, migration round-trip bila ada migration, Pint, Blade, Composer strict, route audit, build, browser upload nyata, dan CI lulus.
+
+Verification:
+
+- Belum dijalankan.
+
+Documentation updates:
+
+- Business rules, kontrak maintenance, backlog, dan ADR akan diperbarui setelah verifikasi.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

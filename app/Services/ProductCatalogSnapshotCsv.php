@@ -6,7 +6,7 @@ use App\Models\Product;
 
 class ProductCatalogSnapshotCsv
 {
-    public const VERSION = 'qammaris-catalog-snapshot-v1';
+    public const VERSION = 'qammaris-catalog-snapshot-v2';
 
     public const HEADERS = [
         'snapshot_version',
@@ -33,9 +33,13 @@ class ProductCatalogSnapshotCsv
         'active_image_count',
         'has_primary_image',
         'updated_at',
+        'row_fingerprint',
     ];
 
-    public function __construct(private SpreadsheetSafeCell $safeCell) {}
+    public function __construct(
+        private SpreadsheetSafeCell $safeCell,
+        private ProductCatalogRowFingerprint $rowFingerprint
+    ) {}
 
     /** @param resource $stream */
     public function write($stream): void
@@ -97,6 +101,7 @@ class ProductCatalogSnapshotCsv
             $product->images_count,
             $product->primary_image_exists ? 'ya' : 'tidak',
             $product->updated_at?->toIso8601String(),
+            $this->rowFingerprint->hash($product),
         ];
     }
 
