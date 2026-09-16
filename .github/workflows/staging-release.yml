@@ -177,6 +177,7 @@ jobs:
           original_hash=""
 
           restore_environment() {
+            set +e
             if [ -f "$backup" ]; then
               cp "$backup" .env
               chmod 600 .env
@@ -185,16 +186,26 @@ jobs:
             rm -f "$fragment" "$candidate"
             php artisan config:clear --no-interaction >/dev/null
             php artisan optimize --no-interaction >/dev/null
+            printf '%s\n' 'Rollback cleanup completed.'
           }
 
-          trap restore_environment EXIT
-          test -f .env
-          test -f "$fragment"
-          test ! -e "$backup"
-          test "$(stat -c '%a' .env)" = "600"
-          chmod 600 "$fragment"
+          restore_after_exit() {
+            exit_code=$?
+            trap - EXIT
+            restore_environment
+            exit "$exit_code"
+          }
+
+          trap restore_after_exit EXIT
+          test -f .env || { printf '%s\n' 'Missing staging .env.' >&2; exit 1; }
+          test -f "$fragment" || { printf '%s\n' 'Missing protected R2 environment fragment.' >&2; exit 1; }
+          test ! -e "$backup" || { printf '%s\n' 'A stale P4-06 environment backup already exists.' >&2; exit 1; }
+          chmod 600 .env "$fragment"
+          test "$(stat -c '%a' .env)" = "600" || { printf '%s\n' 'Unable to constrain staging .env permissions.' >&2; exit 1; }
+          printf '%s\n' 'Baseline files and permissions verified.'
           original_hash="$(sha256sum .env | awk '{print $1}')"
           php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); if (config("media.product_disk") !== "public") { fwrite(STDERR, "Staging did not start on the rollback-safe public disk.\n"); exit(1); }'
+          printf '%s\n' 'Baseline media disk verified: public'
           install -m 600 .env "$backup"
 
           grep -vE '^(R2_ACCESS_KEY_ID|R2_SECRET_ACCESS_KEY|R2_BUCKET|R2_ENDPOINT|R2_REGION|R2_URL|PRODUCT_MEDIA_TARGET_DISK|PRODUCT_MEDIA_DISK)=' .env > "$candidate" || true
@@ -205,6 +216,7 @@ jobs:
 
           php artisan config:clear --no-interaction >/dev/null
           php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); if (config("media.product_disk") !== "r2") { fwrite(STDERR, "R2 cutover configuration was not activated.\n"); exit(1); }'
+          printf '%s\n' 'Temporary media disk activated: r2'
 
           before_counts="$(php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo App\Models\Product::query()->count().":".App\Models\ProductImage::query()->count();')"
 
@@ -218,8 +230,10 @@ jobs:
           after_counts="$(php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo App\Models\Product::query()->count().":".App\Models\ProductImage::query()->count();')"
           test "$before_counts" = "$after_counts"
           php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); $files=Illuminate\Support\Facades\Storage::disk("r2")->files("products"); if (count($files) !== 19) { fwrite(STDERR, "Unexpected R2 product object count after rehearsal.\n"); exit(1); }'
+          printf '%s\n' 'R2 product object count preserved: 19'
 
           restore_environment
+          set -e
           trap - EXIT
 
           restored_hash="$(sha256sum .env | awk '{print $1}')"
