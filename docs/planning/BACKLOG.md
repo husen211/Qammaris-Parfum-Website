@@ -808,6 +808,73 @@ Verification:
 - Database lokal tetap `180` products dan `19` product images; `0` referenced source hilang. Disk aktif tetap `public`, target tetap `r2`, bucket tetap private, dan production/staging public traffic tidak berubah.
 - Focused regression test lulus: `7 passed (40 assertions)`. `composer validate --strict`, credential leak scan, dan `git diff --check` lulus.
 
+### P4-05 R2 staging delivery rehearsal — DONE
+
+Outcome:
+
+- Media R2 dapat dibaca melalui public development URL khusus bucket staging dan jalur write/read/delete sintetis terbukti sebelum disk aktif aplikasi dialihkan.
+
+In scope:
+
+- Public development URL `r2.dev` hanya untuk bucket `qammaris-website-media-staging` sebagai fallback staging sementara.
+- Kontrak `R2_URL` untuk URL object publik staging.
+- Verifikasi HTTPS, content type, content length, dan sample object yang sudah lolos copy-verify.
+- Rehearsal upload object sintetis, read/checksum, lalu cleanup object sintetis yang dibuat oleh rehearsal.
+- Bukti rollback dengan mempertahankan `PRODUCT_MEDIA_DISK=public` dan seluruh source lokal.
+
+Out of scope:
+
+- Mengubah production DNS/domain, mengaktifkan bucket Qammaris App, mengganti `PRODUCT_MEDIA_DISK` staging/production, memindahkan database/media source, cleanup 19 object hasil migrasi, atau deployment production.
+
+Dependencies:
+
+- P4-04 selesai dengan 19 object identik pada bucket R2 staging.
+- Public development URL Cloudflare R2 tersedia untuk rehearsal non-production.
+
+Risks:
+
+- Mengaktifkan `r2.dev` membuat seluruh object pada bucket dapat dibaca publik. Hanya media katalog staging yang boleh berada pada bucket ini.
+- `r2.dev` mempunyai rate limit dan tidak menyediakan Cloudflare Cache/WAF sehingga tidak boleh menjadi endpoint production.
+- Resolver DNS lokal saat rehearsal mengembalikan IPv4 non-Cloudflare untuk hostname `r2.dev`; verifikasi deterministik dilakukan ke edge Cloudflare dengan TLS/SNI tetap memakai hostname yang benar. Perbaikan DNS client/jaringan tetap diperlukan sebelum browser lokal dapat memakai URL tanpa override.
+
+Acceptance criteria:
+
+- Public development URL HTTPS berstatus aktif hanya pada bucket staging; custom domain production tetap belum dihubungkan.
+- Sample referenced image merespons `200` dengan MIME gambar dan ukuran yang cocok dengan manifest.
+- Object sintetis dapat ditulis, dibaca ulang dengan checksum identik, diakses melalui delivery URL, lalu dibersihkan tanpa menyentuh 19 object migrasi.
+- Database, disk aktif, source lokal, staging application traffic, dan production tidak berubah.
+- Credential tidak masuk Git, dokumentasi, URL, atau output terminal.
+
+Verification:
+
+- Cloudflare R2 mengaktifkan public development URL `https://pub-f71b3243d61541f5a14dba6a479ded39.r2.dev` hanya untuk bucket `qammaris-website-media-staging`; bucket Qammaris App tidak diubah.
+- GitHub Environment `staging` menyimpan `R2_URL` sebagai non-secret environment variable. Credential tetap berada pada encrypted secrets dan tidak ditampilkan.
+- Sample `products/b9A7Hqhl1hzuv47VovEM0QUWRIr0TmbFlL2eSWn1.jpg` merespons `200`, `image/jpeg`, `304.172` byte, dan SHA-256 `74911ab4f1b07d057bfa6c7a864d164ef71abae1d27df6a75229cd903560d1cc`, identik dengan manifest copy-verify.
+- Object sintetis `rehearsals/p4-05-01M2MJ2G93ECD6B0M3SAJNA4X0.png` berhasil ditulis dan dibaca melalui S3, diakses melalui HTTPS sebagai `image/png` berukuran `68` byte dengan checksum identik, lalu dihapus. Verifikasi akhir menemukan `0` object rehearsal P4-05 tersisa.
+- Database lokal tetap `180` products dan `19` product images; `19` referenced source unik tetap tersedia dan `0` source hilang. Disk aktif tetap `public`, target tetap `r2`.
+- Custom domain belum dapat dipasang karena zone `qammarisparfum.id` belum berada pada account Cloudflare/DNS yang sama. Tidak ada perubahan DNS, staging application traffic, deployment, atau production.
+- Resolver lokal mengarahkan IPv4 hostname `r2.dev` ke `202.169.44.80` dan timeout. Fetch verifikasi memakai edge Cloudflare `104.18.50.34` dengan hostname/TLS asli dan lulus; ini dicatat sebagai keterbatasan jaringan lokal, bukan kegagalan object R2.
+
+### P4-06 R2 staging application cutover rehearsal — BACKLOG
+
+Outcome:
+
+- Aplikasi staging membaca dan menulis media produk melalui R2 dengan health check dan rollback ke disk `public` yang teruji, tanpa mengubah production.
+
+Dependencies:
+
+- P4-05 selesai.
+- DNS client/operator dapat mengakses delivery hostname secara normal atau staging memakai custom domain pada zone Cloudflare yang terkelola.
+- Snapshot database/media staging dan recovery ref tersedia sebelum cutover.
+
+Acceptance criteria:
+
+- `PRODUCT_MEDIA_DISK=r2` hanya diterapkan pada environment staging setelah preflight dan approval cutover staging.
+- Halaman katalog/detail staging memuat sample existing image melalui delivery URL dan upload admin baru tersimpan di R2.
+- Rollback ke `public` dipraktikkan tanpa kehilangan metadata maupun file.
+- Seluruh source lokal serta 19 object hasil copy tetap dipertahankan; cleanup menjadi pekerjaan terpisah.
+- Production dan DNS production tidak berubah.
+
 ## P5 — Admin Panel V2 captured requirements
 
 ### P5-01 Preserve catalog working context — BACKLOG
