@@ -1731,7 +1731,7 @@ Final report:
 - Rollback: revert commit dokumentasi/close-out; tidak ada migration atau data rollback.
 - Suggested next item: `P7-02` query/state discovery untuk validation, filter gender/harga/availability, sort deterministic, pagination preservation, dan parity mobile/desktop; belum dimulai.
 
-### P7-02 Query dan state discovery katalog publik — IN_PROGRESS
+### P7-02 Query dan state discovery katalog publik — DONE
 
 Outcome:
 
@@ -1777,11 +1777,25 @@ Acceptance criteria:
 
 Verification:
 
-- Sedang dikerjakan.
+- `php artisan test tests/Feature/PublicCatalogDiscoveryTest.php tests/Feature/ProductDetailJsonLdTest.php tests/Feature/CatalogSafetyTest.php` lulus: 14 test, 59 assertions.
+- Full `php artisan test` lulus: 177 test, 1.096 assertions.
+- Pint targeted, `composer validate --strict`, route audit `/products`, Blade clear/cache, `git diff --check`, dan `npm run build` lulus; build hanya mempertahankan warning existing DaisyUI `@property` dan chunk lanyard besar.
+- Browser audit `390x844`: state filter/sort sinkron, panel mobile menampilkan nilai aktif, submit menghasilkan URL bersih, kombinasi filter dan empty state benar, target aksi utama 44 px, serta tidak ada horizontal overflow.
+- Browser audit `1440x900`: 180 total/24 kartu per halaman, sidebar dan sort aktif benar, pagination mempertahankan query, detail mempertahankan return context, canonical detail tanpa query, tidak ada horizontal overflow, dan console tanpa error/warning.
+- CI implementasi hijau pada commit `b53ffc7`: https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35183620004
 
 Documentation updates:
 
-- Sedang dikerjakan.
+- Backlog ini merekam scope, acceptance criteria, hasil test/build/browser, dan batas bahwa P7-03 belum dimulai.
+- Implementasi terdokumentasi melalui `ProductCatalogState`, focused feature tests, serta atribut data katalog yang menjadi kontrak sinkronisasi form mobile/desktop.
+
+Rollback:
+
+- Revert commit implementasi `b53ffc7` dan commit close-out P7-02; tidak ada migration, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-03` redesign presentation kartu/list katalog dan copy effective availability berdasarkan kontrak P7-01; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
