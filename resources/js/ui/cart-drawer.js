@@ -110,4 +110,8 @@ if (drawer) {
             fetchInquiryContent();
         }
     });
+
+    drawer.addEventListener('close', () => {
+        document.getElementById('cart-drawer-trigger')?.focus();
+    });
 }

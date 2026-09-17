@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 
 const ArrowIcon = () => (
@@ -26,6 +26,7 @@ const CardNav = ({
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const navRef = useRef(null);
+  const menuButtonRef = useRef(null);
   const cardsRef = useRef([]);
   const tlRef = useRef(null);
 
@@ -71,15 +72,23 @@ const CardNav = ({
     gsap.set(navEl, { height: 60, overflow: 'hidden' });
     gsap.set(cardsRef.current, { y: 50, opacity: 0 });
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duration = reduceMotion ? 0 : 0.4;
     const tl = gsap.timeline({ paused: true });
 
     tl.to(navEl, {
       height: calculateHeight,
-      duration: 0.4,
+      duration,
       ease
     });
 
-    tl.to(cardsRef.current, { y: 0, opacity: 1, duration: 0.4, ease, stagger: 0.08 }, '-=0.1');
+    tl.to(cardsRef.current, {
+      y: 0,
+      opacity: 1,
+      duration,
+      ease,
+      stagger: reduceMotion ? 0 : 0.08
+    }, reduceMotion ? 0 : '-=0.1');
 
     return tl;
   };
@@ -123,6 +132,24 @@ const CardNav = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isExpanded]);
 
+  useEffect(() => {
+    if (!isExpanded) return undefined;
+
+    const closeOnEscape = event => {
+      if (event.key !== 'Escape') return;
+
+      setIsHamburgerOpen(false);
+      tlRef.current?.eventCallback('onReverseComplete', () => {
+        setIsExpanded(false);
+        menuButtonRef.current?.focus();
+      });
+      tlRef.current?.reverse();
+    };
+
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [isExpanded]);
+
   const toggleMenu = () => {
     const tl = tlRef.current;
     if (!tl) return;
@@ -134,13 +161,6 @@ const CardNav = ({
       setIsHamburgerOpen(false);
       tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
       tl.reverse();
-    }
-  };
-
-  const handleToggleKey = event => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      toggleMenu();
     }
   };
 
@@ -178,13 +198,14 @@ const CardNav = ({
         style={{ backgroundColor: baseColor }}
       >
         <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-5 z-[2]">
-          <div
-            className={`hamburger-menu ${isHamburgerOpen ? 'open' : ''} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
+          <button
+            ref={menuButtonRef}
+            type="button"
+            className={`hamburger-menu ${isHamburgerOpen ? 'open' : ''} group h-full w-11 flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black`}
             onClick={toggleMenu}
-            onKeyDown={handleToggleKey}
-            role="button"
-            aria-label={isExpanded ? 'Close menu' : 'Open menu'}
-            tabIndex={0}
+            aria-label={isExpanded ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            aria-expanded={isExpanded}
+            aria-controls="primary-navigation-menu"
             style={{ color: menuColor || '#000' }}
           >
             <div
@@ -197,33 +218,34 @@ const CardNav = ({
                 isHamburgerOpen ? '-translate-y-[4px] -rotate-45' : ''
               } group-hover:opacity-75`}
             />
-          </div>
+          </button>
 
           <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none">
             {logo ? (
-              <a href={homeHref} aria-label="Kembali ke beranda" className="inline-flex items-center">
-                <img src={logo} alt={logoAlt} className="logo h-[28px] md:h-[30px]" />
+              <a href={homeHref} aria-label="Kembali ke beranda" className="inline-flex min-h-11 min-w-11 items-center justify-center">
+                <img src={logo} alt={logoAlt} width="30" height="30" className="logo h-[28px] w-[28px] md:h-[30px] md:w-[30px]" />
               </a>
             ) : null}
           </div>
 
           <div className="flex items-center gap-2 order-3">
-            <button
-              type="button"
-              aria-label="Cari"
-              className="hidden md:inline-flex items-center justify-center h-[40px] w-[40px] border border-black/10 hover:border-black/30 transition-colors"
+            <a
+              href={buttonHref}
+              aria-label="Cari parfum di katalog"
+              className="hidden md:inline-flex items-center justify-center h-11 w-11 border border-black/10 hover:border-black/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </button>
+            </a>
             <button
+              id="cart-drawer-trigger"
               type="button"
               aria-label="Buka daftar inquiry"
               onClick={handleCartClick}
-              className="relative inline-flex items-center justify-center h-[40px] w-[40px] border border-black/10 hover:border-black/30 transition-colors"
+              className="relative inline-flex items-center justify-center h-11 w-11 border border-black/10 hover:border-black/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {cartCount > 0 ? (
@@ -234,7 +256,7 @@ const CardNav = ({
             </button>
             <a
               href={buttonHref}
-              className="hidden md:inline-flex border-0 px-4 items-center h-[40px] font-medium cursor-pointer transition-colors duration-300"
+              className="hidden md:inline-flex border-0 px-4 items-center min-h-11 font-medium cursor-pointer transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
               style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
             >
               {buttonLabel}
@@ -243,6 +265,7 @@ const CardNav = ({
         </div>
 
         <div
+          id="primary-navigation-menu"
           className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1] ${
             isExpanded ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
           } md:flex-row md:items-end md:gap-[12px]`}
@@ -267,6 +290,7 @@ const CardNav = ({
                     }`}
                     href={lnk.href}
                     aria-label={lnk.ariaLabel}
+                    aria-current={isActiveLink(lnk.href) ? 'page' : undefined}
                   >
                     <ArrowIcon />
                     {lnk.label}

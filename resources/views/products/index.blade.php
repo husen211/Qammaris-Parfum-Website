@@ -21,8 +21,8 @@
                 <div class="absolute inset-x-5 top-4 h-px bg-white/10 md:inset-x-8" aria-hidden="true"></div>
                 <div class="absolute inset-x-5 bottom-4 h-px bg-brand-gold/40 md:inset-x-8" aria-hidden="true"></div>
                 <div class="relative z-10">
-                    <h1 class="font-mayluxa text-3xl md:text-4xl tracking-wide mb-2 text-white">All Collections</h1>
-                    <p class="text-[10px] md:text-xs uppercase tracking-[0.3em] text-brand-gold font-light">Premium Fragrances</p>
+                    <h1 class="font-mayluxa text-3xl md:text-4xl tracking-wide mb-2 text-white">Koleksi Parfum</h1>
+                    <p class="text-[10px] md:text-xs uppercase tracking-[0.3em] text-brand-gold font-light">Parfum pilihan Qammaris</p>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
 
     <div class="lg:hidden sticky top-[70px] z-30 bg-white border-y border-gray-100 shadow-sm">
         <div class="grid grid-cols-2 divide-x divide-gray-100">
-            <button type="button" data-catalog-filter-trigger aria-controls="mobileFilter" aria-haspopup="dialog"
+            <button type="button" data-catalog-filter-trigger aria-controls="mobileFilter" aria-haspopup="dialog" aria-expanded="false"
                 class="min-h-11 px-3 flex items-center justify-center gap-2 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black transition-colors">
                 <svg class="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -205,7 +205,7 @@
                                 @include('products._card', [
                                     'product' => $product,
                                     'detailUrl' => $detailUrl,
-                                    'prioritizeImage' => $loop->index < 4,
+                                    'prioritizeImage' => $loop->first,
                                 ])
                             @endforeach
                         </div>

@@ -1,6 +1,8 @@
 const catalog = document.querySelector('[data-catalog-discovery]');
 
 if (catalog) {
+    const filterTrigger = document.querySelector('[data-catalog-filter-trigger]');
+    const filterDialog = document.getElementById('mobileFilter');
     const state = {
         search: catalog.dataset.search ?? '',
         brand: new Set((catalog.dataset.brandIds ?? '').split(',').filter(Boolean)),
@@ -69,22 +71,24 @@ if (catalog) {
         });
     };
 
-    document.querySelector('[data-catalog-filter-trigger]')?.addEventListener('click', () => {
-        const dialog = document.getElementById('mobileFilter');
-
+    filterTrigger?.addEventListener('click', () => {
         syncControls();
 
-        if (dialog instanceof HTMLDialogElement && !dialog.open) {
-            dialog.showModal();
+        if (filterDialog instanceof HTMLDialogElement && !filterDialog.open) {
+            filterTrigger.setAttribute('aria-expanded', 'true');
+            filterDialog.showModal();
         }
     });
 
     document.querySelector('[data-catalog-filter-close]')?.addEventListener('click', () => {
-        const dialog = document.getElementById('mobileFilter');
-
-        if (dialog instanceof HTMLDialogElement) {
-            dialog.close();
+        if (filterDialog instanceof HTMLDialogElement) {
+            filterDialog.close();
         }
+    });
+
+    filterDialog?.addEventListener('close', () => {
+        filterTrigger?.setAttribute('aria-expanded', 'false');
+        filterTrigger?.focus();
     });
 
     document.querySelectorAll('[data-catalog-sort]').forEach((control) => {

@@ -174,21 +174,30 @@ Server-rendered page tidak membutuhkan skeleton loading pada initial request. Ja
 ## Accessibility
 
 - Satu `h1`, urutan heading logis, landmark `main`, dan result summary yang dapat diumumkan.
+- Layout menyediakan skip link sebagai fokus keyboard pertama dan `main-content` sebagai target fokus yang stabil.
 - Semua icon-only control mempunyai accessible name.
 - Visible focus memakai token kontras existing dan tidak dihapus.
-- Dialog mengembalikan fokus ke trigger saat ditutup.
+- Menu, filter dialog, dan inquiry drawer mengembalikan fokus ke trigger saat ditutup; menu dapat ditutup dengan Escape dan mengekspos state expanded/controls.
 - Input mempunyai label; error price range terhubung melalui `aria-describedby`.
 - Selected filters/sort tidak hanya dibedakan warna.
 - Target sentuh utama minimal 44 px; reduced motion mematikan scale/transition non-esensial.
 - Bahasa utama UI konsisten Bahasa Indonesia. Nama brand/produk tidak diterjemahkan.
+- Footer tidak mengekspos tautan placeholder/hash tanpa tujuan nyata dan memakai heading outline yang berurutan.
 
 ## Performa dan media
 
 - Gambar memakai storage abstraction Qammaris, dimensi/reserved aspect ratio, format yang didukung, dan `loading=lazy` setelah initial viewport.
-- Primary image initial viewport dapat diprioritaskan; related product dan gambar lanjutan tetap lazy.
+- Hanya kandidat LCP pertama pada listing memakai `fetchpriority=high`; kartu berikutnya, related product, dan gambar lanjutan tetap lazy.
 - Tidak menambah font, icon, animation, atau UI dependency untuk Phase 7.
 - Query listing eager-load brand/category/primary image/offer dan harus bebas N+1.
 - Setiap implementasi memeriksa layout shift, horizontal overflow, console, ukuran build, dan warning chunk existing secara terpisah.
+
+Status implementasi P7-06:
+
+- Kontrak accessibility di atas telah diverifikasi pada keyboard serta viewport `390x844` dan `1440x900` tanpa horizontal overflow atau console warning/error.
+- Regression membandingkan query listing untuk page size kecil dan besar agar pertumbuhan N+1 terdeteksi tanpa bergantung pada angka absolut environment.
+- End-to-end feature test mengunci discovery context, detail, add inquiry, resolusi ulang nilai database current, dan contextual WhatsApp tanpa membuka link eksternal.
+- Build production tetap mencatat warning existing chunk lazy `about-lanyard` sekitar 3,28 MB; Phase 7 tidak menambah dependency atau memuat chunk tersebut pada halaman katalog.
 
 ## Urutan implementasi yang disarankan
 

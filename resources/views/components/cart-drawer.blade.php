@@ -1,24 +1,24 @@
-<dialog id="cartDrawer" class="modal modal-bottom sm:modal-middle lg:modal-right" aria-label="Daftar Inquiry"
+<dialog id="cartDrawer" class="modal modal-bottom sm:modal-middle lg:modal-right" aria-labelledby="cart-drawer-title"
     data-cart-url="{{ route('cart.data') }}"
     data-products-url="{{ route('products.index') }}">
     <div class="modal-box bg-white text-brand-black sm:h-full h-[85vh] w-full sm:w-[450px] max-w-none p-0 rounded-t-2xl sm:rounded-none flex flex-col">
         
         <div class="flex items-center justify-between p-6 border-b border-gray-100">
             <div>
-                <h3 class="font-mayluxa text-2xl">Daftar Inquiry</h3>
+                <h2 id="cart-drawer-title" class="font-mayluxa text-2xl">Daftar Inquiry</h2>
                 <p class="mt-1 text-xs text-gray-500">Produk yang ingin ditanyakan ke admin.</p>
             </div>
             <form method="dialog">
                 <button type="submit" aria-label="Tutup daftar inquiry"
-                    class="hover:rotate-90 transition-transform duration-300 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white">
+                    class="flex h-11 w-11 items-center justify-center hover:rotate-90 motion-reduce:transform-none transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white">
                     <svg class="w-5 h-5 text-gray-400 hover:text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </form>
         </div>
         
-        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]" id="drawerCartItems">
-            <div class="flex flex-col items-center justify-center h-full text-center space-y-4">
-                <div class="animate-spin w-6 h-6 border-2 border-brand-black border-t-transparent rounded-full"></div>
+        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#FAFAFA]" id="drawerCartItems" aria-live="polite" aria-busy="true">
+            <div class="flex flex-col items-center justify-center h-full text-center space-y-4" role="status">
+                <div class="animate-spin motion-reduce:animate-none w-6 h-6 border-2 border-brand-black border-t-transparent rounded-full" aria-hidden="true"></div>
                 <p class="text-xs uppercase tracking-widest text-gray-400">Memuat daftar inquiry...</p>
             </div>
         </div>

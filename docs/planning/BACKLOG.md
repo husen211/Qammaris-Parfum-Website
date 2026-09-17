@@ -20,7 +20,7 @@
 | P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | DONE | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | DONE | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
-| P7 | Public catalog UX | IN_PROGRESS | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
+| P7 | Public catalog UX | DONE | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
 | P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
 | P9 | Hardening & cutover | BACKLOG | P1–P8 | Production launch dan observation selesai |
 
@@ -2171,6 +2171,84 @@ Rollback:
 Suggested next item:
 
 - `P7-06` accessibility/performance hardening dan end-to-end regression katalog publik; belum dimulai.
+
+### P7-06 Accessibility, performance, dan end-to-end regression katalog publik — DONE
+
+Outcome:
+
+- Journey katalog publik listing → detail → daftar inquiry tetap cepat, dapat dipakai dengan keyboard dan assistive technology, serta terlindungi regression test lintas-surface.
+
+In scope:
+
+- Landmark dan skip link global untuk melewati navigasi menuju konten utama.
+- Header publik: native interactive semantics, Bahasa Indonesia, state expanded/controls, keyboard Escape, focus yang dapat diprediksi, reduced motion, dan target minimum 44 px.
+- Dialog filter serta drawer inquiry: accessible name/status, focus return, dan state trigger yang sinkron.
+- Heading outline footer dan penghapusan tautan placeholder/hash yang tidak mempunyai target nyata.
+- Prioritas loading gambar katalog dibatasi pada kandidat LCP pertama; gambar berikutnya memakai lazy loading dengan dimensi tetap.
+- Regression journey listing/detail/inquiry dan guard query katalog agar jumlah query tidak bertambah mengikuti jumlah produk.
+- Audit nyata pada `390x844` dan `1440x900`, keyboard, reduced-motion contract, overflow, console, build output, dan full test suite.
+
+Out of scope:
+
+- Redesign visual baru, perubahan business rule/query contract, perubahan schema/data/media, dependency baru, Lighthouse target production, rekomendasi AI, Shopee/Majoo sync, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-01 sampai P7-05 selesai; ADR-020 dan `PUBLIC_CATALOG_UX.md` menjadi contract discovery-to-inquiry.
+
+Baseline:
+
+- Listing mempunyai satu `h1` dan tidak overflow pada `390x844`/`1440x900`, tetapi layout tidak menyediakan skip link atau target ID pada `main`.
+- Hamburger masih memakai `div role=button`, label Inggris, tanpa `aria-expanded`/`aria-controls`; tombol header hanya 40 px dan animasi GSAP belum menghormati reduced motion.
+- Footer melompati heading `h1` ke `h3/h4` serta mengekspos `Cara Pesan`, kebijakan privasi, dan syarat sebagai hash link tanpa target nyata.
+- Empat kartu pertama diberi `fetchpriority=high`; kandidat LCP belum dibedakan dari media berikutnya.
+- Browser baseline console bersih dan layout existing dipertahankan sebagai pembanding, bukan alasan melakukan redesign.
+
+Risks:
+
+- Perubahan semantics React navigation dapat mengubah focus/animation behavior; verifikasi keyboard dan viewport wajib.
+- Lazy loading terlalu agresif dapat menunda media di atas fold; hanya kandidat LCP pertama yang diberi high priority, sedangkan browser tetap dapat memuat gambar near-viewport.
+- Query-count assertion yang terlalu spesifik mudah rapuh; regression membandingkan pertumbuhan query untuk dataset kecil dan besar, bukan angka absolut environment tertentu.
+
+Acceptance criteria:
+
+- Tab pertama menawarkan skip ke konten utama; semua header action memakai elemen native, nama Indonesia, visible focus, target minimum 44 px, dan state expanded yang benar.
+- Menu dapat ditutup dengan Escape, fokus kembali ke trigger, dan animation duration menjadi nol pada `prefers-reduced-motion: reduce`.
+- Filter dialog serta drawer mempunyai accessible title/status dan fokus kembali ke trigger setelah ditutup.
+- Tidak ada tautan footer `href="#"` atau fragment tanpa target pada public layout; heading landmark tidak melompati level.
+- Hanya kartu pertama memakai `fetchpriority="high"`; kartu berikutnya lazy dengan width/height sehingga layout stabil.
+- End-to-end feature test mengunci state katalog, detail, add inquiry, current database values, dan contextual WhatsApp; query regression membuktikan listing bebas N+1.
+- Focused/full tests, Pint, Blade compile, `git diff --check`, build, browser mobile/desktop, keyboard, overflow, console, dan CI lulus.
+
+Implementation notes:
+
+- Layout publik menyediakan skip link `Lewati ke konten utama` dan target fokus `main-content` tanpa mengubah hierarchy visual.
+- Header React memakai native button/link, label Bahasa Indonesia, `aria-expanded`/`aria-controls`, target utama 44 px, Escape dengan focus return, serta durasi nol pada reduced motion.
+- Filter menyinkronkan expanded state dan mengembalikan fokus ke trigger; drawer inquiry mempunyai accessible title/status dan mengembalikan fokus ke tombol header.
+- Footer memakai heading outline logis dan tidak lagi mengekspos tautan placeholder/hash tanpa tujuan nyata.
+- Hanya gambar kartu pertama memakai `fetchpriority="high"`; kartu selanjutnya memakai lazy loading dan dimensi intrinsik tetap.
+- Regression baru membandingkan query count dataset 1 vs 24 produk dan mengunci journey listing → detail → add inquiry → current database values → contextual WhatsApp.
+
+Verification:
+
+- Focused regression lulus: 25 test / 220 assertions untuk discovery, card trust, detail trust, inquiry, serta hardening.
+- Full suite lulus: 196 test / 1294 assertions; Pint dan Blade compile lulus.
+- `npm run build`, route audit, dan `git diff --check` lulus. Warning existing DaisyUI `@property` dan chunk lazy `about-lanyard` sekitar 3,28 MB tetap tercatat; tidak ada dependency baru.
+- Browser nyata `390x844`: satu `h1`, skip link menjadi fokus pertama dan memindahkan fokus ke `main`, menu Escape/focus return lulus, filter dan drawer focus return lulus, tiga header action utama 44×44, satu high-priority image, empat lazy image, tanpa horizontal overflow.
+- Browser nyata `1440x900`: seluruh lima action header yang terlihat minimal 44 px, satu `h1`, satu high-priority image, empat lazy image, tanpa horizontal overflow; console tanpa warning/error.
+- External WhatsApp link tidak dibuka, tidak ada data/media/schema/dependency/production/deployment yang diubah.
+
+Documentation updates:
+
+- `PUBLIC_CATALOG_UX.md` merekam kontrak accessibility/performance yang kini sudah diimplementasikan dan diverifikasi.
+
+Rollback:
+
+- Revert skip/main landmark, header semantics/focus/reduced-motion, dialog focus return, footer cleanup, image priority, regression test, dan dokumentasi P7-06. Tidak ada migration, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- Definisikan `P8-01` sebagai kontrak read-only API v1 yang restricted, scoped, revocable, dan auditable; belum dimulai dan belum menghubungkan AI.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
