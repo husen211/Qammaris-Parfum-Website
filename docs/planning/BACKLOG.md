@@ -1657,11 +1657,11 @@ Verification:
 Documentation updates:
 
 - Business rules, master plan, kontrak `PRODUCT_MAINTENANCE_CSV.md`, backlog, dan `ADR-019-transactional-maintenance-apply.md` diperbarui.
-- Phase 6 selesai. Kandidat berikutnya adalah `P7-01` audit dan kontrak UX discovery katalog publik mobile-first; sedang dikerjakan.
+- Phase 6 selesai. `P7-01` audit dan kontrak UX discovery katalog publik mobile-first telah selesai. Kandidat berikutnya adalah `P7-02` query/state discovery; belum dimulai.
 
 ## P7 — Public catalog UX
 
-### P7-01 Audit dan kontrak UX discovery katalog publik — IN_PROGRESS
+### P7-01 Audit dan kontrak UX discovery katalog publik — DONE
 
 Outcome:
 
@@ -1704,11 +1704,32 @@ Acceptance criteria:
 
 Verification:
 
-- Sedang dikerjakan.
+- Audit kode mencakup `ProductController`, listing/detail Blade, product domain, route, cart/inquiry, serta test safety existing.
+- Browser baseline direkam pada `390x844` dan `1440x900`: listing/detail tidak mengalami horizontal overflow dan console tidak mempunyai warning/error.
+- Audit mobile membuktikan beberapa target utama masih 28–40 px, hero/detail media menunda informasi inti, dan mobile sort tidak merefleksikan URL aktual.
+- Audit URL membuktikan state `search=Mykonos`, `brand[]=17`, dan `sort=price_high` hilang pada pagination (`/products?page=2`) serta tidak dibawa ke detail.
+- Query read-only lokal membuktikan 180 published product semuanya effective `unknown`; 115 belum mempunyai offer aktif dan 166 belum mempunyai primary image. Tidak ada data yang diubah.
+- Kontrak menetapkan allowlist query, normalization, page reset/preservation, deterministic sort, card/detail hierarchy, availability copy/action, inquiry boundary, aksesibilitas, performa, legacy-data state, dan lima slice implementasi berikutnya.
+- Full Laravel suite lulus: 171 test / 1.064 assertion. Composer strict validation dan Vite production build lulus; warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB tetap tercatat.
+- Markdown trailing-whitespace check dan `git diff --check` lulus.
+- Commit kontrak `937c866` lulus GitHub Actions CI: `https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35180945632`.
+- Tidak ada perubahan runtime, schema, data, media, dependency, staging, production, deployment, credential, atau repository lain.
 
 Documentation updates:
 
-- Sedang dikerjakan.
+- Kontrak baru `docs/product/PUBLIC_CATALOG_UX.md` menjadi source of truth Phase 7 untuk discovery-to-inquiry.
+- `BUSINESS_RULES.md` menegaskan URL state, price authority, availability copy, sold-out discovery, dan cart sebagai daftar inquiry.
+- `MASTER_PLAN.md` memecah Phase 7 menjadi delivery incremental.
+- `ADR-020-public-catalog-state-and-inquiry-boundary.md` menerima keputusan GET state, validated detail context, effective availability, single offer, serta inquiry boundary.
+
+Final report:
+
+- Files changed: lima file dokumentasi; tidak ada application code yang diubah.
+- Schema/data impact: nihil; seluruh pemeriksaan database bersifat read-only.
+- Screenshots: baseline listing dan detail direkam melalui browser nyata pada mobile dan desktop sebelum implementasi UI apa pun.
+- Known limitations: data lokal legacy membuat sebagian besar kartu memakai placeholder atau fallback; reconciliation tetap pekerjaan terpisah dan tidak boleh disamarkan oleh redesign.
+- Rollback: revert commit dokumentasi/close-out; tidak ada migration atau data rollback.
+- Suggested next item: `P7-02` query/state discovery untuk validation, filter gender/harga/availability, sort deterministic, pagination preservation, dan parity mobile/desktop; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
