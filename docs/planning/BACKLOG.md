@@ -1797,7 +1797,7 @@ Suggested next item:
 
 - `P7-03` redesign presentation kartu/list katalog dan copy effective availability berdasarkan kontrak P7-01; belum dimulai.
 
-### P7-03 Trust layer kartu produk katalog publik — IN_PROGRESS
+### P7-03 Trust layer kartu produk katalog publik — DONE
 
 Outcome:
 
@@ -1842,15 +1842,26 @@ Acceptance criteria:
 
 Verification:
 
-- Pending implementasi dan quality gate.
+- Focused tests `PublicCatalogCardTrustTest`, `PublicCatalogDiscoveryTest`, `ProductMediaStorageTest`, `ProductDetailJsonLdTest`, dan `CatalogSafetyTest` lulus: 23 test, 109 assertions.
+- Full `php artisan test` lulus: 181 test, 1.131 assertions.
+- Pint targeted, `composer validate --strict`, route audit `/products`, Blade clear/cache, `git diff --check`, dan `npm run build` lulus; build hanya mempertahankan warning existing DaisyUI `@property` dan chunk lanyard besar.
+- Browser audit `390x844`: dua kolom tetap terbaca, nama panjang aman, satu link detail per kartu, keempat state audit tampil, placeholder lokal digunakan, 4 gambar initial memakai high priority, dan tidak ada horizontal overflow.
+- Browser audit `1440x900`: sidebar/discovery state P7-02 tetap utuh, ukuran/harga offer aktif serta tiga effective availability tampil benar, sold-out tetap dapat dibuka, tidak ada external image request, horizontal overflow, atau console error/warning.
+- Empat record sintetis lokal untuk state browser telah dihapus kembali; verifikasi akhir menunjukkan `0` record audit tersisa.
+- CI implementasi hijau pada commit `5e48eb3`: https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35190905471
 
 Documentation updates:
 
-- Backlog ini menjadi boundary tunggal P7-03; hasil final dan rollback akan dicatat saat close-out.
+- Backlog ini merekam scope, acceptance criteria, hasil test/build/browser, commit, CI, serta batas bahwa P7-04 belum dimulai.
+- Partial `products._card`, placeholder SVG lokal, dan focused feature test menjadi kontrak implementasi trust layer kartu.
 
 Rollback:
 
-- Revert commit implementasi P7-03; tidak ada migration, data, media, dependency, staging, production, atau deployment untuk di-rollback.
+- Revert commit implementasi `5e48eb3` dan commit close-out P7-03; tidak ada migration, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-04` redesign detail produk single-offer dan presentation fragrance notes berdasarkan kontrak P7-01; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
