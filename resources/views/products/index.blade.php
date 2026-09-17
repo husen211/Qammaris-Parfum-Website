@@ -15,13 +15,14 @@
 @endphp
 
 @section('content')
-    <div class="bg-white pt-24 pb-8">
+    <div class="bg-white pt-20 pb-5 md:pt-24 md:pb-7">
         <div class="container mx-auto px-4">
-            <div class="bg-brand-black text-white py-14 px-6 text-center relative overflow-hidden rounded-sm shadow-sm">
-                <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+            <div class="bg-brand-black text-white py-7 px-5 md:py-9 md:px-6 text-center relative overflow-hidden rounded-sm shadow-sm">
+                <div class="absolute inset-x-5 top-4 h-px bg-white/10 md:inset-x-8" aria-hidden="true"></div>
+                <div class="absolute inset-x-5 bottom-4 h-px bg-brand-gold/40 md:inset-x-8" aria-hidden="true"></div>
                 <div class="relative z-10">
-                    <h1 class="font-mayluxa text-4xl lg:text-6xl tracking-wide mb-3 text-white">All Collections</h1>
-                    <p class="text-xs md:text-sm uppercase tracking-[0.3em] text-brand-gold font-light">Premium Fragrances</p>
+                    <h1 class="font-mayluxa text-3xl md:text-4xl tracking-wide mb-2 text-white">All Collections</h1>
+                    <p class="text-[10px] md:text-xs uppercase tracking-[0.3em] text-brand-gold font-light">Premium Fragrances</p>
                 </div>
             </div>
         </div>
@@ -196,39 +197,16 @@
 
                 <div class="flex-1 min-w-0">
                     @if ($products->count() > 0)
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 sm:gap-x-4 md:gap-x-6 md:gap-y-11">
                             @foreach ($products as $product)
                                 @php
                                     $detailUrl = route('products.show', array_merge(['product' => $product->slug], $detailContext));
                                 @endphp
-                                <article class="group flex flex-col">
-                                    <div class="relative aspect-[3/4] bg-[#F9F9F9] mb-4 overflow-hidden">
-                                        <a href="{{ $detailUrl }}" class="block w-full h-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                                            <img src="{{ $product->primaryImage?->image_url ?? 'https://placehold.co/400x533/F5F5F5/333?text=No+Image' }}" alt="{{ $product->name }}" class="w-full h-full object-cover object-center group-hover:scale-105 motion-reduce:transform-none transition-transform duration-700 ease-out mix-blend-multiply opacity-95 group-hover:opacity-100">
-                                        </a>
-
-                                        @if ($product->is_best_seller)
-                                            <div class="absolute top-0 left-0 bg-brand-black text-white text-[9px] md:text-[10px] font-bold px-2 py-1 uppercase tracking-widest z-10">Terlaris</div>
-                                        @endif
-
-                                        <div class="absolute bottom-0 left-0 w-full translate-y-full group-hover:translate-y-0 group-focus-within:translate-y-0 motion-reduce:transform-none transition-transform duration-300 hidden lg:block">
-                                            <a href="{{ $detailUrl }}" class="bg-white/90 backdrop-blur text-brand-black text-xs uppercase tracking-widest w-full min-h-11 flex items-center justify-center hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black transition-colors font-medium border-t border-gray-100">Lihat detail</a>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-center flex-1 flex flex-col">
-                                        <div class="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mb-1.5">{{ $product->brand?->name ?? 'Brand' }}</div>
-                                        <h2 class="font-mayluxa text-base md:text-lg text-brand-black mb-2 leading-tight line-clamp-2 group-hover:text-brand-gold transition-colors">
-                                            <a href="{{ $detailUrl }}" class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ $product->name }}</a>
-                                        </h2>
-                                        <div class="mt-auto">
-                                            @if ($product->compare_at_price && $product->compare_at_price > $product->cheapest_price)
-                                                <div class="text-[10px] md:text-xs text-gray-400 line-through">{{ format_rupiah($product->compare_at_price) }}</div>
-                                            @endif
-                                            <div class="text-sm md:text-base font-medium text-brand-black">{{ format_rupiah($product->cheapest_price) }}</div>
-                                        </div>
-                                    </div>
-                                </article>
+                                @include('products._card', [
+                                    'product' => $product,
+                                    'detailUrl' => $detailUrl,
+                                    'prioritizeImage' => $loop->index < 4,
+                                ])
                             @endforeach
                         </div>
 

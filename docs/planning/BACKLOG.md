@@ -1797,6 +1797,61 @@ Suggested next item:
 
 - `P7-03` redesign presentation kartu/list katalog dan copy effective availability berdasarkan kontrak P7-01; belum dimulai.
 
+### P7-03 Trust layer kartu produk katalog publik — IN_PROGRESS
+
+Outcome:
+
+- Customer dapat memahami identitas produk, satu ukuran/harga yang berwenang, dan status ketersediaan efektif langsung dari kartu tanpa klaim data yang belum terbukti.
+
+In scope:
+
+- Kartu katalog memakai hanya relasi `activeOffer` untuk ukuran dan harga.
+- Copy effective availability untuk `available`, `unknown`/stale, dan `sold_out`.
+- State netral untuk offer atau gambar yang belum lengkap, placeholder lokal, label terlaris, fixed image ratio, serta image loading yang sesuai posisi viewport.
+- Penyesuaian density listing mobile-first tanpa mengubah discovery state P7-02.
+- Focused regression tests dan browser verification `390x844` serta `1440x900`.
+
+Out of scope:
+
+- Redesign detail P7-04, inquiry/cart P7-05, perubahan filter/query P7-02, rekonsiliasi data, schema/migration, write media, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-01 kontrak UX/ADR-020 dan P7-02 discovery state selesai.
+
+Risks:
+
+- Sebagian besar data lokal belum mempunyai offer aktif atau gambar; UI tidak boleh menyamarkan gap tersebut dengan `base_price`, gambar remote, atau copy stok yang meyakinkan secara palsu.
+- Nama panjang, sold-out, dan kombinasi badge/status dapat mengubah tinggi kartu serta density dua kolom pada mobile.
+
+Implementation notes:
+
+- Surface aktif hanya public catalog. Primary task: memahami produk, ukuran/harga tepercaya, dan effective availability sebelum membuka detail.
+- Baseline browser sebelum perubahan telah direkam pada `390x844` dan `1440x900` sesuai quality gate `qammaris-ui-review`.
+- Pertahankan Laravel/Blade/Tailwind/DaisyUI dan identitas visual existing; tanpa dependency atau framework baru.
+
+Acceptance criteria:
+
+- Ukuran dan harga kartu hanya berasal dari satu offer aktif; `base_price` dan `compare_at_price` tidak menjadi fallback presentasi kartu.
+- Produk tanpa offer aktif tidak menampilkan harga/ukuran tebakan dan menampilkan `Data sedang dilengkapi`.
+- Produk tanpa gambar memakai asset placeholder lokal, tidak melakukan hotlink provider, dan menyatakan foto sedang dilengkapi.
+- Effective availability menampilkan tepat `Tersedia saat diperiksa`, `Konfirmasi stok`, atau `Sold out`; raw available yang stale dipresentasikan sebagai unknown.
+- Sold-out tetap discoverable dan dapat membuka detail; label `Terlaris` hanya muncul ketika flag aktif.
+- Kartu mempunyai satu target detail yang semantik, focus state jelas, gambar stabil, nama panjang aman, dan density dua kolom mobile tetap terbaca.
+- Focused/full tests, Pint, Blade compile, build, browser states, console, overflow, dan CI lulus.
+
+Verification:
+
+- Pending implementasi dan quality gate.
+
+Documentation updates:
+
+- Backlog ini menjadi boundary tunggal P7-03; hasil final dan rollback akan dicatat saat close-out.
+
+Rollback:
+
+- Revert commit implementasi P7-03; tidak ada migration, data, media, dependency, staging, production, atau deployment untuk di-rollback.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

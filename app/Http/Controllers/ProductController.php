@@ -17,7 +17,7 @@ class ProductController extends Controller
         $categories = Category::active()->orderBy('name')->get();
         $catalogState = ProductCatalogState::fromRequest($request, $brands, $categories);
 
-        $query = Product::with(['brand', 'category', 'primaryImage'])
+        $query = Product::with(['brand', 'category', 'primaryImage', 'activeOffer'])
             ->withMin([
                 'variants as variants_min_price' => fn ($variantQuery) => $variantQuery->where('is_active', true),
             ], 'price')
