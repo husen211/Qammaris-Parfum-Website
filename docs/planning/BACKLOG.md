@@ -20,7 +20,7 @@
 | P4 | Media storage | DONE | P1, P2 | Media menggunakan storage abstraction dan migrasi terverifikasi |
 | P5 | Admin Panel V2 | DONE | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | DONE | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
-| P7 | Public catalog UX | BACKLOG | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
+| P7 | Public catalog UX | IN_PROGRESS | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
 | P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
 | P9 | Hardening & cutover | BACKLOG | P1–P8 | Production launch dan observation selesai |
 
@@ -1657,7 +1657,58 @@ Verification:
 Documentation updates:
 
 - Business rules, master plan, kontrak `PRODUCT_MAINTENANCE_CSV.md`, backlog, dan `ADR-019-transactional-maintenance-apply.md` diperbarui.
-- Phase 6 selesai. Kandidat berikutnya adalah `P7-01` audit dan kontrak UX discovery katalog publik mobile-first; belum dimulai.
+- Phase 6 selesai. Kandidat berikutnya adalah `P7-01` audit dan kontrak UX discovery katalog publik mobile-first; sedang dikerjakan.
+
+## P7 — Public catalog UX
+
+### P7-01 Audit dan kontrak UX discovery katalog publik — IN_PROGRESS
+
+Outcome:
+
+- Baseline katalog publik mobile dan desktop, gap terhadap business rules, serta kontrak implementasi discovery-to-inquiry terdokumentasi sebelum redesign visual dimulai.
+
+In scope:
+
+- Audit kode dan browser nyata untuk listing, filter/search/sort, pagination, kartu produk, detail, availability, dan jalur inquiry.
+- Baseline viewport `390x844` dan `1440x900`, termasuk overflow, touch target, state URL, dan console.
+- Kontrak URL/state, informasi kartu, availability truth, empty/error states, aksesibilitas, performa, serta pembagian pekerjaan Phase 7.
+- ADR untuk keputusan state katalog dan batas inquiry.
+
+Out of scope:
+
+- Perubahan visual katalog, controller/query, cart, schema, data produk, media, dependency, staging, production, deployment, dan integrasi AI/API.
+
+Dependencies:
+
+- P3 product domain, P4 media boundary, serta P5 admin publication/availability selesai.
+
+Risks:
+
+- Data lokal legacy belum memenuhi publication completeness sehingga visual baseline tidak mewakili katalog final.
+- Redesign tanpa kontrak state dapat menghilangkan filter saat pagination atau kembali dari detail.
+- Label stok dari variant dapat secara keliru dianggap live inventory dan bertentangan dengan availability efektif.
+
+Implementation notes:
+
+- Surface aktif hanya public catalog. Primary task: customer menemukan parfum, memahami harga/ukuran/status secara jujur, membuka detail, lalu memulai inquiry tanpa kehilangan state discovery.
+- Gunakan `qammaris-ui-review`; pertahankan Laravel, Blade, Tailwind, DaisyUI, dan identitas black/ivory/gold.
+
+Acceptance criteria:
+
+- Temuan current state dibuktikan melalui kode, data lokal read-only, dan browser nyata pada dua viewport target.
+- Kontrak canonical search/filter/sort/pagination dan preservasi state sampai detail mempunyai allowlist yang eksplisit.
+- Kartu/detail membedakan `available`, `sold_out`, dan `unknown` tanpa klaim live stock; sold-out tetap discoverable.
+- Mobile behavior, touch target, keyboard/focus, empty/error/legacy-data state, performa gambar, dan bahasa UI ditetapkan.
+- Urutan item implementasi Phase 7 cukup kecil untuk diverifikasi dan tidak memasukkan production atau data migration.
+- Dokumentasi lulus link/reference review, Markdown hygiene, dan `git diff --check`.
+
+Verification:
+
+- Sedang dikerjakan.
+
+Documentation updates:
+
+- Sedang dikerjakan.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

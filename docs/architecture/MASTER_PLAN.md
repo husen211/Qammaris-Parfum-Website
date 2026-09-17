@@ -185,6 +185,17 @@ Meningkatkan katalog, search/filter, product detail, cart/inquiry flow, availabi
 
 Seluruh pekerjaan UI pada fase ini menggunakan `qammaris-ui-review` sebagai quality gate. Skill tersebut berlaku sebagai panduan audit dan verifikasi, sementara business rules, active backlog item, dan keputusan owner tetap mempunyai prioritas lebih tinggi.
 
+Urutan delivery incremental:
+
+1. Audit baseline dan kontrak discovery-to-inquiry.
+2. Query/state discovery dan parity filter mobile/desktop.
+3. Product card trust layer untuk ukuran, harga, availability, serta missing-data state.
+4. Detail mobile-first dan kembali ke hasil katalog.
+5. Inquiry list/WhatsApp dengan semantics non-reservasi.
+6. Accessibility, performance, dan end-to-end hardening.
+
+Kontrak rinci berada di `docs/product/PUBLIC_CATALOG_UX.md` dan keputusan arsitektur state/inquiry berada di `ADR-020-public-catalog-state-and-inquiry-boundary.md`.
+
 ### Phase 8 — Restricted API readiness
 
 Mengekspos operasi yang benar-benar dibutuhkan dengan scoped credentials dan auditability. Belum menghubungkan AI.

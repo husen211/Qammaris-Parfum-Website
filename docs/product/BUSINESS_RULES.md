@@ -72,6 +72,22 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 5. Ukuran tidak menjadi filter utama karena satu halaman sudah mewakili satu ukuran dan data lokal didominasi 100 ml; dapat ditambah kelak jika kebutuhan customer terbukti.
 6. Best seller adalah merchandising flag yang dikelola admin, bukan kategori dan bukan hasil AI otomatis.
 7. Kategori dan brand dapat dinonaktifkan tanpa menghapus produk atau merusak URL.
+8. URL GET adalah source of truth state katalog publik. Search, filter, sort, pagination, dan kembali dari detail wajib mempertahankan parameter yang valid.
+9. Perubahan search, filter, atau sort mengembalikan pagination ke halaman pertama; pagination hanya mengganti parameter `page`.
+10. Sort “Populer” memakai sinyal `view_count` yang dapat dijelaskan. Label “Terlaris” hanya berasal dari merchandising flag `is_best_seller`, bukan dari view count.
+11. Harga filter dan sort berasal dari satu offer aktif. `base_price` tidak boleh diam-diam menjadi fallback authority untuk row published yang belum direkonsiliasi.
+12. Detail product tidak boleh menerima arbitrary return URL. Context kembali ke katalog hanya dibangun dari query katalog allowlisted dan tervalidasi.
+
+## Katalog dan inquiry publik
+
+1. Primary journey publik adalah discovery menuju inquiry, bukan checkout pembayaran atau reservasi stok.
+2. Kartu minimum menampilkan brand, nama, satu ukuran, satu harga, dan effective availability; best seller hanya tampil bila flag merchandising aktif.
+3. Copy availability publik: fresh `available` berarti “Tersedia saat diperiksa”, `unknown` berarti “Konfirmasi stok”, dan `sold_out` berarti “Sold out”.
+4. Produk sold out tetap discoverable dan action utamanya menjadi inquiry restock.
+5. Quantity snapshot dan stock variant tidak boleh ditampilkan atau diterjemahkan sebagai live inventory.
+6. Daftar/cart customer-facing adalah daftar inquiry. Memasukkan produk tidak menjanjikan pembayaran, reservasi, atau stok.
+7. Pesan WhatsApp inquiry harus membawa konteks produk dan intent stok/restock tanpa mengarang informasi availability.
+8. Row legacy tanpa offer atau primary image adalah data-quality state yang harus direkonsiliasi; public UI tidak boleh menebak harga, ukuran, atau gambar.
 
 ## Media
 
