@@ -1,247 +1,236 @@
 @extends('layouts.app')
 
-@section('title', 'Keranjang Belanja - Qammaris Perfumes')
+@section('title', 'Daftar Inquiry - Qammaris Perfumes')
 @section('robots', 'noindex,nofollow')
 
 @section('content')
-
-    <section class="pt-32 pb-20 bg-white min-h-screen">
+    <section class="min-h-screen bg-white pb-20 pt-28 md:pt-32" aria-labelledby="inquiry-title">
         <div class="container mx-auto px-4 lg:px-20">
+            <header class="mx-auto mb-10 max-w-2xl text-center md:mb-14">
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">Konfirmasi melalui WhatsApp</p>
+                <h1 id="inquiry-title" class="mt-3 font-mayluxa text-4xl text-brand-black lg:text-5xl">Daftar Inquiry</h1>
+                <p class="mx-auto mt-4 max-w-xl text-sm font-light leading-6 text-gray-500">
+                    Kumpulkan parfum yang ingin ditanyakan. Stok dan harga terbaru tetap dikonfirmasi oleh admin; daftar ini bukan reservasi.
+                </p>
+            </header>
 
-            <div class="text-center mb-16">
-                <h1 class="font-mayluxa text-4xl lg:text-5xl mb-4">Keranjang Belanja</h1>
-                <div class="w-12 h-px bg-brand-black mx-auto"></div>
-            </div>
-
-            @if (cart_count() > 0)
-                <div class="flex flex-col lg:flex-row gap-12 lg:gap-24">
-
-                    <div class="flex-1">
-                        <div class="hidden md:grid grid-cols-12 border-b border-gray-200 pb-4 text-xs font-bold uppercase tracking-widest text-gray-400">
-                            <div class="col-span-6">Produk</div>
-                            <div class="col-span-2 text-center">Jumlah</div>
-                            <div class="col-span-4 text-right">Total</div>
-                        </div>
-
-                        <div class="space-y-8 md:space-y-0 mt-6 md:mt-0">
-                            @php $cart = session('cart', []); @endphp
-                            @foreach ($cart as $id => $item)
-                                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-0 items-center py-6 border-b border-gray-100 cart-item-row"
-                                    data-id="{{ $id }}">
-
-                                    <div class="col-span-6 flex gap-6">
-                                        <div class="w-24 h-32 bg-[#FAFAFA] flex-shrink-0 border border-gray-100">
-                                            <img src="{{ $item['image'] }}" alt="{{ $item['product_name'] }}" loading="lazy" decoding="async"
-                                                class="w-full h-full object-cover mix-blend-multiply">
-                                        </div>
-                                        <div class="flex flex-col justify-center">
-                                            <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
-                                                {{ $item['brand_name'] }}</p>
-                                            <h3 class="font-mayluxa text-lg text-brand-black mb-1">
-                                                <a href="#" class="hover:text-brand-gold transition-colors">{{ $item['product_name'] }}</a>
-                                            </h3>
-                                            <p class="text-sm text-gray-500 mb-3">{{ $item['volume'] }}ml</p>
-                                            <button onclick="removeItem('{{ $id }}')"
-                                                class="text-[10px] uppercase tracking-widest text-red-400 hover:text-red-600 text-left w-fit border-b border-transparent hover:border-red-600 transition-all">
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-span-2 flex justify-center">
-                                        <div class="flex items-center border border-gray-200 w-fit h-10">
-                                            <button type="button" onclick="updateQuantity('{{ $id }}', 'decrease')"
-                                                class="w-8 h-full hover:bg-gray-50 text-gray-500 flex items-center justify-center text-lg transition-colors">-</button>
-
-                                            <input type="number" id="qty-{{ $id }}" value="{{ $item['quantity'] }}"
-                                                class="w-10 text-center border-none focus:ring-0 p-0 text-sm font-medium appearance-none" readonly>
-
-                                            <button type="button" onclick="updateQuantity('{{ $id }}', 'increase')"
-                                                class="w-8 h-full hover:bg-gray-50 text-brand-black flex items-center justify-center text-lg transition-colors">+</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-span-4 text-right">
-                                        <p class="font-medium text-brand-black text-lg">
-                                            {{ format_rupiah($item['price'] * $item['quantity']) }}
-                                        </p>
-                                        @if ($item['quantity'] > 1)
-                                            <p class="text-xs text-gray-400 mt-1">{{ format_rupiah($item['price']) }} per item</p>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        <div class="flex justify-between items-center mt-8">
-                            <a href="{{ route('products.index') }}"
-                                class="text-xs font-bold uppercase tracking-widest border-b border-brand-black pb-1 hover:text-brand-gold hover:border-brand-gold transition-all">
-                                Lanjut Belanja
-                            </a>
-
-                            <form action="{{ route('cart.clear') }}" method="POST"
-                                onsubmit="return confirm('Yakin ingin mengosongkan keranjang?')">
-                                @csrf
-                                <button type="submit"
-                                    class="text-xs text-gray-400 hover:text-brand-black uppercase tracking-widest transition-colors">
-                                    Kosongkan Keranjang
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="w-full lg:w-96 flex-shrink-0">
-                        <div class="bg-[#FAFAFA] p-8 sticky top-32 border border-gray-100">
-                            <h3 class="font-mayluxa text-xl mb-6">Data Pembeli</h3>
-
-                            <form action="{{ route('cart.checkout') }}" method="POST">
-                                @csrf
-                                
-                                <div class="space-y-5 mb-8">
-                                    <div class="group">
-                                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1 group-focus-within:text-brand-black transition-colors">Nama Lengkap</label>
-                                        <input type="text" name="customer_name" required
-                                            class="w-full bg-transparent border-b border-gray-300 py-2 text-sm focus:border-brand-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
-                                            placeholder="Nama Anda">
-                                    </div>
-
-                                    <div class="group">
-                                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1 group-focus-within:text-brand-black transition-colors">Nomor WhatsApp</label>
-                                        <input type="tel" name="customer_phone" required
-                                            class="w-full bg-transparent border-b border-gray-300 py-2 text-sm focus:border-brand-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
-                                            placeholder="0812...">
-                                    </div>
-
-                                    <div class="group">
-                                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1 group-focus-within:text-brand-black transition-colors">Alamat Pengiriman</label>
-                                        <textarea name="customer_address" rows="2" required
-                                            class="w-full bg-transparent border-b border-gray-300 py-2 text-sm focus:border-brand-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300 resize-none"
-                                            placeholder="Jalan, Kota, Provinsi"></textarea>
-                                    </div>
-
-                                    <div class="group">
-                                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-1 group-focus-within:text-brand-black transition-colors">Catatan (Opsional)</label>
-                                        <input type="text" name="customer_note"
-                                            class="w-full bg-transparent border-b border-gray-300 py-2 text-sm focus:border-brand-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
-                                            placeholder="Catatan khusus...">
-                                    </div>
-                                </div>
-
-                                <h3 class="font-mayluxa text-xl mb-4">Ringkasan</h3>
-                                
-                                <div class="space-y-3 mb-6 border-b border-gray-200 pb-6">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500">Subtotal</span>
-                                        <span class="font-medium">{{ format_rupiah(cart_total()) }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-500">Pengiriman</span>
-                                        <span class="text-xs text-gray-400 italic">Dihitung via WhatsApp</span>
-                                    </div>
-                                </div>
-
-                                <div class="flex justify-between items-end mb-8">
-                                    <span class="text-sm font-bold uppercase tracking-widest">Total</span>
-                                    <span class="font-mayluxa text-2xl">{{ format_rupiah(cart_total()) }}</span>
-                                </div>
-
-                                <button type="submit"
-                                    class="btn bg-brand-black text-white hover:bg-gray-800 w-full h-14 rounded-none uppercase tracking-widest text-sm flex items-center justify-center gap-3 mb-4 transition-transform active:scale-[0.98]">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                                    </svg>
-                                    Kirim Pesanan
-                                </button>
-                            </form>
-                            <div class="text-center space-y-2">
-                                <p class="text-[10px] text-gray-400 uppercase tracking-widest">Checkout aman via WhatsApp</p>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            @else
-                <div class="flex flex-col items-center justify-center py-20 text-center">
-                    <div class="w-20 h-20 border border-gray-200 rounded-full flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                    </div>
-                    <h2 class="font-mayluxa text-2xl mb-3">Keranjang masih kosong</h2>
-                    <p class="text-gray-500 font-light mb-8 max-w-md">Sepertinya kamu belum menemukan signature scent-mu.</p>
-                    <a href="{{ route('products.index') }}"
-                        class="btn bg-brand-black text-white hover:bg-gray-800 px-12 h-12 rounded-none uppercase tracking-widest text-xs">
-                        Lihat Koleksi
-                    </a>
+            @if (session('error'))
+                <div class="mx-auto mb-8 max-w-4xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                    {{ session('error') }}
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="mx-auto mb-8 max-w-4xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                    Periksa kembali catatan inquiry sebelum melanjutkan.
+                </div>
+            @endif
+
+            @if ($hasUnavailableItems)
+                <div class="mx-auto max-w-2xl border border-amber-200 bg-amber-50 p-6 text-center md:p-8">
+                    <h2 class="font-mayluxa text-2xl text-brand-black">Daftar perlu ditinjau</h2>
+                    <p class="mt-3 text-sm leading-6 text-gray-600">
+                        Satu atau lebih produk sudah tidak tayang atau offer-nya berubah. Daftar lama tidak akan dikirim agar informasi yang diteruskan tidak keliru.
+                    </p>
+                    <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                        <a href="{{ route('products.index') }}" class="inline-flex min-h-12 items-center justify-center bg-brand-black px-6 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                            Kembali ke katalog
+                        </a>
+                        <form action="{{ route('cart.clear') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="min-h-12 w-full border border-brand-black px-6 text-xs font-semibold uppercase tracking-widest text-brand-black hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                Kosongkan daftar lama
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @elseif ($items !== [])
+                <div class="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16">
+                    <section aria-labelledby="inquiry-items-title">
+                        <div class="flex items-end justify-between gap-4 border-b border-gray-200 pb-4">
+                            <div>
+                                <h2 id="inquiry-items-title" class="font-mayluxa text-2xl text-brand-black">Produk yang ditanyakan</h2>
+                                <p class="mt-1 text-xs text-gray-500">Jumlah menunjukkan minat, bukan stok yang direservasi.</p>
+                            </div>
+                            <span class="shrink-0 text-xs font-semibold uppercase tracking-widest text-gray-400">{{ count($items) }} produk</span>
+                        </div>
+
+                        <div class="divide-y divide-gray-200">
+                            @foreach ($items as $item)
+                                @php
+                                    $availabilityClass = match ($item['effective_availability']) {
+                                        \App\Models\Product::AVAILABILITY_AVAILABLE => 'text-emerald-700',
+                                        \App\Models\Product::AVAILABILITY_SOLD_OUT => 'text-gray-500',
+                                        default => 'text-amber-700',
+                                    };
+                                @endphp
+                                <article class="grid gap-5 py-6 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center" data-inquiry-row data-id="{{ $item['id'] }}">
+                                    <a href="{{ $item['product_url'] }}" class="h-32 w-24 overflow-hidden bg-[#FAF8F3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                        <img src="{{ $item['image'] }}" alt="{{ $item['product_name'] }}" width="96" height="128" loading="lazy" decoding="async" class="h-full w-full object-contain">
+                                    </a>
+
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{{ $item['brand_name'] }}</p>
+                                        <h3 class="mt-1 font-mayluxa text-xl leading-tight text-brand-black">
+                                            <a href="{{ $item['product_url'] }}" class="hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ $item['product_name'] }}</a>
+                                        </h3>
+                                        <p class="mt-2 text-sm text-gray-500">{{ $item['volume'] }} ml · {{ $item['formatted_unit_price'] }} per item</p>
+                                        <p class="mt-2 text-xs font-semibold {{ $availabilityClass }}">{{ $item['availability_label'] }}</p>
+                                        <button type="button" onclick="removeInquiryItem('{{ $item['id'] }}')"
+                                            class="mt-4 min-h-11 text-xs font-semibold uppercase tracking-widest text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                            Hapus dari daftar
+                                        </button>
+                                    </div>
+
+                                    <div class="flex items-end justify-between gap-5 sm:flex-col sm:items-end">
+                                        <p class="text-lg font-semibold tabular-nums text-brand-black">{{ $item['formatted_price'] }}</p>
+                                        <div>
+                                            <span class="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-gray-400">Jumlah minat</span>
+                                            <div class="flex h-11 items-center border border-gray-300">
+                                                <button type="button" onclick="updateInquiryQuantity('{{ $item['id'] }}', -1)" aria-label="Kurangi jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-gray-500 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">−</button>
+                                                <input type="number" id="qty-{{ $item['id'] }}" value="{{ $item['quantity'] }}" min="1" max="99" aria-label="Jumlah {{ $item['product_name'] }}" class="h-11 w-11 border-none p-0 text-center text-sm font-semibold focus:ring-0" readonly>
+                                                <button type="button" onclick="updateInquiryQuantity('{{ $item['id'] }}', 1)" aria-label="Tambah jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+
+                        <p data-inquiry-feedback role="status" aria-live="polite" class="min-h-6 text-sm text-gray-600"></p>
+
+                        <div class="mt-6 flex flex-col justify-between gap-4 border-t border-gray-200 pt-6 sm:flex-row sm:items-center">
+                            <a href="{{ route('products.index') }}" class="inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-widest underline decoration-gray-300 underline-offset-4 hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                Tambah produk lain
+                            </a>
+                            <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Kosongkan seluruh daftar inquiry?')">
+                                @csrf
+                                <button type="submit" class="min-h-11 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                    Kosongkan daftar
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <aside class="border border-gray-200 bg-[#FAF8F3] p-6 lg:sticky lg:top-28 lg:p-8" aria-labelledby="inquiry-summary-title">
+                        <h2 id="inquiry-summary-title" class="font-mayluxa text-2xl text-brand-black">Ringkasan inquiry</h2>
+
+                        <div class="mt-6 border-y border-gray-200 py-5">
+                            <div class="flex items-end justify-between gap-4">
+                                <div>
+                                    <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Estimasi nilai produk</p>
+                                    <p class="mt-1 text-xs leading-5 text-gray-500">Berdasarkan harga yang tampil saat ini.</p>
+                                </div>
+                                <p class="shrink-0 text-xl font-semibold tabular-nums text-brand-black">{{ format_rupiah($estimateTotal) }}</p>
+                            </div>
+                        </div>
+
+                        <form action="{{ route('cart.checkout') }}" method="POST" class="mt-6">
+                            @csrf
+                            <label for="customer_note" class="block text-[10px] font-semibold uppercase tracking-widest text-gray-500">Catatan untuk admin (opsional)</label>
+                            <textarea id="customer_note" name="customer_note" rows="3" maxlength="200" aria-describedby="inquiry-note-help{{ $errors->has('customer_note') ? ' inquiry-note-error' : '' }}"
+                                class="mt-2 w-full resize-none border border-gray-300 bg-white px-3 py-3 text-sm leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black"
+                                placeholder="Contoh: ingin cek ketersediaan di toko">{{ old('customer_note') }}</textarea>
+                            <p id="inquiry-note-help" class="mt-2 text-xs leading-5 text-gray-500">Nama, nomor, dan alamat tidak diperlukan; percakapan dilanjutkan langsung di WhatsApp.</p>
+                            @error('customer_note')
+                                <p id="inquiry-note-error" class="mt-2 text-xs text-red-700">{{ $message }}</p>
+                            @enderror
+
+                            @if ($whatsappAvailable)
+                                <button type="submit" class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                    Tanyakan via WhatsApp
+                                </button>
+                            @else
+                                <button type="button" disabled class="mt-6 flex min-h-14 w-full cursor-not-allowed items-center justify-center bg-gray-200 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                                    Kontak WhatsApp belum tersedia
+                                </button>
+                            @endif
+                        </form>
+
+                        <p class="mt-4 text-center text-xs leading-5 text-gray-500">
+                            Admin akan mengonfirmasi stok dan harga terbaru. Mengirim inquiry tidak menyimpan stok atau membuat transaksi.
+                        </p>
+                    </aside>
+                </div>
+            @else
+                <div class="mx-auto flex max-w-xl flex-col items-center justify-center py-12 text-center md:py-20">
+                    <div class="flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 text-3xl text-gray-300" aria-hidden="true">?</div>
+                    <h2 class="mt-6 font-mayluxa text-2xl text-brand-black">Daftar inquiry masih kosong</h2>
+                    <p class="mt-3 max-w-md text-sm font-light leading-6 text-gray-500">Tambahkan parfum dari katalog untuk menanyakan stok dan harga terbaru kepada admin.</p>
+                    <a href="{{ route('products.index') }}" class="mt-8 inline-flex min-h-12 items-center justify-center bg-brand-black px-8 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                        Lihat katalog
+                    </a>
+                </div>
+            @endif
         </div>
     </section>
-
 @endsection
 
 @push('scripts')
 <script>
-async function updateQuantity(itemId, action) {
-    const input = document.getElementById(`qty-${itemId}`);
-    let currentQty = parseInt(input.value);
-    
-    if (action === 'increase') {
-        currentQty++;
-    } else if (action === 'decrease') {
-        if (currentQty > 1) currentQty--;
-        else return;
-    }
+const inquiryFeedback = document.querySelector('[data-inquiry-feedback]');
 
-    input.value = currentQty;
+function setInquiryFeedback(message, isError = false) {
+    if (!inquiryFeedback) return;
+    inquiryFeedback.textContent = message;
+    inquiryFeedback.classList.toggle('text-red-700', isError);
+    inquiryFeedback.classList.toggle('text-gray-600', !isError);
+}
+
+async function updateInquiryQuantity(itemId, change) {
+    const input = document.getElementById(`qty-${itemId}`);
+    if (!input) return;
+
+    const previous = Number.parseInt(input.value, 10);
+    const quantity = Math.min(Math.max(previous + change, 1), 99);
+    if (quantity === previous) return;
+
+    input.value = quantity;
+    setInquiryFeedback('Memperbarui daftar…');
 
     try {
-        const response = await fetch(`/cart/update/${itemId}`, {
+        const response = await fetch(`/cart/update/${encodeURIComponent(itemId)}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ quantity: currentQty })
+            body: JSON.stringify({ quantity }),
         });
-        
         const data = await response.json();
-        
-        if (data.success) {
-            location.reload(); 
-        } else {
-            alert('Gagal update: ' + data.message);
-            location.reload();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Jumlah belum dapat diperbarui.');
         }
+
+        window.location.reload();
     } catch (error) {
-        console.error('Error:', error);
+        input.value = previous;
+        setInquiryFeedback(error.message || 'Jumlah belum dapat diperbarui. Coba lagi.', true);
     }
 }
 
-async function removeItem(itemId) {
-    if (!confirm('Hapus produk ini dari keranjang?')) return;
-    
+async function removeInquiryItem(itemId) {
+    setInquiryFeedback('Menghapus produk dari daftar…');
+
     try {
-        const response = await fetch(`/cart/remove/${itemId}`, {
+        const response = await fetch(`/cart/remove/${encodeURIComponent(itemId)}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
-            }
+            },
         });
-        
         const data = await response.json();
-        
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Gagal menghapus item');
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Produk belum dapat dihapus.');
         }
+
+        window.location.reload();
     } catch (error) {
-        console.error('Error:', error);
+        setInquiryFeedback(error.message || 'Produk belum dapat dihapus. Coba lagi.', true);
     }
 }
 </script>

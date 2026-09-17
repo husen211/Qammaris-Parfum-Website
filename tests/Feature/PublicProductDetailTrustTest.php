@@ -124,8 +124,8 @@ class PublicProductDetailTrustTest extends TestCase
             ->assertOk()
             ->assertSee('data-detail-availability="sold_out"', false)
             ->assertSee('Sold out')
-            ->assertSee('Produk sold out')
-            ->assertSee('Pesan via WhatsApp')
+            ->assertSee('Tanya restock via WhatsApp')
+            ->assertDontSee('Tambah ke daftar inquiry')
             ->assertDontSee('<button type="button" data-add-to-cart', false);
     }
 

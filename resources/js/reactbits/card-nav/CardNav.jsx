@@ -219,7 +219,7 @@ const CardNav = ({
             </button>
             <button
               type="button"
-              aria-label="Buka keranjang"
+              aria-label="Buka daftar inquiry"
               onClick={handleCartClick}
               className="relative inline-flex items-center justify-center h-[40px] w-[40px] border border-black/10 hover:border-black/30 transition-colors"
             >

@@ -3,87 +3,111 @@ const drawer = document.getElementById('cartDrawer');
 if (drawer) {
     const cartUrl = drawer.dataset.cartUrl;
     const productsUrl = drawer.dataset.productsUrl || '/products';
-    const productBaseUrl = productsUrl.replace(/\/$/, '');
     const container = document.getElementById('drawerCartItems');
-    const subtotalEl = document.getElementById('drawerSubtotal');
+    const estimateEl = document.getElementById('drawerSubtotal');
 
-    const setSubtotal = (value) => {
-        if (subtotalEl) {
-            subtotalEl.innerText = value;
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#039;',
+        '"': '&quot;',
+    }[character]));
+
+    const setEstimate = (value) => {
+        if (estimateEl) {
+            estimateEl.innerText = value;
         }
     };
 
     const renderEmpty = () => {
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
         container.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full text-center">
-                <span class="text-4xl mb-4">:-)</span>
-                <h4 class="font-mayluxa text-xl mb-2">Keranjang masih kosong</h4>
-                <a href="${productsUrl}" class="text-xs border-b border-brand-black pb-1 hover:text-brand-gold hover:border-brand-gold uppercase tracking-widest mt-2">Mulai Belanja</a>
+            <div class="flex h-full flex-col items-center justify-center text-center">
+                <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 text-2xl text-gray-300" aria-hidden="true">?</div>
+                <h4 class="font-mayluxa text-xl">Daftar inquiry masih kosong</h4>
+                <p class="mt-2 max-w-64 text-sm leading-6 text-gray-500">Tambahkan parfum yang ingin Anda tanyakan kepada admin.</p>
+                <a href="${escapeHtml(productsUrl)}" class="mt-5 inline-flex min-h-11 items-center border-b border-brand-black text-xs font-semibold uppercase tracking-widest hover:border-brand-gold hover:text-brand-gold">Lihat katalog</a>
             </div>
         `;
-        setSubtotal('Rp 0');
+        setEstimate('Rp 0');
+    };
+
+    const renderError = (message, cartPageUrl) => {
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="flex h-full flex-col items-center justify-center text-center" role="alert">
+                <h4 class="font-mayluxa text-xl">Daftar perlu ditinjau</h4>
+                <p class="mt-2 max-w-72 text-sm leading-6 text-gray-500">${escapeHtml(message)}</p>
+                <button type="button" data-retry-inquiry class="mt-5 min-h-11 border border-brand-black px-5 text-xs font-semibold uppercase tracking-widest hover:bg-brand-black hover:text-white">Coba lagi</button>
+                <a href="${escapeHtml(cartPageUrl)}" class="mt-3 inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-widest underline underline-offset-4">Buka daftar</a>
+            </div>
+        `;
+        setEstimate('—');
+        container.querySelector('[data-retry-inquiry]')?.addEventListener('click', fetchInquiryContent);
     };
 
     const renderItems = (items) => {
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
-        let html = '<div class="space-y-6">';
-        items.forEach((item) => {
-            html += `
-                <div class="flex gap-4 group">
-                    <div class="w-20 h-24 bg-white flex-shrink-0 border border-gray-100">
-                        <img src="${item.image}" class="w-full h-full object-cover mix-blend-multiply">
+        const html = items.map((item) => `
+            <article class="flex gap-4 border-b border-gray-200 pb-5 last:border-b-0" data-inquiry-item>
+                <a href="${escapeHtml(item.product_url)}" class="h-24 w-20 shrink-0 overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                    <img src="${escapeHtml(item.image)}" alt="" width="80" height="96" class="h-full w-full object-contain" loading="lazy" decoding="async">
+                </a>
+                <div class="min-w-0 flex-1 py-0.5">
+                    <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">${escapeHtml(item.brand_name)}</p>
+                    <h4 class="mt-1 font-mayluxa text-base leading-tight text-brand-black">
+                        <a href="${escapeHtml(item.product_url)}" class="hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">${escapeHtml(item.product_name)}</a>
+                    </h4>
+                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                        <span>${escapeHtml(item.volume)} ml</span>
+                        <span>${escapeHtml(item.availability_label)}</span>
                     </div>
-                    <div class="flex-1 flex flex-col justify-between py-1">
-                        <div>
-                            <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-1">${item.brand_name}</p>
-                            <h4 class="font-mayluxa text-sm text-brand-black leading-tight mb-1">
-                                <a href="${productBaseUrl}/${item.slug}" class="hover:text-brand-gold transition-colors">${item.product_name}</a>
-                            </h4>
-                            <p class="text-xs text-gray-500">${item.volume}ml</p>
-                        </div>
-                        <div class="flex justify-between items-end">
-                            <p class="text-sm font-medium text-brand-black">${item.formatted_price}</p>
-                            <p class="text-xs text-gray-400">x${item.quantity}</p>
-                        </div>
+                    <div class="mt-3 flex items-end justify-between gap-3">
+                        <p class="text-sm font-medium text-brand-black">${escapeHtml(item.formatted_price)}</p>
+                        <p class="text-xs text-gray-500">Jumlah ${escapeHtml(item.quantity)}</p>
                     </div>
                 </div>
-            `;
-        });
-        html += '</div>';
-        container.innerHTML = html;
+            </article>
+        `).join('');
+
+        container.innerHTML = `<div class="space-y-5">${html}</div>`;
     };
 
-    const fetchCartContent = async () => {
-        if (!cartUrl || !container) {
-            return;
-        }
+    async function fetchInquiryContent() {
+        if (!cartUrl || !container) return;
+
+        container.setAttribute('aria-busy', 'true');
 
         try {
-            const response = await fetch(cartUrl);
+            const response = await fetch(cartUrl, { headers: { Accept: 'application/json' } });
             const data = await response.json();
+
+            if (!response.ok) {
+                renderError(data.message || 'Daftar inquiry belum dapat dimuat.', data.cart_url || '/cart');
+                return;
+            }
 
             if (Array.isArray(data.items) && data.items.length > 0) {
                 renderItems(data.items);
-                setSubtotal(data.formatted_total ?? 'Rp 0');
+                setEstimate(data.formatted_total ?? 'Rp 0');
                 return;
             }
 
             renderEmpty();
         } catch (error) {
-            console.error('Error fetching cart:', error);
+            renderError('Koneksi bermasalah. Periksa jaringan lalu coba lagi.', '/cart');
+        } finally {
+            container.removeAttribute('aria-busy');
         }
-    };
+    }
 
     drawer.addEventListener('toggle', () => {
         if (drawer.open) {
-            fetchCartContent();
+            fetchInquiryContent();
         }
     });
 }

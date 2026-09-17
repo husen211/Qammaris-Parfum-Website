@@ -88,6 +88,11 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 6. Daftar/cart customer-facing adalah daftar inquiry. Memasukkan produk tidak menjanjikan pembayaran, reservasi, atau stok.
 7. Pesan WhatsApp inquiry harus membawa konteks produk dan intent stok/restock tanpa mengarang informasi availability.
 8. Row legacy tanpa offer atau primary image adalah data-quality state yang harus direkonsiliasi; public UI tidak boleh menebak harga, ukuran, atau gambar.
+9. Route dan session `/cart` boleh dipertahankan sebagai detail implementasi kompatibilitas, tetapi seluruh istilah customer-facing wajib memakai `Daftar Inquiry`.
+10. Snapshot produk di session bukan sumber kebenaran untuk tampilan atau pesan. Sebelum merender drawer/halaman dan sebelum membuka WhatsApp, sistem mengambil ulang brand, nama, offer, harga, media, URL, publication, dan effective availability dari database.
+11. Produk dengan effective availability `sold_out` tidak dapat ditambahkan sebagai inquiry stok biasa; detail produk menyediakan inquiry restock kontekstual secara langsung.
+12. Quantity pada daftar inquiry hanya menyatakan jumlah yang diminati, dibatasi defensif 1–99, dan tidak divalidasi terhadap stock variant.
+13. Daftar inquiry tidak meminta nama, nomor customer, atau alamat pengiriman. Catatan admin bersifat opsional; pesan dan UI wajib menegaskan bahwa stok/harga masih perlu dikonfirmasi dan inquiry belum menjadi transaksi atau reservasi.
 
 ## Media
 

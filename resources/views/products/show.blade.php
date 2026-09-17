@@ -198,24 +198,39 @@
                                 <p class="max-w-44 text-right text-[10px] leading-4 text-gray-400">Ketersediaan tetap perlu dikonfirmasi.</p>
                             </div>
 
-                            <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}" data-max-quantity="{{ max(1, $offer->stock) }}"
+                            <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}"
                                 class="flex min-h-14 w-full items-center justify-center gap-3 bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300">
-                                Tambah ke keranjang
+                                Tambah ke daftar inquiry
                             </button>
                         @elseif ($effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT)
-                            <button type="button" disabled class="flex min-h-14 w-full cursor-not-allowed items-center justify-center bg-gray-200 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                                Produk sold out
-                            </button>
+                            @if ($productInquiryUrl)
+                                <a href="{{ $productInquiryUrl }}" target="_blank" rel="noopener noreferrer"
+                                    class="flex min-h-14 w-full items-center justify-center bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                    Tanya restock via WhatsApp
+                                </a>
+                            @else
+                                <button type="button" disabled class="flex min-h-14 w-full cursor-not-allowed items-center justify-center bg-gray-200 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                                    Kontak WhatsApp belum tersedia
+                                </button>
+                            @endif
                         @else
                             <button type="button" disabled class="flex min-h-14 w-full cursor-not-allowed items-center justify-center bg-gray-200 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
                                 Data produk belum lengkap
                             </button>
                         @endif
 
-                        <a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer"
-                            class="flex min-h-14 w-full items-center justify-center gap-3 border border-brand-black bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-black transition-colors hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                            Pesan via WhatsApp
-                        </a>
+                        @if ($offer && $effectiveAvailability !== \App\Models\Product::AVAILABILITY_SOLD_OUT)
+                            @if ($productInquiryUrl)
+                                <a href="{{ $productInquiryUrl }}" target="_blank" rel="noopener noreferrer"
+                                    class="flex min-h-14 w-full items-center justify-center gap-3 border border-brand-black bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-black transition-colors hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                    Tanya stok via WhatsApp
+                                </a>
+                            @else
+                                <button type="button" disabled class="flex min-h-14 w-full cursor-not-allowed items-center justify-center border border-gray-200 bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
+                                    Kontak WhatsApp belum tersedia
+                                </button>
+                            @endif
+                        @endif
                         <p data-cart-feedback role="status" aria-live="polite" class="min-h-5 text-xs text-gray-500"></p>
                     </div>
                 </section>
@@ -306,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const quantityInput = document.getElementById('quantity');
     const addButton = document.querySelector('[data-add-to-cart]');
     const feedback = document.querySelector('[data-cart-feedback]');
-    const maxQuantity = Number.parseInt(addButton?.dataset.maxQuantity ?? '1', 10);
+    const maxQuantity = 99;
 
     document.querySelectorAll('[data-quantity-change]').forEach((button) => {
         button.addEventListener('click', () => {
@@ -349,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartBadge.classList.remove('hidden');
             }
 
-            if (feedback) feedback.textContent = 'Produk ditambahkan ke keranjang.';
+            if (feedback) feedback.textContent = 'Produk ditambahkan ke daftar inquiry.';
             document.getElementById('cartDrawer')?.showModal();
         } catch (error) {
             if (feedback) feedback.textContent = error.message || 'Produk belum dapat ditambahkan. Coba lagi.';

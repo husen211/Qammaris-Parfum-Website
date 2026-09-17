@@ -2101,6 +2101,77 @@ Suggested next item:
 
 - `P7-05` inquiry list dan contextual WhatsApp; belum dimulai.
 
+### P7-05 Daftar inquiry dan WhatsApp kontekstual — DONE
+
+Outcome:
+
+- Customer dapat mengumpulkan produk yang ingin ditanyakan dan mengirim inquiry WhatsApp dengan konteks produk yang current tanpa janji live stock, reservasi, checkout, invoice, atau pembayaran.
+
+In scope:
+
+- Rename seluruh terminology customer-facing cart menjadi `Daftar Inquiry` dengan route/session internal existing tetap kompatibel.
+- Detail produk: tambah ke daftar untuk effective `available`/`unknown`, direct contextual WhatsApp untuk stok, dan direct restock inquiry untuk `sold_out`.
+- Session list tidak memakai `variant stock` sebagai batas quantity; batas input defensif tetap diterapkan.
+- Drawer dan halaman `/cart` membaca product, offer, price, image, URL, dan effective availability current dari database, bukan snapshot session.
+- Halaman daftar inquiry tanpa form alamat/pengiriman; optional note dan satu action `Tanyakan via WhatsApp`.
+- Pesan WhatsApp memuat brand, nama, ukuran, canonical URL, quantity minat, harga current, status website, serta intent stok/restock tanpa mengarang availability.
+- Empty, stale/error/retry, disabled/unavailable contact, success feedback, mobile, desktop, keyboard/focus, dan compatibility route.
+
+Out of scope:
+
+- Live stock, reservasi, pembayaran, order persistence, CRM/chat history, login customer, Shopee/Majoo sync, data migration, schema, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-01 sampai P7-04C selesai; ADR-020 dan `PUBLIC_CATALOG_UX.md` menetapkan boundary inquiry/non-reservasi.
+
+Risks:
+
+- Session legacy menyimpan snapshot yang stale; seluruh presentasi dan pesan wajib resolve ulang current database values.
+- Product/offer dapat menjadi unpublished/nonaktif setelah masuk list; UI harus memberi recovery yang jujur tanpa mengirim data stale.
+- Membuka WhatsApp mentransmisikan detail inquiry ke pihak ketiga; automated browser verification hanya memeriksa URL/href dan tidak mengirim pesan.
+
+Acceptance criteria:
+
+- Tidak ada copy `Keranjang Belanja`, `checkout`, `pesanan`, `pengiriman`, `invoice`, `payment`, pajak, atau ongkir pada flow customer-facing inquiry.
+- Add/update inquiry tidak memeriksa `variant stock`; quantity valid 1–99 dan sold-out tidak dapat ditambahkan sebagai inquiry biasa.
+- Product detail menghasilkan contextual WhatsApp URL current untuk intent stok/restock; missing offer tidak mengarang ukuran/harga.
+- Drawer/page hanya merender current database values dan placeholder lokal; stale list menampilkan error/recovery dan tidak mengirim inquiry.
+- Inquiry WhatsApp list tidak meminta nama, nomor, atau alamat; optional note tervalidasi dan message menegaskan konfirmasi stok/harga serta non-reservasi.
+- Existing `/cart` routes tetap tersedia, input tervalidasi, external URL aman, output escaped, dan tidak ada schema/data/media mutation.
+- Focused/full tests, Pint, Blade compile, route audit, build, browser states `390x844`/`1440x900`, console, overflow, dan CI lulus.
+
+Implementation notes:
+
+- `InquiryWhatsApp` menjadi satu builder terenkapsulasi untuk inquiry detail dan daftar; nomor dinormalisasi sebelum URL `wa.me` dibuat.
+- Session lama tetap menyimpan key kompatibel, tetapi presentation dan pesan tidak membaca snapshot nama, brand, harga, gambar, slug, atau availability dari session.
+- Seluruh item harus resolve secara utuh. Satu item stale membuat drawer mengembalikan state review dan halaman menahan action WhatsApp agar data parsial tidak terkirim.
+- Status sold out ditolak pada add biasa dengan recovery ke direct restock inquiry. Nilai `variant.stock` tidak dipakai sebagai gate add/update.
+- UI hanya membuka WhatsApp setelah customer menekan action; audit otomatis tidak mengikuti external link.
+
+Verification:
+
+- Focused regression lulus: 28 test / 181 assertions untuk inquiry, checkout integrity, catalog safety, product detail trust, dan domain state.
+- Full suite lulus: 193 test / 1261 assertions.
+- Pint, Blade cache, `git diff --check`, tujuh route `/cart`, dan Vite production build lulus.
+- Build mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB; tidak ada dependency baru.
+- Browser nyata populated state lulus pada `390x844` dan `1440x900`: detail, drawer, serta halaman daftar memakai current values, tidak overflow, dan console tanpa warning/error.
+- Contextual WhatsApp href diverifikasi memuat produk, ukuran, harga, status, canonical URL, intent, serta disclaimer; link eksternal tidak dibuka dan tidak ada pesan yang dikirim.
+- Empty, stale, sold-out, zero-stock snapshot, missing offer, validation, dan current-data replacement diverifikasi lewat feature test terisolasi.
+
+Documentation updates:
+
+- `BUSINESS_RULES.md` menetapkan compatibility route, current-data resolution, sold-out/restock, quantity minat, dan batas data customer.
+- `PUBLIC_CATALOG_UX.md` merekam behavior P7-05 yang sudah diimplementasikan dan batas WhatsApp non-otomatis.
+
+Rollback:
+
+- Revert builder WhatsApp, controller/request inquiry, Blade/JavaScript drawer-page-detail, regression test, dan dokumentasi P7-05. Tidak ada schema, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-06` accessibility/performance hardening dan end-to-end regression katalog publik; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

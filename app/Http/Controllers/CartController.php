@@ -5,59 +5,74 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Cart\AddToCartRequest;
 use App\Http\Requests\Cart\CheckoutRequest;
 use App\Http\Requests\Cart\UpdateCartRequest;
+use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\StoreInfo;
+use App\Support\InquiryWhatsApp;
 
 class CartController extends Controller
 {
+    public function __construct(private readonly InquiryWhatsApp $inquiryWhatsApp) {}
+
     public function index()
     {
         $cart = session('cart', []);
+        $resolvedItems = $cart === [] ? [] : $this->resolveInquiryItems($cart);
+        $hasUnavailableItems = $cart !== [] && $resolvedItems === null;
+        $items = $resolvedItems ?? [];
+        $estimateTotal = array_sum(array_column($items, 'line_total'));
+        $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
 
-        return view('cart.index', compact('cart'));
+        return view('cart.index', compact(
+            'items',
+            'estimateTotal',
+            'hasUnavailableItems',
+            'whatsappAvailable',
+        ));
     }
 
     public function add(AddToCartRequest $request)
     {
-        $variant = ProductVariant::with(['product.primaryImage'])
+        $variant = ProductVariant::with(['product.brand', 'product.primaryImage'])
             ->active()
             ->whereHas('product', fn ($query) => $query->published())
             ->findOrFail($request->variant_id);
 
-        if ($variant->stock < $request->quantity) {
+        if ($variant->product->effective_availability === Product::AVAILABILITY_SOLD_OUT) {
             return response()->json([
                 'success' => false,
-                'message' => 'Stok tidak mencukupi',
-            ], 400);
+                'message' => 'Produk sedang sold out. Gunakan tombol Tanya restock.',
+            ], 422);
         }
 
         $cart = session('cart', []);
+        $quantity = (int) $request->quantity;
+        $nextQuantity = (int) ($cart[$variant->id]['quantity'] ?? 0) + $quantity;
 
-        // Ambil URL gambar yang valid
-        $imageUrl = $variant->product->primaryImage
-            ? $variant->product->primaryImage->image_url
-            : 'https://placehold.co/100x100/F5F5F5/333?text=No+Image';
-
-        if (isset($cart[$variant->id])) {
-            $cart[$variant->id]['quantity'] += $request->quantity;
-        } else {
-            $cart[$variant->id] = [
-                'variant_id' => $variant->id,
-                'product_id' => $variant->product_id,
-                'product_name' => $variant->product->name,
-                'slug' => $variant->product->slug,
-                'brand_name' => $variant->product->brand->name,
-                'volume' => $variant->volume,
-                'price' => $variant->price,
-                'quantity' => $request->quantity,
-                'image' => $imageUrl,
-            ];
+        if ($nextQuantity > 99) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jumlah maksimum dalam daftar inquiry adalah 99.',
+            ], 422);
         }
+
+        $cart[$variant->id] = [
+            'variant_id' => $variant->id,
+            'product_id' => $variant->product_id,
+            'product_name' => $variant->product->name,
+            'slug' => $variant->product->slug,
+            'brand_name' => $variant->product->brand?->name ?? 'Brand belum diisi',
+            'volume' => $variant->volume,
+            'price' => $variant->price,
+            'quantity' => $nextQuantity,
+            'image' => $variant->product->primaryImage?->image_url ?? asset('images/product-placeholder.svg'),
+        ];
 
         session(['cart' => $cart]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Produk ditambahkan ke keranjang',
+            'message' => 'Produk ditambahkan ke daftar inquiry.',
             'cart_count' => cart_count(),
             'cart_total' => cart_total(),
         ]);
@@ -67,122 +82,114 @@ class CartController extends Controller
     {
         $cart = session('cart', []);
 
-        if (isset($cart[$id])) {
-            $variant = ProductVariant::active()
-                ->whereHas('product', fn ($query) => $query->published())
-                ->findOrFail($id);
-
-            if ($variant->stock < $request->quantity) {
-                return response()->json(['success' => false, 'message' => 'Stok kurang'], 400);
-            }
-
-            $cart[$id]['quantity'] = $request->quantity;
-            session(['cart' => $cart]);
-
-            return response()->json([
-                'success' => true,
-                'cart_count' => cart_count(),
-                'cart_total' => cart_total(),
-            ]);
+        if (! isset($cart[$id])) {
+            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan di daftar inquiry.'], 404);
         }
 
-        return response()->json(['success' => false], 404);
+        ProductVariant::active()
+            ->whereHas('product', fn ($query) => $query->published())
+            ->findOrFail($id);
+
+        $cart[$id]['quantity'] = (int) $request->quantity;
+        session(['cart' => $cart]);
+
+        return response()->json([
+            'success' => true,
+            'cart_count' => cart_count(),
+            'cart_total' => cart_total(),
+        ]);
     }
 
     public function remove($id)
     {
         $cart = session('cart', []);
 
-        if (isset($cart[$id])) {
-            unset($cart[$id]);
-            session(['cart' => $cart]);
-
-            return response()->json([
-                'success' => true,
-                'cart_count' => cart_count(),
-                'cart_total' => cart_total(),
-            ]);
+        if (! isset($cart[$id])) {
+            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan di daftar inquiry.'], 404);
         }
 
-        return response()->json(['success' => false], 404);
+        unset($cart[$id]);
+        session(['cart' => $cart]);
+
+        return response()->json([
+            'success' => true,
+            'cart_count' => cart_count(),
+            'cart_total' => cart_total(),
+        ]);
     }
 
     public function clear()
     {
         session()->forget('cart');
 
-        return redirect()->back()->with('success', 'Keranjang berhasil dikosongkan');
+        return redirect()->back()->with('success', 'Daftar inquiry berhasil dikosongkan.');
     }
 
-    // === INI FUNGSI BARU UNTUK PROSES CHECKOUT DATA DIRI ===
     public function checkout(CheckoutRequest $request)
     {
         $cart = session('cart', []);
 
-        if (empty($cart)) {
-            return redirect()->route('products.index')->with('error', 'Keranjang kosong');
+        if ($cart === []) {
+            return redirect()->route('products.index')->with('error', 'Daftar inquiry masih kosong.');
         }
 
-        $checkoutItems = $this->resolveCheckoutItems($cart);
-
-        if ($checkoutItems === null) {
+        $items = $this->resolveInquiryItems($cart);
+        if ($items === null) {
             return back()->with(
                 'error',
-                'Satu atau lebih produk di keranjang sudah tidak tersedia atau berubah. Silakan perbarui keranjang.'
+                'Satu atau lebih produk di daftar inquiry sudah tidak tersedia atau berubah. Tinjau kembali daftar Anda.'
             );
         }
 
-        // 2. Susun Pesan WhatsApp (Style: Clean Digital Receipt)
-        $message = "*QAMMARIS PERFUMES*\n";
-        $message .= "Order Request\n";
-        $message .= "______________________________\n\n"; // Garis tipis minimalis
+        $url = $this->inquiryWhatsApp->listUrl(
+            $this->whatsappNumber(),
+            $items,
+            $request->validated('customer_note'),
+        );
 
-        $counter = 1;
-        $total = 0;
-
-        foreach ($checkoutItems as $item) {
-            $subtotal = $item['price'] * $item['quantity'];
-            $total += $subtotal;
-
-            // Format Item:
-            // 1. Brand - Product (Bold)
-            //    Size x Qty (Regular)
-            //    Subtotal (Regular)
-            $message .= "{$counter}. *{$item['brand_name']} - {$item['product_name']}*\n";
-            $message .= "   {$item['volume']}ml  x  {$item['quantity']} pcs\n";
-            $message .= '   Rp '.number_format($subtotal, 0, ',', '.')."\n\n";
-            $counter++;
+        if ($url === null) {
+            return back()->with('error', 'Kontak WhatsApp belum tersedia. Silakan coba lagi nanti.');
         }
 
-        $message .= "______________________________\n";
-        $message .= '*TOTAL : Rp '.number_format($total, 0, ',', '.')."*\n";
-        $message .= "______________________________\n\n";
-
-        // 3. Data Pengiriman (Format Rata Kiri)
-        $message .= "*SHIPPING DETAILS*\n";
-        $message .= 'Name    : '.$request->customer_name."\n";
-        $message .= 'Phone   : '.$request->customer_phone."\n";
-        $message .= 'Address : '.$request->customer_address."\n";
-
-        if ($request->customer_note) {
-            $message .= 'Note    : '.$request->customer_note."\n";
-        }
-
-        $message .= "\n_Waiting for invoice and payment info._";
-
-        // 4. Redirect ke WhatsApp
-        $whatsappNumber = function_exists('setting') ? setting('whatsapp_number') : '6285144924931';
-
-        if (substr($whatsappNumber, 0, 1) == '0') {
-            $whatsappNumber = '62'.substr($whatsappNumber, 1);
-        }
-
-        $encodedMessage = urlencode($message);
-
-        return redirect()->away("https://wa.me/{$whatsappNumber}?text={$encodedMessage}");
+        return redirect()->away($url);
     }
 
-    private function resolveCheckoutItems(array $cart): ?array
+    public function getCartData()
+    {
+        $cart = session('cart', []);
+
+        if ($cart === []) {
+            return response()->json([
+                'items' => [],
+                'formatted_total' => 'Rp 0',
+                'count' => 0,
+            ]);
+        }
+
+        $items = $this->resolveInquiryItems($cart);
+        if ($items === null) {
+            return response()->json([
+                'items' => [],
+                'message' => 'Daftar inquiry berubah. Buka daftar untuk meninjau produk yang tidak lagi tersedia.',
+                'cart_url' => route('cart.index'),
+            ], 409);
+        }
+
+        $total = array_sum(array_column($items, 'line_total'));
+
+        return response()->json([
+            'items' => $items,
+            'formatted_total' => $this->formatRupiah($total),
+            'count' => array_sum(array_column($items, 'quantity')),
+        ]);
+    }
+
+    /**
+     * Resolve every session entry against current catalog data. A partial list is never presented or sent.
+     *
+     * @return array<int, array<string, mixed>>|null
+     */
+    private function resolveInquiryItems(array $cart): ?array
     {
         $variantIds = collect($cart)
             ->map(fn ($item, $key) => is_array($item) ? ($item['variant_id'] ?? $key) : null)
@@ -195,7 +202,7 @@ class CartController extends Controller
             return null;
         }
 
-        $variants = ProductVariant::with(['product.brand'])
+        $variants = ProductVariant::with(['product.brand', 'product.primaryImage'])
             ->active()
             ->whereHas('product', fn ($query) => $query->published())
             ->whereIn('id', $variantIds)
@@ -206,7 +213,7 @@ class CartController extends Controller
             return null;
         }
 
-        $checkoutItems = [];
+        $items = [];
 
         foreach ($cart as $key => $sessionItem) {
             if (! is_array($sessionItem)) {
@@ -217,53 +224,46 @@ class CartController extends Controller
             $quantity = filter_var(
                 $sessionItem['quantity'] ?? null,
                 FILTER_VALIDATE_INT,
-                ['options' => ['min_range' => 1]]
+                ['options' => ['min_range' => 1, 'max_range' => 99]],
             );
             $variant = $variants->get($variantId);
 
-            if (! $variant || $quantity === false || $variant->stock < $quantity) {
+            if (! $variant || $quantity === false) {
                 return null;
             }
 
-            $checkoutItems[] = [
-                'brand_name' => $variant->product->brand->name,
-                'product_name' => $variant->product->name,
-                'volume' => $variant->volume,
-                'price' => $variant->price,
-                'quantity' => $quantity,
-            ];
-        }
-
-        return $checkoutItems;
-    }
-
-    public function getCartData()
-    {
-        $cart = session('cart', []);
-        $total = 0;
-        $items = [];
-
-        foreach ($cart as $id => $details) {
-            $subtotal = $details['price'] * $details['quantity'];
-            $total += $subtotal;
+            $product = $variant->product;
+            $lineTotal = (int) $variant->price * $quantity;
 
             $items[] = [
-                'id' => $id,
-                'product_name' => $details['product_name'],
-                'brand_name' => $details['brand_name'] ?? '',
-                'image' => $details['image'],
-                'volume' => $details['volume'],
-                'quantity' => $details['quantity'],
-                'price' => $details['price'],
-                'formatted_price' => 'Rp '.number_format($subtotal, 0, ',', '.'),
-                'slug' => $details['slug'] ?? '#',
+                'id' => $variant->id,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'brand_name' => $product->brand?->name ?? 'Brand belum diisi',
+                'image' => $product->primaryImage?->image_url ?? asset('images/product-placeholder.svg'),
+                'volume' => $variant->volume,
+                'quantity' => $quantity,
+                'price' => (int) $variant->price,
+                'line_total' => $lineTotal,
+                'formatted_price' => $this->formatRupiah($lineTotal),
+                'formatted_unit_price' => $this->formatRupiah($variant->price),
+                'slug' => $product->slug,
+                'product_url' => route('products.show', $product),
+                'effective_availability' => $product->effective_availability,
+                'availability_label' => $this->inquiryWhatsApp->availabilityLabel($product->effective_availability),
             ];
         }
 
-        return response()->json([
-            'items' => $items,
-            'formatted_total' => 'Rp '.number_format($total, 0, ',', '.'),
-            'count' => count($cart),
-        ]);
+        return $items;
+    }
+
+    private function whatsappNumber(): ?string
+    {
+        return (StoreInfo::query()->first() ?? new StoreInfo)->whatsapp_number;
+    }
+
+    private function formatRupiah(int|float|string $amount): string
+    {
+        return 'Rp '.number_format((float) $amount, 0, ',', '.');
     }
 }

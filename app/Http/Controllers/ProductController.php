@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\StoreInfo;
+use App\Support\InquiryWhatsApp;
 use App\Support\ProductCatalogState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -66,7 +68,7 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'brands', 'categories', 'catalogState'));
     }
 
-    public function show(Request $request, Product $product)
+    public function show(Request $request, Product $product, InquiryWhatsApp $inquiryWhatsApp)
     {
         abort_unless($product->isPublished(), 404);
 
@@ -94,7 +96,17 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('products.show', compact('product', 'relatedProducts', 'catalogState'));
+        $storeInfo = StoreInfo::query()->first() ?? new StoreInfo;
+        $productInquiryUrl = $product->activeOffer
+            ? $inquiryWhatsApp->productUrl(
+                $storeInfo->whatsapp_number,
+                $product,
+                $product->activeOffer,
+                $product->effective_availability === Product::AVAILABILITY_SOLD_OUT ? 'restock' : 'stock',
+            )
+            : null;
+
+        return view('products.show', compact('product', 'relatedProducts', 'catalogState', 'productInquiryUrl'));
     }
 
     private function applyAvailabilityFilter(Builder $query, string $availability): void

@@ -126,6 +126,12 @@ Aturan:
 - Variant stock tidak menentukan copy availability publik.
 - WhatsApp message minimal membawa nama, brand, ukuran, URL canonical product, dan intent `stok` atau `restock`. Nomor/URL tetap berasal dari konfigurasi toko.
 - “Cart” diperlakukan sebagai daftar inquiry, bukan checkout pembayaran atau reservasi. Rename customer-facing dan perubahan flow dikerjakan pada item terpisah tanpa wajib mengganti route internal sekaligus.
+- Implementasi P7-05 mempertahankan route/session `/cart` untuk kompatibilitas, tetapi drawer, halaman, feedback, dan navigation memakai istilah `Daftar Inquiry`.
+- Detail `available`/`unknown` menyediakan dua jalur yang jujur: tambah ke daftar atau inquiry stok langsung. Detail `sold_out` hanya menyediakan inquiry restock dan tidak menawarkan add biasa.
+- Drawer, halaman, dan pesan WhatsApp selalu resolve ulang seluruh item terhadap database. Jika satu item sudah tidak published atau offer tidak aktif, tidak ada partial list yang dirender atau dikirim.
+- Quantity adalah jumlah minat 1–99, bukan pemeriksaan stock variant. Estimasi memakai harga current dan bukan total transaksi.
+- Halaman inquiry hanya menerima catatan admin opsional; nama, nomor customer, alamat, pengiriman, pajak, invoice, payment, dan checkout transaksi tidak menjadi bagian flow.
+- Link WhatsApp langsung memuat brand, nama, ukuran, harga current, effective availability, canonical product URL, serta intent. Link dibuka oleh customer dan tidak dikirim otomatis oleh aplikasi.
 
 ## Layout mobile-first
 

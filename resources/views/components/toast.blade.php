@@ -5,7 +5,7 @@
         </div>
         <div>
             <p class="font-bold text-sm uppercase tracking-wider mb-0.5">Berhasil</p>
-            <p id="toastMessage" class="text-sm font-light text-gray-300">Produk ditambahkan ke keranjang</p>
+            <p id="toastMessage" class="text-sm font-light text-gray-300">Perubahan berhasil disimpan.</p>
         </div>
     </div>
 </div>
