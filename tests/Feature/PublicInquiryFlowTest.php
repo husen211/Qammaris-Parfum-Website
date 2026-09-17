@@ -13,6 +13,13 @@ class PublicInquiryFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutVite();
+    }
+
     public function test_detail_builds_contextual_stock_and_restock_links(): void
     {
         [$product, $offer] = $this->createCatalogItem([
