@@ -2044,6 +2044,63 @@ Suggested next item:
 
 - `P7-05` inquiry list dan contextual WhatsApp; belum dimulai.
 
+### P7-04C Koreksi single-frame gallery produk — DONE
+
+Outcome:
+
+- Detail produk memakai satu frame foto portrait yang bersih tanpa efek kotak kecil di dalam stage besar, termasuk ketika produk mempunyai beberapa gambar.
+
+In scope:
+
+- Frame `4:5` terpusat dengan batas lebar mobile/desktop.
+- Media nyata tanpa padding tambahan; placeholder tetap mempunyai inset.
+- Thumbnail lebih ringkas, menempel di bawah frame, dan terpusat pada mobile.
+- Browser audit produk dua gambar `Rasasi Hawas Fire For Him`, produk satu gambar, dan placeholder.
+
+Out of scope:
+
+- Penggantian/retouch file foto, background removal, promo/review/wishlist C&F, P7-05, backend, data, schema, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-04B selesai; feedback owner membuktikan pendekatan inset universal gagal pada foto dengan background sendiri.
+
+Risks:
+
+- Foto sumber berbeda rasio dapat menyisakan whitespace; `object-contain` dipertahankan agar foto tidak terpotong.
+- Lebar frame harus cukup kecil untuk tidak terasa hero, tetapi cukup besar untuk inspeksi produk.
+
+Acceptance criteria:
+
+- Tidak ada stage beige besar di luar foto nyata atau padding palsu pada media nyata.
+- Mobile memakai frame maksimum 15 rem; desktop maksimum 24 rem dengan rasio `4:5`.
+- Thumbnail tidak selebar kolom, target tetap memadai, dan selected/focus behavior gallery tidak berubah.
+- Placeholder tetap jelas, berlabel, dan tidak membesar memenuhi frame.
+- Tidak ada overflow, console error baru, atau perubahan business/data behavior.
+- Focused tests, Blade compile, build, dan browser audit `390x844`, `430x932`, serta `1440x900` lulus.
+
+Verification:
+
+- Focused tests `PublicProductDetailTrustTest`, `ProductDetailJsonLdTest`, dan `CatalogSafetyTest` lulus: 15 test / 101 assertions.
+- Pint check, Blade clear/cache, `git diff --check`, dan Vite production build lulus; warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB tetap tercatat.
+- `Rasasi Hawas Fire For Him` pada `430x932`: real image menjadi satu frame `240x300` tanpa padding/outer beige stage, dua thumbnail 56 px terpusat tepat di bawah, dan tidak ada overflow atau console error.
+- Produk yang sama pada `390x844`: frame tetap `240x300`, title menyusul setelah thumbnail, selected state gallery tetap tersedia, dan tidak ada overflow.
+- Produk yang sama pada `1440x900`: frame `384x480` terpusat di kolom kiri, thumbnail berada dalam lebar frame, detail tetap di kolom kanan, dan console bersih.
+- Produk satu gambar `Rasasi Hawas For Him` memakai frame yang sama tanpa thumbnail/padding; placeholder lokal memakai inset 32 px dan label data belum lengkap.
+
+Documentation updates:
+
+- `PUBLIC_CATALOG_UX.md` mengganti kontrak universal inset dengan single-frame portrait dan membedakan perlakuan real image dari placeholder.
+- Backlog mencatat bahwa validasi gallery wajib mencakup produk multi-image, bukan hanya satu fixture visual.
+
+Rollback:
+
+- Revert wrapper single-frame, conditional placeholder inset, thumbnail alignment/size, regression assertions, dan dokumentasi P7-04C; tidak ada schema, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-05` inquiry list dan contextual WhatsApp; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

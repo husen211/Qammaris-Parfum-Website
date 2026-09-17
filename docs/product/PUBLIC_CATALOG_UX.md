@@ -140,7 +140,7 @@ Aturan:
 ### Detail
 
 - Setelah navigasi kembali, mobile menampilkan media utama yang ringkas lebih dahulu, lalu brand, nama, ukuran, harga, availability, dan action inquiry. Media tidak boleh memenuhi hampir satu viewport atau mendorong seluruh informasi tersebut terlalu jauh ke bawah.
-- Bingkai media utama mobile memakai rasio `4:3`; desktop memakai stage square dalam komposisi dua kolom. Media memakai `object-contain` dan inset responsif agar foto tetap utuh, terpusat, dan tidak memenuhi seluruh bidang.
+- Galeri memakai satu frame portrait `4:5` yang lebarnya dibatasi dan dipusatkan, sehingga foto dengan background sendiri tidak membentuk efek kotak-di-dalam-kotak. Media nyata memakai `object-contain` tanpa padding tambahan; hanya placeholder lokal yang memakai inset. Thumbnail berada langsung di bawah frame, terpusat pada mobile dan rata kiri dalam frame pada desktop.
 - Satu offer ditampilkan sebagai informasi, bukan selector ukuran palsu.
 - Gallery mendukung swipe/thumbnail tanpa kehilangan alt text atau focus state.
 - Sticky mobile action boleh digunakan bila tidak menutupi konten, safe area, atau action accessibility.

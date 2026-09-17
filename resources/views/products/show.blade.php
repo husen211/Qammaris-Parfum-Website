@@ -102,37 +102,39 @@
 
             <div class="grid items-start gap-6 md:gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(24rem,0.95fr)] lg:gap-14 xl:gap-20">
                 <section class="order-1 min-w-0" aria-label="Galeri {{ $product->name }}" data-product-gallery>
-                    <div class="relative aspect-[4/3] overflow-hidden border border-gray-100 bg-[#F6F2EA] sm:aspect-square">
-                        <img id="mainImage" src="{{ $mainImageUrl }}"
-                            alt="{{ $hasProductImage ? $product->name : 'Foto '.$product->name.' sedang dilengkapi' }}"
-                            width="720" height="900" fetchpriority="high" decoding="async"
-                            class="h-full w-full object-contain object-center p-8 opacity-95 transition-opacity duration-300 motion-reduce:transition-none lg:p-16 {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[25%]' : '' }}">
+                    <div class="mx-auto w-full max-w-[15rem] lg:max-w-sm">
+                        <div class="relative aspect-[4/5] overflow-hidden bg-white">
+                            <img id="mainImage" src="{{ $mainImageUrl }}"
+                                alt="{{ $hasProductImage ? $product->name : 'Foto '.$product->name.' sedang dilengkapi' }}"
+                                width="720" height="900" fetchpriority="high" decoding="async"
+                                class="h-full w-full object-contain object-center opacity-95 transition-opacity duration-300 motion-reduce:transition-none {{ $hasProductImage ? '' : 'p-8 lg:p-12' }} {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[25%]' : '' }}">
 
-                        @if ($product->is_best_seller)
-                            <span class="absolute left-0 top-0 bg-brand-black px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Terlaris</span>
-                        @endif
+                            @if ($product->is_best_seller)
+                                <span class="absolute left-0 top-0 bg-brand-black px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Terlaris</span>
+                            @endif
 
-                        @unless ($hasProductImage)
-                            <span class="absolute inset-x-4 bottom-4 bg-white/90 px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-600 backdrop-blur-sm">
-                                Foto sedang dilengkapi
-                            </span>
-                        @endunless
-                    </div>
-
-                    @if ($galleryImages->count() > 1)
-                        <div class="mt-3 flex gap-3 overflow-x-auto pb-2" aria-label="Pilihan foto produk">
-                            @foreach ($galleryImages as $image)
-                                <button type="button" data-gallery-thumbnail
-                                    data-gallery-src="{{ $image->image_url }}"
-                                    data-gallery-alt="{{ $product->name }} — foto {{ $loop->iteration }}"
-                                    aria-label="Tampilkan foto {{ $loop->iteration }} dari {{ $product->name }}"
-                                    aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
-                                    class="h-16 w-16 shrink-0 overflow-hidden border bg-white p-1 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black md:h-20 md:w-20 {{ $loop->first ? 'border-brand-black' : 'border-gray-200 hover:border-gray-500' }}">
-                                    <img src="{{ $image->image_url }}" alt="" width="80" height="80" loading="lazy" decoding="async" class="h-full w-full object-cover">
-                                </button>
-                            @endforeach
+                            @unless ($hasProductImage)
+                                <span class="absolute inset-x-3 bottom-3 bg-white/90 px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-600 backdrop-blur-sm">
+                                    Foto sedang dilengkapi
+                                </span>
+                            @endunless
                         </div>
-                    @endif
+
+                        @if ($galleryImages->count() > 1)
+                            <div class="mt-3 flex justify-center gap-3 overflow-x-auto pb-2 lg:justify-start" aria-label="Pilihan foto produk">
+                                @foreach ($galleryImages as $image)
+                                    <button type="button" data-gallery-thumbnail
+                                        data-gallery-src="{{ $image->image_url }}"
+                                        data-gallery-alt="{{ $product->name }} — foto {{ $loop->iteration }}"
+                                        aria-label="Tampilkan foto {{ $loop->iteration }} dari {{ $product->name }}"
+                                        aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
+                                        class="h-14 w-14 shrink-0 overflow-hidden border bg-white p-1 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black md:h-16 md:w-16 {{ $loop->first ? 'border-brand-black' : 'border-gray-200 hover:border-gray-500' }}">
+                                        <img src="{{ $image->image_url }}" alt="" width="64" height="64" loading="lazy" decoding="async" class="h-full w-full object-cover">
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </section>
 
                 <section class="order-2 min-w-0 lg:sticky lg:top-28" aria-labelledby="product-title">

@@ -155,10 +155,12 @@ class PublicProductDetailTrustTest extends TestCase
         $response->assertOk()
             ->assertSee('aria-label="Pilihan foto produk"', false)
             ->assertSee('aria-pressed="true"', false)
-            ->assertSee('aria-pressed="false"', false);
+            ->assertSee('aria-pressed="false"', false)
+            ->assertSee('justify-center', false);
 
         $this->assertSame(2, substr_count($html, '<button type="button" data-gallery-thumbnail'));
         $this->assertSame(1, substr_count($html, 'aria-pressed="true"'));
+        $this->assertMatchesRegularExpression('/id="mainImage"[\s\S]*?class="(?![^"]*p-8)[^"]*object-contain[^"]*"/', $html);
     }
 
     public function test_mobile_detail_places_a_compact_gallery_before_the_product_summary(): void
@@ -171,10 +173,12 @@ class PublicProductDetailTrustTest extends TestCase
 
         $response->assertOk()
             ->assertSee('class="order-1 min-w-0" aria-label="Galeri Media First Detail" data-product-gallery', false)
-            ->assertSee('aspect-[4/3]', false)
+            ->assertSee('max-w-[15rem]', false)
+            ->assertSee('lg:max-w-sm', false)
+            ->assertSee('aspect-[4/5]', false)
             ->assertSee('object-contain', false)
             ->assertSee('p-8', false)
-            ->assertSee('lg:p-16', false)
+            ->assertSee('lg:p-12', false)
             ->assertDontSee('lg:object-cover', false)
             ->assertSee('class="order-2 min-w-0 lg:sticky lg:top-28" aria-labelledby="product-title"', false);
 
