@@ -1863,7 +1863,7 @@ Suggested next item:
 
 - `P7-04` redesign detail produk single-offer dan presentation fragrance notes berdasarkan kontrak P7-01; belum dimulai.
 
-### P7-04 Detail produk mobile-first dan single-offer — IN_PROGRESS
+### P7-04 Detail produk mobile-first dan single-offer — DONE
 
 Outcome:
 
@@ -1911,15 +1911,27 @@ Acceptance criteria:
 
 Verification:
 
-- Pending implementasi dan quality gate.
+- Focused tests `PublicProductDetailTrustTest`, `ProductDetailJsonLdTest`, `PublicCatalogDiscoveryTest`, `PublicCatalogCardTrustTest`, `ProductMediaStorageTest`, dan `CatalogSafetyTest` lulus: 29 test, 168 assertions.
+- Full `php artisan test` lulus: 187 test, 1.190 assertions.
+- Pint targeted, `composer validate --strict`, route audit `/products`, Blade clear/cache, `git diff --check`, dan `npm run build` lulus; build hanya mempertahankan warning existing DaisyUI `@property` dan chunk lanyard besar.
+- Browser audit `390x844`: identitas, satu ukuran/harga, effective availability, quantity, serta dua action tampil sebelum media; fresh/stale/sold-out/missing-offer, placeholder lokal, long content, dan no-overflow telah diverifikasi.
+- Browser audit `1440x900`: komposisi foto/detail seimbang, informasi dan action terlihat pada initial viewport, explicit return membawa `search=Rasasi&sort=popular&page=2`, tidak ada external image request atau horizontal overflow.
+- Gallery produk nyata dengan dua gambar berhasil diganti melalui keyboard; `aria-pressed`, main image source, dan alt text berubah sesuai pilihan tanpa menduplikasi thumbnail primary.
+- Console browser tidak mempunyai error/warning. Empat record sintetis lokal telah dihapus; verifikasi akhir menunjukkan `0` record audit tersisa.
+- CI implementasi hijau pada commit `cbad5ff`: https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/35193525231
 
 Documentation updates:
 
-- Backlog ini menjadi boundary tunggal P7-04; hasil final dan rollback akan dicatat saat close-out.
+- Backlog ini merekam scope, acceptance criteria, hasil test/build/browser, commit, CI, serta batas bahwa P7-05 belum dimulai.
+- `PublicProductDetailTrustTest` dan kontrak JSON-LD offer menjadi regression boundary untuk detail single-offer, missing data, gallery, notes, availability, related card, dan context kembali.
 
 Rollback:
 
-- Revert commit implementasi P7-04; tidak ada migration, data, media, dependency, staging, production, atau deployment untuk di-rollback.
+- Revert commit implementasi `cbad5ff` dan commit close-out P7-04; tidak ada migration, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-05` inquiry list dan contextual WhatsApp dengan semantics non-reservasi, termasuk sold-out/restock dan compatibility route cart; belum dimulai.
 
 ## P7 prerequisite — Qammaris UI quality gate
 
