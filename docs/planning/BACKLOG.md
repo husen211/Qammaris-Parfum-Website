@@ -1987,6 +1987,63 @@ Suggested next item:
 
 - `P7-05` inquiry list dan contextual WhatsApp; belum dimulai.
 
+### P7-04B Refinement skala foto detail responsif — DONE
+
+Outcome:
+
+- Foto produk terasa proporsional seperti product gallery retail: objek dipusatkan dengan ruang napas, tidak memenuhi seluruh bidang pada mobile maupun desktop.
+
+In scope:
+
+- Menambah inset internal pada media utama agar visual foto lebih kecil dari gallery stage.
+- Mengubah desktop dari crop `cover` portrait menjadi gallery square dengan `object-contain`.
+- Mempertahankan urutan media-first mobile, thumbnail, dan seluruh behavior gallery existing.
+- Regression test serta browser verification `390x844`, `430x932`, dan `1440x900`.
+
+Out of scope:
+
+- Menyalin branding, promo, review, wishlist, sticky cart, atau information architecture C&F.
+- Inquiry/cart P7-05, data/media source, backend, schema, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-04A selesai dan referensi visual C&F diberikan owner.
+
+Risks:
+
+- Inset yang terlalu besar membuat foto produk sulit dikenali; ukuran wajib diverifikasi pada produk dengan gambar serta placeholder.
+- Perubahan desktop tidak boleh mengubah urutan kolom atau action produk.
+
+Acceptance criteria:
+
+- Mobile mempertahankan gallery stage `4:3`, tetapi media mempunyai inset konsisten sehingga tidak edge-to-edge.
+- Desktop memakai gallery stage square dan `object-contain`; foto tidak dipotong atau diperbesar memenuhi kolom.
+- Produk dengan foto dan placeholder tetap terbaca, tidak overflow, serta informasi produk tidak terdorong berlebihan.
+- Tidak ada console error baru atau perubahan behavior/data.
+- Focused test, Blade compile, build, dan browser audit tiga viewport lulus.
+
+Verification:
+
+- Focused tests `PublicProductDetailTrustTest`, `ProductDetailJsonLdTest`, dan `CatalogSafetyTest` lulus: 15 test / 97 assertions.
+- Pint check, Blade clear/cache, `git diff --check`, dan Vite production build lulus; warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB tetap tercatat.
+- Browser `390x844`: stage tetap `4:3`, media memakai inset 32 px, `object-fit: contain`, informasi produk tetap langsung menyusul, dan tidak ada horizontal overflow.
+- Browser `430x932`: komposisi compact media-first mengikuti proporsi referensi owner; foto terpusat, harga/status/dua action tetap terbaca dalam alur awal halaman, dan tidak ada overflow.
+- Browser `1440x900`: stage berubah dari portrait 578x723 px dengan crop menjadi square sekitar 580x580 px, inset 64 px, dan foto utuh terpusat; detail tetap di kolom kanan dan console bersih.
+- Produk tanpa foto pada `390x844` mempertahankan placeholder lokal, alt text, label data belum lengkap, inset yang sama, dan no-overflow.
+
+Documentation updates:
+
+- `PUBLIC_CATALOG_UX.md` menetapkan stage mobile `4:3`, desktop square, serta `object-contain` dengan inset responsif.
+- Backlog ini merekam referensi C&F sebagai prinsip skala/whitespace saja, bukan izin menyalin branding atau fitur di luar scope.
+
+Rollback:
+
+- Revert class stage/inset/object-fit, regression assertion, dan dokumentasi P7-04B; tidak ada schema, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-05` inquiry list dan contextual WhatsApp; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

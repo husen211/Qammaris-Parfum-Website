@@ -173,8 +173,9 @@ class PublicProductDetailTrustTest extends TestCase
             ->assertSee('class="order-1 min-w-0" aria-label="Galeri Media First Detail" data-product-gallery', false)
             ->assertSee('aspect-[4/3]', false)
             ->assertSee('object-contain', false)
-            ->assertSee('lg:aspect-[4/5]', false)
-            ->assertSee('lg:object-cover', false)
+            ->assertSee('p-8', false)
+            ->assertSee('lg:p-16', false)
+            ->assertDontSee('lg:object-cover', false)
             ->assertSee('class="order-2 min-w-0 lg:sticky lg:top-28" aria-labelledby="product-title"', false);
 
         $galleryPosition = strpos($html, '<section class="order-1 min-w-0"');

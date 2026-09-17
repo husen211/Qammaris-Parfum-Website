@@ -102,11 +102,11 @@
 
             <div class="grid items-start gap-6 md:gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(24rem,0.95fr)] lg:gap-14 xl:gap-20">
                 <section class="order-1 min-w-0" aria-label="Galeri {{ $product->name }}" data-product-gallery>
-                    <div class="relative aspect-[4/3] overflow-hidden border border-gray-100 bg-[#F6F2EA] sm:aspect-square lg:aspect-[4/5]">
+                    <div class="relative aspect-[4/3] overflow-hidden border border-gray-100 bg-[#F6F2EA] sm:aspect-square">
                         <img id="mainImage" src="{{ $mainImageUrl }}"
                             alt="{{ $hasProductImage ? $product->name : 'Foto '.$product->name.' sedang dilengkapi' }}"
                             width="720" height="900" fetchpriority="high" decoding="async"
-                            class="h-full w-full object-contain object-center opacity-95 transition-opacity duration-300 motion-reduce:transition-none lg:object-cover {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[25%]' : '' }}">
+                            class="h-full w-full object-contain object-center p-8 opacity-95 transition-opacity duration-300 motion-reduce:transition-none lg:p-16 {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[25%]' : '' }}">
 
                         @if ($product->is_best_seller)
                             <span class="absolute left-0 top-0 bg-brand-black px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Terlaris</span>
