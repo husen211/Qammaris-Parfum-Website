@@ -1933,6 +1933,60 @@ Suggested next item:
 
 - `P7-05` inquiry list dan contextual WhatsApp dengan semantics non-reservasi, termasuk sold-out/restock dan compatibility route cart; belum dimulai.
 
+### P7-04A Refinement urutan media detail mobile — DONE
+
+Outcome:
+
+- Customer melihat foto produk lebih dahulu pada detail mobile tanpa galeri memenuhi hampir satu layar, sementara komposisi desktop tetap seimbang.
+
+In scope:
+
+- Menempatkan galeri sebelum ringkasan produk pada viewport sempit.
+- Membatasi tinggi media utama mobile dengan rasio yang lebih ringkas dan menampilkan foto utuh.
+- Regression test markup serta browser verification `390x844` dan `1440x900`.
+
+Out of scope:
+
+- Inquiry/cart P7-05, copy/action WhatsApp, data/media, backend, schema, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-04 selesai dan feedback visual owner pada halaman detail.
+
+Risks:
+
+- Foto portrait dapat terpotong bila container dipendekkan; mobile wajib memakai `object-contain`.
+- Perubahan order tidak boleh mengubah komposisi desktop atau accessibility gallery.
+
+Acceptance criteria:
+
+- Pada mobile, urutan setelah navigasi adalah galeri lalu brand/nama/harga/status/action.
+- Media utama mobile tidak melebihi lebar konten, memakai rasio `4:3`, dan mempertahankan seluruh objek dengan `object-contain`.
+- Pada desktop, galeri tetap kolom kiri dengan rasio portrait dan ringkasan tetap kolom kanan.
+- Tidak ada horizontal overflow, console error baru, atau perubahan business/data behavior.
+- Focused test, Blade compile, build, dan browser audit dua viewport lulus.
+
+Verification:
+
+- Focused tests `PublicProductDetailTrustTest`, `ProductDetailJsonLdTest`, dan `CatalogSafetyTest` lulus: 15 test / 96 assertions.
+- Pint check pada focused test, Blade clear/cache, `git diff --check`, dan Vite production build lulus; build mempertahankan warning existing DaisyUI `@property` serta chunk `about-lanyard` sekitar 3,28 MB.
+- Browser `390x844`: galeri berpindah dari posisi setelah action (mulai sekitar 681 px) menjadi tepat setelah navigasi (mulai sekitar 144 px); tinggi image utama turun dari sekitar 427 px menjadi 256 px dengan `object-fit: contain`.
+- Browser `390x844` untuk produk tanpa foto: placeholder lokal, alt text, label `Foto sedang dilengkapi`, urutan media-first, dan no-overflow terverifikasi.
+- Browser `1440x900`: galeri tetap di kiri dan ringkasan di kanan; media memakai rasio portrait serta `object-fit: cover`, tidak ada horizontal overflow atau console error/warning.
+
+Documentation updates:
+
+- `PUBLIC_CATALOG_UX.md` diperbarui mengikuti keputusan owner bahwa detail mobile memakai compact media-first.
+- Backlog ini merekam refinement sebagai koreksi terukur terhadap P7-04 tanpa memperluas scope ke P7-05.
+
+Rollback:
+
+- Revert perubahan class order/aspect/object-fit, regression test, dan pembaruan dokumentasi; tidak ada schema, data, media, dependency, staging, production, atau deployment yang perlu di-rollback.
+
+Suggested next item:
+
+- `P7-05` inquiry list dan contextual WhatsApp; belum dimulai.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

@@ -161,6 +161,30 @@ class PublicProductDetailTrustTest extends TestCase
         $this->assertSame(1, substr_count($html, 'aria-pressed="true"'));
     }
 
+    public function test_mobile_detail_places_a_compact_gallery_before_the_product_summary(): void
+    {
+        $product = $this->createProduct('Media First Detail');
+        $this->createOffer($product);
+
+        $response = $this->get(route('products.show', $product));
+        $html = $response->getContent();
+
+        $response->assertOk()
+            ->assertSee('class="order-1 min-w-0" aria-label="Galeri Media First Detail" data-product-gallery', false)
+            ->assertSee('aspect-[4/3]', false)
+            ->assertSee('object-contain', false)
+            ->assertSee('lg:aspect-[4/5]', false)
+            ->assertSee('lg:object-cover', false)
+            ->assertSee('class="order-2 min-w-0 lg:sticky lg:top-28" aria-labelledby="product-title"', false);
+
+        $galleryPosition = strpos($html, '<section class="order-1 min-w-0"');
+        $summaryPosition = strpos($html, '<section class="order-2 min-w-0 lg:sticky lg:top-28"');
+
+        $this->assertNotFalse($galleryPosition);
+        $this->assertNotFalse($summaryPosition);
+        $this->assertLessThan($summaryPosition, $galleryPosition);
+    }
+
     public function test_notes_render_only_nonempty_groups_and_escape_imported_content(): void
     {
         $product = $this->createProduct('Notes Detail', [

@@ -139,7 +139,8 @@ Aturan:
 
 ### Detail
 
-- Brand, nama, ukuran, harga, availability, dan action inquiry harus terlihat lebih awal; media tidak boleh mendorong semua informasi tersebut jauh ke bawah.
+- Setelah navigasi kembali, mobile menampilkan media utama yang ringkas lebih dahulu, lalu brand, nama, ukuran, harga, availability, dan action inquiry. Media tidak boleh memenuhi hampir satu viewport atau mendorong seluruh informasi tersebut terlalu jauh ke bawah.
+- Bingkai media utama mobile memakai rasio `4:3` dan `object-contain` agar foto portrait tetap utuh; desktop dapat mempertahankan komposisi portrait dua kolom.
 - Satu offer ditampilkan sebagai informasi, bukan selector ukuran palsu.
 - Gallery mendukung swipe/thumbnail tanpa kehilangan alt text atau focus state.
 - Sticky mobile action boleh digunakan bila tidak menutupi konten, safe area, atau action accessibility.
