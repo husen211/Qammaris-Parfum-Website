@@ -1731,6 +1731,58 @@ Final report:
 - Rollback: revert commit dokumentasi/close-out; tidak ada migration atau data rollback.
 - Suggested next item: `P7-02` query/state discovery untuk validation, filter gender/harga/availability, sort deterministic, pagination preservation, dan parity mobile/desktop; belum dimulai.
 
+### P7-02 Query dan state discovery katalog publik — IN_PROGRESS
+
+Outcome:
+
+- Customer dapat mencari, memfilter, mengurutkan, berpindah halaman, dan membuka detail tanpa kehilangan state katalog yang valid pada mobile maupun desktop.
+
+In scope:
+
+- Satu boundary normalisasi server-side untuk query `search`, `brand[]`, `category`, `gender`, `price_min`, `price_max`, `availability`, `sort`, dan `page`.
+- Filter brand, kategori, audience, rentang harga offer aktif, serta effective availability.
+- Sort deterministic terbaru, harga rendah/tinggi, dan populer; pagination 24 produk dengan query allowlist yang dipertahankan.
+- Parity kontrol mobile/desktop, total result summary, active-filter count, clear all, empty state, serta context kembali dari detail.
+- Regression tests dan browser verification `390x844` serta `1440x900`.
+
+Out of scope:
+
+- Redesign product card, copy/status availability pada kartu, single-offer detail redesign, cart/inquiry flow, data reconciliation, schema/migration, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-01 kontrak UX dan ADR-020 selesai.
+
+Risks:
+
+- Harga legacy pada `base_price` dapat berbeda dari offer; filter/sort wajib hanya memakai offer aktif.
+- Raw availability dapat stale; filter wajib memakai semantics effective availability 36 jam.
+- Query tidak valid tidak boleh menghasilkan error, open redirect, atau diteruskan ke pagination/detail.
+
+Implementation notes:
+
+- Surface aktif hanya public catalog. URL GET adalah source of truth dan form tetap berfungsi tanpa JavaScript.
+- Pertahankan URL `/products` dan `/products/{slug}`, Laravel/Blade/Tailwind/DaisyUI, serta visual identity existing.
+
+Acceptance criteria:
+
+- Query valid dinormalisasi sekali dan dipakai oleh database query, kedua UI filter, pagination, serta return context detail.
+- Query invalid/unknown diabaikan secara deterministik; taxonomy nonaktif/tidak dikenal tidak diteruskan.
+- Search mencakup nama dan brand; filter gender, category, multi-brand, price range, dan effective availability dapat dikombinasikan.
+- Harga berasal dari offer aktif; sort mempunyai tie-breaker ID dan null offer selalu di akhir.
+- Pagination memakai 24 item dan mempertahankan seluruh state allowlisted; filter/sort form tidak meneruskan page lama.
+- Mobile dan desktop menampilkan selected state yang sama, current sort benar, total hasil benar, clear state jelas, dan target aksi utama minimal 44 px.
+- Detail menyediakan kembali ke hasil dari context allowlisted dan canonical URL tetap tanpa query.
+- Focused/full tests, Pint, Blade compile, Composer strict, route audit, build, browser states, console, overflow, dan CI lulus.
+
+Verification:
+
+- Sedang dikerjakan.
+
+Documentation updates:
+
+- Sedang dikerjakan.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

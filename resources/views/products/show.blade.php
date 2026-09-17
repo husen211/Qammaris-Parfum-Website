@@ -2,6 +2,8 @@
 
 @php
     $brandName = $product->brand?->name ?? 'Brand';
+    $catalogUrl = route('products.index', $catalogState->query());
+    $detailContext = $catalogState->query();
     $minVariantPrice = $product->variants->min('price');
     $displayPrice = $minVariantPrice ?? $product->base_price;
     $descriptionText = $product->description ?? '';
@@ -48,7 +50,7 @@
         <nav class="text-[10px] md:text-xs uppercase tracking-widest text-gray-400 mb-8 flex flex-wrap gap-2">
             <a href="{{ route('home') }}" class="hover:text-brand-black transition-colors">Beranda</a>
             <span>/</span>
-            <a href="{{ route('products.index') }}" class="hover:text-brand-black transition-colors">Katalog</a>
+            <a href="{{ $catalogUrl }}" class="hover:text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black transition-colors">Katalog</a>
             <span>/</span>
             @if($product->brand_id)
                 <a href="{{ route('products.index', ['brand' => $product->brand_id]) }}" class="hover:text-brand-black transition-colors">{{ $brandName }}</a>
@@ -219,14 +221,14 @@
             @foreach($relatedProducts as $related)
             <div class="group flex flex-col">
                 <div class="relative aspect-3/4 bg-white mb-4 overflow-hidden">
-                    <a href="{{ route('products.show', $related->slug) }}" class="block w-full h-full">
+                    <a href="{{ route('products.show', array_merge(['product' => $related->slug], $detailContext)) }}" class="block w-full h-full">
                         <img src="{{ $related->primaryImage?->image_url ?? 'https://placehold.co/400x533/fff/333?text=No+Image' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 mix-blend-multiply" alt="{{ $related->name }}">
                     </a>
                 </div>
                 <div class="text-center">
                     <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">{{ $related->brand?->name ?? 'Brand' }}</p>
                     <h3 class="font-mayluxa text-base md:text-lg mb-1 group-hover:text-brand-gold transition-colors">
-                        <a href="{{ route('products.show', $related->slug) }}">{{ $related->name }}</a>
+                        <a href="{{ route('products.show', array_merge(['product' => $related->slug], $detailContext)) }}">{{ $related->name }}</a>
                     </h3>
                     @if ($related->compare_at_price && $related->compare_at_price > $related->cheapest_price)
                         <p class="text-[10px] text-gray-400 line-through">
