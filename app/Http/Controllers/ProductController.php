@@ -79,19 +79,18 @@ class ProductController extends Controller
         $product->load([
             'brand',
             'category',
+            'primaryImage',
             'images',
-            'variants' => fn ($variantQuery) => $variantQuery->where('is_active', true),
-            'variants.product',
+            'activeOffer',
         ]);
         $product->incrementViewCount();
 
-        $relatedProducts = Product::with(['brand', 'primaryImage'])
-            ->withMin([
-                'variants as variants_min_price' => fn ($variantQuery) => $variantQuery->where('is_active', true),
-            ], 'price')
+        $relatedProducts = Product::with(['brand', 'primaryImage', 'activeOffer'])
             ->published()
             ->where('brand_id', $product->brand_id)
             ->where('id', '!=', $product->id)
+            ->orderByDesc('is_best_seller')
+            ->orderByDesc('id')
             ->take(4)
             ->get();
 

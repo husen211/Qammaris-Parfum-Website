@@ -49,14 +49,16 @@ class ProductDetailJsonLdTest extends TestCase
         $this->assertStringNotContainsString('<?php', json_encode($schema, JSON_THROW_ON_ERROR));
     }
 
-    public function test_product_without_a_variant_uses_its_base_price(): void
+    public function test_product_without_an_active_offer_does_not_publish_a_guessed_price(): void
     {
         $product = $this->createProduct();
 
         $html = $this->get(route('products.show', $product))->assertOk()->getContent();
         $schema = $this->productSchemaFrom($html);
 
-        $this->assertSame('175000.00', $schema['offers']['price']);
+        $this->assertArrayNotHasKey('offers', $schema);
+        $this->assertStringNotContainsString('Rp 175.000', $html);
+        $this->assertStringContainsString('Data sedang dilengkapi', $html);
     }
 
     private function createProduct(array $overrides = []): Product

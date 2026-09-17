@@ -1863,6 +1863,64 @@ Suggested next item:
 
 - `P7-04` redesign detail produk single-offer dan presentation fragrance notes berdasarkan kontrak P7-01; belum dimulai.
 
+### P7-04 Detail produk mobile-first dan single-offer — IN_PROGRESS
+
+Outcome:
+
+- Customer dapat memahami brand, nama, satu ukuran/harga berwenang, effective availability, deskripsi, dan fragrance notes lebih awal, lalu kembali ke context hasil katalog yang tervalidasi.
+
+In scope:
+
+- Information hierarchy detail mobile-first dengan ringkasan produk sebelum media pada viewport sempit dan komposisi dua kolom pada desktop.
+- Presentasi satu `activeOffer` sebagai informasi, bukan selector variant; tidak ada fallback harga dari `base_price`.
+- Effective availability dan checked-time context yang tidak mengklaim live stock.
+- Gallery maksimal tiga gambar dengan placeholder lokal, thumbnail accessible, fixed aspect ratio, dan progressive image loading.
+- Deskripsi, fragrance notes optional, best-seller state, explicit return-to-results, serta related product yang memakai trust card P7-03.
+- Focused regression tests dan browser verification `390x844` serta `1440x900`.
+
+Out of scope:
+
+- Redesign inquiry list/cart dan contextual WhatsApp P7-05, perubahan controller cart/checkout, filter/query P7-02, rekonsiliasi data, schema/migration, write media, dependency, staging, production, dan deployment.
+
+Dependencies:
+
+- P7-01 kontrak UX/ADR-020, P7-02 discovery state, dan P7-03 card trust layer selesai.
+
+Risks:
+
+- Published legacy row dapat kehilangan offer atau image; detail wajib menyatakan data belum lengkap tanpa menebak harga, ukuran, atau gambar.
+- Gallery, nama/deskripsi/notes panjang, dan related products dapat mendorong primary information terlalu jauh atau menyebabkan overflow pada mobile.
+- Cart legacy masih memvalidasi quantity variant stock dan terminology inquiry belum selesai; perubahan semantics end-to-end tetap ditahan untuk P7-05.
+
+Implementation notes:
+
+- Surface aktif hanya public catalog detail. Primary task: memahami produk dan availability secara jujur, lalu kembali ke hasil katalog.
+- Baseline browser produk nyata `Rasasi Hawas For Him` telah direkam pada `390x844` dan `1440x900` sesuai quality gate `qammaris-ui-review`.
+- Pertahankan URL, context query allowlisted, Laravel/Blade/Tailwind/DaisyUI, dan identitas black/ivory/gold tanpa dependency baru.
+
+Acceptance criteria:
+
+- Mobile menampilkan brand, nama, ukuran, harga, availability, dan action existing sebelum media mendorong informasi tersebut jauh ke bawah; desktop tetap mempunyai komposisi foto dan detail yang seimbang.
+- Ukuran/harga serta JSON-LD offer hanya berasal dari satu `activeOffer`; row tanpa offer menampilkan `Data sedang dilengkapi` tanpa `base_price` atau action cart aktif.
+- Tidak ada selector ukuran palsu atau copy `In Stock`/variant stock sebagai availability publik.
+- Effective availability menampilkan tepat `Tersedia saat diperiksa`, `Konfirmasi stok`, atau `Sold out`; stale available menjadi unknown dan quantity snapshot tidak ditampilkan sebagai stok live.
+- Gallery tidak menduplikasi primary image, memakai source storage/placeholder lokal, mempunyai alt/focus/selected state, dan tidak hotlink provider/placeholder eksternal.
+- Fragrance notes menampilkan hanya kelompok nonempty; long content aman, output tetap escaped, dan UI utama konsisten Bahasa Indonesia.
+- Return-to-results serta related links mempertahankan context allowlisted dan canonical detail tetap tanpa query.
+- Focused/full tests, Pint, Blade compile, build, browser states, keyboard, console, overflow, dan CI lulus.
+
+Verification:
+
+- Pending implementasi dan quality gate.
+
+Documentation updates:
+
+- Backlog ini menjadi boundary tunggal P7-04; hasil final dan rollback akan dicatat saat close-out.
+
+Rollback:
+
+- Revert commit implementasi P7-04; tidak ada migration, data, media, dependency, staging, production, atau deployment untuk di-rollback.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
