@@ -143,21 +143,29 @@ jobs:
           mv public/.staging-build/build public/build
           rmdir public/.staging-build
           auth_file="$(dirname "$STAGING_PATH")/.htpasswd"
-          if [ -f "$auth_file" ] && ! grep -q 'Qammaris Staging Review' .htaccess; then
-            auth_config="$(mktemp .htaccess.XXXXXX)"
-            {
-              printf '%s\n' 'AuthType Basic'
-              printf '%s\n' 'AuthName "Qammaris Staging Review"'
-              printf 'AuthUserFile %s\n' "$auth_file"
-              printf '%s\n' '<RequireAny>'
-              printf '%s\n' '  Require expr "%{THE_REQUEST} =~ m#^POST /integrations/qammaris-app/webhook HTTP/[0-9.]+$#"'
-              printf '%s\n' '  Require valid-user'
-              printf '%s\n\n' '</RequireAny>'
-              cat .htaccess
-            } > "$auth_config"
-            mv "$auth_config" .htaccess
-          fi
+          test -f "$auth_file" || { printf '%s\n' 'Missing staging password file.' >&2; exit 1; }
+          STAGING_AUTH_FILE="$auth_file" php <<'AUTH_PHP'
+          <?php
+          $authFile = getenv('STAGING_AUTH_FILE');
+          $header = "# BEGIN Qammaris Staging Review\nAuthType Basic\nAuthName \"Qammaris Staging Review\"\nAuthUserFile {$authFile}\n"
+              . "SetEnvIf Request_URI \"^/(public/)?integrations/qammaris-app/webhook$\" qammaris_webhook=1\n"
+              . "<RequireAny>\n  Require env qammaris_webhook\n  Require env REDIRECT_qammaris_webhook\n  Require valid-user\n</RequireAny>\n# END Qammaris Staging Review\n\n";
+          // Hostinger's effective entry directory is public; protect both rewrite levels.
+          foreach (['.htaccess', 'public/.htaccess'] as $path) {
+              $content = file_get_contents($path);
+              $content = preg_replace('/\A# BEGIN Qammaris Staging Review\R.*?# END Qammaris Staging Review\R\R?/s', '', $content);
+              $content = preg_replace('/\AAuthType Basic\RAuthName "Qammaris Staging Review"\R.*?\R\R/s', '', $content);
+              if (str_contains($content, 'Qammaris Staging Review')) {
+                  throw new RuntimeException('Unexpected staging auth block; preserve it for review.');
+              }
+              $candidate = $path.'.staging-auth';
+              if (file_put_contents($candidate, $header.$content) === false || !chmod($candidate, 0644) || !rename($candidate, $path)) {
+                  throw new RuntimeException('Staging auth installation failed.');
+              }
+          }
+          AUTH_PHP
           php artisan optimize
+          chmod 600 bootstrap/cache/config.php
           test -f public/build/manifest.json
           test -L public/storage
           REMOTE_SCRIPT
@@ -190,6 +198,7 @@ jobs:
             rm -f "$fragment" "$candidate"
             php artisan config:clear --no-interaction >/dev/null
             php artisan optimize --no-interaction >/dev/null
+            chmod 600 bootstrap/cache/config.php
             printf '%s\n' 'Rollback cleanup completed.'
           }
 

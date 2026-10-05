@@ -33,7 +33,20 @@ Paste it **only** into `WEBSITE_WEBHOOK_SECRET`. Set the public staging URL abov
 
 This clears the clipboard only when it still contains one of this pair. Remove a secret from clipboard history too if the operating system retained it; do not sync/share the clipboard contents. The store is user/machine-bound; do not transfer its file to another computer as a handoff mechanism.
 
-Reply only **“env backend terisi, backend sudah restart”**. No values are needed in chat. The same pair must be installed securely in website staging as `QAMMARIS_APP_API_KEY` and `QAMMARIS_APP_WEBHOOK_SECRET`, with base URL `https://api.qammarisapp.com/api/public/v1`; these stay in its protected, untracked environment.
+Reply only **“env backend terisi, backend sudah restart”**. No values are needed in chat. The same pair **is already installed** in website staging as `QAMMARIS_APP_API_KEY` and `QAMMARIS_APP_WEBHOOK_SECRET`, with base URL `https://api.qammarisapp.com/api/public/v1`. Website env and cached config are 0600. Do not generate a different pair for the app.
+
+## Website staging process supervision
+
+The worker and `schedule:work` are running for staging tests. SSH has no `crontab` executable. Durable supervision requires configuration in the **website staging** hosting panel, separately from app backend env.
+
+If using Hostinger custom cron, configure these as two separate once-per-minute entries, without credentials in commands:
+
+```text
+bash /home/u429527638/domains/staging.qammarisparfum.id/public_html/storage/app/private/p8-03-worker-watchdog.sh
+bash /home/u429527638/domains/staging.qammarisparfum.id/public_html/storage/app/private/p8-03-scheduler.sh
+```
+
+After the website team verifies cron execution, it must stop the recorded temporary `schedule:work` process to avoid duplicate scheduler invocations. The worker watchdog shares a file lock to prevent a second integration worker. A hosting process manager may be used if available; crash/reboot recovery must be verified. Do not change other sites' jobs.
 
 ## Next verification, after backend configuration
 

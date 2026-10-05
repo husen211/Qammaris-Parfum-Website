@@ -2,6 +2,8 @@
 
 Implementation is P8-01 / ADR-021. This runbook describes activation; it does not authorize deployment, secret changes or production mapping.
 
+2026-10-05: Owner explicitly authorized **staging** activation. Receiver deployed at `https://staging.qammarisparfum.id/integrations/qammaris-app/webhook`; secrets installed, signed synthetic signal returns 202 and worker retries source 503 without advancing checkpoint. Actual half-hour scheduler invocation observed. App backend env/restart and durable hosting supervision remain Owner handoff work. See [runtime evidence](../verification/p8-03/README.md) and [Owner instructions](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Production target still requires separate approval; no live end-to-end success claimed.
+
 The staged runtime acceptance matrix, Basic Auth ingress decision, progress denominator and remaining launch stages are in [QAMMARIS_APP_LAUNCH_READINESS.md](QAMMARIS_APP_LAUNCH_READINESS.md). The existing staging release pipeline does not start the integration worker/scheduler; deploying code alone does not establish API connectivity.
 
 ## Configuration

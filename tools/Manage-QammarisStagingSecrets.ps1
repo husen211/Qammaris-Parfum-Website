@@ -32,16 +32,23 @@ if ($Action -eq 'Initialize') {
     if ((Get-Item -LiteralPath $vaultDirectory).Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'The secret store must not be a directory link.'
     }
-    $acl = [Security.AccessControl.DirectorySecurity]::new()
-    $acl.SetOwner($userSid)
-    $acl.SetAccessRuleProtection($true, $false)
-    foreach ($sid in @($userSid, [Security.Principal.SecurityIdentifier]::new('S-1-5-18'))) {
-        $rule = [Security.AccessControl.FileSystemAccessRule]::new(
-            $sid, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow'
-        )
-        $acl.AddAccessRule($rule)
+    $acl = Get-Acl -LiteralPath $vaultDirectory
+    $allowedSids = @($userSid.Value, 'S-1-5-18')
+    $unexpectedRules = @($acl.Access | Where-Object {
+        $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -notin $allowedSids
+    })
+    if (-not $acl.AreAccessRulesProtected -or $unexpectedRules.Count -gt 0) {
+        # Modify only the existing DACL; replacing the whole descriptor can request SACL privileges.
+        $acl.SetAccessRuleProtection($true, $false)
+        foreach ($existingRule in @($acl.Access)) { $acl.RemoveAccessRuleSpecific($existingRule) }
+        foreach ($sid in @($userSid, [Security.Principal.SecurityIdentifier]::new('S-1-5-18'))) {
+            $rule = [Security.AccessControl.FileSystemAccessRule]::new(
+                $sid, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow'
+            )
+            $acl.AddAccessRule($rule)
+        }
+        Set-Acl -LiteralPath $vaultDirectory -AclObject $acl
     }
-    Set-Acl -LiteralPath $vaultDirectory -AclObject $acl
 
     # Existing values are reused: retries must not silently rotate either side.
     if (-not (Test-Path -LiteralPath $vaultFile -PathType Leaf)) {

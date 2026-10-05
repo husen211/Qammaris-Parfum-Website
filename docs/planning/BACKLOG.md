@@ -2311,16 +2311,18 @@ Outcome: demonstrate actual app webhook → database worker → checkpoint/audit
 
 In scope: staged release preflight and exact revision, protected Owner-configured credentials, approved staging ingress, dedicated persistent worker/scheduler, one approved synthetic pair, MySQL concurrency/page/revision/hidden/outage verification and evidence. Out of scope: production deployment, broad production mapping, automatic catalog/price/media writes, outgoing API or internal-app code changes.
 
-Preparation completed:
+Historical preparation (before explicit activation request):
 
 - Local runtime presence checks: API key false, webhook secret false, client configured false; secret values were not printed. POST receiver/throttle and 30-minute schedule definitions confirmed.
 - Integration/presentation regression rerun: `24 passed (186 assertions)`, isolated SQLite/fake HTTP. This is local proof, not upstream connectivity.
 - Existing staging workflow applies unconditional Basic Auth and does not start/restart integration worker or install cron. Historical staging was verified 2026-09-15; current access/hosting state not confirmed. Two public HEAD targets failed at socket transport; no HTTP status was obtained, so no remote route/outage claim is made.
 - Reviewable activation/launch plan, candidate URLs, runtime matrix, remaining three delivery stages and progress denominator in `docs/runbooks/QAMMARIS_APP_LAUNCH_READINESS.md`.
 
-Acceptance: all Stage 1 outcomes in that runbook evidenced on actual staging; durable 202 alone and fake HTTP tests do not pass. Dependencies: P8-01/P8-02 reviewed, confirmed hosting/process manager/access/clock, latest staging backup and explicit staging/ingress approval. Status remains READY pending these approvals/inputs; no deployment or credential change executed.
+Activation evidence (2026-10-05): deployed `1867d83` through successful CI/staging release after protected staging backup; pending additive migrations applied, baseline catalog/users empty and preserved. Secrets generated without output, encrypted outside Git and installed into protected website env/cache (0600). Basic Auth preserved at both rewrite levels; exact webhook URI bypasses human Basic Auth but Laravel POST/HMAC remains mandatory. Tested 401 unsigned, 422 signed invalid payload, 202 signed synthetic signal, worker retries and checkpoint retention at 0. Actual half-hour scheduler invocation observed at 15:00 UTC. Source both with/without key returns 503; no snapshots/products mapped. Full local suite 222 tests / 1487 assertions passed. Evidence: `docs/verification/p8-03/README.md`.
 
-Data/media impact of preparation: none. Files changed: this backlog, integration runbook link and launch readiness runbook. Documentation-only rollback. Next dependent work (not started): P8-04 reviewed identity/launch catalog, then P9-01 production hardening/cutover with P1-04 backup preflight.
+Acceptance remains IN_PROGRESS: Owner backend panel env/restart handoff, real feed drain/order/pagination, reviewed staging mapping, Owner change/revert, measured webhook/UI latency, live revision/hidden/MySQL recovery and successful reconciliation. Host SSH has no crontab binary: worker and schedule:work active under nohup/flock for staging, persistent hosting crash/reboot supervision not confirmed. Do not claim connected or begin P8-04/production cutover. Durable 202 alone and fake HTTP tests do not pass.
+
+Activation data/media impact: dedicated staging additive schema/checkpoint and synthetic queue signals only; no product/media/price writes, app database/frontend or website production changes. Retain staging backup/integration state; prefer forward fix after source data arrives. Documentation/helper/workflow changes accompany runtime evidence. Next action: finish P8-03 after Owner's safe handoff. Next dependent item (not started): P8-04 reviewed launch identities, then separately approved P9-01 cutover with P1-04 backup preflight.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

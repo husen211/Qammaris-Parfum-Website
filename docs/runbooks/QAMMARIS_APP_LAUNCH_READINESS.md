@@ -2,13 +2,15 @@
 
 Prepared 2026-10-05 from repository code/configuration. This is a reviewable activation plan, not deployment authorization or a claim that the API is connected.
 
+**Activation update, 2026-10-05:** explicit staging authorization received. Laravel deployed, protected credentials installed, HMAC 401/422/202 and worker retries verified; scheduled reconciliation invoked at 15:00 UTC. Source with/without key still 503. Owner app env/restart, durable supervision and real feed/mapping/webhook/UI proof pending. See [current P8-03 evidence](../verification/p8-03/README.md) and [secure handoff](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Preparation observations below are historical and do not override this update.
+
 ## Progress denominator
 
 The program board has 10 phases (P0–P9); 7 are marked DONE: P0 and P2–P7. **70% is phase-count progress only**, not percentage of effort or production readiness. P1 still has production backup/cutover preflight outstanding; P8 is in progress; P9 has not started. P8-01 backend and P8-02 public presentation are implemented locally and IN_REVIEW, not deployed integration proof. There is no defensible elapsed-time or remaining-hours estimate before hosting access and credentials are confirmed.
 
 Three remaining launch stages below are delivery gates spanning P1/P8/P9, not three new architecture projects. The machine mutation API, AI integration, full Majoo catalog population, source price review UI and Shopee media import are separate optional work; they are not automatically added to this stock-integration launch.
 
-## Current evidence
+## Historical pre-activation evidence
 
 | Gate | Evidence | Status |
 | --- | --- | --- |
