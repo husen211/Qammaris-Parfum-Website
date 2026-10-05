@@ -1,6 +1,6 @@
 # P8-03 — Owner-selected AOERA staging pair
 
-Prepared 2026-10-05. Owner selected **AOERA MAJESTIC 50 ML** and explicitly requested preparation of its staging pair/mapping. This is a retained, protected staging fixture for the pending availability test; it is not launch catalog curation or a production mapping.
+Prepared 2026-10-05. Owner selected **AOERA MAJESTIC 50 ML** and explicitly requested preparation of its staging pair/mapping. This is a retained, protected staging fixture for availability tests; it is not launch catalog curation or a production mapping. [Latest follow-up](runtime-follow-up.md): revision/checkpoint **456**, authenticated desktop/mobile review passed, rollback scenarios passed and Hostinger watchdog repaired. Exact source ingress/browser-transition timing and remaining real-source scenarios are still unconfirmed.
 
 ## Exact pair and baseline
 
@@ -33,7 +33,7 @@ Media key `products/p8-03-aoera-placeholder.svg` is a verified byte-for-byte cop
 6. At **16:11:47 UTC**, staging Laravel HTTP-kernel detail and catalog requests each returned **200** with the selected name, `available` state and **Tersedia** label; no legacy freshness text. First CLI render attempt incorrectly ran with console-only provider behavior and returned 500 (`footerCategories` missing). A process-only HTTP-context override corrected that verification setup; no application/config-file edit was needed.
 7. Unauthenticated external detail request returned **401**. In-app Browser and Chrome could not open the protected page because review Basic Auth credentials were unavailable to automation. Browser/mobile/desktop visual acceptance and actual external authenticated 200 are **not confirmed**; protection was not relaxed. No page screenshot or new regression suite run; no application code changed.
 
-## Ready for Owner action
+## Historical preparation for Owner action
 
 Open the staging URL using existing review Basic Auth directly in the browser; never send credentials through chat. The loopback preview at `127.0.0.1:8000` remains separate and is not this live staging fixture.
 

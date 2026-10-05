@@ -2,7 +2,7 @@
 
 Observed 2026-10-05. **Staging feed connected and initial sync complete; mapped-product end-to-end acceptance pending.** Owner authorized website staging SSH and the existing signed-in Chrome hPanel session for internal Node backend integration env/restart only. No website production cutover, app frontend change, app database access or filesystem permission change occurred in this continuation.
 
-Latest Owner-selected follow-up: **AOERA MAJESTIC 50 ML** staging fixture **product 1** is prepared and published through existing readiness checks, explicitly mapped to UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`. Baseline revision **59**, label **Tersedia**, global checkpoint **452**. Staging contains **one** test product; other catalog products have not been created/imported. Owner's sold-out test reached **Habis** automatically at revision/checkpoint **453** in about **10 seconds**, then the return-to-available reached **Tersedia** at revision/checkpoint **454** in about **13 seconds**, by stored timestamps. Server-side HTTP-context catalog/detail renders passed; queue is empty, price/size/URL/media retained. Browser review is blocked by Basic Auth; exact ingress/browser latency and remaining mapped scenarios are pending. [Exact pair, fixture fields and verification limits](aoera-staging-test.md).
+Latest Owner-selected follow-up: **AOERA MAJESTIC 50 ML** staging fixture **product 1** is prepared and published through existing readiness checks, explicitly mapped to UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`. Baseline revision **59**, label **Tersedia**, global checkpoint **452**. Staging contains **one** test product; other catalog products have not been created/imported. Owner's sold-out test reached **Habis** automatically at revision/checkpoint **453** in about **10 seconds**, then the return-to-available reached **Tersedia** at revision/checkpoint **454** in about **13 seconds**, by stored timestamps. Server-side HTTP-context catalog/detail renders passed; queue is empty, price/size/URL/media retained. Owner subsequently logged into review Basic Auth; catalog/detail acceptance passed at 1440×900 and 390×844. Latest product revision/checkpoint is 456. Deployed rollback state scenarios and the inherited cron-lock repair passed; exact source ingress/browser-transition latency and remaining real-source scenarios are pending. [Latest runtime/browser/media follow-up](runtime-follow-up.md). [Exact pair, fixture fields and verification limits](aoera-staging-test.md).
 
 ## Release and isolation
 
@@ -11,7 +11,7 @@ Latest Owner-selected follow-up: **AOERA MAJESTIC 50 ML** staging fixture **prod
 - [CI 37326362172](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37326362172): success. [Staging release 37326698406](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37326698406): success; R2 rehearsal disabled.
 - PHP 8.2.33, APP_ENV staging, debug disabled, dedicated staging MySQL. Baseline products/variants/images/users: **0 each**. No reseeding, production snapshot replacement, product creation, price application or media write.
 - Protected backup: `storage/app/private/p8-03-20261005-143646` on staging. Database dump, previous env, root .htaccess, source revision and assets retained. Directory 0700; sensitive files restricted. Compressed dump integrity checked; actual restore rehearsal **not performed**.
-- Existing pending additive migrations plus `2026_10_05_000001_create_qammaris_app_integration` applied through release. Initial checkpoint was **0**; current checkpoint **452**. No catalog product backfill.
+- Existing pending additive migrations plus `2026_10_05_000001_create_qammaris_app_integration` applied through release. Initial checkpoint was **0**; initial drain checkpoint was **452** (latest follow-up: **456**). No catalog product backfill.
 
 ## Secret and access boundary
 
@@ -44,7 +44,7 @@ Latest continuation read the existing pair from staging env through authorized S
 | Duplicate/old wake-up no-op | Signed revisions **59 / 59 / 1** each returned **202**; consumed by worker, source snapshot digest unchanged, checkpoint **452**, audit **0**, last_synced_at **15:51:14 UTC** | Live ingress/cache no-op passed; mapped-product mutation guard still needs its selected test |
 | Hidden tombstones | **6** hidden source snapshots retained; website product count **0** | Cache retention passed; actual mapped public exclusion pending |
 
-Source status counts: **275 available / 163 sold_out / 14 unknown**, including hidden records. Public-safe example: **AOERA MAJESTIC 50 ML**, UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`, available, revision **59**. This is a source example, not an approved test product/mapping. Staging catalog remains **0** products: synchronization does not create/publish products, copy prices or add media automatically.
+Initial-drain source status counts: **275 available / 163 sold_out / 14 unknown**, including hidden records. Public-safe example: **AOERA MAJESTIC 50 ML**, UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`, available, revision **59**. This was initially an unmapped source example; Owner subsequently selected it for the single staging fixture above. At initial drain the staging catalog contained **0** products: synchronization does not create/publish products, copy prices or add media automatically.
 
 ## Hosting limits
 

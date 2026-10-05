@@ -4,6 +4,8 @@ Implementation is P8-01 / ADR-021. This runbook describes activation; it does no
 
 2026-10-05: Owner explicitly authorized **staging** activation, staging SSH and backend hPanel env/restart. Existing staging pair reused in the backend, same backend commit `921569b4` successfully restarted. Source **401 without key / 200 with key**; worker drained **452** snapshots to checkpoint **452**, has_more=false, including **6** hidden tombstones. Existing two minute cron heartbeats advance; temporary schedule:work stopped. Duplicate/older signed wakeups complete without changing snapshots/checkpoint. The Owner-selected AOERA staging fixture is prepared (product 1, source revision 59, label Tersedia); the real app change to its public label remains a public acceptance gate. Actual half-hour reconciliation passed at **16:00 UTC** (worker success **16:00:04**, error null, queue empty). See [runtime evidence](../verification/p8-03/README.md) and [operational handoff](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Production target still requires separate approval; no full end-to-end success claimed.
 
+Latest follow-up, 2026-10-06 local: actual selected-product sold-out/revert passed, authenticated desktop/mobile review passed, latest checkpoint/revision **456**, one worker, queue empty. MySQL rare-state/revision/outage checks passed inside a rollback transaction with synthetic HTTP. Fixed inherited Hostinger cron lock by closing fd 3 on the persistent worker child; both minute heartbeats now advance. [Current runtime evidence and limitations](../verification/p8-03/runtime-follow-up.md). Earlier preparation figures above describe their observation time.
+
 The staged runtime acceptance matrix, Basic Auth ingress decision, progress denominator and remaining launch stages are in [QAMMARIS_APP_LAUNCH_READINESS.md](QAMMARIS_APP_LAUNCH_READINESS.md). The existing staging release pipeline does not start the integration worker/scheduler; deploying code alone does not establish API connectivity.
 
 ## Configuration
@@ -30,7 +32,7 @@ Webhook URL: `https://<approved-website-domain>/integrations/qammaris-app/webhoo
 php artisan queue:work database --queue=qammaris-app --sleep=1 --timeout=60 --tries=5
 ```
 
-Queue `retry_after` must exceed 60 seconds (repository database default: 90). The overlap lock expires after 80 seconds. On one host use the existing shared file cache; all workers must see the same lock store. Do not use process-local array cache for deployed workers. Integration queues are separate from image jobs.
+Queue `retry_after` must exceed 60 seconds (repository database default: 90). The overlap lock expires after 80 seconds. On one host use the existing shared file cache; all workers must see the same lock store. Do not use process-local array cache for deployed workers. Integration queues are separate from image jobs. On the approved Hostinger staging cron setup, use the existing watchdog script, whose reviewed copy is `tools/hostinger/staging-qammaris-worker-watchdog.sh`. It closes inherited provider fd 3 before starting the persistent worker; retaining `/tmp/cron_lock_*` in the child blocks subsequent watchdog ticks. Verify both the fresh minute heartbeat and absence of that inherited provider lock in `/proc`; the application worker flock should remain. This is observed staging host behavior, not a guarantee for other process managers. Preserve existing file permissions and do not add duplicate cron entries.
 
 4. Install/verify the existing Laravel scheduler invocation once/minute:
 

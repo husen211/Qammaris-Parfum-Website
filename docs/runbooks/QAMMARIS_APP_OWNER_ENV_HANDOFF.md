@@ -27,7 +27,15 @@ Both protected heartbeat files advance. After verifying cron execution and exact
 
 The scheduler definition queues reconciliation every **30 minutes**. Watchdog restart recovery passed: the worker stopped at **15:56:28 UTC**, one job remained durable, and the cron started a new worker and consumed the job at **15:57:02 UTC**, retaining checkpoint **452** and clearing no source state. Recovery took about **34 seconds**; OS reboot was not tested. Actual half-hour cron execution passed at **16:00 UTC / 23:00 WIB**: task DONE, worker success **16:00:04 UTC**, queue pending **0**, checkpoint **452**, last_error **null**, remaining feed empty and has_more=false. Three historical failed jobs from the earlier source outage are retained. Do not erase/retry unrelated failed jobs.
 
-## Next Owner action — prepared AOERA availability test
+## Latest verification — 2026-10-06 local
+
+Owner's AOERA sold-out/return-to-available cycle passed automatically (revision 453/454, approximately 10/13 seconds by stored timestamps). Latest revision/checkpoint **456**, five audits, queue empty, no sync error. Owner logged into the existing review Basic Auth; live catalog/detail acceptance passed at **1440×900 / 390×844**. Deployed rollback tests proved rare-state/old-revision behavior with synthetic HTTP; these do not substitute for actual source-originated rare-state delivery or measured browser transition timing. [Latest verification and remaining gates](../verification/p8-03/runtime-follow-up.md).
+
+The staging watchdog was repaired after its persistent child inherited Hostinger's cron lock on **fd 3**. Its nohup launch now includes **`3>&-`**, verified against the value-free repository script `tools/hostinger/staging-qammaris-worker-watchdog.sh`. Bash syntax passed; original mode 0700 unchanged; existing two cron commands remain unchanged. One refreshed worker holds only the application worker lock; both minute heartbeats advance. Keep the backup `storage/app/private/p8-03-worker-watchdog-before-fd-fix-20261005.sh` but prefer forward fix: restoring it would reintroduce the blocking provider lock. Check `/proc` cwd/executable/argv/descriptors, not just the PID file.
+
+AOERA remains a **placeholder fixture**, not launch-ready product imagery. No Shopee image matching/import or permanent production R2 cutover occurred. Review actual launch identities and real media separately after remaining P8-03 gates.
+
+## Historical Owner action — prepared AOERA availability test
 
 Owner selected **AOERA MAJESTIC 50 ML**. Its staging fixture is ready: website product **1** → UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`, revision **59**, label **Tersedia**. Open `https://staging.qammarisparfum.id/products/p8-03-aoera-majestic-50-ml` with review Basic Auth directly in the browser. Report this exact source product sold out; let the website team observe Habis before deleting the report and verifying Tersedia. No operational product has been changed by the website agent. [Fixture and verified baseline](../verification/p8-03/aoera-staging-test.md).
 
