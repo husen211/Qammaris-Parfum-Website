@@ -2,58 +2,41 @@
 
 Scope: internal-app **backend Node** at `api.qammarisapp.com` and Laravel website staging. Do not redeploy the app frontend, modify app database or switch to the website production receiver.
 
-Two distinct random 32-byte hexadecimal values were generated without printing them. The local secret store is Windows DPAPI-encrypted, bound to this Windows user, outside Git at `%LOCALAPPDATA%\QammarisWebsite\IntegrationSecrets\staging-api-secrets.clixml`. Directory/file access is restricted to this user and SYSTEM. Do not open/export it as plaintext or attach it to chat. Re-running initialization reuses the pair; it never rotates them silently.
+## Current status — 2026-10-05
 
-## Backend app env — Owner action when panel control is unavailable
+Owner explicitly authorized website staging SSH and the existing signed-in Chrome hPanel session. The existing `QAMMARIS_APP_API_KEY` and `QAMMARIS_APP_WEBHOOK_SECRET` were read from staging env into memory only, then entered into these backend environment variables:
 
-Use the authenticated Hostinger panel for **api.qammarisapp.com backend**, not the frontend site. Set only:
+- `WEBSITE_API_KEY`: **terisi**, same staging value.
+- `WEBSITE_WEBHOOK_SECRET`: **terisi**, same staging value.
+- `WEBSITE_WEBHOOK_URL`: `https://staging.qammarisparfum.id/integrations/qammaris-app/webhook`.
 
-- `WEBSITE_API_KEY`
-- `WEBSITE_WEBHOOK_SECRET`
-- `WEBSITE_WEBHOOK_URL` = `https://staging.qammarisparfum.id/integrations/qammaris-app/webhook`
-- Optional `WEBSITE_FEED_SAFE_DELAY_MS` = `5000` (already the default)
+Only these three variables were added/applied. hPanel saved them and restarted/redeployed the same backend commit **921569b4**, completed at **15:48:01 UTC / 22:48:01 WIB**. No pair rotation, clipboard transfer, secret output/file or filesystem permission change occurred. Secret session variables were cleared afterward. Staging env is authoritative; do not blindly restore an older local secret store.
 
-From a local PowerShell terminal in the website repository, copy one value directly from the encrypted store to the clipboard; the helper prints no secret:
-
-```powershell
-./tools/Manage-QammarisStagingSecrets.ps1 -Action CopyApiKey
-```
-
-Paste it **only** into the protected `WEBSITE_API_KEY` backend env field. Then:
-
-```powershell
-./tools/Manage-QammarisStagingSecrets.ps1 -Action CopyWebhookSecret
-```
-
-Paste it **only** into `WEBSITE_WEBHOOK_SECRET`. Set the public staging URL above, save and restart/redeploy **only the backend**. Use the host's normal secure configuration editor; do not screenshot revealed fields or paste them into terminal commands/chat. Clear the copied value after pasting:
-
-```powershell
-./tools/Manage-QammarisStagingSecrets.ps1 -Action ClearClipboard
-```
-
-This clears the clipboard only when it still contains one of this pair. Remove a secret from clipboard history too if the operating system retained it; do not sync/share the clipboard contents. The store is user/machine-bound; do not transfer its file to another computer as a handoff mechanism.
-
-Reply only **“env backend terisi, backend sudah restart”**. No values are needed in chat. The same pair **is already installed** in website staging as `QAMMARIS_APP_API_KEY` and `QAMMARIS_APP_WEBHOOK_SECRET`, with base URL `https://api.qammarisapp.com/api/public/v1`. Website env and cached config are 0600. Do not generate a different pair for the app.
+Feed authentication now returns **401 without key / 200 with key**. Initial database-worker synchronization completed: **452** snapshots, checkpoint **452**, `has_more=false`, six hidden tombstones retained. Catalog products remain **0**; a feed snapshot does not create or publish a website product. Evidence and safe product example: [P8-03 verification](../verification/p8-03/README.md).
 
 ## Website staging process supervision
 
-Update 2026-10-05: **both entries below are already saved in staging hPanel**, each once per minute. Do not create duplicates. Browser control works, but domain-scoped File Manager rejects public_html access. Actual cron heartbeat and stopping temporary schedule:work are still unverified under the current hPanel-only access restriction. Owner assistance is needed; backend env has not been changed in this follow-up.
-
-The worker and `schedule:work` are running for staging tests. SSH has no `crontab` executable. Durable supervision requires configuration in the **website staging** hosting panel, separately from app backend env.
-
-If using Hostinger custom cron, configure these as two separate once-per-minute entries, without credentials in commands:
+The two entries below are **already saved** in staging hPanel, each once per minute. Do not add duplicates:
 
 ```text
 bash /home/u429527638/domains/staging.qammarisparfum.id/public_html/storage/app/private/p8-03-worker-watchdog.sh
 bash /home/u429527638/domains/staging.qammarisparfum.id/public_html/storage/app/private/p8-03-scheduler.sh
 ```
 
-After the website team verifies cron execution, it must stop the recorded temporary `schedule:work` process to avoid duplicate scheduler invocations. The worker watchdog shares a file lock to prevent a second integration worker. A hosting process manager may be used if available; crash/reboot recovery must be verified. Do not change other sites' jobs.
+Both protected heartbeat files advance. After verifying cron execution and exact staging process identity, temporary `schedule:work` was stopped. One actual PHP integration worker is running under flock; signed duplicate/older wakeups were consumed, queue pending became zero, snapshots/checkpoint stayed unchanged. The original wrapper PID file was stale: verify the live process working directory, command and dedicated queue before any process-control action. Never terminate a process from a PID file alone.
 
-## Next verification, after backend configuration
+The scheduler definition queues reconciliation every **30 minutes**. Watchdog restart recovery passed: the worker stopped at **15:56:28 UTC**, one job remained durable, and the cron started a new worker and consumed the job at **15:57:02 UTC**, retaining checkpoint **452** and clearing no source state. Recovery took about **34 seconds**; OS reboot was not tested. Actual half-hour cron execution passed at **16:00 UTC / 23:00 WIB**: task DONE, worker success **16:00:04 UTC**, queue pending **0**, checkpoint **452**, last_error **null**, remaining feed empty and has_more=false. Three historical failed jobs from the earlier source outage are retained. Do not erase/retry unrelated failed jobs.
 
-Without a key the feed must change from 503 to 401. Laravel then tests the key and drains the sequence feed from checkpoint 0, preserving hidden tombstones internally and excluding them from the public catalog. Record aggregate counts and one public-safe product example, not complete response bodies.
+## Next Owner action — one selected availability test
 
-After initial sync and one reviewed staging product/UUID mapping, Owner changes that exact source product's availability (sold out → revert/inbound), allowing the website team to measure the real webhook/worker/public-label path. A price-only source edit exercises revision delivery but does **not** change the website selling price, which remains a reviewed proposal by business rule. Do not alter an operational product merely for testing without selecting it explicitly.
+Select **one** safe source product by name and size. Wait for the website team to prepare and review its exact staging product/UUID pair before changing availability. Then report that product sold out and delete the report (or record inbound through the normal SOP), allowing real source webhook → worker → staging label latency to be measured. No operational product has been changed by the website agent.
 
-Verify duplicate/old signals are no-op, actual 30-minute reconciliation, and queue restart recovery. Website production cutover and changing `WEBSITE_WEBHOOK_URL` to the production website remain separately approved work.
+A price-only edit exercises revision delivery but does **not** change the website selling price, which remains a reviewed proposal. Source product names/SKUs are matching assistance only; mapping uses the application's UUID. No automatic catalog/price/media imports are authorized by activation.
+
+Complete the remaining P8-03 runtime matrix: actual mapped availability/revert, old/duplicate revision guard, hidden/OTW/unknown behavior. Then review P8-04 launch identities; do not start broad mapping automatically.
+
+## Confidentiality and rollback
+
+No secret values are needed in chat, repository, screenshots, logs or command arguments. Keep existing protected environment values; store presence-only operational evidence. If panel access is unavailable, Owner can transfer values directly from authorized protected storage into the backend editor without sending them through chat.
+
+Retain the protected staging backup, source snapshots, checkpoint and audit. Prefer forward fix; do not reset the cursor, drop integration tables or delete catalog/media as automatic rollback. Pausing integration requires only approved staging process/env changes. **Website production cutover and changing the webhook target to production require separate Owner approval.**

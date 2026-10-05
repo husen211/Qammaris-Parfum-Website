@@ -2,7 +2,7 @@
 
 Prepared 2026-10-05 from repository code/configuration. This is a reviewable activation plan, not deployment authorization or a claim that the API is connected.
 
-**Activation update, 2026-10-05:** explicit staging authorization received. Laravel deployed, protected credentials installed, HMAC 401/422/202 and worker retries verified; scheduled reconciliation invoked at 15:00 UTC. Source with/without key still 503. Owner app env/restart, durable supervision and real feed/mapping/webhook/UI proof pending. See [current P8-03 evidence](../verification/p8-03/README.md) and [secure handoff](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Preparation observations below are historical and do not override this update.
+**Activation update, 2026-10-05:** staging feed is connected after reusing the existing protected pair through authorized staging SSH and backend hPanel. Backend restarted on the same `921569b4` commit; source **401 without key / 200 with key**. Database worker drained **452** snapshots to checkpoint **452**, has_more=false; six hidden tombstones retained. Existing minute crons execute, temporary schedule:work stopped, duplicate/older ingress signals are cache no-ops. Catalog remains empty; one reviewed test mapping, real Owner availability change/revert and public latency remain P8-03 gates. Actual half-hour reconciliation passed at **16:00 UTC**, worker success **16:00:04**, queue empty. See [current evidence](../verification/p8-03/README.md) and [operational handoff](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Preparation observations below are historical and do not override this update. Production remains separately approved.
 
 ## Progress denominator
 

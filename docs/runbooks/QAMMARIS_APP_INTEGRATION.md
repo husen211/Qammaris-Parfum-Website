@@ -2,7 +2,7 @@
 
 Implementation is P8-01 / ADR-021. This runbook describes activation; it does not authorize deployment, secret changes or production mapping.
 
-2026-10-05: Owner explicitly authorized **staging** activation. Receiver deployed at `https://staging.qammarisparfum.id/integrations/qammaris-app/webhook`; secrets installed, signed synthetic signal returns 202 and worker retries source 503 without advancing checkpoint. Actual half-hour scheduler invocation observed. App backend env/restart and durable hosting supervision remain Owner handoff work. See [runtime evidence](../verification/p8-03/README.md) and [Owner instructions](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Production target still requires separate approval; no live end-to-end success claimed.
+2026-10-05: Owner explicitly authorized **staging** activation, staging SSH and backend hPanel env/restart. Existing staging pair reused in the backend, same backend commit `921569b4` successfully restarted. Source **401 without key / 200 with key**; worker drained **452** snapshots to checkpoint **452**, has_more=false, including **6** hidden tombstones. Existing two minute cron heartbeats advance; temporary schedule:work stopped. Duplicate/older signed wakeups complete without changing snapshots/checkpoint. Staging catalog remains empty, so the real app change to a mapped public label remains a public acceptance gate. Actual half-hour reconciliation passed at **16:00 UTC** (worker success **16:00:04**, error null, queue empty). See [runtime evidence](../verification/p8-03/README.md) and [operational handoff](QAMMARIS_APP_OWNER_ENV_HANDOFF.md). Production target still requires separate approval; no full end-to-end success claimed.
 
 The staged runtime acceptance matrix, Basic Auth ingress decision, progress denominator and remaining launch stages are in [QAMMARIS_APP_LAUNCH_READINESS.md](QAMMARIS_APP_LAUNCH_READINESS.md). The existing staging release pipeline does not start the integration worker/scheduler; deploying code alone does not establish API connectivity.
 
@@ -18,7 +18,7 @@ QAMMARIS_APP_WEBHOOK_SECRET=
 
 Never put real values in Git, command arguments or logs. Blank values disable delivery (webhook 503, reconciliation command queues nothing). No employee JWT is used. The API base URL must be HTTPS without embedded credentials/query/fragment. The worker always uses connection `database`, independently of `QUEUE_CONNECTION`.
 
-Webhook URL: `https://<approved-website-domain>/integrations/qammaris-app/webhook`. Final deployed domain is **not confirmed**. HMAC uses `X-Qammaris-Timestamp` (Unix seconds), `.`, then unchanged raw JSON bytes; signature is lowercase hexadecimal in `X-Qammaris-Signature`. Clocks must agree within 300 seconds. On retry the app signs a new header timestamp. Receiver returns 401 for invalid signature, 422 for invalid signed body, 413 for >16 KiB, 429 for throttling, 503 for unavailable config/queue, and 202 only after durable enqueue.
+Webhook URL: `https://<approved-website-domain>/integrations/qammaris-app/webhook`. Staging URL is approved and active; production URL is **not approved for cutover**. HMAC uses `X-Qammaris-Timestamp` (Unix seconds), `.`, then unchanged raw JSON bytes; signature is lowercase hexadecimal in `X-Qammaris-Signature`. Clocks must agree within 300 seconds. On retry the app signs a new header timestamp. Receiver returns 401 for invalid signature, 422 for invalid signed body, 413 for >16 KiB, 429 for throttling, 503 for unavailable config/queue, and 202 only after durable enqueue.
 
 ## Approved activation sequence
 
