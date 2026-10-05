@@ -6,9 +6,9 @@ Prepared 2026-10-05 from repository code/configuration. This is a reviewable act
 
 ## Progress denominator
 
-The program board has 10 phases (P0–P9); 7 are marked DONE: P0 and P2–P7. **70% is phase-count progress only**, not percentage of effort or production readiness. P1 still has production backup/cutover preflight outstanding; P8 is in progress; P9 has not started. P8-01 backend and P8-02 public presentation are implemented locally and IN_REVIEW, not deployed integration proof. Hosting access and staging credentials are now confirmed. There is still no defensible launch-date/remaining-hours estimate before the reviewed launch set, its media/data gaps and production preflight are known.
+The program board has 10 phases (P0–P9); 7 are marked DONE: P0 and P2–P7. **70% is phase-count progress only**, not percentage of effort or production readiness. P1 still has production backup/cutover preflight outstanding; P8 is in progress; P9 has not started. P8-01 backend and P8-02 presentation are deployed to staging; actual feed/webhook availability cycle and reconciliation are proven. P8-03 is IN_REVIEW with explicitly deferred/remaining runtime gates, while P8-04 is preparing the Owner-approved feed launch catalog. Hosting access and staging credentials are now confirmed. There is still no defensible launch-date/remaining-hours estimate before the reviewed launch set, its media/data gaps and production preflight are known.
 
-Three remaining launch stages below are delivery gates spanning P1/P8/P9, not three new architecture projects. The machine mutation API, AI integration, full Majoo catalog population, source price review UI and Shopee media import are separate optional work; they are not automatically added to this stock-integration launch.
+Three remaining launch stages below are delivery gates spanning P1/P8/P9, not three new architecture projects. The machine mutation API, AI integration and source price review UI remain separate future work. Owner explicitly added feed-authoritative drafts and Shopee media to P8-04 on 2026-10-06; this overrides the earlier optional-catalog scope.
 
 ## Historical pre-activation evidence
 
@@ -62,15 +62,15 @@ Required staging acceptance matrix:
 
 Stage 1 passes only when these runtime outcomes and the approved configuration/release SHA are recorded. Tests with fake HTTP do not complete this gate.
 
-## Stage 2 — Reviewed identity and launch catalog (P8-04 + P1-04 preparation)
+## Stage 2 — Feed launch drafts and media review (P8-04)
 
-1. Inventory the actual website/source launch set read-only. Record counts of mapped, unmapped, ambiguous, hidden and incomplete products; current production counts are not confirmed.
-2. Review exact website product/size → app UUID pairs. SKU is matching assistance only, names alone are not identity, and differently sized products must not be conflated. The existing CLI previews exact pairs; it is not a bulk matching UI. Agree the launch set before choosing a batch mapping tool or applying a broad production map.
-3. Owner reviews ambiguous pairs and approves the exact apply scope. Preserve internal IDs/slugs/offers/media; retain mapping audit and replay cached state. Unmapped products retain legacy semantics; do not imply every catalog product is connected.
-4. Verify connected labels against source and preserve discoverability for sold-out products. Check the selected launch products' valid offer, price, image, description and links. Obtain latest production backup/inventory/restore evidence for P1-04. Missing source rows never imply deletions.
-5. Gap resolution uses existing draft/import/media/maintenance operations after separate scope approval. The 180-product preview is not evidence that 180 production products are ready, nor a mandate to import all 400+ source products before this launch. No source prices or Shopee images are applied automatically.
+Owner approved current feed snapshots as launch authority (452 total / 446 visible), new drafts only, explicit name-derived size/concentration, and Owner-owned Shopee cover + first two additional downloads. Old 180-product backup is a read-only preservation matching reference. Source=app requires review. See [draft runbook](QAMMARIS_APP_LAUNCH_DRAFTS.md) and ADR-022.
 
-Pass: Owner-reviewed launch set, explicit mapping/exception report, approved mapping scope, preserved identifiers/media, verified catalog journeys and latest production backup/restore plan. Stage 2 can be scoped to an agreed subset; the website must not claim unreviewed products are integrated.
+A separate preview/apply CLI creates only unmapped visible drafts with immutable audit and source/catalog stale guards. Stock worker does not create/publish or alter prices. Existing mapped website ID/slug/price/media remain; ambiguous existing catalog candidates block automatic creation. Initial source price applies only to new drafts. Missing data is never invented.
+
+Stage preparation passes when all eligible staging UUIDs have one record, draft/no-publish and preservation/repeat safeguards hold, strong photos are acquired or explicitly reported failed, and manual photo/data exceptions are reviewable. This is not approval to publish incomplete drafts or replace production DB.
+
+Before production, resolve actual production UUID pairings and old URL/media preservation, choose reviewed launch subset, complete required catalog facts/photos and publish via readiness validation, with P1-04 backup/restore proof. P8-03 rare-state live tests deferred by Owner remain visible in the release risk matrix.
 
 ## Stage 3 — Production hardening, release and observation (P9-01)
 

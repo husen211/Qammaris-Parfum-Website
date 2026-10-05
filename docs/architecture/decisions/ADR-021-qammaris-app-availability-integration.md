@@ -1,6 +1,6 @@
-# ADR-021 â€” Qammaris App availability integration
+# ADR-021 — Qammaris App availability integration
 
-Status: Accepted â€” 2026-10-05, explicit Owner instruction to implement the Laravel receiver, feed worker and 30-minute reconciliation.
+Status: Accepted — 2026-10-05, explicit Owner instruction to implement the Laravel receiver, feed worker and 30-minute reconciliation.
 
 ## Context
 

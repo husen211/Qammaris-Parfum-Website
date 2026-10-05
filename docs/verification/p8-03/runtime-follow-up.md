@@ -62,6 +62,10 @@ Owner logged into the existing staging review Basic Auth in Chrome, without shar
 ![Staging catalog desktop](aoera-catalog-desktop.jpg)
 ![Staging catalog mobile](aoera-catalog-mobile.jpg)
 
+## Current handoff — Owner steering 2026-10-06
+
+P8-03 moved to IN_REVIEW; Owner explicitly deferred live OTW testing and authorized P8-04 feed-authoritative drafts/media. Remaining exact timing and rare-state/concurrency gates below are not claimed passed. P8-04 results are recorded separately in `../p8-04/README.md`; older photo/future-scope statements below describe this historical P8-03 follow-up only.
+
 ## Photos and launch scope
 
 Current staging disk is **public**, not permanently switched to R2. AOERA uses the bundled technical placeholder, verified byte-for-byte against its stored copy. Integration preserves existing image records/files and never hotlinks or automatically copies source media.
