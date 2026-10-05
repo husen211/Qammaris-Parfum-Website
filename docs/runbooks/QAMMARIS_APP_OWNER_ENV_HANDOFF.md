@@ -37,6 +37,8 @@ Reply only **“env backend terisi, backend sudah restart”**. No values are ne
 
 ## Website staging process supervision
 
+Update 2026-10-05: **both entries below are already saved in staging hPanel**, each once per minute. Do not create duplicates. Browser control works, but domain-scoped File Manager rejects public_html access. Actual cron heartbeat and stopping temporary schedule:work are still unverified under the current hPanel-only access restriction. Owner assistance is needed; backend env has not been changed in this follow-up.
+
 The worker and `schedule:work` are running for staging tests. SSH has no `crontab` executable. Durable supervision requires configuration in the **website staging** hosting panel, separately from app backend env.
 
 If using Hostinger custom cron, configure these as two separate once-per-minute entries, without credentials in commands:

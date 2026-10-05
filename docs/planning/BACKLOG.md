@@ -2303,6 +2303,8 @@ Future separate items: reviewed initial SKU/UUID matching, source price proposal
 
 ### P8-03 Staging integration activation and runtime proof — IN_PROGRESS
 
+Latest continuation 2026-10-05 restricts administrative access to the existing signed-in hPanel browser session. Control now works, but staging File Manager rejects public_html with a permission error; no permission/alternate access changes made. Backend env remains untouched. Exactly two once-per-minute runbook cron entries saved on staging only, with screenshot in `docs/verification/p8-03/hostinger-staging-cron.jpg`. Cron execution and temporary schedule:work shutdown are not confirmed; source env/restart and real feed/product/webhook proof remain pending Owner assistance. No application code/database/media/production changes in this follow-up.
+
 Owner's continuation 2026-10-05 authorizes preparation for the next integration step. Remote deployment, credentials/permissions, synthetic staging records and the actual activation still require explicit Owner direction per repository instructions.
 
 Owner's subsequent explicit activation request authorizes staging deployment/environment/worker setup and only the internal Node backend integration env/restart. No app database/frontend changes or website production cutover. Backend panel control is unavailable in this session; follow the Owner fallback instead of an alternate app access route. Random secrets are stored encrypted outside the repository, with presence-only reporting. Safe Owner instructions: `docs/runbooks/QAMMARIS_APP_OWNER_ENV_HANDOFF.md` and the value-free `tools/Manage-QammarisStagingSecrets.ps1` helper.

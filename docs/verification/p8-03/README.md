@@ -38,6 +38,24 @@ No source product example is available: source returns 503, staging catalog is e
 
 ## Hosting limits
 
+### Follow-up: hPanel-only authorization, 2026-10-05
+
+Owner subsequently authorized completion through the **already signed-in hPanel browser session only**. Browser control now works; backend environment-variable UI at api.qammarisapp.com was reached with values remaining masked. No variable was added/edited, no backend restart occurred, and no new secret pair was created.
+
+The domain-scoped staging File Manager opened, but entering public_html returned **"You don't have permissions to access this."** No permissions were changed, no account-wide File Manager or alternate administrative access was used, and the staging env could not be read. This is now a file-access blocker, not an absence of browser tools.
+
+![Domain-scoped staging File Manager denies access](hostinger-staging-file-access.jpg)
+
+The previously empty staging cron list now contains exactly the two runbook commands, both **`* * * * *`**, entered through that staging site's hPanel. Screenshot below contains no environment values. Scheduler "Lihat Output" showed an empty output; this does **not** prove execution/heartbeat. Temporary schedule:work was **not stopped**, because no allowed process-control path was available. Cron execution, temporary scheduler shutdown and recovery remain pending; Owner assistance was requested. Existing revision guards/queue lock do not replace the requirement to stop duplicate scheduler invocation.
+
+![Two staging cron entries saved](hostinger-staging-cron.jpg)
+
+Current a/b/d outcomes remain unverified after this follow-up: no authorized-key request, initial sync, selected product mapping or real Owner availability change was performed. Earlier 503/checkpoint/test results above are historical observations. Only hosting cron configuration and documentation changed in this follow-up; no database/media/application-code or production changes. No regression suite rerun for this panel/documentation-only change.
+
+Recovery: do not create duplicate cron entries. Owner must verify both protected script heartbeats and stop only the recorded temporary staging schedule:work process. If supervision cannot be verified, remove only these newly created staging cron entries and retain the original scripts/state. Source env must use the existing staging pair, never values in chat.
+
+### Earlier SSH preparation (before hPanel-only restriction)
+
 Root-only Basic Auth did not protect the effective public entry directory; the initial THE_REQUEST expression blocked signed delivery. Tested fix installs marked auth blocks at **both** rewrite levels with an exact webhook URI environment exception. Laravel exposes POST only, GET returns 405, every accepted POST requires HMAC. Catalog and adjacent paths remain protected. Final workflow installer executed twice with unchanged contents on retry. These are hosting observations, not general LiteSpeed compatibility claims.
 
 Dedicated queue:work database (qammaris-app, sleep 1, timeout 60, tries 5) and schedule:work started using nohup/flock, observed alive across SSH sessions for over nine minutes. flock and PHP proc_open are available; **crontab binary absent**, no system cron installed. Temporary staging processes do not prove automatic crash/reboot recovery. Protected value-free watchdog/scheduler scripts and PID/lock files are retained for Owner hosting cron setup. Do not run cron scheduler and schedule:work indefinitely together.
