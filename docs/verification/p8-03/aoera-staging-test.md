@@ -57,7 +57,22 @@ Owner reported this selected product sold out, then asked the website team to ch
 
 The automatic application happened between the half-hour reconciliation ticks, consistent with the configured webhook path. Exact source webhook send/ingress 202 timestamps were not captured; no accessible staging domain access-log files were found at the domain logs path. Do not label this as directly observed webhook arrival timing or browser paint latency. Authenticated browser/mobile/desktop acceptance remains unconfirmed because review Basic Auth access was unavailable to automation.
 
-The sold-out state is now verified and Owner may delete **that report** to test the newer revert. Wait for its own newer source revision and website audit; do not force availability manually. Revert and mapped hidden/OTW/unknown scenarios remain P8-03 gates. Production cutover/P8-04 broad launch mapping has not started.
+## Owner return-to-available test — 2026-10-05
+
+Owner then returned the selected product to available and requested verification. No manual sync or source mutation was triggered during this check.
+
+| Check | Observed result |
+| --- | --- |
+| Source detail | HTTP **200**, availability **available**, hidden **false**, revision/change_seq **454** |
+| Source status time | **16:55:03.862 UTC** |
+| Website application time | Cache and audit **16:55:17 UTC**, approximately **13 seconds** after source status time |
+| Website state | Product **1**, **Tersedia**, published, not hidden; checkpoint **454** |
+| Audit | Revision **454**, actor **qammaris_app**, **sold_out → available**; three availability audits including baseline 59 and sold-out 453 |
+| Queue/sync | Pending jobs **0**, last sync **16:55:17 UTC**, last error **null** |
+| Retained fields | Offer price **180000.00**, size **50 ml**, existing slug and image ID **1** unchanged |
+| Server-side HTTP-context render | Catalog and detail **200** at **16:56:49 UTC**, available markers and **Tersedia** label, no legacy freshness text |
+
+The selected product's automatic sold-out/return-to-available cycle is verified. These delays compare stored timestamps; clock offsets, exact real webhook ingress/202 time and authenticated browser paint latency were not independently captured. Browser visual review and mapped hidden/OTW/unknown scenarios remain P8-03 gates. Production cutover/P8-04 broad launch mapping has not started.
 
 ## Retention / rollback
 
