@@ -2,6 +2,8 @@
 
 Observed 2026-10-05. **Staging feed connected and initial sync complete; mapped-product end-to-end acceptance pending.** Owner authorized website staging SSH and the existing signed-in Chrome hPanel session for internal Node backend integration env/restart only. No website production cutover, app frontend change, app database access or filesystem permission change occurred in this continuation.
 
+Latest Owner-selected follow-up: **AOERA MAJESTIC 50 ML** staging fixture **product 1** is prepared and published through existing readiness checks, explicitly mapped to UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`. Baseline revision **59**, label **Tersedia**, global checkpoint **452**. Staging now contains **one** test product; other catalog products have not been created/imported. Server-side HTTP-context catalog/detail render passed, repeat mapping was idempotent. Browser review is blocked by Basic Auth; real Owner sold-out/revert and delivery/UI latency are pending. [Exact pair, fixture fields and verification limits](aoera-staging-test.md).
+
 ## Release and isolation
 
 - Staging: `https://staging.qammarisparfum.id`; receiver: `/integrations/qammaris-app/webhook`.

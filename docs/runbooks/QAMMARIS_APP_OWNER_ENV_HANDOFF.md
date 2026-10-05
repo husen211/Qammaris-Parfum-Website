@@ -12,7 +12,7 @@ Owner explicitly authorized website staging SSH and the existing signed-in Chrom
 
 Only these three variables were added/applied. hPanel saved them and restarted/redeployed the same backend commit **921569b4**, completed at **15:48:01 UTC / 22:48:01 WIB**. No pair rotation, clipboard transfer, secret output/file or filesystem permission change occurred. Secret session variables were cleared afterward. Staging env is authoritative; do not blindly restore an older local secret store.
 
-Feed authentication now returns **401 without key / 200 with key**. Initial database-worker synchronization completed: **452** snapshots, checkpoint **452**, `has_more=false`, six hidden tombstones retained. Catalog products remain **0**; a feed snapshot does not create or publish a website product. Evidence and safe product example: [P8-03 verification](../verification/p8-03/README.md).
+Feed authentication now returns **401 without key / 200 with key**. Initial database-worker synchronization completed: **452** snapshots, checkpoint **452**, `has_more=false`, six hidden tombstones retained. Catalog was **0** after initial sync; the Owner-selected AOERA follow-up now adds **one** explicit staging fixture. A feed snapshot itself does not create or publish a website product. Evidence and safe product example: [P8-03 verification](../verification/p8-03/README.md).
 
 ## Website staging process supervision
 
@@ -27,9 +27,9 @@ Both protected heartbeat files advance. After verifying cron execution and exact
 
 The scheduler definition queues reconciliation every **30 minutes**. Watchdog restart recovery passed: the worker stopped at **15:56:28 UTC**, one job remained durable, and the cron started a new worker and consumed the job at **15:57:02 UTC**, retaining checkpoint **452** and clearing no source state. Recovery took about **34 seconds**; OS reboot was not tested. Actual half-hour cron execution passed at **16:00 UTC / 23:00 WIB**: task DONE, worker success **16:00:04 UTC**, queue pending **0**, checkpoint **452**, last_error **null**, remaining feed empty and has_more=false. Three historical failed jobs from the earlier source outage are retained. Do not erase/retry unrelated failed jobs.
 
-## Next Owner action — one selected availability test
+## Next Owner action — prepared AOERA availability test
 
-Select **one** safe source product by name and size. Wait for the website team to prepare and review its exact staging product/UUID pair before changing availability. Then report that product sold out and delete the report (or record inbound through the normal SOP), allowing real source webhook → worker → staging label latency to be measured. No operational product has been changed by the website agent.
+Owner selected **AOERA MAJESTIC 50 ML**. Its staging fixture is ready: website product **1** → UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`, revision **59**, label **Tersedia**. Open `https://staging.qammarisparfum.id/products/p8-03-aoera-majestic-50-ml` with review Basic Auth directly in the browser. Report this exact source product sold out; let the website team observe Habis before deleting the report and verifying Tersedia. No operational product has been changed by the website agent. [Fixture and verified baseline](../verification/p8-03/aoera-staging-test.md).
 
 A price-only edit exercises revision delivery but does **not** change the website selling price, which remains a reviewed proposal. Source product names/SKUs are matching assistance only; mapping uses the application's UUID. No automatic catalog/price/media imports are authorized by activation.
 
