@@ -2,7 +2,7 @@
 
 Observed 2026-10-05. **Staging feed connected and initial sync complete; mapped-product end-to-end acceptance pending.** Owner authorized website staging SSH and the existing signed-in Chrome hPanel session for internal Node backend integration env/restart only. No website production cutover, app frontend change, app database access or filesystem permission change occurred in this continuation.
 
-Latest Owner-selected follow-up: **AOERA MAJESTIC 50 ML** staging fixture **product 1** is prepared and published through existing readiness checks, explicitly mapped to UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`. Baseline revision **59**, label **Tersedia**, global checkpoint **452**. Staging now contains **one** test product; other catalog products have not been created/imported. Server-side HTTP-context catalog/detail render passed, repeat mapping was idempotent. Browser review is blocked by Basic Auth; real Owner sold-out/revert and delivery/UI latency are pending. [Exact pair, fixture fields and verification limits](aoera-staging-test.md).
+Latest Owner-selected follow-up: **AOERA MAJESTIC 50 ML** staging fixture **product 1** is prepared and published through existing readiness checks, explicitly mapped to UUID `00360de8-31bd-4982-bd73-ddaaba2d9658`. Baseline revision **59**, label **Tersedia**, global checkpoint **452**. Staging now contains **one** test product; other catalog products have not been created/imported. Server-side HTTP-context catalog/detail render passed, repeat mapping was idempotent. Owner sold-out test now reached Habis automatically at revision/checkpoint **453** in about **10 seconds** by stored timestamps. Browser review is blocked by Basic Auth; revert and directly observed delivery/UI latency remain pending. [Exact pair, fixture fields and verification limits](aoera-staging-test.md).
 
 ## Release and isolation
 
@@ -39,7 +39,7 @@ Latest continuation read the existing pair from staging env through authorized S
 | Correct HMAC, synthetic UUID/revision signal | **202**, accepted | Durable enqueue verified |
 | Worker after accepted signals | Queue drained; checkpoint **452**, safe error cleared | Live source application passed; three historical failed jobs from pre-activation outage retained |
 | Scheduler | Actual minute-cron invocation of qammaris-app:sync **16:00 UTC / 23:00 WIB** recorded DONE; worker last_synced_at **16:00:04 UTC**, checkpoint **452**, error **null**, queue pending **0** | Successful post-activation half-hour reconciliation passed; remaining feed empty, has_more=false |
-| Owner source change to public label within 7–15 seconds | Not performed | Not confirmed |
+| Owner sold-out change to mapped state | Source status time **16:51:56.923 UTC**, source revision **453**, website audit **16:52:07 UTC**, checkpoint **453**, label **Habis**; catalog/detail HTTP-context render **200** | Automatic state application passed, approximately **10 seconds** by stored timestamps; exact ingress/browser latency and revert pending |
 | Duplicate/old wake-up no-op | Signed revisions **59 / 59 / 1** each returned **202**; consumed by worker, source snapshot digest unchanged, checkpoint **452**, audit **0**, last_synced_at **15:51:14 UTC** | Live ingress/cache no-op passed; mapped-product mutation guard still needs its selected test |
 | Hidden tombstones | **6** hidden source snapshots retained; website product count **0** | Cache retention passed; actual mapped public exclusion pending |
 

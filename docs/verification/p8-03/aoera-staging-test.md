@@ -39,7 +39,25 @@ Open the staging URL using existing review Basic Auth directly in the browser; n
 
 Report **this exact source product** sold out through the normal application workflow, then allow the website team to observe its newer source revision, signed webhook delivery, worker audit and **Habis** label before deleting the report. The newer revert should restore **Tersedia**. Prepare/compare the source `stock_status_at`, website audit `created_at`, local checkpoint, product label and unchanged price/URL/media. Do not infer that revision 59 is the global checkpoint, or that synthetic wake-up tests prove real app delivery latency.
 
-The Owner has not performed these source changes yet; real app-to-public latency, revert, mapped hidden/OTW/unknown scenarios remain P8-03 runtime gates. Production cutover/P8-04 broad launch mapping has not started.
+## Owner sold-out test — 2026-10-05
+
+Owner reported this selected product sold out, then asked the website team to check. No manual reconciliation or source mutation was triggered during this verification.
+
+| Observation | Result |
+| --- | --- |
+| Source detail GET | **200**, same UUID/name, sold_out, hidden=false |
+| Source revision / global checkpoint | **453 / 453**, up from product revision 59 / checkpoint 452 |
+| Source stock_status_at | **2026-10-05 16:51:56.923 UTC** |
+| Website snapshot/audit commit | **2026-10-05 16:52:07 UTC**, actor qammaris_app, available → sold_out |
+| Observed status-to-commit delay | Approximately **10 seconds** (about 10.1 by stored timestamps; audit time has second precision and cross-system clock offset was not independently measured) |
+| Website product | **Habis**, still published, not hidden, price **180000**, size **50 ml**, same slug and image ID **1** |
+| Worker state at 16:52:49 UTC | Queue pending **0**, last_error **null**, last_synced_at **16:52:07 UTC** |
+| Mapping/audit | One existing identity; two availability audits: initial revision **59** and sold-out revision **453** |
+| Catalog/detail render at 16:53:19 UTC | Both application HTTP **200**, selected name and sold_out state, **Habis** label, no legacy freshness text |
+
+The automatic application happened between the half-hour reconciliation ticks, consistent with the configured webhook path. Exact source webhook send/ingress 202 timestamps were not captured; no accessible staging domain access-log files were found at the domain logs path. Do not label this as directly observed webhook arrival timing or browser paint latency. Authenticated browser/mobile/desktop acceptance remains unconfirmed because review Basic Auth access was unavailable to automation.
+
+The sold-out state is now verified and Owner may delete **that report** to test the newer revert. Wait for its own newer source revision and website audit; do not force availability manually. Revert and mapped hidden/OTW/unknown scenarios remain P8-03 gates. Production cutover/P8-04 broad launch mapping has not started.
 
 ## Retention / rollback
 
