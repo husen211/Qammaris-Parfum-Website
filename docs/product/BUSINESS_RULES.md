@@ -199,3 +199,15 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 - Membangun AI recommendation atau autonomous agent.
 - Memigrasikan Laravel ke framework lain.
 - Mengubah public website menjadi SPA.
+
+
+## Launch preparation from Qammaris app — Owner approved 2026-10-06
+
+- Launch source is synchronized app feed. Visible UUIDs may be explicitly batch-prepared into draft/nonactive website products; one qammaris_app identity per product, never auto-publish. Webhook worker itself still changes availability only.
+- Initial new-draft name, brand and selling price come from source. Existing catalog name/price/slug/media are retained; later source prices remain proposals.
+- Size ml and concentration are parsed only when explicit/unambiguous in source name. Unknown values, descriptions and audience remain blank for review; department is not a category.
+- Source brand and explicitly parsed concentration may create missing taxonomy during this Owner-authorized preparation. Existing inactive/ambiguous taxonomy is not activated or guessed.
+- Old local 180-product catalog is a read-only matching reference for existing slugs/media, never launch data. An unmatched current website candidate blocks automatic draft creation pending review.
+- Shopee media source is Owner-owned. Only unique strong name/size matches may map provider shopee and acquire cover plus first two additional images; source SKUs across providers are not identity keys. Download through approved host/MIME/dimension/size checks and website disk, never hotlink. Cover must succeed before additions. Existing product media is untouched.
+- Unmatched/ambiguous/no-photo records remain drafts for Owner upload. source=app always has an explicit review issue. Publication readiness remains a separate human step.
+- Machine/CLI preparation uses a distinct persisted contract version and Owner-authorized source label with no fabricated human user. Before/after, source revision, row issues and file acquisition outcomes are audited using existing import tables.

@@ -52,6 +52,14 @@ class AcquireProductImportRowImages
                 continue;
             }
 
+            if ($row->batch->contract_version === PrepareQammarisAppDrafts::VERSION
+                && ($outcome['slot'] ?? '') !== 'foto_utama_url'
+                && ! collect($row->fresh()->image_acquisition_outcomes)->contains(fn ($candidate) => ($candidate['slot'] ?? '') === 'foto_utama_url' && ($candidate['status'] ?? '') === 'stored')) {
+                $this->recordOutcome($rowId, $index, 'blocked', 'Foto sampul harus berhasil sebelum foto tambahan.');
+
+                continue;
+            }
+
             $product = Product::query()->find($row->applied_product_id);
 
             if (! $product || $product->publication_status !== Product::PUBLICATION_DRAFT) {

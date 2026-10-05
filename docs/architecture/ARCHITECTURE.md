@@ -30,3 +30,12 @@ The webhook is stateless, outside session/CSRF web routes, and uses HMAC instead
 P8-02 centralizes availability labels in `CatalogAvailability`, shared by Blade cards/detail, `CartController` and `InquiryWhatsApp`. Inquiry rows are resolved from current product metadata on every request; session labels are not trusted. App-only inquiries use reservation-neutral notices; legacy/mixed lists retain their confirmation notice. The drawer loads this notice from the existing JSON endpoint and resets to neutral during loading/error/empty states. Connected details hide checked timestamps; legacy freshness is unchanged. No UI redesign or new database fields are required by P8-02.
 
 ADR-021 defines the integration. `CURRENT_STATE.md` remains the historical discovery baseline. Public copy/restock UI is implemented locally in P8-02; activation remains unverified. The restricted website mutation API and Shopee media import remain separate future items.
+
+
+## Launch draft preparation (P8-04)
+
+`qammaris-app:prepare-drafts` -> persisted `qammaris-drafts-v1` preview -> explicit exact batch apply -> MapExternalProductIdentity + SyncSingleOffer + ApplyQammarisAppAvailability -> new draft/nonactive products + existing import audit rows. Existing mapped products are skipped. Source/candidate/tamper/catalog guards run before transactional creation. The stock worker remains unchanged.
+
+Owner Shopee media XLSX -> read-only extraction to private allowlisted JSON -> conservative unique name/size match (SKU never cross-provider key) -> separate explicit QueueProductImportImages -> existing product-import-images database jobs -> ImportedProductImageDownloader + ProductMediaStorage + AttachProductImage. The Qammaris contract requires successful cover before additional slots. Ambiguous/unmatched photos and incomplete app records stay in review; no publication/hotlink.
+
+Current CLI deliberately rejects production. Old local catalog mapping review is read-only and preserves the source SQLite hash. ADR-022 governs the approved exception to the original stock-only scope.

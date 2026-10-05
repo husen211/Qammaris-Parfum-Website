@@ -1,6 +1,6 @@
-# ADR-021 — Qammaris App availability integration
+# ADR-021 â€” Qammaris App availability integration
 
-Status: Accepted — 2026-10-05, explicit Owner instruction to implement the Laravel receiver, feed worker and 30-minute reconciliation.
+Status: Accepted â€” 2026-10-05, explicit Owner instruction to implement the Laravel receiver, feed worker and 30-minute reconciliation.
 
 ## Context
 
@@ -30,3 +30,6 @@ P8-01 implements the backend. The separate focused UI item P8-02 now implements 
 ## Rollback / forward fix
 
 Before integration writes, rollback the new migration only after checking no source/audit data needs preserving. After activation, prefer stopping delivery/worker under an approved operational change and forward-fixing. Export integration state/audit first; do not drop populated tables or reset the cursor. Do not roll back to code that ignores hidden tombstones or expires connected availability. No file/media cleanup is part of rollback.
+
+
+Owner-approved P8-04 exception (2026-10-06): ADR-022 permits a separate feed-authoritative draft preparation CLI. Stock/webhook worker still does not create drafts or alter price/media. No automatic publication.

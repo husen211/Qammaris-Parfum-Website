@@ -2301,7 +2301,7 @@ Next recommended item, not started: approved staging activation/verification of 
 
 Future separate items: reviewed initial SKU/UUID matching, source price proposals UI, Shopee media preview/acquisition for existing catalog, outgoing restricted API. They are not authorized by P8-01.
 
-### P8-03 Staging integration activation and runtime proof — IN_PROGRESS
+### P8-03 Staging integration activation and runtime proof — IN_REVIEW
 
 Follow-up 2026-10-06 local: authenticated real staging catalog/detail reviewed at **1440×900 / 390×844**, Tersedia/price/size and website-hosted placeholder loaded, no horizontal overflow; mobile search/filter/context-return and desktop empty state passed. **55 local tests / 322 assertions** and **27 deployed MySQL rollback checks** passed: mapped revision no-op, OTW/unknown/hidden scope/detail/inquiry, outage/malformed page retention, related-record preservation and complete test rollback. Source HTTP was synthetic only for these rollback cases; real source-originated rare-state and exact ingress/browser-transition timing remain unconfirmed. Current checkpoint/product revision **456**, audits **5**, queue **0**, no sync error; controlled receiver revisions **456/456/1** returned 202 and were no-ops.
 
@@ -2333,6 +2333,22 @@ Earlier activation evidence (2026-10-05): deployed `1867d83` through successful 
 Acceptance remains IN_PROGRESS: selected AOERA mapping and automatic Owner sold-out/revert passed; authenticated available-state browser review and rollback mapped-state/revision guards passed; exact real source webhook/UI transition latency and remaining real-source runtime scenarios are pending. Watchdog restart recovery passed in about 34 seconds; actual half-hour reconciliation passed at **16:00 UTC**, worker success **16:00:04**, queue empty. Feed connection, MySQL pagination/drain, ingress/cache no-op and minute cron are now confirmed. Host SSH has no crontab binary; the existing hPanel crons supervise worker/schedule invocation, temporary schedule:work is stopped. Three historical failed queue jobs from the source outage are retained. Do not equate feed connectivity with full end-to-end/public launch readiness or begin P8-04/production cutover.
 
 Activation data/media impact: dedicated staging additive schema, 452 source snapshots/checkpoint and synthetic queue signals; no catalog product/media/price writes, app database/frontend or website production changes. Retain staging backup/integration state; prefer forward fix after source data arrives. This continuation changes only operational documentation/screenshots in Git. Next action: finish remaining P8-03 browser/delivery and mapped-state runtime gates; the selected AOERA sold-out/revert cycle has passed. Next dependent item (not started): P8-04 reviewed launch identities, then separately approved P9-01 cutover with P1-04 backup preflight.
+
+### P8-04 Feed-authoritative launch drafts and Shopee media — IN_PROGRESS
+
+Owner direction 2026-10-06: continue through P8-04; defer the real OTW test in P8-03. Feed cache (452 synchronized snapshots) is the launch source, not the old 180-product local catalog or Majoo Excel. This explicitly authorizes staging draft preparation and strong Shopee photo matching/acquisition; production cutover remains separate.
+
+Outcome: one mapped website record per visible source UUID, new records always draft/nonactive; Owner can review missing size/concentration/price/media and source=app records before publication.
+
+In scope: persisted immutable preview/apply audit, source and catalog stale guards, UUID idempotency, initial source price/name/brand, explicit size/concentration parsing, exact strong name/size photo matching, cover + first two additional downloads through existing safe media operations, read-only old-catalog mapping report, staging verification.
+
+Out of scope: automatic publication, published product edits, source price updates applied to existing catalog, copying old catalog as launch data, ambiguous photo auto-match, inferred size/audience/description, production deployment, app code/database/frontend, credentials/permissions changes.
+
+Dependencies: P8-01/02 deployed and P8-03 feed/webhook/reconciliation operational. P8-03 remains IN_REVIEW; deferred OTW, exact ingress/browser timing and independent concurrency proof remain explicit limitations, not claimed passed.
+
+Risks: source names often omit size/concentration; such records remain incomplete drafts. Old slugs/media require reviewed matching during eventual production migration. Staging catalogue must not replace production DB wholesale.
+
+Acceptance: preview records all source rows including hidden; apply creates only visible unmapped nonconflicting drafts; existing IDs/slugs/price/media remain; repeat apply no-op; stale/tampered preview rolls back; source=app flagged; ambiguous/unmatched photos retained for manual upload; cover and at most two additional files downloaded/validated/stored, no hotlinks; audit/review CSV and tests plus staged counts recorded. No schema change or production cutover.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

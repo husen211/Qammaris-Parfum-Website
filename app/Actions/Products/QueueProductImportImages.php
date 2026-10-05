@@ -15,13 +15,17 @@ class QueueProductImportImages
     /**
      * @return array{queued_rows: int, candidate_images: int}
      */
-    public function handle(ProductImportBatch $batch, User $actor): array
+    public function handle(ProductImportBatch $batch, ?User $actor): array
     {
         $rowIds = [];
         $candidateImages = 0;
 
         DB::transaction(function () use ($batch, $actor, &$rowIds, &$candidateImages): void {
             $lockedBatch = ProductImportBatch::query()->lockForUpdate()->findOrFail($batch->getKey());
+
+            if ($actor === null && ($lockedBatch->contract_version !== PrepareQammarisAppDrafts::VERSION || $lockedBatch->actor_id !== null)) {
+                throw new DomainException('Machine attribution is restricted to Owner-authorized Qammaris draft batches.');
+            }
 
             if ($lockedBatch->status !== ProductImportBatch::STATUS_APPLIED) {
                 throw new DomainException('Akuisisi gambar hanya tersedia untuk batch yang sudah selesai di-apply.');
@@ -47,7 +51,7 @@ class QueueProductImportImages
                 if ($outcomes === []) {
                     $row->forceFill([
                         'image_acquisition_status' => ProductImportRow::IMAGE_NO_SOURCES,
-                        'image_acquisition_requested_by' => $actor->getKey(),
+                        'image_acquisition_requested_by' => $actor?->getKey(),
                         'image_acquisition_requested_at' => now(),
                         'image_acquisition_completed_at' => now(),
                         'image_acquisition_outcomes' => [],
@@ -62,7 +66,7 @@ class QueueProductImportImages
                     'image_acquisition_status' => $hasPending
                         ? ProductImportRow::IMAGE_QUEUED
                         : ProductImportRow::IMAGE_COMPLETED,
-                    'image_acquisition_requested_by' => $actor->getKey(),
+                    'image_acquisition_requested_by' => $actor?->getKey(),
                     'image_acquisition_requested_at' => now(),
                     'image_acquisition_completed_at' => $hasPending ? null : now(),
                     'image_acquisition_outcomes' => $outcomes,
@@ -75,7 +79,11 @@ class QueueProductImportImages
         });
 
         foreach ($rowIds as $rowId) {
-            AcquireProductImportRowImages::dispatch($rowId)->afterCommit();
+            $dispatch = AcquireProductImportRowImages::dispatch($rowId);
+            if ($actor === null) {
+                $dispatch->onConnection('database');
+            }
+            $dispatch->afterCommit();
         }
 
         return [
