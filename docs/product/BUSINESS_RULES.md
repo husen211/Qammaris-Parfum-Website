@@ -34,13 +34,17 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 3. Nilai availability: unknown, available, sold_out.
 4. Sold out tidak menghapus atau mengarsipkan produk.
 5. Availability harus menyimpan source dan checked time.
-6. Available yang melewati freshness window ditampilkan sebagai unknown.
-7. Customer diarahkan mengonfirmasi stok melalui WhatsApp.
+6. Untuk produk terhubung aplikasi Qammaris (`availability_source=qammaris_app`), status diterima apa adanya: tidak ada kedaluwarsa, downgrade otomatis, atau pesan publik tentang waktu pemeriksaan. Gangguan koneksi mempertahankan status terakhir.
+7. Customer menggunakan WhatsApp untuk inquiry. Produk terhubung tidak meminta verifikasi ulang status yang sudah dikirim aplikasi; legacy/manual tetap memakai konfirmasi stok. Jumlah minat bukan reservasi atau jumlah stok aktual.
 8. Bila quantity tersedia, quantity boleh disimpan tanpa ditampilkan publik.
-9. Freshness window untuk status available adalah 36 jam sejak `availability_checked_at`, sesuai target pembaruan setiap tutup toko dengan toleransi keterlambatan satu siklus.
+9. Freshness window 36 jam hanya berlaku pada produk legacy/manual yang belum menggunakan sumber aplikasi Qammaris. Ia tidak berlaku pada produk terhubung.
 10. Status sold_out tidak otomatis berubah menjadi unknown karena dianggap konfirmasi eksplisit; perubahan menjadi available atau unknown harus berasal dari pembaruan berikutnya.
 11. Produk tanpa pemeriksaan stok yang valid menggunakan status unknown, bukan available.
 12. Quantity dari file kurasi/import diperlakukan sebagai snapshot opsional, bukan janji live stock.
+13. Keputusan Owner 2026-10-05: sumber aplikasi `available` -> “Tersedia”, `sold_out` -> “Habis”, `unknown` -> “Tanyakan ketersediaan”. OTW memberi informasi “Restok segera” tanpa mengubah Habis menjadi Tersedia. P8-02 menerapkan label ini pada kartu, detail, daftar/drawer inquiry, dan pesan WhatsApp; waktu pemeriksaan tidak ditampilkan pada produk terhubung. P8-01 adalah backend.
+14. Feed nonaktif/merged/departemen lainnya tetap dikirim sebagai hidden tombstone. Website menyimpan visibility guard terpisah, tanpa menghapus data, mengarsipkan publication, atau memindahkan mapping otomatis.
+15. UUID aplikasi adalah identity provider `qammaris_app`; SKU hanya bantuan review. Mapping harus eksplisit. Harga sumber menjadi usulan, bukan update offer otomatis. Departemen tidak menggantikan kategori.
+16. Webhook HMAC adalah jalur utama; rekonsiliasi feed setiap 30 menit adalah jaring pengaman. Revision/checkpoint/audit wajib idempotent dan transactional; kredensial mesin hanya baca dan terpisah dari akun karyawan.
 
 ## Harga
 

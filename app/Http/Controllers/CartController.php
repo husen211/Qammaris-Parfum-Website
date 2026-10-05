@@ -8,6 +8,7 @@ use App\Http\Requests\Cart\UpdateCartRequest;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StoreInfo;
+use App\Support\CatalogAvailability;
 use App\Support\InquiryWhatsApp;
 
 class CartController extends Controller
@@ -181,6 +182,7 @@ class CartController extends Controller
             'items' => $items,
             'formatted_total' => $this->formatRupiah($total),
             'count' => array_sum(array_column($items, 'quantity')),
+            'notice' => $this->inquiryWhatsApp->listNotice($items),
         ]);
     }
 
@@ -250,7 +252,8 @@ class CartController extends Controller
                 'slug' => $product->slug,
                 'product_url' => route('products.show', $product),
                 'effective_availability' => $product->effective_availability,
-                'availability_label' => $this->inquiryWhatsApp->availabilityLabel($product->effective_availability),
+                'availability_label' => CatalogAvailability::label($product),
+                'requires_stock_confirmation' => $product->availability_source !== 'qammaris_app',
             ];
         }
 

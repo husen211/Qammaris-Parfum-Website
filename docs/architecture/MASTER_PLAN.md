@@ -73,6 +73,8 @@ Website bukan live inventory. Pisahkan publication dari availability:
 
 Simpan `stock_quantity` bila tersedia, `availability_source`, dan `availability_checked_at`, tetapi angka stok tidak harus ditampilkan kepada customer. Data availability yang melewati freshness window berubah menjadi `unknown` pada tampilan publik.
 
+Keputusan Owner 2026-10-05 / ADR-021 menggantikan freshness untuk produk terhubung aplikasi Qammaris: status ditampilkan apa adanya tanpa expiry atau downgrade saat outage. UUID provider `qammaris_app`, webhook HMAC sebagai jalur utama, feed checkpoint transactional dan rekonsiliasi 30 menit. Freshness legacy/manual tetap berlaku. Integrasi ini konsumen data aplikasi, bukan API mutasi website untuk automation.
+
 ## 7. Storage media
 
 ### Target

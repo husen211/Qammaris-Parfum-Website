@@ -7,10 +7,10 @@
     <section class="min-h-screen bg-white pb-20 pt-28 md:pt-32" aria-labelledby="inquiry-title">
         <div class="container mx-auto px-4 lg:px-20">
             <header class="mx-auto mb-10 max-w-2xl text-center md:mb-14">
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">Konfirmasi melalui WhatsApp</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">Inquiry melalui WhatsApp</p>
                 <h1 id="inquiry-title" class="mt-3 font-mayluxa text-4xl text-brand-black lg:text-5xl">Daftar Inquiry</h1>
                 <p class="mx-auto mt-4 max-w-xl text-sm font-light leading-6 text-gray-500">
-                    Kumpulkan parfum yang ingin ditanyakan. Stok dan harga terbaru tetap dikonfirmasi oleh admin; daftar ini bukan reservasi.
+                    Kumpulkan parfum yang ingin ditanyakan. Daftar ini bukan transaksi atau reservasi.
                 </p>
             </header>
 
@@ -148,7 +148,7 @@
                         </form>
 
                         <p class="mt-4 text-center text-xs leading-5 text-gray-500">
-                            Admin akan mengonfirmasi stok dan harga terbaru. Mengirim inquiry tidak menyimpan stok atau membuat transaksi.
+                            {{ app(\App\Support\InquiryWhatsApp::class)->listNotice($items) }}
                         </p>
                     </aside>
                 </div>

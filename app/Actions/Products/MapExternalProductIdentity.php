@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductExternalIdentity;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class MapExternalProductIdentity
@@ -18,6 +19,9 @@ class MapExternalProductIdentity
 
         $provider = $this->normalizeProvider($provider);
         $externalProductId = $this->normalizeExternalProductId($externalProductId);
+        if ($provider === ProductExternalIdentity::PROVIDER_QAMMARIS_APP && ! Str::isUuid($externalProductId)) {
+            throw new InvalidArgumentException('Identity Qammaris app wajib berupa UUID.');
+        }
 
         return DB::transaction(function () use ($product, $provider, $externalProductId) {
             $identityForCode = ProductExternalIdentity::query()

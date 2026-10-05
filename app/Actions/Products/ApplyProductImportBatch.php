@@ -243,8 +243,10 @@ class ApplyProductImportBatch
 
         if (($data['stok'] ?? '') !== '') {
             $attributes['stock_quantity'] = (int) $data['stok'];
-            $attributes['availability_source'] = 'import:'.$row->provider;
-            $attributes['availability_checked_at'] = $appliedAt;
+            if ($product->availability_source !== 'qammaris_app') {
+                $attributes['availability_source'] = 'import:'.$row->provider;
+                $attributes['availability_checked_at'] = $appliedAt;
+            }
         }
 
         $notes = $this->mergedFragranceNotes($product, $data);

@@ -353,7 +353,7 @@ class ProductImportPreviewer
      */
     private function validateProvider(array $data, array &$issues): void
     {
-        if ($data['provider'] !== '' && ! in_array($data['provider'], ProductExternalIdentity::SUPPORTED_PROVIDERS, true)) {
+        if ($data['provider'] !== '' && ! in_array($data['provider'], [ProductExternalIdentity::PROVIDER_SHOPEE, ProductExternalIdentity::PROVIDER_MAJOO], true)) {
             $issues[] = $this->issue('error', 'provider', 'Provider hanya boleh shopee atau majoo.');
         }
     }

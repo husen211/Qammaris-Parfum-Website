@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
@@ -58,6 +59,8 @@ class Product extends Model
         'archived_at' => 'datetime',
         'stock_quantity' => 'integer',
         'availability_checked_at' => 'datetime',
+        'qammaris_app_hidden' => 'boolean',
+        'availability_restock_eta' => 'date',
         'view_count' => 'integer',
     ];
 
@@ -208,7 +211,8 @@ class Product extends Model
     {
         return $query
             ->where('publication_status', self::PUBLICATION_PUBLISHED)
-            ->where('is_active', true);
+            ->where('is_active', true)
+            ->where('qammaris_app_hidden', false);
     }
 
     /**
@@ -262,6 +266,11 @@ class Product extends Model
         return $this->publication_status === self::PUBLICATION_PUBLISHED && $this->is_active;
     }
 
+    public function isPubliclyVisible(): bool
+    {
+        return $this->isPublished() && ! $this->qammaris_app_hidden;
+    }
+
     public function markArchived(): void
     {
         if ($this->publication_status === self::PUBLICATION_ARCHIVED && ! $this->is_active) {
@@ -293,7 +302,7 @@ class Product extends Model
     {
         $status = $this->availability_status ?? self::AVAILABILITY_UNKNOWN;
 
-        if ($status === self::AVAILABILITY_AVAILABLE) {
+        if ($status === self::AVAILABILITY_AVAILABLE && $this->availability_source !== 'qammaris_app') {
             if (! $this->availability_checked_at) {
                 return self::AVAILABILITY_UNKNOWN;
             }
@@ -312,5 +321,37 @@ class Product extends Model
         }
 
         return $status;
+    }
+
+    public function scopeEffectiveAvailability(Builder $query, string $availability): Builder
+    {
+        if ($availability === self::AVAILABILITY_SOLD_OUT) {
+            return $query->where('availability_status', self::AVAILABILITY_SOLD_OUT);
+        }
+
+        $threshold = now()->subHours(self::AVAILABILITY_FRESH_HOURS);
+        if ($availability === self::AVAILABILITY_AVAILABLE) {
+            return $query->where('availability_status', self::AVAILABILITY_AVAILABLE)
+                ->where(function (Builder $query) use ($threshold): void {
+                    $query->where('availability_source', 'qammaris_app')
+                        ->orWhere(function (Builder $query) use ($threshold): void {
+                            $query->whereNotNull('availability_checked_at')->where('availability_checked_at', '>=', $threshold);
+                        });
+                });
+        }
+
+        return $query->where(function (Builder $query) use ($threshold): void {
+            $query->whereNull('availability_status')
+                ->orWhereNotIn('availability_status', [self::AVAILABILITY_AVAILABLE, self::AVAILABILITY_SOLD_OUT])
+                ->orWhere(function (Builder $query) use ($threshold): void {
+                    $query->where('availability_status', self::AVAILABILITY_AVAILABLE)
+                        ->where(function (Builder $query): void {
+                            $query->whereNull('availability_source')->orWhere('availability_source', '!=', 'qammaris_app');
+                        })
+                        ->where(function (Builder $query) use ($threshold): void {
+                            $query->whereNull('availability_checked_at')->orWhere('availability_checked_at', '<', $threshold);
+                        });
+                });
+        });
     }
 }

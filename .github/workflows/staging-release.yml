@@ -127,6 +127,7 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -p "$STAGING_SSH_PORT" "$STAGING_SSH_USERNAME@$STAGING_SSH_HOST" "STAGING_PATH='$STAGING_PATH' bash -s" <<'REMOTE_SCRIPT'
           set -euo pipefail
           cd "$STAGING_PATH"
+          chmod 600 .env
           php artisan migrate --force --no-interaction
           if [ ! -e public/storage ]; then
             ln -s "$STAGING_PATH/storage/app/public" public/storage
@@ -148,7 +149,10 @@ jobs:
               printf '%s\n' 'AuthType Basic'
               printf '%s\n' 'AuthName "Qammaris Staging Review"'
               printf 'AuthUserFile %s\n' "$auth_file"
-              printf '%s\n\n' 'Require valid-user'
+              printf '%s\n' '<RequireAny>'
+              printf '%s\n' '  Require expr "%{THE_REQUEST} =~ m#^POST /integrations/qammaris-app/webhook HTTP/[0-9.]+$#"'
+              printf '%s\n' '  Require valid-user'
+              printf '%s\n\n' '</RequireAny>'
               cat .htaccess
             } > "$auth_config"
             mv "$auth_config" .htaccess

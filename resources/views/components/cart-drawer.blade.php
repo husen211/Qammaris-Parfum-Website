@@ -29,8 +29,8 @@
             <span class="font-mayluxa text-xl text-brand-black" id="drawerSubtotal">Rp 0</span>
             </div>
             
-            <p class="text-[10px] text-gray-400 text-center font-light">
-                Harga dan stok perlu dikonfirmasi. Daftar ini bukan reservasi.
+            <p id="drawerInquiryNotice" class="text-[10px] text-gray-400 text-center font-light">
+                Daftar ini bukan transaksi atau reservasi.
             </p>
 
             <div class="grid grid-cols-1 gap-3">

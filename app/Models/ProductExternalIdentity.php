@@ -10,9 +10,12 @@ class ProductExternalIdentity extends Model
 
     public const PROVIDER_MAJOO = 'majoo';
 
+    public const PROVIDER_QAMMARIS_APP = 'qammaris_app';
+
     public const SUPPORTED_PROVIDERS = [
         self::PROVIDER_SHOPEE,
         self::PROVIDER_MAJOO,
+        self::PROVIDER_QAMMARIS_APP,
     ];
 
     protected $fillable = [

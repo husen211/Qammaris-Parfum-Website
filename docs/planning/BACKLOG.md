@@ -21,7 +21,7 @@
 | P5 | Admin Panel V2 | DONE | P3, P4 | Pengelolaan katalog lengkap tanpa phpMyAdmin |
 | P6 | Import/export & audit | DONE | P3, P5 | Bulk workflow aman, idempotent, dan dapat dilacak |
 | P7 | Public catalog UX | DONE | P3, sebagian P5 | Mobile catalog dan inquiry flow matang |
-| P8 | Restricted API readiness | BACKLOG | P5, P6 | Operasi machine-access terbatas dan auditable |
+| P8 | Restricted API readiness | IN_PROGRESS | P5, P6 | Integrasi availability aplikasi dan operasi machine-access terbatas yang auditable |
 | P9 | Hardening & cutover | BACKLOG | P1–P8 | Production launch dan observation selesai |
 
 ## P0 — Discovery & decisions
@@ -2248,7 +2248,79 @@ Rollback:
 
 Suggested next item:
 
-- Definisikan `P8-01` sebagai kontrak read-only API v1 yang restricted, scoped, revocable, dan auditable; belum dimulai dan belum menghubungkan AI.
+- Saran awal setelah P7: kontrak read-only API website. Arahan Owner 2026-10-05 kemudian menetapkan P8-01 sebagai integrasi consumer aplikasi Qammaris (lihat item di bawah); outgoing API tetap future work.
+
+## P8 — Application integration and restricted API readiness
+
+### P8-01 Qammaris app webhook, feed worker and reconciliation — IN_REVIEW
+
+Owner authorization: 2026-10-05; implement Laravel against final app handoff section 6. This replaces the earlier suggestion to start with an outgoing read-only website API; that API remains future work.
+
+Outcome:
+
+- Stateless HMAC receiver at `/integrations/qammaris-app/webhook`; 202 only after database job persistence, 503 for configuration/enqueue failure.
+- Database worker reads validated sequence feed from persisted checkpoint; 30-minute scheduler queues the same operation.
+- Page transaction coordinates source snapshots, mapped availability/hidden/ETA, machine audit and checkpoint. Retry/duplicate/obsolete revisions do not regress data.
+- UUID provider `qammaris_app` and exact CLI mapping preview/confirmation replay cached state. Unmapped snapshots remain review data; no auto matching/publish/draft creation.
+- Connected stock has no expiry/outage downgrade. Public visibility guard preserves website publication and admin completeness/last-image protections.
+
+Scope exclusions:
+
+- Public/admin layout or label changes, Shopee media import, source price apply/review UI, outgoing website mutation API, credentials, deployed worker/scheduler, staging/production deployment and broad production mapping.
+
+Data/media impact:
+
+- One additive migration creates three integration tables and adds two product metadata columns. It does not backfill/mutate existing product values, IDs, slugs, offers, relationships or media.
+- No migration was applied to development/production in this task. Local verification uses isolated SQLite and synthetic secrets; no real upstream request.
+
+Verification:
+
+- Baseline identity/admin availability: 14 tests / 64 assertions passed before edits.
+- Final full suite: **217 tests / 1,437 assertions passed** using SQLite in-memory. Includes durable enqueue, actual database worker consumption, HMAC/replay window, invalid payload/feed, checkpoint concurrency/rollback, revision replay, unmatched cache/mapping, tombstones, retained offer/media, connected availability and hidden-published admin/media protections.
+- Laravel Pint check passed for all changed/new PHP files; `git diff --check` passed. Route listing confirms POST receiver with `throttle:120,1` and no session/CSRF middleware; scheduler listing confirms `*/30 * * * *`.
+- Existing UI unchanged; browser screenshots are not applicable to this backend item.
+
+Documentation: BUSINESS_RULES, MASTER_PLAN, ARCHITECTURE, ADR-021 and QAMMARIS_APP_INTEGRATION runbook.
+
+Remaining gates: reviewer acceptance and approved staging activation (actual API credentials/network, MySQL locking, persistent worker, scheduler, clock synchronization and deployment URL). Forward fix after activation; retain checkpoint/source/audit instead of resetting or dropping data.
+
+### P8-02 Connected availability public copy — IN_REVIEW
+
+Apply Owner's exact labels to connected products: Tersedia, Habis, Habis · Restok segera, Tanyakan ketersediaan. Remove connected checked-time/expiry verification messaging in detail/inquiry. Preserve legacy/manual behavior, existing design and URLs. Verify mobile/desktop before/after and relevant availability/inquiry tests. Do not start automatically.
+
+Implementation / verification 2026-10-05:
+
+- Owner's `gas lanjut` authorized this focused public item. Shared `CatalogAvailability` presenter supplies card/detail/inquiry/WhatsApp labels; existing colors/layout/actions remain. Connected details hide checked timestamps and source recheck text; old timestamps/ETA do not expire status. Filter wording is Indonesian, values unchanged.
+- Inquiry resolves current source metadata from DB, ignores session presentation fields, uses neutral app-only notices and retains legacy/mixed confirmation. Drawer resets notice on loading/error/empty and renders the current server notice safely.
+- Full suite `222 passed (1487 assertions)`, focused tests, Pint and diff whitespace checks passed; Vite build passed with existing CSS/chunk warnings.
+- Real browser at 390×844 / 1440×900 checked labels, inquiry quantity/success/loading/error/retry/empty, Escape focus return, filters, unknown/restock actions and legacy detail. No observed overflow or console warning/error. Evidence: `docs/verification/p8-02/README.md` with before/after screenshots.
+- Preview isolated from unavailable local MySQL using public tables from the verified 2026-09-14 local backup. Original MySQL/.env/media untouched. Four disposable synthetic products/offers removed; final 180 products / 64 offers / 19 images / zero users. No P8-02 schema change, live API call, credential change or deployment.
+- Docs updated: BUSINESS_RULES, ARCHITECTURE, ADR-021 scope, integration/local preview runbooks and evidence. UI rollback needs focused code revert/asset rebuild only; after activation prefer forward fix, retain P8-01 state.
+
+Next recommended item, not started: approved staging activation/verification of P8-01 + P8-02 (Owner secrets, final webhook URL, MySQL migration/locking, persistent worker, 30-minute reconciliation and one reviewed synthetic staging mapping). Reviewer acceptance and live end-to-end delivery remain outstanding; local readiness is not live connection readiness.
+
+Future separate items: reviewed initial SKU/UUID matching, source price proposals UI, Shopee media preview/acquisition for existing catalog, outgoing restricted API. They are not authorized by P8-01.
+
+### P8-03 Staging integration activation and runtime proof — IN_PROGRESS
+
+Owner's continuation 2026-10-05 authorizes preparation for the next integration step. Remote deployment, credentials/permissions, synthetic staging records and the actual activation still require explicit Owner direction per repository instructions.
+
+Owner's subsequent explicit activation request authorizes staging deployment/environment/worker setup and only the internal Node backend integration env/restart. No app database/frontend changes or website production cutover. Backend panel control is unavailable in this session; follow the Owner fallback instead of an alternate app access route. Random secrets are stored encrypted outside the repository, with presence-only reporting. Safe Owner instructions: `docs/runbooks/QAMMARIS_APP_OWNER_ENV_HANDOFF.md` and the value-free `tools/Manage-QammarisStagingSecrets.ps1` helper.
+
+Outcome: demonstrate actual app webhook → database worker → checkpoint/audit → mapped public status on isolated staging, with 30-minute reconciliation and crash/retry recovery. P8-01/P8-02 review acceptance is a prerequisite to deployment.
+
+In scope: staged release preflight and exact revision, protected Owner-configured credentials, approved staging ingress, dedicated persistent worker/scheduler, one approved synthetic pair, MySQL concurrency/page/revision/hidden/outage verification and evidence. Out of scope: production deployment, broad production mapping, automatic catalog/price/media writes, outgoing API or internal-app code changes.
+
+Preparation completed:
+
+- Local runtime presence checks: API key false, webhook secret false, client configured false; secret values were not printed. POST receiver/throttle and 30-minute schedule definitions confirmed.
+- Integration/presentation regression rerun: `24 passed (186 assertions)`, isolated SQLite/fake HTTP. This is local proof, not upstream connectivity.
+- Existing staging workflow applies unconditional Basic Auth and does not start/restart integration worker or install cron. Historical staging was verified 2026-09-15; current access/hosting state not confirmed. Two public HEAD targets failed at socket transport; no HTTP status was obtained, so no remote route/outage claim is made.
+- Reviewable activation/launch plan, candidate URLs, runtime matrix, remaining three delivery stages and progress denominator in `docs/runbooks/QAMMARIS_APP_LAUNCH_READINESS.md`.
+
+Acceptance: all Stage 1 outcomes in that runbook evidenced on actual staging; durable 202 alone and fake HTTP tests do not pass. Dependencies: P8-01/P8-02 reviewed, confirmed hosting/process manager/access/clock, latest staging backup and explicit staging/ingress approval. Status remains READY pending these approvals/inputs; no deployment or credential change executed.
+
+Data/media impact of preparation: none. Files changed: this backlog, integration runbook link and launch readiness runbook. Documentation-only rollback. Next dependent work (not started): P8-04 reviewed identity/launch catalog, then P9-01 production hardening/cutover with P1-04 backup preflight.
 
 ## P7 prerequisite — Qammaris UI quality gate
 

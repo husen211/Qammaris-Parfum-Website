@@ -228,7 +228,8 @@ class AdminProductController extends Controller
                 'is_best_seller' => $request->has('is_best_seller'),
             ]);
 
-            if ($request->has('availability_status')) {
+            if ($request->has('availability_status')
+                && Product::query()->whereKey($product->id)->lockForUpdate()->value('availability_source') !== 'qammaris_app') {
                 $availabilityStatus = $request->validated('availability_status');
 
                 if ($availabilityStatus !== $product->availability_status
@@ -430,37 +431,7 @@ class AdminProductController extends Controller
 
     private function applyAvailabilityFilter(Builder $query, string $availability): void
     {
-        if ($availability === Product::AVAILABILITY_AVAILABLE) {
-            $query
-                ->where('availability_status', Product::AVAILABILITY_AVAILABLE)
-                ->whereNotNull('availability_checked_at')
-                ->where('availability_checked_at', '>=', now()->subHours(Product::AVAILABILITY_FRESH_HOURS));
-
-            return;
-        }
-
-        if ($availability === Product::AVAILABILITY_SOLD_OUT) {
-            $query->where('availability_status', Product::AVAILABILITY_SOLD_OUT);
-
-            return;
-        }
-
-        $freshnessThreshold = now()->subHours(Product::AVAILABILITY_FRESH_HOURS);
-
-        $query->where(function (Builder $availabilityQuery) use ($freshnessThreshold): void {
-            $availabilityQuery
-                ->whereNull('availability_status')
-                ->orWhere('availability_status', Product::AVAILABILITY_UNKNOWN)
-                ->orWhere(function (Builder $staleAvailableQuery) use ($freshnessThreshold): void {
-                    $staleAvailableQuery
-                        ->where('availability_status', Product::AVAILABILITY_AVAILABLE)
-                        ->where(function (Builder $checkedAtQuery) use ($freshnessThreshold): void {
-                            $checkedAtQuery
-                                ->whereNull('availability_checked_at')
-                                ->orWhere('availability_checked_at', '<', $freshnessThreshold);
-                        });
-                });
-        });
+        $query->effectiveAvailability($availability);
     }
 
     private function positiveInteger(mixed $value): ?int

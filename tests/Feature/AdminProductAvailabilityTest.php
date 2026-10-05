@@ -66,6 +66,32 @@ class AdminProductAvailabilityTest extends TestCase
         $this->assertTrue($product->is_active);
     }
 
+    public function test_connected_product_rejects_manual_availability_override(): void
+    {
+        $product = $this->createProduct('App controlled', [
+            'availability_status' => Product::AVAILABILITY_SOLD_OUT,
+            'availability_source' => 'qammaris_app',
+        ]);
+        $payload = $this->validUpdatePayload($product, [
+            'availability_status' => Product::AVAILABILITY_AVAILABLE,
+            'availability_confirmed' => '1',
+        ]);
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)
+            ->assertSessionHasErrors('availability_status');
+        $this->assertSame('sold_out', $product->fresh()->availability_status);
+        $this->assertSame('qammaris_app', $product->fresh()->availability_source);
+    }
+
+    public function test_hidden_published_product_keeps_admin_completeness_validation(): void
+    {
+        $product = $this->createProduct('Hidden but published');
+        $product->forceFill(['qammaris_app_hidden' => true])->save();
+        $payload = $this->validUpdatePayload($product, ['description' => null]);
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)
+            ->assertSessionHasErrors('description');
+        $this->assertNotNull($product->fresh()->description);
+    }
+
     public function test_ordinary_edit_preserves_availability_time_and_explicit_confirmation_refreshes_it(): void
     {
         $checkedAt = Carbon::parse('2026-09-16 08:00:00');

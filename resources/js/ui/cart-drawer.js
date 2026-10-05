@@ -5,6 +5,7 @@ if (drawer) {
     const productsUrl = drawer.dataset.productsUrl || '/products';
     const container = document.getElementById('drawerCartItems');
     const estimateEl = document.getElementById('drawerSubtotal');
+    const noticeEl = document.getElementById('drawerInquiryNotice');
 
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
         '&': '&amp;',
@@ -78,6 +79,7 @@ if (drawer) {
     };
 
     async function fetchInquiryContent() {
+        if (noticeEl) noticeEl.textContent = 'Daftar ini bukan transaksi atau reservasi.';
         if (!cartUrl || !container) return;
 
         container.setAttribute('aria-busy', 'true');
@@ -94,6 +96,7 @@ if (drawer) {
             if (Array.isArray(data.items) && data.items.length > 0) {
                 renderItems(data.items);
                 setEstimate(data.formatted_total ?? 'Rp 0');
+                if (noticeEl) noticeEl.textContent = data.notice || 'Daftar ini bukan transaksi atau reservasi.';
                 return;
             }
 

@@ -8,6 +8,7 @@
     $displayPrice = $offer?->price;
     $descriptionText = trim((string) $product->description);
     $effectiveAvailability = $product->effective_availability;
+    $managedByApp = $product->availability_source === 'qammaris_app';
     $availability = match ($effectiveAvailability) {
         \App\Models\Product::AVAILABILITY_AVAILABLE => [
             'label' => 'Tersedia saat diperiksa',
@@ -28,7 +29,12 @@
             'text' => 'text-amber-800',
         ],
     };
-    $availabilityCheckedLabel = $product->availability_checked_at
+    $availability['label'] = \App\Support\CatalogAvailability::label($product);
+    if ($managedByApp) {
+        $availability['detail'] = $effectiveAvailability === \App\Models\Product::AVAILABILITY_UNKNOWN
+            ? 'Tanyakan melalui WhatsApp.' : '';
+    }
+    $availabilityCheckedLabel = ! $managedByApp && $product->availability_checked_at
         ? $product->availability_checked_at->locale('id')->diffForHumans()
         : null;
     $galleryImages = $product->images
@@ -175,12 +181,14 @@
                         <span class="mt-2 h-2 w-2 shrink-0 rounded-full {{ $availability['dot'] }}" aria-hidden="true"></span>
                         <div>
                             <p class="text-sm font-semibold {{ $availability['text'] }}">{{ $availability['label'] }}</p>
-                            <p class="mt-0.5 text-xs leading-5 text-gray-500">
-                                {{ $availability['detail'] }}
-                                @if ($availabilityCheckedLabel && $effectiveAvailability !== \App\Models\Product::AVAILABILITY_UNKNOWN)
-                                    <span class="block">Pemeriksaan terakhir {{ $availabilityCheckedLabel }}.</span>
-                                @endif
-                            </p>
+                            @if ($availability['detail'] !== '' || $availabilityCheckedLabel)
+                                <p class="mt-0.5 text-xs leading-5 text-gray-500">
+                                    {{ $availability['detail'] }}
+                                    @if ($availabilityCheckedLabel && $effectiveAvailability !== \App\Models\Product::AVAILABILITY_UNKNOWN)
+                                        <span class="block">Pemeriksaan terakhir {{ $availabilityCheckedLabel }}.</span>
+                                    @endif
+                                </p>
+                            @endif
                         </div>
                     </div>
 
@@ -195,7 +203,7 @@
                                         <button type="button" data-quantity-change="1" aria-label="Tambah jumlah" class="flex h-11 w-11 items-center justify-center text-lg text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">+</button>
                                     </div>
                                 </div>
-                                <p class="max-w-44 text-right text-[10px] leading-4 text-gray-400">Ketersediaan tetap perlu dikonfirmasi.</p>
+                                <p class="max-w-44 text-right text-[10px] leading-4 text-gray-400">{{ $managedByApp ? 'Jumlah yang diminati, bukan reservasi.' : 'Ketersediaan tetap perlu dikonfirmasi.' }}</p>
                             </div>
 
                             <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}"

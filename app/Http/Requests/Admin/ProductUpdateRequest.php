@@ -62,6 +62,12 @@ class ProductUpdateRequest extends FormRequest
                     Product::AVAILABILITY_AVAILABLE,
                     Product::AVAILABILITY_SOLD_OUT,
                 ]),
+                function (string $attribute, mixed $value, \Closure $fail) use ($currentProduct): void {
+                    if ($currentProduct?->availability_source === 'qammaris_app'
+                        && ($value !== $currentProduct->availability_status || $this->boolean('availability_confirmed'))) {
+                        $fail('Availability produk ini dikelola aplikasi Qammaris.');
+                    }
+                },
             ],
             'availability_confirmed' => ['sometimes', 'boolean'],
             'top_notes' => ['nullable', 'string', 'max:1000'],

@@ -13,7 +13,11 @@ final class InquiryWhatsApp
         ProductVariant $offer,
         string $intent,
     ): ?string {
+        $managedByApp = $product->availability_source === 'qammaris_app';
         $intentLabel = $intent === 'restock' ? 'informasi restock' : 'konfirmasi stok';
+        if ($managedByApp && $intent !== 'restock') {
+            $intentLabel = 'inquiry produk';
+        }
         $opening = $intent === 'restock'
             ? 'Halo Admin Qammaris, saya ingin menanyakan restock produk ini:'
             : 'Halo Admin Qammaris, saya ingin menanyakan ketersediaan produk ini:';
@@ -24,11 +28,12 @@ final class InquiryWhatsApp
             '*'.$this->plainText($product->brand?->name ?? 'Brand belum diisi').' - '.$this->plainText($product->name).'*',
             'Ukuran: '.$offer->volume.' ml',
             'Harga saat ini: '.$this->rupiah($offer->price),
-            'Status website: '.$this->availabilityLabel($product->effective_availability),
+            'Status website: '.CatalogAvailability::label($product),
             'Link produk: '.route('products.show', $product),
             'Intent: '.$intentLabel,
             '',
-            'Mohon konfirmasi informasi terbaru. Inquiry ini belum menjadi transaksi atau reservasi.',
+            $managedByApp ? 'Inquiry ini belum menjadi transaksi atau reservasi.'
+                : 'Mohon konfirmasi informasi terbaru. Inquiry ini belum menjadi transaksi atau reservasi.',
         ]);
 
         return $this->url($number, $message);
@@ -58,7 +63,7 @@ final class InquiryWhatsApp
             $lines[] = '   Ukuran: '.$item['volume'].' ml';
             $lines[] = '   Jumlah yang diminati: '.$item['quantity'];
             $lines[] = '   Harga saat ini: '.$this->rupiah($item['price']).' / item';
-            $lines[] = '   Status website: '.$this->availabilityLabel($item['effective_availability']);
+            $lines[] = '   Status website: '.$this->plainText($item['availability_label'] ?? $this->availabilityLabel($item['effective_availability']));
             $lines[] = '   Link: '.$item['product_url'];
         }
 
@@ -71,18 +76,33 @@ final class InquiryWhatsApp
         }
 
         $lines[] = '';
-        $lines[] = 'Mohon konfirmasi stok dan harga terbaru. Daftar inquiry ini belum menjadi transaksi atau reservasi.';
+        $lines[] = $this->requiresStockConfirmation($items)
+            ? 'Mohon konfirmasi stok dan harga terbaru. Daftar inquiry ini belum menjadi transaksi atau reservasi.'
+            : 'Daftar inquiry ini belum menjadi transaksi atau reservasi.';
 
         return $this->url($number, implode("\n", $lines));
     }
 
     public function availabilityLabel(string $availability): string
     {
-        return match ($availability) {
-            Product::AVAILABILITY_AVAILABLE => 'Tersedia saat diperiksa',
-            Product::AVAILABILITY_SOLD_OUT => 'Sold out',
-            default => 'Konfirmasi stok',
-        };
+        return CatalogAvailability::legacyLabel($availability);
+    }
+
+    public function listNotice(array $items): string
+    {
+        return ($this->requiresStockConfirmation($items) ? 'Admin akan mengonfirmasi stok dan harga terbaru. ' : '')
+            .'Mengirim inquiry tidak menyimpan stok atau membuat transaksi.';
+    }
+
+    private function requiresStockConfirmation(array $items): bool
+    {
+        foreach ($items as $item) {
+            if ($item['requires_stock_confirmation'] ?? true) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hasValidNumber(?string $number): bool

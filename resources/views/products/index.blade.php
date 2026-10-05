@@ -160,9 +160,9 @@
                             <label for="desktop-catalog-availability" class="font-bold text-xs uppercase tracking-widest mb-3 text-brand-black block">Ketersediaan</label>
                             <select id="desktop-catalog-availability" name="availability" data-catalog-autosubmit class="select select-bordered w-full min-h-11 rounded-none bg-white border-gray-200 focus:outline-none focus:border-brand-black">
                                 <option value="">Semua status</option>
-                                <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia saat diperiksa</option>
-                                <option value="unknown" {{ $catalogState->availability === 'unknown' ? 'selected' : '' }}>Konfirmasi stok</option>
-                                <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Sold out</option>
+                                <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia</option>
+                                <option value="unknown" {{ $catalogState->availability === 'unknown' ? 'selected' : '' }}>Tanyakan ketersediaan</option>
+                                <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Habis</option>
                             </select>
                         </div>
 
@@ -295,9 +295,9 @@
                         <label for="mobile-catalog-availability" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Ketersediaan</label>
                         <select id="mobile-catalog-availability" name="availability" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
                             <option value="">Semua status</option>
-                            <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia saat diperiksa</option>
-                            <option value="unknown" {{ $catalogState->availability === 'unknown' ? 'selected' : '' }}>Konfirmasi stok</option>
-                            <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Sold out</option>
+                            <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia</option>
+                            <option value="unknown" {{ $catalogState->availability === 'unknown' ? 'selected' : '' }}>Tanyakan ketersediaan</option>
+                            <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Habis</option>
                         </select>
                     </div>
                 </div>

@@ -20,6 +20,7 @@
             'text' => 'text-amber-800',
         ],
     };
+    $availability['label'] = \App\Support\CatalogAvailability::label($product);
 @endphp
 
 <article class="group min-w-0" data-product-card data-effective-availability="{{ $effectiveAvailability }}">
