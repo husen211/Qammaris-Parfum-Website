@@ -1,0 +1,126 @@
+[
+  {
+    "cardOverflow": 0,
+    "columns": 2,
+    "firstRowPrices": [
+      632,
+      632
+    ],
+    "frameMismatch": 0,
+    "framing": {
+      "balanced": 7,
+      "not-loaded": 14,
+      "original": 3
+    },
+    "height": 844,
+    "horizontalOverflow": 0,
+    "nameClipping": 0,
+    "nestedActions": 0,
+    "scrollY": 0,
+    "width": 320
+  },
+  {
+    "cardOverflow": 0,
+    "columns": 2,
+    "firstRowPrices": [
+      664,
+      664
+    ],
+    "frameMismatch": 0,
+    "framing": {
+      "balanced": 7,
+      "not-loaded": 14,
+      "original": 3
+    },
+    "height": 844,
+    "horizontalOverflow": 0,
+    "nameClipping": 0,
+    "nestedActions": 0,
+    "scrollY": 0,
+    "width": 375
+  },
+  {
+    "cardOverflow": 0,
+    "columns": 2,
+    "firstRowPrices": [
+      672,
+      672
+    ],
+    "frameMismatch": 0,
+    "framing": {
+      "balanced": 7,
+      "not-loaded": 14,
+      "original": 3
+    },
+    "height": 844,
+    "horizontalOverflow": 0,
+    "nameClipping": 0,
+    "nestedActions": 0,
+    "scrollY": 0,
+    "width": 390
+  },
+  {
+    "cardOverflow": 0,
+    "columns": 3,
+    "firstRowPrices": [
+      737,
+      737,
+      737
+    ],
+    "frameMismatch": 0,
+    "framing": {
+      "balanced": 9,
+      "not-loaded": 12,
+      "original": 3
+    },
+    "height": 900,
+    "horizontalOverflow": 0,
+    "nameClipping": 0,
+    "nestedActions": 0,
+    "scrollY": 0,
+    "width": 768
+  },
+  {
+    "cardOverflow": 0,
+    "columns": 3,
+    "firstRowPrices": [
+      811,
+      811,
+      811
+    ],
+    "frameMismatch": 0,
+    "framing": {
+      "balanced": 9,
+      "not-loaded": 12,
+      "original": 3
+    },
+    "height": 900,
+    "horizontalOverflow": 0,
+    "nameClipping": 0,
+    "nestedActions": 0,
+    "scrollY": 0,
+    "width": 1440
+  },
+  {
+    "cardOverflow": 0,
+    "columns": 4,
+    "firstRowPrices": [
+      728,
+      728,
+      728,
+      728
+    ],
+    "frameMismatch": 0,
+    "framing": {
+      "balanced": 11,
+      "not-loaded": 8,
+      "original": 5
+    },
+    "height": 900,
+    "horizontalOverflow": 0,
+    "nameClipping": 0,
+    "nestedActions": 0,
+    "scrollY": 0,
+    "width": 1920
+  }
+]

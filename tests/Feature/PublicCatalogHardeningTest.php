@@ -48,7 +48,7 @@ class PublicCatalogHardeningTest extends TestCase
 
         $this->assertSame(1, substr_count($html, 'fetchpriority="high"'));
         $this->assertSame(4, substr_count($html, 'loading="lazy"'));
-        $this->assertSame(5, substr_count($html, 'width="480" height="640"'));
+        $this->assertSame(5, substr_count($html, 'width="480" height="480"'));
     }
 
     public function test_catalog_query_count_does_not_grow_with_the_page_size(): void
