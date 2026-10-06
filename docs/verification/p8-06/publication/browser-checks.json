@@ -1,0 +1,30 @@
+{
+  "cssViewports": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "catalog": 123,
+  "soldOut": 40,
+  "available": 83,
+  "unknown": 0,
+  "search9PM": 2,
+  "paginationPage2": "25–48 of 123",
+  "inquiry": {
+    "product": "9 PM Rebel Edp 100 Ml",
+    "quantity": 2,
+    "estimate": 1196000,
+    "testItemRemoved": true,
+    "whatsappSent": false
+  },
+  "applicationErrors": 0,
+  "extensionWarnings": 9,
+  "overflow": false,
+  "brokenLoadedImages": 0,
+  "externalImages": 0
+}

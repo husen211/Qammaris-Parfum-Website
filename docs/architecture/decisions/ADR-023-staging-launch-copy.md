@@ -1,6 +1,6 @@
 # ADR-023 — Restricted staging launch copy
 
-Status: Accepted — Owner instruction 2026-10-06; publication remains subject to Owner review.
+Status: Accepted — Owner instructions 2026-10-06; exact 122-product staging publication subsequently approved.
 
 ## Problem and decision
 
@@ -27,3 +27,9 @@ Code rollback restores the exact prior recorder/apply files and disables the new
 ## Approved continuation after pairing
 
 Owner requests continuation of photographed launch products while leaving all image-less drafts alone. The original113 cohort is historical; a fresh structurally complete175 cohort is derived from current exact provider mappings and actual Laravel readiness. Reuse the same unchanged CLI/application guards for46 clear blank-audience updates; do not loosen structural or publication protection. The supplemental read-only preparation tool records original Shopee copy/evidence, current guards and exact publication-candidate IDs. Other taxonomy/offer facts and ambiguous audience stay in review. No new mutation layer/contract, role, account or deployment is justified. Owner approval of a concrete current subset still precedes publication.
+
+## Approved publication of the concrete subset
+
+Owner's subsequent explicit approval covers exactly 122 reviewed staging IDs in CSV SHA256 `c9eda30849a7e439fdcdeb6be4cd958e6f5f71a146da81b0550b652d35b48013`. Existing `PublishProduct` is sufficient for each mutation; the admin HTTP flow requires a human account while staging has none. A fixed one-off SSH operator script supplies the existing operation with immutable preview, identity/source/media/readiness guards, ordered locks and one transaction, recording nullable-actor before/after audit as `launch-publish-v1`. It is deliberately bound to this exact list and staging database rather than creating a reusable bulk-write API, synthetic admin or another application layer. The separate audit contract prevents copy/maintenance tools from interpreting publication rows as field edits. The real publisher and audit writes were rehearsed with complete rollback, including failure on the last row, before approved apply; replay is a no-op.
+
+This adds only an operator script and existing-table audit, not a new product mutation abstraction, schema, account or web route. Keep the original lists, sources and audit private. Production remains separately approved; staging is never copied wholesale into production. Recovery requires an explicitly scoped forward unpublish/correction using before snapshots; removing the script or rolling back code does not undo publication.

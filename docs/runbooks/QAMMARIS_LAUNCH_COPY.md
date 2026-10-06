@@ -50,3 +50,21 @@ Only structurally complete photographed visible connected Majoo-source drafts wi
 Capture after apply and prepare a new review. The actual no-blocker IDs define `publication-candidates.csv`, with product UUID/slug/price/size/audience and exact concurrency guards; it is a read-only approval list, not maintenance input. `build_launch_copy_review.py` accepts 1..1000 distinct explicitly captured rows and exact cover membership/checksums. Never publish from source confidence alone.
 
 Current protected review: `https://staging.qammarisparfum.id/owner-review/p8-06-launch-ready/`. Six allowed review files only: HTML/CSS/JS, two correction CSVs and publication-candidate CSV. Raw basic export/capture/evidence/maintenance input stay private. Use a fresh new path, retaining earlier review snapshots; do not change authentication or permissions on existing paths. Confirm anonymous401 for directory/every file and actual Owner Chrome at390x844/1440x900. Retain media/guards/audit and verify the actual browser download against the approval-list hash. Owner must approve this concrete staging subset before publication; production and its final backup/cutover remain separate.
+
+## Approved 122-product staging publication — completed 2026-10-06
+
+Owner explicitly approved the exact list SHA256 `c9eda30849a7e439fdcdeb6be4cd958e6f5f71a146da81b0550b652d35b48013`. `tools/staging_publish_launch_wave.php` is a fixed operator tool for this run, not a general import/publication interface. It accepts only that private staging CSV, exactly 122 distinct IDs/UUIDs, excluding fixture ID 1. It checks actual staging environment, connected MySQL driver/database, draft visibility, provider ownership, source visibility/hash, immutable preview/row hashes, timestamps and actual publication readiness including stored cover existence. It uses existing `PublishProduct` under an outer transaction; protected-field/relationship differences abort all writes. No secret is read/output by the tool.
+
+The unchanged script is retained privately on staging at `storage/app/private/p8-06-publication-20261006/staging_publish_launch_wave.php`. From the staging application root only:
+
+```text
+php storage/app/private/p8-06-publication-20261006/staging_publish_launch_wave.php preview
+php storage/app/private/p8-06-publication-20261006/staging_publish_launch_wave.php rehearse
+php storage/app/private/p8-06-publication-20261006/staging_publish_launch_wave.php apply
+```
+
+Preview persisted batch 6 and 122 exact approved rows. Inspect before apply. Rehearsal called the real publisher/audit writes and rolled them all back. A separate private failure probe rejected the last row and proved no partial publication/audit change. Approved apply recorded 122 before/after rows with contract `launch-publish-v1`, explicit Owner-approved source label and null human actor IDs; no fake admin. Repeating the applied batch returns persisted audit digest without writing. Do not reactivate a stale/invalid/failed batch, broaden the list, or adapt this script for production.
+
+After apply: 123 published including unchanged integration fixture; 323 drafts including all 95 without photos. Public scope exactly equals approved IDs plus fixture. IDs/slugs/prices/offers/media/identities/availability/source snapshots retained; only publication state/timestamps changed. Browser detail reads may subsequently increment existing view counters. Draft routes remain 404. Verify catalog/search/filters/pagination/gallery/copy/inquiry at mobile and desktop; remove only the operator's own inquiry item, do not send WhatsApp. API/cron/worker and protected config/auth/media hashes remain healthy. Evidence: `docs/verification/p8-06/README.md` and `publication/` screenshots; raw captures/audit stay private.
+
+Recovery is a reviewed forward unpublish/correction of this exact batch when authorized, using stored before snapshots and fresh guards; preserve identifiers, slugs, media and audit. Code rollback/removal of the operator tool alone leaves publication intact. Never restore a whole staging database or reverse later stock changes. Production backup/preflight/cutover/webhook URL change are separate Owner-approved steps; no extra old-data backup during this run.
