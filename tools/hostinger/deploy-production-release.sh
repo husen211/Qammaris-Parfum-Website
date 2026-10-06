@@ -16,8 +16,8 @@ flock -n 9
 test ! -e "$release"
 # Packages are produced by the private GitHub workflow, not arbitrary operator uploads.
 php -r '$a=new PharData($argv[1]);foreach(new RecursiveIteratorIterator($a) as $f){$p=$f->getPathName();if(str_contains($p,"/../")||str_contains($p,"/.env")||$f->isLink()){exit(1);}}' "$archive"
-mkdir "$release"
-tar -xzf "$archive" -C "$release" --no-same-owner
+mkdir -m 0711 "$release"
+tar -xzf "$archive" -C "$release" --no-same-owner --same-permissions
 test "$(cat "$release/release-revision.txt")" = "$revision"
 ln -s "$shared/.env" "$release/.env"
 ln -s "$shared/storage" "$release/storage"

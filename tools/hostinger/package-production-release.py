@@ -25,6 +25,14 @@ if any(path.is_symlink() or ".env" in path.parts or ".git" in path.parts for pat
 Path("release-revision.txt").write_text(revision + "\n")
 files.add(Path("release-revision.txt"))
 with tarfile.open("production-release.tar.gz", "w:gz") as archive:
+    # Include directory modes: implicit tar parents would inherit the private deploy umask,
+    # making public assets unreadable by the hosting web server.
+    directories = {parent for path in files for parent in path.parents if parent != Path(".")}
+    for directory in sorted(directories, key=lambda path: (len(path.parts), path.as_posix())):
+        info = tarfile.TarInfo(directory.as_posix())
+        info.type = tarfile.DIRTYPE
+        info.mode = 0o755
+        archive.addfile(info)
     for path in sorted(files):
         archive.add(path, arcname=path.as_posix(), recursive=False)
 print(f"Release packaged: {len(files)} files; no env, media, sessions, database or accounts")

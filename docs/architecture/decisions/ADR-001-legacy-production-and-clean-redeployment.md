@@ -48,3 +48,8 @@ Owner explicitly waived preservation/migration and backup of legacy production d
 ### Narrow production hosting inspection authorized and completed
 
 Owner's subsequent “lanjutt gas” authorizes the pending read-only hosting inspection on2026-10-06. The deferment above is lifted only for minimal runtime/layout/config-status/cron metadata; legacy database contents remain unread. Production files/database/env/accounts/permissions/public routing are unchanged. Confirmed public_html -> sibling laravel_app, CLI PHP8.2.33, lockLaravel12.39.0 and existing public storage symlink. Target preparation and public cutover require concrete separate scope; see P1-04 evidence/runbook.
+
+### Separate production preparation authorized (2026-10-06)
+
+Owner subsequently authorized target/database/catalog/media/admin/runtime preparation and explicitly approved GitHub production Secrets/access after automatic review asked for specific credential permission. A separate fresh target is now prepared; legacy routing/data/files and both staging cron entries remain intact. The new admin email is admin@qammaris.com and its new password may be sent to Owner after creation; API/webhook values remain confidential. Public activation, target-only static traversal/read permissions, main promotion/enable flag and backend webhook production destination remain final Owner decisions. See current P1-04 production-target evidence.
+
