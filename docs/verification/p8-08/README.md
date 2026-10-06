@@ -1,6 +1,6 @@
 # P8-08 — Admin app inbox, recurring drafts and prices
 
-Status: IN_REVIEW; local implementation verified, no production deployment.
+Status: DONE; combined public/admin patch released to production after explicit Owner approval and the one-release touch-test waiver. See [PRODUCTION_RELEASE.md](PRODUCTION_RELEASE.md) for installed revision, actual live checks and remaining observation limits. Unreleased statements below describe the historical pre-release verification.
 Date: 2026-10-06. Branch: `codex/admin-app-inbox`, based on `codex/catalog-navigation` / 30ff559 (PR4 dependency).
 
 ## Outcome and UX rationale
