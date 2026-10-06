@@ -2352,6 +2352,24 @@ Risks: source names often omit size/concentration; such records remain incomplet
 
 Acceptance: preview records all source rows including hidden; apply creates only visible unmapped nonconflicting drafts; existing IDs/slugs/price/media remain; repeat apply no-op; stale/tampered preview rolls back; source=app flagged; ambiguous/unmatched photos retained for manual upload; cover and at most two additional files downloaded/validated/stored, no hotlinks; audit/review CSV and tests plus staged counts recorded. No schema change or production cutover.
 
+### P8-05 Prioritized launch catalog review — IN_REVIEW
+
+Owner direction 2026-10-06: continue toward launch and defer additional backups of the old catalog. Existing preservation obligations remain; this item does not authorize production cutover or destructive writes.
+
+Outcome: prioritize the closest-to-complete feed drafts and provide a guarded maintenance template so Owner can complete factual descriptions/audience in bulk rather than editing 445 records individually.
+
+In scope: fresh read-only staging capture of linked drafts, actual publication blockers and current row fingerprints; deterministic review ordering; Owner-editable review package and exact maintenance-v1 template; verification that untouched templates are no-op in the existing Laravel preview. Supplemental Shopee descriptions may be proposed only after Owner approval and only by existing exact provider identity, with provenance and no automatic apply.
+
+Out of scope: applying/publishing products, invented descriptions/audience/size, relaxed publication requirements, old-catalog copy, ambiguous matching, new admin accounts, migrations, additional old-data backup, production deployment, app changes, credentials or permission changes.
+
+Dependencies: P8-04 staged drafts/media, existing P5 publication readiness and P6 maintenance snapshot/preview. P8-03 deferred runtime gates remain separately tracked.
+
+Risks: source status changes can invalidate maintenance fingerprints; use fresh preview before any apply. Shopee basic export is older than current feed and cannot replace source names/prices/status. Review priority does not mean approval to publish.
+
+Acceptance criteria: all current linked visible drafts classified once, with no published/hidden record in templates; priority based on actual blockers rather than guessed facts; mandatory maintenance headers/ID/timestamp/fingerprint present; untouched template produces zero mutations and no unexpected validation errors; files remain private, formula-safe and traceable to capture; no catalog/media/production mutation.
+
+Verification 2026-10-06: fresh guarded READ ONLY staging capture, 445 drafts classified once: 113 description/audience only, 66 with photos needing other data, 263 needing photos/data, 3 source=app review. Private workbook (113/332 rows) and maintenance templates created. Staging Laravel previews: 113 and 445 review/no-op rows, zero errors/changes; product/image/identity/batch/row counts unchanged. Local maintenance regression **14 passed / 139 assertions**. Recalculation, zero formula errors, disposable workflow-input checks, saved workbook IDs/UUIDs/fingerprints/UTC dates, dropdowns/panes and restored blank inputs checked; both sheet openings visually inspected. No MS Excel roundtrip proof, supplemental Shopee content or catalog apply/publish. No application/PHP/frontend/DB/schema/media/env/permission/production change and no additional old-data backup. Evidence: `docs/verification/p8-05/README.md`; workflow: `docs/runbooks/QAMMARIS_LAUNCH_CATALOG_REVIEW.md`. Next: factual completion with Owner review and existing guarded maintenance; do not auto-start cutover.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

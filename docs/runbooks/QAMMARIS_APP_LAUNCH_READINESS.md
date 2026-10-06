@@ -72,6 +72,10 @@ Stage preparation passes when all eligible staging UUIDs have one record, draft/
 
 Before production, resolve actual production UUID pairings and old URL/media preservation, choose reviewed launch subset, complete required catalog facts/photos and publish via readiness validation, with P1-04 backup/restore proof. P8-03 rare-state live tests deferred by Owner remain visible in the release risk matrix.
 
+### Catalog review continuation (P8-05)
+
+Owner deferred additional backup of the old catalog on 2026-10-06 and requested launch-critical work next. Read-only staging review now prioritizes **113 drafts** whose only blockers are description/audience. A private 113/332-row review workbook and exact maintenance-v1 templates are prepared; untouched templates produce zero errors/changes in staging Laravel preview. Existing catalog/media/checkpoint are retained, no extra database backup or apply/publish performed. See `QAMMARIS_LAUNCH_CATALOG_REVIEW.md` for completing factual data by internal ID and fresh optimistic guards. Remaining draft gaps and production cutover are separate gates; backup deferral does not authorize destructive data replacement.
+
 ## Stage 3 — Production hardening, release and observation (P9-01)
 
 1. Final regression/CI and browser acceptance on the deployed candidate: mobile/desktop catalog, search/filter, real media, detail, inquiry, admin/auth, hidden/sold-out behavior, sitemap/URLs. Confirm production configuration, indexing policy, HTTPS, debug off, worker/scheduler, log hygiene and failure recovery; do not reuse staging Basic Auth or synthetic users.
