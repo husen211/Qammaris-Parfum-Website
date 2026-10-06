@@ -14,6 +14,8 @@ python tools/build_launch_copy_review.py <private-wave-one.json> <private-cover-
 
 No packages installed. Outputs are private/ignored. `wave-one.json` preserves source SHA, original/cleaned text, removals, provider mapping, proposal and audience evidence. Maintenance CSV proposes only description/gender; blank gender means retain unknown. Correction CSVs are review files, not import contracts. The offline HTML safely escapes source text, embeds verified website covers, supports search/clear/unknown/conflict filters and has no publish operation. Serve only its own directory on loopback for review; never expose storage/app/private or repository root.
 
+The approved review is also available at `https://staging.qammarisparfum.id/owner-review/p8-06-wave-one/` behind existing staging HTTP Basic Auth. Anonymous requests must remain 401, including its CSV/CSS/JS files. Existing Owner browser must render without an auth/account change. Only the five standalone review files belong there; source XLSX, raw capture, maintenance CSV and environment files stay private. It is a snapshot for Owner, not the public catalog or a dynamic stock screen.
+
 ## Authorized staging draft apply
 
 Use the existing authorized staging SSH session. Confirm app environment staging, expected staging database, original per-file PHP hashes/modes and fresh 113-row preview. Current deployment is a permission-preserving allowlisted PHP overlay, not the full workflow that rewrites auth/permissions. Keep immutable code originals and overlay manifest; no chmod, env/cache/auth/assets/cron/account/schema changes or extra DB backup.

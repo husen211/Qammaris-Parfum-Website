@@ -12,6 +12,8 @@ Preview retains immutable source/catalog/row hashes and before snapshots. Apply 
 
 The offline curation tool pairs existing Shopee IDs and unchanged media-baseline names. It records original text, cleanup removals and exact audience evidence. Comparison/inspiration and aroma/bottle color do not establish audience; missing/conflicting evidence remains blank. A private offline HTML review shows verified existing website covers and exact proposed copy, with separate correction CSVs. It has no publication operation.
 
+The same five-file review can be served on staging behind its existing HTTP Basic Auth after confirming anonymous 401 and an authenticated Owner browser render. No protection/account is created or changed. Raw sources/captures/maintenance input stay private; the review is a snapshot, with no product mutation or published-scope bypass.
+
 ## Tradeoff
 
 The existing Laravel operations already supply the needed transaction/audit/concurrency behavior. A separate bounded contract and nullable machine actor add a few checks, avoiding a second mutation implementation, generic write API, new account or new audit schema. This is a trusted operator tool, not a substitute for future scoped API authorization. Attribution identifies the authorized CLI operation, not a specific human identity; preserve the operational deployment record and Owner approval alongside batch ID.

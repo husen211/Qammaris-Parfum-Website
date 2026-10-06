@@ -19,9 +19,14 @@ def build(wave_path, capture_path, output):
     if wave.get("schema") != "qammaris-wave-one-v1" or len(wave["data"]) != 113:
         raise ValueError("Expected reviewed wave-one cohort")
     covers = {r["id"]: r for r in capture["covers"]}
+    products = {str(r["id"]): r["product"] for r in capture["products"]}
     if len(covers) != 113 or set(covers) != {r["product_id"] for r in wave["data"]}:
         raise ValueError("Cover cohort mismatch")
     escape = lambda text: html.escape(str(text or ""), quote=True)
+    clear = sum(r["audience_decision"] == "clear" for r in wave["data"])
+    review = len(wave["data"]) - clear
+    conflicts = sum(r["audience_decision"] == "conflict" for r in wave["data"])
+    gaps = wave["summary"]["other_size_concentration_gaps"]
     articles = []
     for i, row in enumerate(wave["data"]):
         cover = covers[row["product_id"]]
@@ -35,6 +40,8 @@ def build(wave_path, capture_path, output):
         evidence = "".join(f'<li>{escape(e["text"])}</li>' for e in row["audience_evidence"])
         money = "Rp " + f'{int(float(row["price"])):,}'.replace(",", ".")
         availability = {"available": "Tersedia", "sold_out": "Habis", "unknown": "Tanyakan ketersediaan"}[row["availability"]]
+        if row["availability"] == "sold_out" and products[row["product_id"]].get("availability_restock_eta"):
+            availability += " · Restok segera"
         articles.append(f'''<article data-decision="{escape(decision)}" data-search="{escape(row['name']+' '+row['brand'])}">
 <img src="data:{cover['mime']};base64,{cover['bytes']}" alt="Foto sampul {escape(row['name'])}" width="220" height="220" {'loading="lazy"' if i else ''}>
 <div><p class="brand">{escape(row['brand'])} · ID {escape(row['product_id'])}</p><h2>{escape(row['name'])}</h2>
@@ -46,9 +53,9 @@ def build(wave_path, capture_path, output):
     output.mkdir()
     for name in ("audience-corrections.csv", "size-concentration-corrections.csv"):
         shutil.copyfile(wave_path.parent / name, output / name)
-    document = '''<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Review gelombang 1 · Qammaris</title><link rel="stylesheet" href="review.css"><script defer src="review.js"></script></head><body>
-<a class="skip" href="#products">Lewati ke produk</a><main><header><p class="brand">Qammaris · Review Owner</p><h1>Gelombang pertama</h1><p>113 draft untuk review foto dan deskripsi. 76 peruntukan jelas; 37 perlu keputusanmu. Belum dipublish.</p><details><summary>Cara review dan daftar koreksi</summary><p>Periksa foto dan isi deskripsi sebelum menyetujui publikasi staging. Harga dan status mengikuti snapshot staging; halaman ini adalah berkas review.</p><p><a href="audience-corrections.csv" download>Unduh 37 koreksi peruntukan</a> · <a href="size-concentration-corrections.csv" download>Kekurangan 246 draft lainnya</a></p></details></header>
-<form id="filters"><label>Cari nama atau merek<input id="search" type="search" autocomplete="off"></label><label>Peruntukan<select id="audience"><option value="all">Semua 113 produk</option><option value="clear">Jelas · 76</option><option value="review">Perlu review · 37</option><option value="conflict">Bertentangan · 3</option></select></label><button type="reset">Reset</button></form>
+    document = f'''<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Review gelombang 1 · Qammaris</title><link rel="stylesheet" href="review.css"><script defer src="review.js"></script></head><body>
+<a class="skip" href="#products">Lewati ke produk</a><main><header><p class="brand">Qammaris · Review Owner</p><h1>Gelombang pertama</h1><p>113 draft untuk review foto dan deskripsi. {clear} peruntukan jelas; {review} perlu keputusanmu. Belum dipublish.</p><details><summary>Cara review dan daftar koreksi</summary><p>Periksa foto dan isi deskripsi sebelum menyetujui publikasi staging. Harga dan status mengikuti snapshot staging; halaman ini adalah berkas review.</p><p><a href="audience-corrections.csv" download>Unduh {review} koreksi peruntukan</a> · <a href="size-concentration-corrections.csv" download>Kekurangan {gaps} draft lainnya</a></p></details></header>
+<form id="filters"><label>Cari nama atau merek<input id="search" type="search" autocomplete="off"></label><label>Peruntukan<select id="audience"><option value="all">Semua 113 produk</option><option value="clear">Jelas · {clear}</option><option value="review">Perlu review · {review}</option><option value="conflict">Bertentangan · {conflicts}</option></select></label><button type="reset">Reset</button></form>
 <p id="count" role="status" aria-live="polite">113 produk</p><p id="empty" hidden>Tidak ada produk yang cocok. Ubah pencarian atau reset filter.</p><section id="products" aria-label="Produk gelombang pertama">'''+"".join(articles)+'''</section><footer>266 draft tanpa foto tetap draft. Ukuran/konsentrasi lainnya tidak menghalangi gelombang ini. Tidak ada tombol publish pada berkas review.</footer></main></body></html>'''
     (output / "index.html").write_text(document, encoding="utf8")
     (output / "review.css").write_text('''*{box-sizing:border-box}body{margin:0;background:#f9f9f7;color:#1a1a1a;font:16px/1.55 Arial,sans-serif}main{max-width:1100px;margin:auto;padding:24px}h1{font-size:32px;margin:8px 0}h2{font-size:21px;line-height:1.35;margin:6px 0;overflow-wrap:anywhere}header{max-width:850px}p{margin:8px 0}.brand{font-size:14px;color:#565656}.offer{font-weight:600}a{color:#0d3f33;text-underline-offset:3px}form{display:flex;gap:16px;align-items:end;margin:24px 0}label{display:grid;gap:5px;flex:1}input,select,button,summary{font:inherit}input,select,button{min-height:44px;padding:8px 12px;border:1px solid #777;border-radius:3px;background:#fff;color:#1a1a1a;max-width:100%}button,summary{cursor:pointer}summary{padding:10px 0;min-height:44px}article{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;padding:28px 0;border-top:1px solid #d7d7d1}img{width:220px;height:220px;object-fit:contain;background:white}details{border-top:1px solid #e5e5df;margin-top:10px}.copy{white-space:pre-line;overflow-wrap:anywhere}li{overflow-wrap:anywhere}.review{color:#74420a}.clear{color:#0d3f33}footer{padding:24px 0;border-top:1px solid #d7d7d1}.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:10px;background:white;padding:8px;z-index:1}:focus-visible{outline:3px solid #0d3f33;outline-offset:3px}[hidden]{display:none!important}@media(max-width:650px){main{padding:20px}h1{font-size:28px}form{flex-direction:column;align-items:stretch;gap:12px}label{width:100%}article{grid-template-columns:100px minmax(0,1fr);gap:14px}img{width:100px;height:120px}article>div{display:contents}article>.brand{grid-column:2}h2,.offer,article p,details{grid-column:1/-1}article img{grid-row:1/4}article .brand,article h2,article .offer{grid-column:2}h2{font-size:18px}ul{padding-left:22px}}''', encoding="utf8")
