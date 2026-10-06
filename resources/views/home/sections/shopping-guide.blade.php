@@ -22,8 +22,8 @@
                     Jelajahi katalog lengkap kami dan temukan signature scent yang paling sesuai.
                 </p>
                 <div class="mt-auto pt-6 flex justify-end">
-                    <img src="{{ asset('storage/images/animation/step1.png') }}" alt="Ilustrasi langkah discover"
-                        loading="lazy" decoding="async" class="h-36 w-auto object-contain" />
+                    <img src="{{ asset('images/illustrations/step1.png') }}" alt="Ilustrasi langkah discover"
+                        width="432" height="578" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
                 </div>
             </div>
 
@@ -34,8 +34,8 @@
                     Pilih varian yang diinginkan, atur jumlah, lalu masukkan ke keranjang belanja.
                 </p>
                 <div class="mt-auto pt-6 flex justify-end">
-                    <img src="{{ asset('storage/images/animation/step2.png') }}" alt="Ilustrasi langkah select"
-                        loading="lazy" decoding="async" class="h-36 w-auto object-contain" />
+                    <img src="{{ asset('images/illustrations/step2.png') }}" alt="Ilustrasi langkah select"
+                        width="677" height="369" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
                 </div>
             </div>
 
@@ -46,8 +46,8 @@
                     Pesanan Anda terkirim otomatis ke WhatsApp admin untuk konfirmasi cepat.
                 </p>
                 <div class="mt-auto pt-6 flex justify-end">
-                    <img src="{{ asset('storage/images/animation/step3.png') }}" alt="Ilustrasi langkah checkout"
-                        loading="lazy" decoding="async" class="h-36 w-auto object-contain" />
+                    <img src="{{ asset('images/illustrations/step3.png') }}" alt="Ilustrasi langkah checkout"
+                        width="408" height="612" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
                 </div>
             </div>
         </div>

@@ -6,6 +6,8 @@ Review: [PR8](https://github.com/husen211/Qammaris-Parfum-Website/pull/8), imple
 
 ## Outcome and rationale
 
+Owner follow-up on homepage photo size and missing illustrations: see [compact photos and static illustration repair](home-media/README.md). It adds four tracked static assets and repairs the desktop quiz grid, without touching product uploads/data. The original verification below is retained as historical evidence; the follow-up records its own checks and release limitations.
+
 - Default `Terlaris dahulu` puts marked products ahead of ordinary products throughout pagination; publication date and ID preserve predictable ordering within groups.
 - Explicit Terbaru, price and popular retain their original meaning. Query normalization/forms/JavaScript now preserve `sort=latest`, including search/filter and detail return.
 - Homepage shows up to six existing visible marked products from a deterministic circular ID list, advancing one position per Palu day at midnight WITA. Adjacent days share five entries when more than six exist. No random reshuffle on reload, cron, mutation, migration or new dependency.

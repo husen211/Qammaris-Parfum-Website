@@ -49,7 +49,7 @@
         <div id="scroller" data-best-seller-rail role="group" aria-label="Pilihan produk terlaris" tabindex="0"
             class="flex overflow-x-auto gap-5 md:gap-8 pb-6 snap-x snap-mandatory scroll-px-6 md:scroll-px-0 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 focus-visible:outline-2 focus-visible:outline-offset-4">
             @foreach ($bestSellers as $product)
-                <div class="flex-none w-[240px] md:w-[280px] snap-start">
+                <div class="flex-none w-[196px] sm:w-[224px] lg:w-[260px] snap-start">
                     @include('products._catalog-card', [
                         'product' => $product,
                         'detailUrl' => route('products.show', $product->slug),
