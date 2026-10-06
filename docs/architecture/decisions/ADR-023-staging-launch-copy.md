@@ -23,3 +23,7 @@ The existing Laravel operations already supply the needed transaction/audit/conc
 All 113 remain drafts until Owner reviews the concrete package; unclear audience still blocks publication. The 266 image-less drafts are untouched. Production backup is deferred until immediately before separately approved cutover. Staging data must never replace the production database wholesale.
 
 Code rollback restores the exact prior recorder/apply files and disables the new command, retaining audit and curated data. It does not undo applied fields. Forward corrections require fresh guarded preview; before snapshots are evidence, not permission for automatic restore.
+
+## Approved continuation after pairing
+
+Owner requests continuation of photographed launch products while leaving all image-less drafts alone. The original113 cohort is historical; a fresh structurally complete175 cohort is derived from current exact provider mappings and actual Laravel readiness. Reuse the same unchanged CLI/application guards for46 clear blank-audience updates; do not loosen structural or publication protection. The supplemental read-only preparation tool records original Shopee copy/evidence, current guards and exact publication-candidate IDs. Other taxonomy/offer facts and ambiguous audience stay in review. No new mutation layer/contract, role, account or deployment is justified. Owner approval of a concrete current subset still precedes publication.

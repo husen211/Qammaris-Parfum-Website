@@ -34,3 +34,19 @@ After apply, check exactly 113 descriptions and only clear audiences, unchanged 
 Open the private visual review, review photos/copy, correct flagged audience by ID and explicitly approve an exact staging subset. That approval comes before publication using existing readiness/product operations. No published page is created to bypass draft protection. Production cutover and webhook URL change remain separate approvals.
 
 Code rollback restores exact original PHP files and disables the new command; retain curated draft copy and audit. Applied fields are not automatically undone by code rollback. Use before snapshots for a fresh reviewed forward correction. No data/media deletion or full staging DB copy into production.
+
+## Refreshing the current photographed cohort after pairing
+
+The original113/266 counts above are historical. Owner approved continued preparation of current photographed drafts after P8-07; image-less drafts stay untouched. Capture the current pairing schema plus `expected_updated_at` directly from Laravel's `toIso8601String()`, current row fingerprints and actual readiness. Do not infer a timezone from raw SQL timestamps.
+
+```text
+python tools/prepare_launch_audience_followup.py <unchanged-Shopee-basic.xlsx> <fresh-private-capture.json> <new-private-output>
+python tools/test_launch_audience_followup.py
+php artisan qammaris-app:launch-copy --file=storage/app/private/<run>/maintenance-audience.csv
+```
+
+Only structurally complete photographed visible connected Majoo-source drafts with unchanged exact Shopee description, blank audience and clear evidence produce gender-only proposals. Current human fields are retained; missing/conflicting evidence is a correction row. Other photographed taxonomy/offer gaps are separate read-only evidence; no price/size/category proposal is applied. Inspect the exact persisted preview against source CSV/evidence, then apply the exact batch with the existing command and verify replay and all protected attributes/media/source snapshots.
+
+Capture after apply and prepare a new review. The actual no-blocker IDs define `publication-candidates.csv`, with product UUID/slug/price/size/audience and exact concurrency guards; it is a read-only approval list, not maintenance input. `build_launch_copy_review.py` accepts 1..1000 distinct explicitly captured rows and exact cover membership/checksums. Never publish from source confidence alone.
+
+Current protected review: `https://staging.qammarisparfum.id/owner-review/p8-06-launch-ready/`. Six allowed review files only: HTML/CSS/JS, two correction CSVs and publication-candidate CSV. Raw basic export/capture/evidence/maintenance input stay private. Use a fresh new path, retaining earlier review snapshots; do not change authentication or permissions on existing paths. Confirm anonymous401 for directory/every file and actual Owner Chrome at390x844/1440x900. Retain media/guards/audit and verify the actual browser download against the approval-list hash. Owner must approve this concrete staging subset before publication; production and its final backup/cutover remain separate.
