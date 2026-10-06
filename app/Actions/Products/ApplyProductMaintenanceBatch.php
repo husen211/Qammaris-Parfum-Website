@@ -13,6 +13,7 @@ use App\Services\ProductCatalogRowFingerprint;
 use App\Services\ProductImportPayloadHasher;
 use App\Services\ProductMaintenancePreviewer;
 use App\Services\ProductMaintenanceProductSnapshot;
+use App\Services\QammarisLaunchCopyScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -29,12 +30,22 @@ class ApplyProductMaintenanceBatch
         private SyncSingleOffer $syncSingleOffer,
     ) {}
 
-    public function handle(ProductImportBatch $batch, User $actor): ProductImportBatch
+    public function handle(ProductImportBatch $batch, ?User $actor): ProductImportBatch
     {
+        $version = $actor ? ProductMaintenanceCsv::VERSION : QammarisLaunchCopyScope::VERSION;
+        if (! $actor) {
+            app(QammarisLaunchCopyScope::class)->assertEnvironment();
+            if ($batch->contract_version !== $version || $batch->actor_id !== null) {
+                throw new RuntimeException('A machine actor may only apply Owner-authorized launch copy.');
+            }
+        }
         try {
-            return DB::transaction(function () use ($batch, $actor): ProductImportBatch {
+            return DB::transaction(function () use ($batch, $actor, $version): ProductImportBatch {
                 $lockedBatch = ProductImportBatch::query()->lockForUpdate()->findOrFail($batch->getKey());
 
+                if (! $actor && ($lockedBatch->contract_version !== $version || $lockedBatch->actor_id !== null)) {
+                    throw new RuntimeException('Launch copy actor/contract changed.');
+                }
                 if ($lockedBatch->status === ProductImportBatch::STATUS_APPLIED) {
                     return $this->loadResult($lockedBatch);
                 }
@@ -45,7 +56,7 @@ class ApplyProductMaintenanceBatch
 
                 $rows = $lockedBatch->rows()->lockForUpdate()->get();
 
-                if ($lockedBatch->contract_version !== ProductMaintenanceCsv::VERSION
+                if ($lockedBatch->contract_version !== $version
                     || ! $this->payloadsAreIntact($rows)) {
                     $this->failBatch(
                         $lockedBatch,
@@ -99,13 +110,13 @@ class ApplyProductMaintenanceBatch
                         continue;
                     }
 
-                    $this->applyRow($row, $appliedAt);
+                    $this->applyRow($row, $appliedAt, ! $actor);
                     $appliedRows++;
                 }
 
                 $lockedBatch->update([
                     'status' => ProductImportBatch::STATUS_APPLIED,
-                    'applied_by' => $actor->getKey(),
+                    'applied_by' => $actor?->getKey(),
                     'applied_at' => $appliedAt,
                     'failed_at' => null,
                     'applied_rows' => $appliedRows,
@@ -120,7 +131,7 @@ class ApplyProductMaintenanceBatch
 
             ProductImportBatch::query()
                 ->whereKey($batch->getKey())
-                ->where('contract_version', ProductMaintenanceCsv::VERSION)
+                ->where('contract_version', $version)
                 ->where('status', ProductImportBatch::STATUS_PREVIEWED)
                 ->update([
                     'status' => ProductImportBatch::STATUS_FAILED,
@@ -147,7 +158,7 @@ class ApplyProductMaintenanceBatch
         ));
     }
 
-    private function applyRow(ProductImportRow $row, mixed $appliedAt): void
+    private function applyRow(ProductImportRow $row, mixed $appliedAt, bool $launchCopy = false): void
     {
         $data = $row->normalized_data ?? [];
         $productId = filter_var($data['product_id'] ?? null, FILTER_VALIDATE_INT, [
@@ -166,6 +177,10 @@ class ApplyProductMaintenanceBatch
             || ! $this->timestampMatches($data['expected_updated_at'] ?? null, $product)
             || ! $this->fingerprintMatches($data['expected_row_fingerprint'] ?? null, $product)) {
             throw new RuntimeException('Produk berubah setelah preview maintenance dibuat.');
+        }
+
+        if ($launchCopy) {
+            app(QammarisLaunchCopyScope::class)->assertRow($product, $data);
         }
 
         $publicationStatus = $product->publication_status;

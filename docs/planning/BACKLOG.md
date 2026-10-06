@@ -2372,6 +2372,24 @@ Verification 2026-10-06: fresh guarded READ ONLY staging capture, 445 drafts cla
 
 Shopee description follow-up 2026-10-06: Owner supplied the fresh basic export as the description source. All **371 source products** have descriptions; **179 visible drafts** have existing exact Shopee identity and unchanged media-baseline source name, **266** have no provider pairing. Description-only maintenance proposals preserve source text/current ISO guards; no name/price/size/audience/status/media changes. Fresh READ ONLY staging preview: **179 valid / 0 review / 0 errors**, only `deskripsi_produk` in changes, catalog-state fingerprint and products/images/identities/batches/rows unchanged. Source workbook SHA retained; CSV roundtrip/exact guard/proposed-field checks and four unsafe-capture rejection cases passed. No apply/publish, account, app/PHP/schema/environment/permission/production change. Private review: `storage/app/private/p8-05-review/shopee-20261006100429/verified-proposals/description-preview.csv`. Source approval fulfilled; exact bulk apply/publication remains a separate human decision. Evidence/runbook updated.
 
+### P8-06 Curated copy and staged wave-one review — IN_PROGRESS
+
+Owner direction 2026-10-06: use provided Shopee descriptions, strip emoji/READY STOCK/shipping/hashtags, infer audience only from clear source name/description and flag missing/conflicting facts. Launch in waves: first 113 structurally complete photographed drafts, leave 266 without photos as drafts, separate size/concentration corrections. Production DB backup is deferred until immediately before approved cutover.
+
+Outcome: 113 draft products have cleaned source copy and evidence-backed audience where clear, with an accessible private visual review and corrections list. Publish in staging only after Owner reviews/approves the actual wave; production cutover is separate.
+
+In scope: deterministic curation with provenance/removal/audience evidence, fixed wave-one product IDs and existing exact Shopee mappings, fresh guarded maintenance preview and transactional/idempotent description/audience-only draft apply with distinct Owner-authorized CLI audit; reuse existing Laravel operations without synthetic admin identity; private mobile/desktop visual review and source correction lists.
+
+Out of scope: publishing before Owner review, guessing ambiguous audience, applying to missing-photo or non-wave drafts, product/price/slug/media/availability changes, relaxed publication gate, new admin accounts, migrations, extra old-data backup, production/app/frontend/environment/permission changes or cutover.
+
+Dependencies: P8-04 existing source identities/media, P8-05 description source/preview, existing publication-readiness/maintenance actions. Production release remains dependent on reviewed approved subset and final staging checks.
+
+Risks: ambiguous audience is not auto-filled; such products cannot publish until corrected. Source or catalog changes invalidate preview. CLI actor must be isolated from human admin maintenance and production; no generic machine write/API is introduced.
+
+Acceptance: exact 113 cohort; copy cleanup preserves product facts/notes, gender has source evidence or explicit review flag; only description/gender draft fields change; transactional replay and stale/tamper/protected-record tests; existing 266 image-less products remain drafts; private visual review usable at 390x844/1440x900; short corrections separate and do not gate cohort. Owner review remains required for publication; no cutover.
+
+Verification: pending.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:

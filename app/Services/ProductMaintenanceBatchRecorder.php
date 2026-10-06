@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Imports\Products\ProductMaintenanceCsv;
+use App\Models\Product;
 use App\Models\ProductImportBatch;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -15,22 +16,41 @@ class ProductMaintenanceBatchRecorder
     /** @param array<string, mixed> $preview */
     public function record(User $actor, UploadedFile $file, array $preview): ProductImportBatch
     {
+        return $this->persist($actor, $file, $preview, ProductMaintenanceCsv::VERSION);
+    }
+
+    public function recordLaunchCopy(UploadedFile $file, array $preview): ProductImportBatch
+    {
+        $scope = app(QammarisLaunchCopyScope::class);
+        $scope->assertEnvironment();
+        foreach ($preview['rows'] as $row) {
+            if ($row['status'] !== 'valid' || $row['action'] !== 'update') {
+                throw new \RuntimeException('Launch copy preview must contain valid changed rows only.');
+            }
+            $scope->assertRow(Product::findOrFail($row['matched_product']['id']), $row['data']);
+        }
+
+        return $this->persist(null, $file, $preview, QammarisLaunchCopyScope::VERSION);
+    }
+
+    private function persist(?User $actor, UploadedFile $file, array $preview, string $version): ProductImportBatch
+    {
         $idempotencyKey = hash('sha256', implode('|', [
-            ProductMaintenanceCsv::VERSION,
-            $actor->getKey(),
+            $version,
+            $actor?->getKey() ?? 'owner-authorized-cli',
             $preview['fingerprint'],
             $preview['catalog_state_fingerprint'],
         ]));
 
-        return DB::transaction(function () use ($actor, $file, $preview, $idempotencyKey): ProductImportBatch {
+        return DB::transaction(function () use ($actor, $file, $preview, $idempotencyKey, $version): ProductImportBatch {
             $batch = ProductImportBatch::query()->firstOrCreate(
                 ['idempotency_key' => $idempotencyKey],
                 [
-                    'actor_id' => $actor->getKey(),
-                    'source_filename' => basename($file->getClientOriginalName()),
+                    'actor_id' => $actor?->getKey(),
+                    'source_filename' => ($actor ? '' : 'owner-authorized-cli-').basename($file->getClientOriginalName()),
                     'source_size' => $file->getSize() ?: 0,
                     'source_fingerprint' => $preview['fingerprint'],
-                    'contract_version' => ProductMaintenanceCsv::VERSION,
+                    'contract_version' => $version,
                     'catalog_state_fingerprint' => $preview['catalog_state_fingerprint'],
                     'status' => ProductImportBatch::STATUS_PREVIEWED,
                     'total_rows' => $preview['summary']['total'],

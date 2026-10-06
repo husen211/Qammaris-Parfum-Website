@@ -39,3 +39,9 @@ ADR-021 defines the integration. `CURRENT_STATE.md` remains the historical disco
 Owner Shopee media XLSX -> read-only extraction to private allowlisted JSON -> conservative unique name/size match (SKU never cross-provider key) -> separate explicit QueueProductImportImages -> existing product-import-images database jobs -> ImportedProductImageDownloader + ProductMediaStorage + AttachProductImage. The Qammaris contract requires successful cover before additional slots. Ambiguous/unmatched photos and incomplete app records stay in review; no publication/hotlink.
 
 Current CLI deliberately rejects production. Old local catalog mapping review is read-only and preserves the source SQLite hash. ADR-022 governs the approved exception to the original stock-only scope.
+
+## Staging launch copy (P8-06)
+
+Owner Shopee basic export -> private deterministic curation by existing provider ID/name -> description and evidence-backed audience proposals -> guarded maintenance preview -> `qammaris-app:launch-copy` / `launch-copy-v1` batch -> existing transactional maintenance apply -> description/gender only on photographed structurally complete visible connected drafts. CLI actor is explicitly labelled with null human IDs; no admin account or write API is created. Stock worker, source checkpoint, offers, media, identities, URLs and publication remain independent and unchanged. Production is refused.
+
+Private offline review shows verified copies of existing website covers plus factual copy and correction lists. It does not publish or modify website UI. Owner approval and readiness checks precede separate staging publication. ADR-023 explains scope and audit tradeoffs.

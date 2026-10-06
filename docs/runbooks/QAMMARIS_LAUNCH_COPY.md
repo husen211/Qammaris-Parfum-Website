@@ -1,0 +1,34 @@
+# Staging wave-one copy and Owner review (P8-06)
+
+Owner explicitly authorizes Shopee copy cleanup and evidence-backed audience on the fixed 113 photographed feed drafts. This is separate from publication approval. No production backup now; backup immediately before an independently approved cutover.
+
+## Private preparation
+
+Use the unchanged Owner basic export and existing exact Shopee media-pairing baseline. Capture current staging draft fingerprints, actual publication blockers and verified website cover bytes read-only, with staging/database guards. Verify the original 113 cohort and every timestamp/fingerprint; never silently refresh stale proposals. The 266 photo-less drafts are outside the scope.
+
+```text
+python tools/curate_shopee_launch_copy.py <Shopee-basic.xlsx> <private-capture.json> <private-media-baseline.json> <new-private-output-dir>
+python tools/test_curate_shopee_launch_copy.py
+python tools/build_launch_copy_review.py <private-wave-one.json> <private-cover-capture.json> <new-private-owner-review-dir>
+```
+
+No packages installed. Outputs are private/ignored. `wave-one.json` preserves source SHA, original/cleaned text, removals, provider mapping, proposal and audience evidence. Maintenance CSV proposes only description/gender; blank gender means retain unknown. Correction CSVs are review files, not import contracts. The offline HTML safely escapes source text, embeds verified website covers, supports search/clear/unknown/conflict filters and has no publish operation. Serve only its own directory on loopback for review; never expose storage/app/private or repository root.
+
+## Authorized staging draft apply
+
+Use the existing authorized staging SSH session. Confirm app environment staging, expected staging database, original per-file PHP hashes/modes and fresh 113-row preview. Current deployment is a permission-preserving allowlisted PHP overlay, not the full workflow that rewrites auth/permissions. Keep immutable code originals and overlay manifest; no chmod, env/cache/auth/assets/cron/account/schema changes or extra DB backup.
+
+```text
+php artisan qammaris-app:launch-copy --file=storage/app/private/<curated-copy.csv>
+php artisan qammaris-app:launch-copy --apply=<exact-preview-batch-id> --confirm
+```
+
+`launch-copy-v1` uses existing guarded Laravel maintenance, with null human actor IDs and explicit Owner-authorized CLI source label. It refuses production, human maintenance batches, published/hidden/nonconnected/non-Shopee/incomplete-photo rows and protected-field proposals. Record exact batch ID and operational Owner authorization. Inspect persisted row changes/before snapshots before apply; a stale/invalid/failed batch is not forcibly reactivated. Repeating the applied batch must preserve field/audit bytes.
+
+After apply, check exactly 113 descriptions and only clear audiences, unchanged other product fields/offers/media/identities, retained 332 other drafts including 266 without photos, existing AOERA publication unchanged, and current checkpoint/worker. Re-evaluate publication readiness; unknown/conflicting gender remains a blocker. Do not claim all 113 ready.
+
+## Owner decision and recovery
+
+Open the private visual review, review photos/copy, correct flagged audience by ID and explicitly approve an exact staging subset. That approval comes before publication using existing readiness/product operations. No published page is created to bypass draft protection. Production cutover and webhook URL change remain separate approvals.
+
+Code rollback restores exact original PHP files and disables the new command; retain curated draft copy and audit. Applied fields are not automatically undone by code rollback. Use before snapshots for a fresh reviewed forward correction. No data/media deletion or full staging DB copy into production.
