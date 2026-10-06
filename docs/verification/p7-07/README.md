@@ -1,6 +1,6 @@
 # P7-07 — Catalog photography and mobile presentation
 
-Status: IN_REVIEW. Implemented locally on `codex/catalog-product-presentation`; no staging/production deployment or main merge. Date: 2026-10-06.
+Status: DONE. Owner accepted the UI and explicitly authorized production deployment after the initial local review. PR3 merged and the GitHub production pipeline succeeded on 2026-10-06. [Release evidence and live screenshots](PRODUCTION_RELEASE.md). The initial implementation/review evidence below precedes that authorized release.
 
 ## Scope and rationale
 
@@ -78,6 +78,6 @@ Additional: [320](after-320.png), [390](after-390.png), [768](after-768.png), [1
 
 Physical iOS/Safari, remote media CORS failure and complete production asset-by-asset visual review are **Not confirmed**. Code safely keeps contain when pixel access is unavailable. Product artwork with colored/edge-touching backgrounds intentionally retains its original composition and may still look different in scale. No API/stock latency or production integration verification is claimed by this UI task.
 
-Owner visual acceptance and an explicitly approved release are next for **P7-07**. No further backlog phase has been started; P1-04's wider launch acceptance remains separate. Do not merge main until deployment is approved: the existing main workflow auto-deploys.
+Owner accepted and explicitly authorized the release for **P7-07**, now completed. No further backlog phase has been started; P1-04's wider launch acceptance remains separate. The existing main workflow auto-deploys; any future change still needs its applicable release authorization.
 
 Rollback, if subsequently released: revert this frontend patch and rebuild assets through the existing release process. No database restore, image rollback, schema migration or API change is required.
