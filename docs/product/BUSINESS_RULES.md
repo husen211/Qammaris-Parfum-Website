@@ -236,3 +236,8 @@ After guarded staging publication all121 are published:297 real launching produc
 ## Final 53-product audience approval — Owner decision 2026-10-06
 
 Owner supplied the final explicit ID/gender list and authorized staging publication for all 53 remaining photographed gender-only drafts: 30 Unisex, 9 Pria, 14 Wanita. Apply the listed value exactly, including Unisex where existing name/description suggests another audience; do not reclassify, rename or rewrite copy. This is an exact-list decision, not a default for future products. Preserve prices, sizes/offers, categories, descriptions, slugs, images, identities and availability. All 53 passed publication readiness after gender entry and are published. Current catalog: 350 real launching products plus unchanged AOERA fixture; all remaining 95 drafts lack both photos and descriptions. No production cutover approval.
+
+
+## Clean production launch — Owner decision 2026-10-06
+
+Owner explicitly states legacy production data is dispensable and waives its backup. This supersedes earlier legacy preservation/merge and final legacy-backup requirements for this launch. Use the approved new catalog: 350 real public products +95 no-photo/no-description drafts; exclude the staging test fixture. Preserve staging source data/media; no wholesale staging DB clone or synthetic admin transfer. Legacy matching/URL mapping is no longer a launch blocker; old links/content/accounts are not promised to carry over. Existing legacy directory/database can remain untouched for reversible routing; deletion is not needed and has not been performed. Exact target/database/account/env/runtime setup and public cutover still need concrete authorization. No production activation or webhook destination switch has occurred.

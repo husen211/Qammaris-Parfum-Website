@@ -2,7 +2,7 @@
 
 **2026-10-06 — IN_PROGRESS; production activation is not authorized.**
 
-Owner requested the next phase after publishing the photographed staging catalog. This document prepares a reviewable release; it does not authorize production mutations. Earlier SSH permission covers staging only. Production SSH read-only inspection has been requested separately because [ADR-001](../architecture/decisions/ADR-001-legacy-production-and-clean-redeployment.md) deferred that inspection. The final production backup remains scheduled immediately before an explicitly approved cutover, not during this preflight.
+Owner requested the next phase after publishing the photographed staging catalog. Latest Owner direction explicitly waives preservation/migration and backup of legacy production data: “data di production itu gpenting dihpus juga gpapa, gprlu backup”. Launch uses the approved new catalog. Earlier requirements for a legacy database merge and final legacy backup are superseded for this release. This does not require deleting the old system: leave its database/files in place and activate a separately prepared target. No deletion, new database, credential change or public cutover has been executed. Earlier SSH permission covers staging only; production hosting inspection still awaits explicit scope under [ADR-001](../architecture/decisions/ADR-001-legacy-production-and-clean-redeployment.md).
 
 ## Verified release baseline
 
@@ -20,7 +20,7 @@ Owner requested the next phase after publishing the photographed staging catalog
 | Real launch media | 1,016 unique JPEG files / 350 primary photos / 35,974,303 bytes; zero missing files; server SHA-256 metadata collected |
 | Latest API/runtime read | 06:20:46 UTC: unauthenticated feed 401, authenticated 200, checkpoint/next_seq 457, `has_more=false`, no sync error, stock/image queues empty |
 | Minute operations | Scheduler/watchdog timestamps 43/44 seconds old at that read; 30-minute reconciliation defined in `routes/console.php` |
-| Content/accounts | Staging has zero users, blog posts and store-info rows. These must not overwrite production content/accounts |
+| Content/accounts | Staging has zero users, blog posts and store-info rows. Legacy accounts/content will not be copied automatically; Owner must have a working admin account in the new target before activation |
 
 Staging Git HEAD is still `1867d83cb527f7573ce1046392860a83f64c8e65`, while guarded overlays match the candidate source as above. Git HEAD alone does not identify the deployed application. Do not use `git reset` as a filesystem rollback for this deployment. Freeze a coherent source/dependency/build manifest for the approved release; do not mix partial local assets with the staging bundle. The existing GitHub release workflow/environment is staging-only; it must not be pointed at production.
 
@@ -38,7 +38,7 @@ Protected, ignored workspace location: `storage/app/private/p1-04-preflight/2026
 
 No media was copied, moved or deleted. Refresh catalog fingerprints and checksum comparison before any eventual write. Exclude the fixture, fixture photo/taxonomy, private owner-review pages, sessions, cached configuration, queued job payloads, historical failed jobs and staging operator batch IDs from production activation. Keep the private approval/audit evidence; do not transplant its staging foreign keys into production.
 
-## Production facts still needed
+## Production facts and the superseded merge plan
 
 The public `/products` page displays **208 products**. This is a public pagination count, not a confirmed database count. Production PHP/MySQL versions, migration history, schema, product/variant IDs, SKU coverage, media inventory, accounts/roles, blog/store content and deployment directory are **Not confirmed**. Read-only SSH inspection awaits explicit Owner scope; do not infer them from staging or the old local snapshot.
 
@@ -50,50 +50,42 @@ Existing public URLs already demonstrate the need for a target-specific preview:
 | `/products/joe-winn-al-fajr`, Rp439,000 | ID170, `/products/maison-jw-al-fajr-extrait-100ml`, Rp439,000 | Brand/name alias and size match Not confirmed; no automatic name-only pairing |
 | `/products/mpf-wicked-noir-eau-de-parfum`, Rp349,000 | ID354, same slug and displayed price | Production identity still requires inspection; matching slug does not authorize replacing its ID |
 
-The read-only baseline should return counts, types, constraints, migration/version information, public URL/media manifests and collision reports. Secret configuration is reported only as **terisi / tidak**, never values. Do not print password hashes, environment files, job bodies or customer data.
+The comparison above remains historical evidence; it no longer blocks launching and does not authorize automatic pairing. Owner accepts launching the fresh catalog instead of preserving legacy product IDs/URLs/data. No legacy database export, migration inspection, variant consolidation, account/password-hash copy or full old-media inventory is needed for this plan.
 
-Concrete migration gates:
+Production hosting facts still required: correct website directory/document root, PHP/extensions, available database/storage layout, deployment entry point, cron/worker mechanism and HTTPS/environment status. Read only the minimum operational metadata; do not dump old database contents or secrets. Report secrets only as **terisi / tidak**. Permission for production inspection remains pending; existing access is staging-only.
 
-1. Detect multiple `product_variants` per product before `2026_09_16_000002_make_product_drafts_and_single_offers_explicit.php` creates its unique product constraint. Staging has none; production is Not confirmed. Do not delete variants to force migration success.
-2. Check existing slugs, external identity uniqueness, orphan relationships, field lengths/nulls and money types against the additive migrations. Do not rewrite historical migrations or coerce incompatible data silently.
-3. Preview the publication backfill in the preceding migration: legacy active products can become published. The approved 350-product staging set does not authorize publishing every legacy record.
-4. Match reviewed UUIDs to legacy IDs using available identity evidence, SKU plus size, and explicit ambiguous choices. Never force a truncated/nonunique SKU or inferred brand alias.
-5. Review name/price/category/gender/description/media conflicts separately. Preserve existing unmatched records and URLs pending Owner direction; do not infer removal from missing feed rows.
+## Updated target strategy — new catalog, no legacy backup
 
-## Proposed data strategy, pending the baseline
+1. Prepare an approved separate target using the frozen candidate source and one complete build bundle. Fresh tables use existing migrations; no legacy migrations/data coercion is needed. Production database creation/settings and deployment target still require exact Owner-approved execution scope.
+2. Transfer exactly the 350 real launching products plus 95 retained drafts from the refreshed private preview. Exclude the AOERA staging fixture and its media/taxonomy. Create target IDs and explicitly remap offers, images, taxonomy and provider identities; never blindly copy the staging database or seed synthetic accounts. Stage users/blog/store counts are zero, so their absence in the new target must be acknowledged rather than reported as preserved production content.
+3. Keep approved new catalog slugs; old canonical URLs may stop resolving under Owner's waiver. Automatic old-to-new name-only redirects are not justified. Old URL recovery/mapping is optional separately approved work, not a launch gate.
+4. Apply only validated scope with before-state conflict guards, idempotency, transaction boundaries and Owner/operator audit attribution. Current staging operators intentionally refuse production; do not relax those guards. The production-safe target transfer operation is not yet implemented or executed.
+5. Copy the 1,016 approved launch photos through the Laravel disk using **copy → checksum/size verify → switch references → retain source**. Stop on differing destination checksum; do not overwrite. Retain staging source photos. The current public disk is sufficient for this release unless Owner approves a concrete storage change; the earlier R2 rehearsal covered 19 objects, not the full launch catalog.
+6. Establish Owner's intended production admin access through protected configuration/handoff before launch, without sending credentials through chat or copying synthetic test accounts. No new account/password/permission changes are authorized by this preflight alone.
+7. Prepare source snapshots/identity links, start a fresh checkpoint-zero feed reconciliation and drain through `has_more=false`. Do not copy staging queued payloads, failed jobs, sessions, cached env or operator IDs. Preserve approved website publication separately from source availability.
 
-Prefer preparing a separate approved target from the final legacy database backup, so real product/variant IDs, password hashes, blog/store content and existing relationships remain intact. Apply reviewed additive migrations there, then apply an exact, audited catalog merge preview. This target has not been created and its actual schema compatibility is Not confirmed.
-
-For matched products, retain their production IDs and canonical slugs; `Product::getSlugOptions()` already disables regeneration on update. Preserve existing variants/media until a reviewed correction explicitly changes them. New records receive target-generated IDs above the existing sequence; remap every child relationship from the reviewed identity map. Never copy staging IDs over production IDs. A deliberate canonical URL change requires an approved redirect.
-
-Apply writes only with validated scope, before-state conflict guards, idempotency, transaction boundaries and Owner/operator audit attribution. Current staging operators intentionally refuse production. Do not relax those guards or assume a generic CSV command already supports this merge. The actual merge operation and exact price/unmatched-product decisions follow the production baseline and Owner-reviewed preview.
-
-Copy launch photos through the current Laravel disk using **copy → checksum/size verify → switch references → retain originals**. Check destination path collisions first; a differing checksum must stop, not overwrite. Preserve production blog/media files and current storage URLs. Keep the public disk for this release unless Owner approves a concrete storage change; the earlier R2 rehearsal covered 19 objects, not this entire launching catalog.
-
-The final visible product count depends on legacy reconciliation. Do not promise 350 total production records until unmatched legacy visibility and mappings are approved.
+The approved target cohort is **350 public + 95 draft**, before future explicit catalog additions. Source availability at transfer must be fresh. No backup is created for the waived legacy data. Keep old database and application files untouched as the simplest reversible fallback; their continued presence is not a backup operation and does not delay launch. Permanent cleanup is unnecessary here and is not executed.
 
 ## Reviewable cutover sequence — do not execute yet
 
 | Order | Work | Completion evidence / gate |
 | --- | --- | --- |
-| 1 | Authorized production read-only baseline | Actual hosting/schema/data/media/account counts and duplicate/collision reports; no mutations |
-| 2 | Exact target preview and release freeze | Owner reviews ID/UUID/slug mapping, conflicting prices/copy, unmatched legacy policy, migrations, complete source/build manifest and target layout |
-| 3 | Owner authorizes the concrete production cutover scope | Includes approved writes, target, downtime/window, media handling, recovery and separately authorized backend webhook switch; do not request vague blanket approval |
-| 4 | Final production backup immediately before cutover | Database and required legacy files/media downloaded to protected storage, checksums recorded, isolated restore checked; environment secrets remain in protected environment/vault, outside Git/chat |
-| 5 | Prepare the approved target and catalog | Reviewed additive migrations, guarded audited merge and media copy/verify; retain legacy release/database/media for recovery |
-| 6 | Prepare integration and runtime | Production receiver/HMAC, database queue worker and minute scheduler/watchdog; no duplicate schedule:work; 30-minute reconciliation; protected env present, HTTPS cookie setting explicit |
-| 7 | Refresh source status | Start a fresh consumer at checkpoint zero, drain the safe feed through `has_more=false` after identity mapping, verify monotonically applied revisions. Do not copy staging checkpoint/queues or stale availability over newer source data |
-| 8 | Verify the approved target | Owner's existing admin account still works; blog/store content retained; old sampled URLs, catalog/detail/price/photo/stock/inquiry, assets and sitemap verified; no test fixture/private review exposure |
-| 9 | Approved website activation | Keep the existing public URL shape. No DNS/other-site changes are implied. Clear only target application caches including the one-hour sitemap cache |
-| 10 | Separately approved backend webhook URL switch | Change only the intended backend destination to production after its receiver/worker is ready; keep staging isolated; verify feed and signed delivery without exposing secrets |
-| 11 | Observe or recover | Queue/cron/feed/HTTP/media/error checks and exact product counts; preserve old system and all newly written data/media through the agreed recovery window |
+| 1 | Authorized minimal production hosting inspection | Exact website target, runtime and deployment/database/worker paths; no old catalog dump or backup |
+| 2 | Freeze target/release manifest | 350 public +95 draft, exact UUID/media/offer/taxonomy remapping, fixture excluded, complete source/build bundle and Owner admin access plan |
+| 3 | Owner authorizes concrete activation scope | Separate target/database/env/runtime setup and public website activation; backend webhook destination switch separately explicit |
+| 4 | Prepare target and catalog | Existing migrations into approved fresh database, audited guarded transfer, all1,016 media checksums verified; leave legacy database/files untouched |
+| 5 | Prepare integration/runtime | Receiver/HMAC, database stock worker and minute scheduler/watchdog; no duplicate schedule:work; 30-minute reconciliation; protected env present and HTTPS session setting explicit |
+| 6 | Refresh and verify | Fresh checkpoint-zero source feed drained, revisions monotonic; Owner admin login and catalog/detail/search/price/photo/inquiry/SEO checks; no fixture/private review exposure |
+| 7 | Approved website activation | Serve approved target at domain; approved new catalog URLs; no DNS/other-site changes implied; clear only target application/sitemap caches |
+| 8 | Separately approved backend webhook switch | Change intended backend destination only after production receiver/worker ready; keep staging isolated; verify signed delivery without exposing secrets |
+| 9 | Observe or recover | Queue/cron/feed/HTTP/media/count checks; restore old deployment routing if needed without deleting either database or new writes/media |
 
 Protected environment checklist names only: `APP_ENV`, `APP_DEBUG`, `APP_URL`, existing `APP_KEY`, database settings, session settings including `SESSION_SECURE_COOKIE`, cache/queue/filesystem settings, `QAMMARIS_APP_BASE_URL`, `QAMMARIS_APP_API_KEY`, `QAMMARIS_APP_WEBHOOK_SECRET`. Confirm actual config variable names before entry. Staging's default queue is sync, but its stock job explicitly selects the database connection; the production worker must consume `qammaris-app` on that connection. Never copy staging `.env` or rotate production credentials as part of preflight.
 
 ## Recovery
 
-Retain the legacy application, its compatible database, media and protected environment as a complete recovery unit. On approved rollback, restore traffic to that unit rather than running destructive down-migrations against populated new tables. Revert the webhook destination only within the authorized integration recovery scope. Preserve new target writes, media and audit evidence for a reviewed forward fix/reconciliation; do not overwrite them with an old backup. Actual recovery commands, paths, maximum downtime and restore duration remain Not confirmed until the production baseline and isolated restore.
+Owner explicitly waived legacy backup; do not make one under this phase. Leave the existing legacy directory/database untouched and record the current deployment routing before activation. If approved recovery is required, route back to the old application and its existing database rather than executing destructive down-migrations. Preserve the new target's writes/media/audit evidence for a forward fix. Restore the webhook destination only within separately authorized integration recovery scope. Exact switching commands and recovery duration are Not confirmed until hosting inspection; no backup/restore proof is claimed.
 
 ## Definition of Done
 
-P1-04 is complete only after the actual production baseline and reviewed mapping, coherent release artifacts, latest backup plus isolated restore evidence, approved activation scope and recovery path are available. At this checkpoint only staging/preflight evidence and the proposed sequence are prepared. Production deployment, backup/restore and webhook switch have not happened. Continue this same item when Owner grants the missing read-only scope; do not begin another phase automatically.
+Updated P1-04 gates: minimal hosting baseline, frozen source/assets/catalog transfer manifest, working Owner admin access plan, approved separate target/runtime setup, reversible activation plan and concrete Owner cutover authorization. Legacy data matching and backup/restore are explicitly waived for this release. At this checkpoint staging/preflight evidence and the target plan are prepared; production target, account setup, transfer and activation have not happened. Continue this same item; do not start another phase automatically.

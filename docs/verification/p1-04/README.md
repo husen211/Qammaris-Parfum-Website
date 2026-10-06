@@ -1,6 +1,6 @@
 # P1-04 preflight evidence — 2026-10-06
 
-Status: **IN_PROGRESS**, awaiting production read-only scope and later reviewed cutover/backup/restore gates. [Runbook](../../runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md).
+Status: **IN_PROGRESS**, awaiting minimal production hosting scope and reviewed fresh-target transfer/activation gates; Owner later waived legacy matching and backup. [Runbook](../../runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md).
 
 ## Actual checks
 
@@ -28,6 +28,9 @@ The prior search-button observation did not reproduce after page load. Its previ
 
 ## Impact and limitations
 
-Only documentation/evidence and ignored local preview metadata were written. Application code, schema, catalog, media, accounts, env, permissions, production, source app and webhook destination unchanged. No package install, new broad suite/build, database backup, restore or cutover. Product/media preview metadata is not a backup or executable target import. Production mapping/ID/slug/price conflicts and latest recovery proof are still required; stage users/blog/store counts are zero, so wholesale staging database replacement would lose legacy content/accounts.
+Only documentation/evidence and ignored local preview metadata were written. Application code, schema, catalog, media, accounts, env, permissions, production, source app and webhook destination unchanged. No package install, new broad suite/build, database backup, restore or cutover. Product/media preview metadata is not a backup or executable target import. Stage users/blog/store counts are zero; new-target Owner admin access must be prepared. Latest Owner decision waives legacy mapping/backup; the target release/transfer/runtime and reversible activation still need verification.
 
-Documentation: active backlog status and production preflight runbook. Business rules/architecture/ADRs unchanged because this phase makes no new business or deployed-architecture decision. Recovery needs no database rollback for these read-only checks; documentation can be reverted independently. Next work remains production baseline and exact merge/release preview inside P1-04, not another backlog phase.
+Documentation: active backlog status and production preflight runbook. Business rules/architecture/ADRs unchanged because this phase makes no new business or deployed-architecture decision. Recovery needs no database rollback for these read-only checks; documentation can be reverted independently. Next work remains minimal hosting baseline and exact fresh-target transfer/release preview inside P1-04, not another backlog phase.
+
+
+Latest Owner override: legacy production data is dispensable; no legacy backup or merge. Earlier preservation/mapping/restore requirements in this checkpoint are superseded for the launch. Current plan uses350 public+95drafts in a separate fresh target, retains old files/database as-is for reversible routing, and still requires exact hosting/target/admin/runtime/cutover scope. No production mutation followed this approval; evidence files retain the facts captured before the revised plan.

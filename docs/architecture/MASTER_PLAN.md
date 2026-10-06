@@ -216,3 +216,8 @@ Regression, browser/device verification, performance, security checks, data/medi
 - Public catalog berfungsi pada mobile dan desktop dengan state/filter yang benar.
 - Data existing tetap terlacak; tidak ada kehilangan ID, slug, atau gambar yang tidak disetujui.
 - API boundary siap tetapi privilege tetap minimal.
+
+
+### Launch scope override — 2026-10-06
+
+Owner waives legacy production data migration and backup for the new 350-public/95-draft catalog. Earlier legacy preservation and backup/restore completion gates are superseded for this release. P1-04 now prepares a separate fresh target, coherent source/assets/catalog transfer, Owner admin access, production runtime/integration and reversible activation while leaving the old deployment/database untouched. No public cutover, credentials/account setup or production writes have happened; concrete execution authorization remains separate. See the current production preflight runbook.

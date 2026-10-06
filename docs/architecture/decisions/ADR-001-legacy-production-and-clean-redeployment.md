@@ -40,3 +40,7 @@ Sesuai instruksi owner, ditetapkan dua belas poin keputusan berikut:
 - Cara spesifik memigrasi data secara mekanis dari Hostinger lama ke instance atau *storage bucket* baru.
 - Penjadwalan spesifik dari tindakan *cutover*.
 
+
+## Owner override for the 2026-10-06 launch
+
+Owner explicitly waived preservation/migration and backup of legacy production data. For this approved launching catalog, the legacy backup/preservation requirements above no longer gate release. Use a separate fresh target for 350 public +95 drafts; retaining the old directory/database provides a routing fallback without making a backup. Permanent cleanup is not required or performed. Old IDs/URLs/accounts/content are not promised to transfer. The production inspection boundary and need for concrete public deployment/environment/account authorization remain; no production mutation is approved by this documentation update. See `docs/runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md` and the latest business rules.

@@ -2,7 +2,7 @@
 
 **Status:** P1-03 selesai — staging dan release workflow terverifikasi
 
-Current production preparation (2026-10-06): [P1-04 preflight](PRODUCTION_CUTOVER_PREFLIGHT.md) records the 350-product launching manifest, media checksums, deployed source/build differences, legacy URL/account preservation and pending production read-only/backup/restore/cutover gates. Historical staging counts below are not the current launching baseline. This runbook does not authorize production activation.
+Current production preparation (2026-10-06): [P1-04 preflight](PRODUCTION_CUTOVER_PREFLIGHT.md) records the 350-product launching manifest, media checksums, source/build differences and fresh-target/cutover gates. Owner now waives legacy data migration and backup; historical backup/preservation rules below are superseded for this release. Historical staging counts below are not the current launching baseline. This runbook does not authorize production activation.
 
 ## Tujuan
 
