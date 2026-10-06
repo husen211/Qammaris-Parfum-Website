@@ -1,0 +1,38 @@
+.qammaris-footer .footer-heading {
+  margin-bottom: 12px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.qammaris-footer .footer-links { font-size: 14px; line-height: 22px; }
+.qammaris-footer .footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  padding-block: 8px;
+  color: rgb(255 255 255 / .75);
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 150ms ease;
+}
+.qammaris-footer .footer-social { width: 44px; justify-content: center; }
+.qammaris-footer .footer-social svg { width: 20px; height: 20px; }
+.qammaris-footer .footer-link:focus-visible {
+  outline: 2px solid var(--color-brand-gold);
+  outline-offset: 4px;
+}
+.qammaris-footer .footer-link:active,
+.qammaris-footer .footer-link[data-navigation-pending] {
+  color: var(--color-brand-gold);
+  background: transparent;
+  box-shadow: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .qammaris-footer .footer-link:hover { color: var(--color-brand-gold); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qammaris-footer .footer-link { transition: none; }
+}

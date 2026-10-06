@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./catalog.css";
+@import "./footer.css";
 
 @custom-variant hover {
     @media (hover: hover) and (pointer: fine) {

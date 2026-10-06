@@ -46,9 +46,12 @@ class PublicCatalogHardeningTest extends TestCase
             ->assertDontSee('href="#"', false)
             ->assertDontSee('href="#how-to-order"', false);
 
-        $this->assertSame(1, substr_count($html, 'fetchpriority="high"'));
-        $this->assertSame(4, substr_count($html, 'loading="lazy"'));
-        $this->assertSame(5, substr_count($html, 'width="480" height="480"'));
+        preg_match_all('/<img\b[^>]*class="catalog-media__image"[^>]*>/s', $html, $matches);
+        $catalogMedia = implode("\n", $matches[0]);
+
+        $this->assertSame(1, substr_count($catalogMedia, 'fetchpriority="high"'));
+        $this->assertSame(4, substr_count($catalogMedia, 'loading="lazy"'));
+        $this->assertSame(5, substr_count($catalogMedia, 'width="480" height="480"'));
     }
 
     public function test_catalog_query_count_does_not_grow_with_the_page_size(): void
