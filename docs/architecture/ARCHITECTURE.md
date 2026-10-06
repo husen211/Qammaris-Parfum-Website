@@ -47,3 +47,9 @@ Owner Shopee basic export -> private deterministic curation by existing provider
 Private offline review shows verified copies of existing website covers plus factual copy and correction lists. It does not publish or modify website UI. Owner approval and readiness checks precede separate staging publication. ADR-023 explains scope and audit tradeoffs.
 
 The same standalone review is served only behind existing staging HTTP Basic Auth at `/owner-review/p8-06-wave-one/`; anonymous access stays 401. It is a snapshot/artifact, not an application admin surface, live catalog or new authorization boundary. Catalog product publication is unchanged.
+
+## Owner-approved Shopee pairing (P8-07)
+
+Owner app-team mapping CSV + media/basic exports -> private exact-ID/provenance curation -> `qammaris-app:shopee-pairs` / `qammaris-pairs-v1` immutable preview -> exact current unique feed SKU -> existing `qammaris_app` UUID -> connected visible draft -> existing MapExternalProductIdentity plus blank-description fill -> separate existing image queue/downloader/storage/attachment. No name fallback or new product creation. Existing media/copy/website fields and publication remain protected. This supplied evidence supersedes the initial conservative name matcher for this dataset only. ADR-024 records the bounded operation and stale/identity guards.
+
+The 56-row standalone Owner review at `/owner-review/p8-07-pairing/` shows downloaded/verified cover copies, all 102 supplied candidate references, descriptions and exact SKU/UUID/current website fingerprints. Choice export has no catalog mutation or publication side effect. Occupied candidates can be proposed as corrections with an explicit conflict flag, never silently rebound. Duplicate selected UUIDs prevent export. A future approved apply needs a fresh guarded preview and explicit conflict resolution. Raw exports/captures remain private; existing Basic Auth protects directory and every asset.
