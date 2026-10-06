@@ -14,6 +14,12 @@ if (catalog) {
         sort: catalog.dataset.sort ?? 'latest',
     };
 
+    const syncBrandSummary = () => {
+        document.querySelectorAll('[data-catalog-brand-summary]').forEach((summary) => {
+            summary.textContent = state.brand.size ? `${state.brand.size} brand dipilih` : 'Semua brand';
+        });
+    };
+
     const syncControls = () => {
         Object.entries(state).forEach(([name, value]) => {
             if (name === 'brand') {
@@ -43,10 +49,50 @@ if (catalog) {
                 control.checked = state.brand.has(control.value);
             }
         });
+        syncBrandSummary();
     };
 
-    document.querySelector('[data-catalog-quick-search]')?.addEventListener('input', (event) => {
-        state.search = event.target.value;
+    document.querySelectorAll('[data-catalog-form] [name]').forEach((control) => {
+        const updateState = () => {
+            if (control.name === 'brand[]') {
+                state.brand = new Set(
+                    [...control.form.querySelectorAll('[name="brand[]"]:checked')].map((brand) => brand.value),
+                );
+                syncBrandSummary();
+            } else if (Object.hasOwn(state, control.name)) {
+                state[control.name] = control.value;
+            }
+        };
+        control.addEventListener('input', updateState);
+        control.addEventListener('change', updateState);
+    });
+
+    document.querySelectorAll('[data-catalog-brand-search]').forEach((search) => {
+        search.addEventListener('input', () => {
+            const dropdown = search.closest('[data-catalog-dropdown]');
+            const query = search.value.trim().toLocaleLowerCase('id');
+            const options = [...dropdown.querySelectorAll('[data-catalog-brand-option]')];
+            options.forEach((option) => {
+                option.hidden = !option.textContent.toLocaleLowerCase('id').includes(query);
+            });
+            dropdown.querySelector('[data-catalog-brand-empty]').hidden = options.some((option) => !option.hidden);
+        });
+    });
+
+    document.querySelectorAll('[data-catalog-dropdown]').forEach((dropdown) => {
+        dropdown.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape' || !dropdown.open) return;
+            event.preventDefault();
+            event.stopPropagation();
+            dropdown.open = false;
+            dropdown.querySelector('summary').focus();
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        document.querySelectorAll('[data-catalog-dropdown][open]').forEach((dropdown) => {
+            if (!dropdown.contains(event.target)) dropdown.open = false;
+        });
     });
 
     const syncHiddenControls = (form) => {
@@ -107,14 +153,7 @@ if (catalog) {
 
     document.querySelectorAll('[data-catalog-autosubmit]').forEach((control) => {
         control.addEventListener('change', () => {
-            if (control.name === 'brand[]') {
-                state.brand = new Set(
-                    [...control.form.querySelectorAll('[name="brand[]"]:checked')].map((brand) => brand.value),
-                );
-            } else {
-                state[control.name] = control.value;
-            }
-
+            state[control.name] = control.value;
             syncControls();
             control.form?.requestSubmit();
         });

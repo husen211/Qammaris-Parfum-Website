@@ -79,6 +79,37 @@ class PublicCatalogDiscoveryTest extends TestCase
         $this->assertSame(6, $state->activeFilterCount());
     }
 
+    public function test_dropdown_forms_preserve_multiple_brands_and_filter_context_on_both_surfaces(): void
+    {
+        $otherBrand = Brand::create(['name' => 'Other & Brand', 'is_active' => true]);
+        $response = $this->get(route('products.index', [
+            'search' => 'perfume',
+            'brand' => [$this->brand->id, $otherBrand->id],
+            'category' => $this->category->id,
+            'gender' => 'Unisex',
+            'availability' => 'sold_out',
+            'price_min' => 100000,
+            'price_max' => 300000,
+            'sort' => 'price_low',
+            'page' => 2,
+        ]))->assertOk();
+
+        $document = new \DOMDocument;
+        @$document->loadHTML($response->getContent());
+        $xpath = new \DOMXPath($document);
+        foreach (['//form[@id="desktopFilterForm"]', '//dialog[@id="mobileFilter"]/div/form'] as $formPath) {
+            $this->assertCount(2, $xpath->query($formPath.'//input[@name="brand[]" and @checked]'));
+            $this->assertCount(0, $xpath->query($formPath.'//input[@name="brand[]" and @data-catalog-autosubmit]'));
+            $this->assertCount(0, $xpath->query($formPath.'//input[@name="page"]'));
+            foreach (['search' => 'perfume', 'sort' => 'price_low', 'price_min' => '100000', 'price_max' => '300000'] as $name => $value) {
+                $this->assertSame($value, $xpath->query($formPath.'//input[@name="'.$name.'"]')->item(0)->getAttribute('value'));
+            }
+            foreach (['category' => (string) $this->category->id, 'gender' => 'Unisex', 'availability' => 'sold_out'] as $name => $value) {
+                $this->assertSame($value, $xpath->query($formPath.'//select[@name="'.$name.'"]/option[@selected]')->item(0)->getAttribute('value'));
+            }
+        }
+    }
+
     public function test_availability_filter_uses_effective_freshness_semantics(): void
     {
         $fresh = $this->createProduct('Fresh Available', [
