@@ -61,7 +61,7 @@ class CatalogSafetyTest extends TestCase
 
     public function test_active_variant_can_be_added_to_cart(): void
     {
-        $product = $this->createProduct();
+        $product = $this->createProduct(['availability_status' => 'available', 'availability_source' => 'qammaris_app']);
         $variant = $this->createVariant($product, ['stock' => 10]);
 
         $this->postJson(route('cart.add'), [

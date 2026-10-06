@@ -5,7 +5,7 @@ if (drawer) {
     const productsUrl = drawer.dataset.productsUrl || '/products';
     const container = document.getElementById('drawerCartItems');
     const estimateEl = document.getElementById('drawerSubtotal');
-    const noticeEl = document.getElementById('drawerInquiryNotice');
+    const noticeEl = document.getElementById('drawerCartNotice');
 
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
         '&': '&amp;',
@@ -27,8 +27,8 @@ if (drawer) {
         container.innerHTML = `
             <div class="flex h-full flex-col items-center justify-center text-center">
                 <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 text-2xl text-gray-300" aria-hidden="true">?</div>
-                <h4 class="font-mayluxa text-xl">Daftar inquiry masih kosong</h4>
-                <p class="mt-2 max-w-64 text-sm leading-6 text-gray-500">Tambahkan parfum yang ingin Anda tanyakan kepada admin.</p>
+                <h4 class="font-mayluxa text-xl">Daftar keranjang masih kosong</h4>
+                <p class="mt-2 max-w-64 text-sm leading-6 text-gray-500">Tambahkan parfum pilihan Anda dari katalog.</p>
                 <a href="${escapeHtml(productsUrl)}" class="mt-5 inline-flex min-h-11 items-center border-b border-brand-black text-xs font-semibold uppercase tracking-widest hover:border-brand-gold hover:text-brand-gold">Lihat katalog</a>
             </div>
         `;
@@ -42,19 +42,19 @@ if (drawer) {
             <div class="flex h-full flex-col items-center justify-center text-center" role="alert">
                 <h4 class="font-mayluxa text-xl">Daftar perlu ditinjau</h4>
                 <p class="mt-2 max-w-72 text-sm leading-6 text-gray-500">${escapeHtml(message)}</p>
-                <button type="button" data-retry-inquiry class="mt-5 min-h-11 border border-brand-black px-5 text-xs font-semibold uppercase tracking-widest hover:bg-brand-black hover:text-white">Coba lagi</button>
+                <button type="button" data-retry-keranjang class="mt-5 min-h-11 border border-brand-black px-5 text-xs font-semibold uppercase tracking-widest hover:bg-brand-black hover:text-white">Coba lagi</button>
                 <a href="${escapeHtml(cartPageUrl)}" class="mt-3 inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-widest underline underline-offset-4">Buka daftar</a>
             </div>
         `;
         setEstimate('—');
-        container.querySelector('[data-retry-inquiry]')?.addEventListener('click', fetchInquiryContent);
+        container.querySelector('[data-retry-keranjang]')?.addEventListener('click', fetchCartContent);
     };
 
     const renderItems = (items) => {
         if (!container) return;
 
         const html = items.map((item) => `
-            <article class="flex gap-4 border-b border-gray-200 pb-5 last:border-b-0" data-inquiry-item>
+            <article class="flex gap-4 border-b border-gray-200 pb-5 last:border-b-0" data-keranjang-item>
                 <a href="${escapeHtml(item.product_url)}" class="h-24 w-20 shrink-0 overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                     <img src="${escapeHtml(item.image)}" alt="" width="80" height="96" class="h-full w-full object-contain" loading="lazy" decoding="async">
                 </a>
@@ -78,8 +78,8 @@ if (drawer) {
         container.innerHTML = `<div class="space-y-5">${html}</div>`;
     };
 
-    async function fetchInquiryContent() {
-        if (noticeEl) noticeEl.textContent = 'Daftar ini bukan transaksi atau reservasi.';
+    async function fetchCartContent() {
+        if (noticeEl) noticeEl.textContent = 'Lengkapi data penerima saat checkout.';
         if (!cartUrl || !container) return;
 
         container.setAttribute('aria-busy', 'true');
@@ -89,14 +89,14 @@ if (drawer) {
             const data = await response.json();
 
             if (!response.ok) {
-                renderError(data.message || 'Daftar inquiry belum dapat dimuat.', data.cart_url || '/cart');
+                renderError(data.message || 'Daftar keranjang belum dapat dimuat.', data.cart_url || '/cart');
                 return;
             }
 
             if (Array.isArray(data.items) && data.items.length > 0) {
                 renderItems(data.items);
                 setEstimate(data.formatted_total ?? 'Rp 0');
-                if (noticeEl) noticeEl.textContent = data.notice || 'Daftar ini bukan transaksi atau reservasi.';
+                if (noticeEl) noticeEl.textContent = data.notice || 'Lengkapi data penerima saat checkout.';
                 return;
             }
 
@@ -110,7 +110,7 @@ if (drawer) {
 
     drawer.addEventListener('toggle', () => {
         if (drawer.open) {
-            fetchInquiryContent();
+            fetchCartContent();
         }
     });
 

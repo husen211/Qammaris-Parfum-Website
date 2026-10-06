@@ -202,7 +202,7 @@
                     </div>
 
                     <div class="mt-5 space-y-3 md:mt-6">
-                        @if ($offer && $effectiveAvailability !== \App\Models\Product::AVAILABILITY_SOLD_OUT)
+                        @if ($offer && $effectiveAvailability === \App\Models\Product::AVAILABILITY_AVAILABLE)
                             <div class="flex items-end justify-between gap-4">
                                 <div>
                                     <label for="quantity" class="block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">Jumlah</label>
@@ -216,7 +216,7 @@
 
                             <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}"
                                 class="flex min-h-14 w-full items-center justify-center gap-3 bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300">
-                                Tambah ke daftar inquiry
+                                Tambah ke keranjang
                             </button>
                         @elseif ($effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT)
                             @if ($productInquiryUrl)
@@ -229,22 +229,19 @@
                                     Kontak WhatsApp belum tersedia
                                 </button>
                             @endif
-                        @else
+                        @elseif (! $offer)
                             <button type="button" disabled class="flex min-h-14 w-full cursor-not-allowed items-center justify-center bg-gray-200 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
                                 Data produk belum lengkap
                             </button>
                         @endif
 
-                        @if ($offer && $effectiveAvailability !== \App\Models\Product::AVAILABILITY_SOLD_OUT)
+                        @if ($offer && $effectiveAvailability === \App\Models\Product::AVAILABILITY_AVAILABLE)
+                            <a href="{{ route('cart.index') }}" class="flex min-h-14 w-full items-center justify-center border border-brand-black px-6 text-xs font-semibold uppercase tracking-widest text-brand-black hover:bg-gray-50 active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Lihat keranjang</a>
+                        @elseif ($offer && $effectiveAvailability === \App\Models\Product::AVAILABILITY_UNKNOWN)
                             @if ($productInquiryUrl)
-                                <a href="{{ $productInquiryUrl }}" target="_blank" rel="noopener noreferrer"
-                                    class="flex min-h-14 w-full items-center justify-center gap-3 border border-brand-black bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-brand-black transition-colors hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                                    Tanya stok via WhatsApp
-                                </a>
+                                <a href="{{ $productInquiryUrl }}" class="flex min-h-14 w-full items-center justify-center border border-brand-black px-6 text-xs font-semibold uppercase tracking-widest text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Tanyakan ketersediaan via WhatsApp</a>
                             @else
-                                <button type="button" disabled class="flex min-h-14 w-full cursor-not-allowed items-center justify-center border border-gray-200 bg-white px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-                                    Kontak WhatsApp belum tersedia
-                                </button>
+                                <p class="text-sm text-gray-500">Kontak WhatsApp belum tersedia.</p>
                             @endif
                         @endif
                         <p data-cart-feedback role="status" aria-live="polite" class="min-h-5 text-xs text-gray-500"></p>
@@ -359,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartBadge.classList.remove('hidden');
             }
 
-            if (feedback) feedback.textContent = 'Produk ditambahkan ke daftar inquiry.';
+            if (feedback) feedback.textContent = 'Produk ditambahkan ke keranjang.';
             document.getElementById('cartDrawer')?.showModal();
         } catch (error) {
             if (feedback) feedback.textContent = error.message || 'Produk belum dapat ditambahkan. Coba lagi.';

@@ -33,6 +33,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::put('/update/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
+    Route::get('/checkout', [CartController::class, 'showCheckout'])->name('checkout.show');
     Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');

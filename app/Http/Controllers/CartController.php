@@ -18,17 +18,19 @@ class CartController extends Controller
     public function index()
     {
         $cart = session('cart', []);
-        $resolvedItems = $cart === [] ? [] : $this->resolveInquiryItems($cart);
+        $resolvedItems = $cart === [] ? [] : $this->resolveCartItems($cart);
         $hasUnavailableItems = $cart !== [] && $resolvedItems === null;
         $items = $resolvedItems ?? [];
         $estimateTotal = array_sum(array_column($items, 'line_total'));
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
+        $canCheckout = $items !== [] && $this->canOrder($items) && $whatsappAvailable;
 
         return view('cart.index', compact(
             'items',
             'estimateTotal',
             'hasUnavailableItems',
             'whatsappAvailable',
+            'canCheckout',
         ));
     }
 
@@ -39,10 +41,10 @@ class CartController extends Controller
             ->whereHas('product', fn ($query) => $query->published())
             ->findOrFail($request->variant_id);
 
-        if ($variant->product->effective_availability === Product::AVAILABILITY_SOLD_OUT) {
+        if ($variant->product->effective_availability !== Product::AVAILABILITY_AVAILABLE || $variant->price <= 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Produk sedang sold out. Gunakan tombol Tanya restock.',
+                'message' => 'Produk ini belum bisa dipesan. Pilih produk berstatus Tersedia.',
             ], 422);
         }
 
@@ -53,7 +55,7 @@ class CartController extends Controller
         if ($nextQuantity > 99) {
             return response()->json([
                 'success' => false,
-                'message' => 'Jumlah maksimum dalam daftar inquiry adalah 99.',
+                'message' => 'Jumlah maksimum dalam keranjang adalah 99.',
             ], 422);
         }
 
@@ -73,7 +75,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Produk ditambahkan ke daftar inquiry.',
+            'message' => 'Produk ditambahkan ke keranjang.',
             'cart_count' => cart_count(),
             'cart_total' => cart_total(),
         ]);
@@ -84,7 +86,7 @@ class CartController extends Controller
         $cart = session('cart', []);
 
         if (! isset($cart[$id])) {
-            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan di daftar inquiry.'], 404);
+            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan di keranjang.'], 404);
         }
 
         ProductVariant::active()
@@ -106,7 +108,7 @@ class CartController extends Controller
         $cart = session('cart', []);
 
         if (! isset($cart[$id])) {
-            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan di daftar inquiry.'], 404);
+            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan di keranjang.'], 404);
         }
 
         unset($cart[$id]);
@@ -123,36 +125,63 @@ class CartController extends Controller
     {
         session()->forget('cart');
 
-        return redirect()->back()->with('success', 'Daftar inquiry berhasil dikosongkan.');
+        return redirect()->back()->with('success', 'Keranjang berhasil dikosongkan.');
+    }
+
+    public function showCheckout()
+    {
+        $items = $this->resolveCartItems(session('cart', []));
+        if (! $items || ! $this->canOrder($items)) {
+            return redirect()->route('cart.index')->with('error', 'Tinjau keranjang: hanya produk Tersedia yang dapat dipesan.');
+        }
+        $checkoutQuote = $this->quote($items);
+        session(['checkout_quote' => $checkoutQuote]);
+        $subtotal = array_sum(array_column($items, 'line_total'));
+        $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
+
+        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable'))
+            ->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
     public function checkout(CheckoutRequest $request)
     {
-        $cart = session('cart', []);
-
-        if ($cart === []) {
-            return redirect()->route('products.index')->with('error', 'Daftar inquiry masih kosong.');
+        $items = $this->resolveCartItems(session('cart', []));
+        if (! $items || ! $this->canOrder($items)) {
+            return redirect()->route('cart.index')->with('error', 'Tinjau keranjang: hanya produk Tersedia yang dapat dipesan.');
         }
-
-        $items = $this->resolveInquiryItems($cart);
-        if ($items === null) {
-            return back()->with(
-                'error',
-                'Satu atau lebih produk di daftar inquiry sudah tidak tersedia atau berubah. Tinjau kembali daftar Anda.'
-            );
+        $quote = $request->validated('checkout_quote');
+        if (! hash_equals((string) session('checkout_quote', ''), $quote) || ! hash_equals($this->quote($items), $quote)) {
+            return redirect()->route('cart.checkout.show')->withInput($request->safe()->except('checkout_quote'))
+                ->with('error', 'Harga atau isi keranjang berubah. Periksa ringkasan terbaru, lalu lanjutkan kembali.');
         }
-
-        $url = $this->inquiryWhatsApp->listUrl(
-            $this->whatsappNumber(),
-            $items,
-            $request->validated('customer_note'),
-        );
-
+        $url = $this->inquiryWhatsApp->orderUrl($this->whatsappNumber(), $items, $request->safe()->except('checkout_quote'));
         if ($url === null) {
-            return back()->with('error', 'Kontak WhatsApp belum tersedia. Silakan coba lagi nanti.');
+            return redirect()->route('cart.checkout.show')->withInput($request->safe()->except('checkout_quote'))
+                ->with('error', 'Kontak WhatsApp belum tersedia. Silakan coba lagi nanti.');
         }
 
-        return redirect()->away($url);
+        // Opening the composer is not proof of delivery: retain the cart for retries.
+        return redirect()->away($url)->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
+    }
+
+    private function canOrder(array $items): bool
+    {
+        foreach ($items as $item) {
+            if ($item['effective_availability'] !== Product::AVAILABILITY_AVAILABLE || $item['price'] <= 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function quote(array $items): string
+    {
+        // Bind the review to server-resolved identity, quantities, prices and status, never client totals.
+        return hash('sha256', json_encode(array_map(fn ($item) => [
+            $item['id'], $item['product_id'], $item['product_name'], $item['brand_name'], $item['volume'],
+            $item['quantity'], $item['price'], $item['effective_availability'],
+        ], $items), JSON_THROW_ON_ERROR));
     }
 
     public function getCartData()
@@ -167,11 +196,11 @@ class CartController extends Controller
             ]);
         }
 
-        $items = $this->resolveInquiryItems($cart);
+        $items = $this->resolveCartItems($cart);
         if ($items === null) {
             return response()->json([
                 'items' => [],
-                'message' => 'Daftar inquiry berubah. Buka daftar untuk meninjau produk yang tidak lagi tersedia.',
+                'message' => 'Keranjang berubah. Buka daftar untuk meninjau produk yang tidak lagi tersedia.',
                 'cart_url' => route('cart.index'),
             ], 409);
         }
@@ -191,7 +220,7 @@ class CartController extends Controller
      *
      * @return array<int, array<string, mixed>>|null
      */
-    private function resolveInquiryItems(array $cart): ?array
+    private function resolveCartItems(array $cart): ?array
     {
         $variantIds = collect($cart)
             ->map(fn ($item, $key) => is_array($item) ? ($item['variant_id'] ?? $key) : null)

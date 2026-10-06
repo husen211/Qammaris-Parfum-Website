@@ -113,7 +113,7 @@ const CardNav = ({
             <button
               id="cart-drawer-trigger"
               type="button"
-              aria-label="Buka daftar inquiry"
+              aria-label="Buka keranjang"
               onClick={handleCartClick}
               className="relative inline-flex items-center justify-center h-11 w-11 border border-black/10 hover:border-black/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
             >

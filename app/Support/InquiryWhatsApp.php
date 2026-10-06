@@ -16,7 +16,7 @@ final class InquiryWhatsApp
         $managedByApp = $product->availability_source === 'qammaris_app';
         $intentLabel = $intent === 'restock' ? 'informasi restock' : 'konfirmasi stok';
         if ($managedByApp && $intent !== 'restock') {
-            $intentLabel = 'inquiry produk';
+            $intentLabel = 'informasi produk';
         }
         $opening = $intent === 'restock'
             ? 'Halo Admin Qammaris, saya ingin menanyakan restock produk ini:'
@@ -32,8 +32,7 @@ final class InquiryWhatsApp
             'Link produk: '.route('products.show', $product),
             'Intent: '.$intentLabel,
             '',
-            $managedByApp ? 'Inquiry ini belum menjadi transaksi atau reservasi.'
-                : 'Mohon konfirmasi informasi terbaru. Inquiry ini belum menjadi transaksi atau reservasi.',
+            'Terima kasih.',
         ]);
 
         return $this->url($number, $message);
@@ -42,43 +41,38 @@ final class InquiryWhatsApp
     /**
      * @param  array<int, array<string, mixed>>  $items
      */
-    public function listUrl(?string $number, array $items, ?string $note = null): ?string
+    public function orderUrl(?string $number, array $items, array $customer): ?string
     {
         if ($items === []) {
             return null;
         }
-
-        $lines = [
-            'Halo Admin Qammaris, saya ingin menanyakan ketersediaan produk berikut:',
-            '',
-            '*DAFTAR INQUIRY*',
-        ];
-        $estimate = 0;
-
+        $lines = ['Halo Qammaris, saya ingin memesan:', '', '*PESANAN QAMMARIS*'];
+        $subtotal = 0;
         foreach ($items as $index => $item) {
             $lineTotal = (int) $item['price'] * (int) $item['quantity'];
-            $estimate += $lineTotal;
+            $subtotal += $lineTotal;
             $lines[] = '';
-            $lines[] = ($index + 1).'. *'.$this->plainText($item['brand_name']).' - '.$this->plainText($item['product_name']).'*';
-            $lines[] = '   Ukuran: '.$item['volume'].' ml';
-            $lines[] = '   Jumlah yang diminati: '.$item['quantity'];
-            $lines[] = '   Harga saat ini: '.$this->rupiah($item['price']).' / item';
-            $lines[] = '   Status website: '.$this->plainText($item['availability_label'] ?? $this->availabilityLabel($item['effective_availability']));
-            $lines[] = '   Link: '.$item['product_url'];
+            $lines[] = ($index + 1).'. '.$this->plainText($item['brand_name']).' - '.$this->plainText($item['product_name']);
+            $lines[] = 'Ukuran: '.$item['volume'].' ml';
+            $lines[] = 'Jumlah: '.$item['quantity'];
+            $lines[] = 'Harga: '.$this->rupiah($item['price']).' / item';
+            $lines[] = 'Total produk: '.$this->rupiah($lineTotal);
+            $lines[] = 'Link: '.$item['product_url'];
         }
-
         $lines[] = '';
-        $lines[] = 'Estimasi nilai produk: '.$this->rupiah($estimate);
-
-        $normalizedNote = $this->plainText($note ?? '');
-        if ($normalizedNote !== '') {
-            $lines[] = 'Catatan: '.$normalizedNote;
+        $lines[] = 'Subtotal: '.$this->rupiah($subtotal);
+        $lines[] = '';
+        $lines[] = '*DATA PENERIMA*';
+        $lines[] = 'Nama: '.$this->plainText($customer['customer_name']);
+        $lines[] = 'No. HP: '.$this->plainText($customer['customer_phone']);
+        $lines[] = 'Alamat: '.$this->plainText($customer['customer_address']);
+        foreach (['customer_postcode' => 'Kode pos', 'customer_note' => 'Catatan'] as $field => $label) {
+            if (! empty($customer[$field])) {
+                $lines[] = $label.': '.$this->plainText($customer[$field]);
+            }
         }
-
         $lines[] = '';
-        $lines[] = $this->requiresStockConfirmation($items)
-            ? 'Mohon konfirmasi stok dan harga terbaru. Daftar inquiry ini belum menjadi transaksi atau reservasi.'
-            : 'Daftar inquiry ini belum menjadi transaksi atau reservasi.';
+        $lines[] = 'Ongkir dan pembayaran dilanjutkan di WhatsApp.';
 
         return $this->url($number, implode("\n", $lines));
     }
@@ -90,19 +84,7 @@ final class InquiryWhatsApp
 
     public function listNotice(array $items): string
     {
-        return ($this->requiresStockConfirmation($items) ? 'Admin akan mengonfirmasi stok dan harga terbaru. ' : '')
-            .'Mengirim inquiry tidak menyimpan stok atau membuat transaksi.';
-    }
-
-    private function requiresStockConfirmation(array $items): bool
-    {
-        foreach ($items as $item) {
-            if ($item['requires_stock_confirmation'] ?? true) {
-                return true;
-            }
-        }
-
-        return false;
+        return 'Lengkapi data penerima saat checkout. Ongkir dan pembayaran dilanjutkan di WhatsApp.';
     }
 
     public function hasValidNumber(?string $number): bool

@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Inquiry - Qammaris Perfumes')
+@section('title', 'Keranjang - Qammaris Perfumes')
 @section('robots', 'noindex,nofollow')
 
 @section('content')
     <section class="min-h-screen bg-white pb-20 pt-28 md:pt-32" aria-labelledby="inquiry-title">
         <div class="container mx-auto px-4 lg:px-20">
             <header class="mx-auto mb-10 max-w-2xl text-center md:mb-14">
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">Inquiry melalui WhatsApp</p>
-                <h1 id="inquiry-title" class="mt-3 font-mayluxa text-4xl text-brand-black lg:text-5xl">Daftar Inquiry</h1>
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">Pesan parfum pilihan Anda</p>
+                <h1 id="inquiry-title" class="mt-3 font-mayluxa text-4xl text-brand-black lg:text-5xl">Keranjang</h1>
                 <p class="mx-auto mt-4 max-w-xl text-sm font-light leading-6 text-gray-500">
-                    Kumpulkan parfum yang ingin ditanyakan. Daftar ini bukan transaksi atau reservasi.
+                    Periksa produk dan jumlah, lalu lengkapi data penerima saat checkout.
                 </p>
             </header>
 
@@ -22,7 +22,7 @@
 
             @if ($errors->any())
                 <div class="mx-auto mb-8 max-w-4xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
-                    Periksa kembali catatan inquiry sebelum melanjutkan.
+                    Periksa kembali keranjang sebelum melanjutkan.
                 </div>
             @endif
 
@@ -30,7 +30,7 @@
                 <div class="mx-auto max-w-2xl border border-amber-200 bg-amber-50 p-6 text-center md:p-8">
                     <h2 class="font-mayluxa text-2xl text-brand-black">Daftar perlu ditinjau</h2>
                     <p class="mt-3 text-sm leading-6 text-gray-600">
-                        Satu atau lebih produk sudah tidak tayang atau offer-nya berubah. Daftar lama tidak akan dikirim agar informasi yang diteruskan tidak keliru.
+                        Satu atau lebih produk sudah tidak tayang atau pilihan ukurannya tidak lagi tersedia. Daftar lama tidak akan dikirim agar informasi yang diteruskan tidak keliru.
                     </p>
                     <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
                         <a href="{{ route('products.index') }}" class="inline-flex min-h-12 items-center justify-center bg-brand-black px-6 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
@@ -39,7 +39,7 @@
                         <form action="{{ route('cart.clear') }}" method="POST">
                             @csrf
                             <button type="submit" class="min-h-12 w-full border border-brand-black px-6 text-xs font-semibold uppercase tracking-widest text-brand-black hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                                Kosongkan daftar lama
+                                Kosongkan keranjang lama
                             </button>
                         </form>
                     </div>
@@ -49,8 +49,8 @@
                     <section aria-labelledby="inquiry-items-title">
                         <div class="flex items-end justify-between gap-4 border-b border-gray-200 pb-4">
                             <div>
-                                <h2 id="inquiry-items-title" class="font-mayluxa text-2xl text-brand-black">Produk yang ditanyakan</h2>
-                                <p class="mt-1 text-xs text-gray-500">Jumlah menunjukkan minat, bukan stok yang direservasi.</p>
+                                <h2 id="inquiry-items-title" class="font-mayluxa text-2xl text-brand-black">Pilihan Anda</h2>
+                                <p class="mt-1 text-xs text-gray-500">Harga dan ketersediaan mengikuti katalog saat ini.</p>
                             </div>
                             <span class="shrink-0 text-xs font-semibold uppercase tracking-widest text-gray-400">{{ count($items) }} produk</span>
                         </div>
@@ -64,8 +64,8 @@
                                         default => 'text-amber-700',
                                     };
                                 @endphp
-                                <article class="grid gap-5 py-6 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center" data-inquiry-row data-id="{{ $item['id'] }}">
-                                    <a href="{{ $item['product_url'] }}" class="h-32 w-24 overflow-hidden bg-[#FAF8F3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                <article class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-4 py-6 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center" data-inquiry-row data-id="{{ $item['id'] }}">
+                                    <a href="{{ $item['product_url'] }}" class="h-24 w-18 sm:h-32 sm:w-24 overflow-hidden bg-[#FAF8F3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                                         <img src="{{ $item['image'] }}" alt="{{ $item['product_name'] }}" width="96" height="128" loading="lazy" decoding="async" class="h-full w-full object-contain">
                                     </a>
 
@@ -78,14 +78,14 @@
                                         <p class="mt-2 text-xs font-semibold {{ $availabilityClass }}">{{ $item['availability_label'] }}</p>
                                         <button type="button" onclick="removeInquiryItem('{{ $item['id'] }}')"
                                             class="mt-4 min-h-11 text-xs font-semibold uppercase tracking-widest text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                                            Hapus dari daftar
+                                            Hapus produk
                                         </button>
                                     </div>
 
-                                    <div class="flex items-end justify-between gap-5 sm:flex-col sm:items-end">
+                                    <div class="col-start-2 flex flex-wrap items-end justify-between gap-4 sm:col-start-auto sm:flex-col sm:items-end">
                                         <p class="text-lg font-semibold tabular-nums text-brand-black">{{ $item['formatted_price'] }}</p>
                                         <div>
-                                            <span class="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-gray-400">Jumlah minat</span>
+                                            <span class="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-gray-400">Jumlah</span>
                                             <div class="flex h-11 items-center border border-gray-300">
                                                 <button type="button" onclick="updateInquiryQuantity('{{ $item['id'] }}', -1)" aria-label="Kurangi jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-gray-500 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">−</button>
                                                 <input type="number" id="qty-{{ $item['id'] }}" value="{{ $item['quantity'] }}" min="1" max="99" aria-label="Jumlah {{ $item['product_name'] }}" class="h-11 w-11 border-none p-0 text-center text-sm font-semibold focus:ring-0" readonly>
@@ -103,60 +103,44 @@
                             <a href="{{ route('products.index') }}" class="inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-widest underline decoration-gray-300 underline-offset-4 hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                                 Tambah produk lain
                             </a>
-                            <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Kosongkan seluruh daftar inquiry?')">
+                            <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Kosongkan seluruh keranjang?')">
                                 @csrf
                                 <button type="submit" class="min-h-11 text-xs font-semibold uppercase tracking-widest text-gray-500 hover:text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                                    Kosongkan daftar
+                                    Kosongkan keranjang
                                 </button>
                             </form>
                         </div>
                     </section>
 
                     <aside class="border border-gray-200 bg-[#FAF8F3] p-6 lg:sticky lg:top-28 lg:p-8" aria-labelledby="inquiry-summary-title">
-                        <h2 id="inquiry-summary-title" class="font-mayluxa text-2xl text-brand-black">Ringkasan inquiry</h2>
+                        <h2 id="inquiry-summary-title" class="font-mayluxa text-2xl text-brand-black">Ringkasan pesanan</h2>
 
                         <div class="mt-6 border-y border-gray-200 py-5">
                             <div class="flex items-end justify-between gap-4">
                                 <div>
-                                    <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Estimasi nilai produk</p>
+                                    <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Subtotal produk</p>
                                     <p class="mt-1 text-xs leading-5 text-gray-500">Berdasarkan harga yang tampil saat ini.</p>
                                 </div>
-                                <p class="shrink-0 text-xl font-semibold tabular-nums text-brand-black">{{ format_rupiah($estimateTotal) }}</p>
+                                <p class="text-xl font-semibold tabular-nums whitespace-nowrap text-brand-black">{{ format_rupiah($estimateTotal) }}</p>
                             </div>
                         </div>
 
-                        <form action="{{ route('cart.checkout') }}" method="POST" class="mt-6">
-                            @csrf
-                            <label for="customer_note" class="block text-[10px] font-semibold uppercase tracking-widest text-gray-500">Catatan untuk admin (opsional)</label>
-                            <textarea id="customer_note" name="customer_note" rows="3" maxlength="200" aria-describedby="inquiry-note-help{{ $errors->has('customer_note') ? ' inquiry-note-error' : '' }}"
-                                class="mt-2 w-full resize-none border border-gray-300 bg-white px-3 py-3 text-sm leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black"
-                                placeholder="Contoh: ingin cek ketersediaan di toko">{{ old('customer_note') }}</textarea>
-                            <p id="inquiry-note-help" class="mt-2 text-xs leading-5 text-gray-500">Nama, nomor, dan alamat tidak diperlukan; percakapan dilanjutkan langsung di WhatsApp.</p>
-                            @error('customer_note')
-                                <p id="inquiry-note-error" class="mt-2 text-xs text-red-700">{{ $message }}</p>
-                            @enderror
-
-                            @if ($whatsappAvailable)
-                                <button type="submit" class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                                    Tanyakan via WhatsApp
-                                </button>
-                            @else
-                                <button type="button" disabled class="mt-6 flex min-h-14 w-full cursor-not-allowed items-center justify-center bg-gray-200 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                                    Kontak WhatsApp belum tersedia
-                                </button>
-                            @endif
-                        </form>
-
-                        <p class="mt-4 text-center text-xs leading-5 text-gray-500">
-                            {{ app(\App\Support\InquiryWhatsApp::class)->listNotice($items) }}
-                        </p>
+                        <p class="mt-4 text-xs leading-5 text-gray-500">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
+                        @if ($canCheckout)
+                            <a href="{{ route('cart.checkout.show') }}" class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                Lanjut ke checkout
+                            </a>
+                        @else
+                            <button type="button" disabled class="mt-6 min-h-14 w-full bg-gray-200 px-5 text-sm text-gray-600">Checkout belum tersedia</button>
+                            <p class="mt-3 text-sm leading-6 text-gray-600" role="status">{{ $whatsappAvailable ? 'Hapus produk Habis atau yang belum tersedia dari keranjang untuk melanjutkan.' : 'Kontak WhatsApp belum tersedia. Silakan coba lagi nanti.' }}</p>
+                        @endif
                     </aside>
                 </div>
             @else
                 <div class="mx-auto flex max-w-xl flex-col items-center justify-center py-12 text-center md:py-20">
                     <div class="flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 text-3xl text-gray-300" aria-hidden="true">?</div>
-                    <h2 class="mt-6 font-mayluxa text-2xl text-brand-black">Daftar inquiry masih kosong</h2>
-                    <p class="mt-3 max-w-md text-sm font-light leading-6 text-gray-500">Tambahkan parfum dari katalog untuk menanyakan stok dan harga terbaru kepada admin.</p>
+                    <h2 class="mt-6 font-mayluxa text-2xl text-brand-black">Keranjang masih kosong</h2>
+                    <p class="mt-3 max-w-md text-sm font-light leading-6 text-gray-500">Temukan parfum pilihan Anda, lalu tambahkan ke keranjang.</p>
                     <a href="{{ route('products.index') }}" class="mt-8 inline-flex min-h-12 items-center justify-center bg-brand-black px-8 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                         Lihat katalog
                     </a>
