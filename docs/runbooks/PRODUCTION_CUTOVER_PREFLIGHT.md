@@ -109,3 +109,13 @@ Owner explicitly waived legacy backup; do not make one under this phase. Leave t
 ## Definition of Done
 
 Updated P1-04 gates: minimal hosting baseline and frozen source/assets/catalog input manifest are now complete. Remaining: guarded target transfer implementation/preview, concrete Owner admin/database/env/runtime setup scope, verified target/reversible activation, and Owner cutover authorization. Legacy data matching and backup/restore are explicitly waived for this release. Production target, account setup, transfer and activation have not happened. Continue this same item; do not start another phase automatically.
+
+## P1-04 authorized production preparation — 2026-10-06
+
+Owner authorizes a separate fresh production target, GitHub auto-deployment preparation and Owner admin admin@qammaris.com. Owner explicitly permits sending that new admin password in chat after successful account creation; API/webhook secrets remain confidential. Public cutover and backend webhook destination switch remain final concrete approval gates.
+
+Created releases/qammaris-85ef088 and new runtime directories under the production domain, plus protected0600 env: production/debugfalse/HTTPS sessions/fresh APP_KEY and the same staging API credential pair read in server memory. Legacy files/database/routing/permissions untouched. Owner created u429527638_qam_launch in hPanel; row verified. Database credential installation, account creation and target transfer are still pending.
+
+New catalog:bootstrap-launch accepts only the reviewed350public+95draft/1016photo cohort in the approved fresh MySQL target/releases path. Persists an audited preview, verifies UUID/offer/media ownership and checksums/MIME, remaps IDs and reuses existing offer/identity/media/publication operations. Refuses existing catalog, requires exact preview for apply, supports rollback rehearsal and idempotent replay. Does not copy users/checkpoints/queues/sessions/fixture1. Focused6tests/37assertions passed; PHP lint, Pint and whitespace passed. No schema/dependency/public UI changes. Production apply not yet run.
+
+Production release workflow builds locked Composer/Vite and curated source artifact without env/media/runtime/database/accounts. Main green CI plus PRODUCTION_DEPLOY_ENABLED=true and server .production-active gate recurring deployment; feature builds cannot deploy. Planned shared protectedenv/storage + per-commit releases/current link retain prior code and runtime. Deploy rejects pending migrations and reverts code after failed /up. Workflow/SSH setup/actual build and deployment remain to verify. Adding workflow is not activation. Initial artifact commit supersedes the older85ef088 source packet once CI succeeds. Continue P1-04, not another backlog item.
