@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PairQammarisShopeeDrafts
 {
-    public const VERSION = 'qammaris-shopee-pairs-v1';
+    public const VERSION = 'qammaris-pairs-v1';
 
     public function __construct(
         private ProductImportPreviewer $catalog,

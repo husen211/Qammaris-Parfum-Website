@@ -102,7 +102,7 @@ def prepare(mapping_path, media_path, basic_path, capture_path, output):
     summary = {"source_rows": len(rows), "statuses": dict(Counter(r["status"] for r in rows)),
                "review_rows": len(review), "candidate_references": sum(len(r["candidates"]) for r in review),
                "missing_skus": sorted(missing), "protected_or_unresolved": issues}
-    (output / "pairs.json").write_text(json.dumps({"schema": "qammaris-shopee-pairs-v1", "provenance": digests, "data": prepared}, ensure_ascii=False), encoding="utf8")
+    (output / "pairs.json").write_text(json.dumps({"schema": "qammaris-pairs-v1", "provenance": digests, "data": prepared}, ensure_ascii=False), encoding="utf8")
     (output / "review-data.json").write_text(json.dumps({"schema": "qammaris-shopee-pair-review-v1", "provenance": digests,
         "capture_sha256": hashlib.sha256(capture_path.read_bytes()).hexdigest(), "captured_at": capture["captured_at"], "data": review, "summary": summary}, ensure_ascii=False), encoding="utf8")
     (output / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf8")

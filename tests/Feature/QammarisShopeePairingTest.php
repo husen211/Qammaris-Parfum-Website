@@ -31,6 +31,7 @@ class QammarisShopeePairingTest extends TestCase
 
     public function test_exact_feed_sku_pairs_existing_uuid_draft_and_replay_preserves_ids_price_slug_and_audit(): void
     {
+        $this->assertLessThanOrEqual(20, strlen(PairQammarisShopeeDrafts::VERSION), 'Existing MySQL contract column is varchar(20).');
         [$product] = $this->target('001-SKU');
         $before = $product->fresh()->getAttributes();
         $action = app(PairQammarisShopeeDrafts::class);
