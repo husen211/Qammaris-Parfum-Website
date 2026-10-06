@@ -14,6 +14,7 @@ Owner requested smaller best-seller photos and repair of the four missing homepa
 
 - PHPUnit `HomeIllustrationAssetsTest|HomeBestSellersTest`: **5 tests /81 assertions passed**. New coverage requires the four homepage URLs to resolve to valid PNG files in the public source with matching intrinsic dimensions, so a clean CI checkout can detect missing release assets.
 - Scoped Pint, Vite production build and `git diff --check`: passed. Existing DaisyUI `@property` and large about-lanyard chunk warnings remain.
+- GitHub CI [37491746006](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37491746006) passed for implementation commit `81d92d2`: **282 Laravel tests /1923 assertions**, **12 Node regressions**, and Vite build. New static assets are tracked in that checkout.
 - Four new local illustration URLs returned HTTP200. Browser confirmed all four loaded with their original dimensions; six best-seller photos loaded from actual product paths, not placeholders, with contain fit.
 - Chrome CSS viewports320x900,375x900,390x844,768x900 and1440x900: no document horizontal overflow; observed card widths196/224/260px. Quiz stacks on phones/tablet and uses two tracks on desktop.
 - Native desktop slider click and keyboard Enter advance the rail; endpoint buttons disable correctly. Native Royal Blend Nero link opens its corresponding detail; Back returns to the homepage. No error/warn console entries captured at final observation.
