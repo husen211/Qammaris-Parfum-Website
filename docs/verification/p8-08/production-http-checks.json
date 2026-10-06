@@ -1,0 +1,38 @@
+[
+  {
+    "path": "/up",
+    "status": 200
+  },
+  {
+    "path": "/products",
+    "status": 200
+  },
+  {
+    "path": "/products/hibiscus-magic-edp-80-ml",
+    "status": 200
+  },
+  {
+    "path": "/build/assets/app-6oxhPUG5.css",
+    "status": 200
+  },
+  {
+    "path": "/build/assets/app-C9yu8TPQ.js",
+    "status": 200
+  },
+  {
+    "path": "/storage/products/M0aW1lj6O6nfFzMN4qp8CQpkUjJttWAXKlinn2TU.jpg",
+    "status": 200
+  },
+  {
+    "path": "/admin/app-products",
+    "status": 302
+  },
+  {
+    "path": "/.env",
+    "status": 403
+  },
+  {
+    "path": "/vendor/autoload.php",
+    "status": 404
+  }
+]
