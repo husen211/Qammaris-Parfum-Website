@@ -1,4 +1,4 @@
-<section id="best-seller" class="py-16 md:py-24 bg-white overflow-hidden relative">
+<section id="best-seller" aria-labelledby="best-seller-heading" data-home-best-sellers class="py-16 md:py-24 bg-white overflow-hidden relative">
 
     <div
         class="absolute top-0 left-0 w-full h-full flex justify-center pt-8 md:pt-10 select-none pointer-events-none overflow-hidden z-0">
@@ -20,57 +20,49 @@
                     <span class="h-px w-8 bg-brand-gold md:hidden"></span>
                 </div>
 
-                <h2 class="font-mayluxa text-4xl md:text-6xl text-brand-black leading-tight">
+                <h2 id="best-seller-heading" class="font-mayluxa text-4xl md:text-6xl text-brand-black leading-tight">
                     Produk Terlaris
                 </h2>
             </div>
 
+            @if ($bestSellers->isNotEmpty())
             <div class="hidden md:flex gap-4">
-                <button type="button" aria-label="Geser produk ke kiri"
-                    onclick="document.getElementById('scroller').scrollBy({left: -350, behavior: 'smooth'})"
-                    class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-brand-black hover:border-brand-black hover:text-white transition-colors duration-300 group">
+                <button type="button" aria-label="Geser produk ke kiri" aria-controls="scroller" data-best-seller-previous disabled
+                    class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-brand-black hover:border-brand-black hover:text-white disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-offset-4 transition-colors duration-300 group">
                     <svg class="w-5 h-5 transition-colors" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <button type="button" aria-label="Geser produk ke kanan"
-                    onclick="document.getElementById('scroller').scrollBy({left: 350, behavior: 'smooth'})"
-                    class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-brand-black hover:border-brand-black hover:text-white transition-colors duration-300 group">
+                <button type="button" aria-label="Geser produk ke kanan" aria-controls="scroller" data-best-seller-next disabled
+                    class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center hover:bg-brand-black hover:border-brand-black hover:text-white disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-offset-4 transition-colors duration-300 group">
                     <svg class="w-5 h-5 transition-colors" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
             </div>
+            @endif
         </div>
 
-        <div id="scroller"
-            class="flex overflow-x-auto gap-6 md:gap-8 pb-12 snap-x snap-mandatory scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 scroll-smooth">
+        @if ($bestSellers->isNotEmpty())
+        <div id="scroller" data-best-seller-rail role="group" aria-label="Pilihan produk terlaris" tabindex="0"
+            class="flex overflow-x-auto gap-5 md:gap-8 pb-6 snap-x snap-mandatory scroll-px-6 md:scroll-px-0 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 focus-visible:outline-2 focus-visible:outline-offset-4">
             @foreach ($bestSellers as $product)
-                <div class="flex-none w-[260px] md:w-[350px] snap-center group cursor-pointer">
-                    <a href="{{ route('products.show', $product->slug) }}" aria-label="Lihat detail {{ $product->name }}"
-                        class="block relative aspect-[4/5] bg-[#F9F9F9] mb-6 overflow-hidden rounded-sm transition-colors duration-500 hover:shadow-xl">
-                        <img src="{{ $product->primaryImage?->image_url ?? 'https://placehold.co/400x500/F5F5F5/333?text=' . urlencode($product->brand->name) }}"
-                            alt="{{ $product->name }}" loading="lazy" decoding="async"
-                            class="w-full h-full object-cover object-center mix-blend-multiply relative z-0">
-
-                        @if ($product->is_best_seller)
-                            <div class="absolute top-4 left-4 z-20"><span
-                                    class="px-3 py-1 bg-white/90 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest text-brand-black">Terlaris</span></div>
-                        @endif
-                    </a>
-
-                    <div class="text-center px-4">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-2">
-                            {{ $product->brand->name }}</p>
-                        <h3 class="font-mayluxa text-xl md:text-2xl text-brand-black leading-tight">
-                            <a href="{{ route('products.show', $product->slug) }}">{{ $product->name }}</a>
-                        </h3>
-                    </div>
+                <div class="flex-none w-[196px] sm:w-[224px] lg:w-[260px] snap-start">
+                    @include('products._catalog-card', [
+                        'product' => $product,
+                        'detailUrl' => route('products.show', $product->slug),
+                        'prioritizeImage' => false,
+                        'headingLevel' => 3,
+                        'showPrice' => false,
+                    ])
                 </div>
             @endforeach
         </div>
+        @else
+            <p class="text-center text-sm text-gray-500">Pilihan produk terlaris sedang disiapkan. Jelajahi koleksi kami di katalog.</p>
+        @endif
 
         <div class="mt-8 md:mt-12 text-center">
             <a href="{{ route('products.index') }}"

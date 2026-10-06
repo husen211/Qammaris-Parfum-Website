@@ -8,6 +8,8 @@ use Illuminate\Support\Collection;
 
 final class ProductCatalogState
 {
+    public const DEFAULT_SORT = 'best_sellers';
+
     private const GENDERS = [
         'unisex' => 'Unisex',
         'pria' => 'Pria',
@@ -21,6 +23,7 @@ final class ProductCatalogState
     ];
 
     private const SORTS = [
+        self::DEFAULT_SORT,
         'latest',
         'price_low',
         'price_high',
@@ -66,7 +69,7 @@ final class ProductCatalogState
             : null;
 
         $sortInput = self::string($request->query('sort'));
-        $sort = $sortInput !== null && in_array($sortInput, self::SORTS, true) ? $sortInput : 'latest';
+        $sort = $sortInput !== null && in_array($sortInput, self::SORTS, true) ? $sortInput : self::DEFAULT_SORT;
 
         $priceMin = self::integer($request->query('price_min'), 0);
         $priceMax = self::integer($request->query('price_max'), 0);
@@ -119,7 +122,7 @@ final class ProductCatalogState
             $query['availability'] = $this->availability;
         }
 
-        if ($this->sort !== 'latest') {
+        if ($this->sort !== self::DEFAULT_SORT) {
             $query['sort'] = $this->sort;
         }
 

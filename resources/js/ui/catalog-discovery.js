@@ -11,7 +11,7 @@ if (catalog) {
         price_min: catalog.dataset.priceMin ?? '',
         price_max: catalog.dataset.priceMax ?? '',
         availability: catalog.dataset.availability ?? '',
-        sort: catalog.dataset.sort ?? 'latest',
+        sort: catalog.dataset.sort ?? 'best_sellers',
     };
 
     const syncControls = () => {
@@ -125,7 +125,7 @@ if (catalog) {
             syncHiddenControls(form);
 
             form.querySelectorAll('[name]').forEach((control) => {
-                if (control.value === '' || (control.name === 'sort' && control.value === 'latest')) {
+                if (control.value === '' || (control.name === 'sort' && control.value === 'best_sellers')) {
                     control.disabled = true;
                 }
             });
