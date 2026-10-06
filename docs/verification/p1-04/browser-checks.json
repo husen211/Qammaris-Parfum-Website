@@ -1,0 +1,30 @@
+{
+  "browser": "Chrome",
+  "desktop": {
+    "viewport": [
+      1440,
+      900
+    ],
+    "staging_search": "9 AM Dive",
+    "result_count": 1,
+    "size_ml": 100,
+    "price_idr": 498000,
+    "availability": "Tersedia",
+    "production_public_count": 208
+  },
+  "mobile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "staging_search": "MALEALI",
+    "result_count": 1,
+    "size_ml": 30,
+    "price_idr": 252000,
+    "availability": "Tersedia"
+  },
+  "captured_console_error_count": 0,
+  "prior_search_issue": "Not reproduced after load; original cause Not confirmed",
+  "viewport_reset": true,
+  "staging_returned_to_full_catalog": 351
+}

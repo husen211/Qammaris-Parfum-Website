@@ -136,9 +136,14 @@ Close-out review:
 - Acceptance gate P1-03 dinyatakan lulus pada 2026-09-15: staging terpisah, source revision, environment/database/storage, workflow manual, idempotensi, proteksi akses, dan rollback asset mempunyai bukti verifikasi.
 - Pada release source staging berikutnya, gunakan branch `staging/known-good-8dc28df` sebagai ref recovery bila release baru gagal, lalu jalankan health check autentik penuh. Ini adalah kewajiban operasi release berikutnya, bukan izin mengubah production.
 
-### P1-04 Production backup dan cutover preflight — BACKLOG
+### P1-04 Production backup dan cutover preflight — IN_PROGRESS
 
 Membutuhkan staging hijau, backup production terbaru, recovery evidence, serta approval owner. Tidak boleh dimulai dari development lokal.
+
+Owner requests the next phase on 2026-10-06 after the 350-product staging wave. Active scope is remote-staging-led preflight and a concrete release/data/media/recovery plan. Production server inspection awaits explicit read-only scope because prior SSH authorization was staging-only and ADR-001 deferred production audit. Public production pages may be read. No production deploy, database/environment/account/permission changes, webhook URL switch or backup yet; Owner requests the final backup immediately before approved cutover. Staging catalog must never replace production wholesale. Verify source/asset/schema drift, preserve legacy IDs/slugs/media/users/content, isolate the fixture/private reviews, identify migration blockers, and document exact next approval scope.
+
+
+Preflight checkpoint 2026-10-06: remote staging source comparison matches candidate85ef088 after line-ending normalization (218/220; remaining staging Basic Auth). Existing CI37421516661 passed that exact source. 350 real launching records/95 retained drafts previewed; all350 have a qammaris_app identity and one offer. All1016 launch JPEGs exist/35,974,303 bytes/350 primary images, checksums recorded; no files copied/backed up. Stage22 migrations, users/blog/store0; never replace production wholesale. Feed401/200,checkpoint457/has_more=false,queues0,minute cron43/44 seconds old at06:20:46UTC. Public legacy catalog displays208; actual production database/schema/IDs/accounts remain Not confirmed pending read-only scope. Coherent build bundle and production ID/slug/price-conflict preview remain gates; final backup/isolated restore/cutover not performed. Runbook `docs/runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md`, evidence `docs/verification/p1-04/`. No application/schema/data/media/env/account/permission/source-app/production changes or new broad suite/build. Continue P1-04; not DONE.
 
 ## P2 — Tests & catalog safety
 
@@ -2485,3 +2490,6 @@ Final report:
 4. Reviewer memindahkan item dari `IN_REVIEW` ke `DONE` setelah bukti verifikasi cukup.
 5. Temuan baru dimasukkan ke backlog; jangan memperluas scope diam-diam.
 6. Blocker harus menyebut bukti, dampak, dan input/akses yang dibutuhkan.
+
+
+P1-04 follow-up to the final-wave search observation: Chrome1440x900 search-button submission from page3 after page load navigates to the correct 9 AM Dive query/result; Chrome390x844 filter-dialog MALEALI submission also works. No captured console errors. Prior issue not reproduced; original cause Not confirmed. No code fix claimed; screenshots/browser-checks in P1-04 evidence.

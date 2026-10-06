@@ -1,0 +1,130 @@
+{
+  "scope": "staging-read-only / public-production-read-only; no backup or production mutations",
+  "candidate_commit": "85ef088f4f9481c6f061141ee1d0a987ddf13832",
+  "existing_ci_run": 37421516661,
+  "source": {
+    "application_file_count": 220,
+    "exact_sha256_matches": 205,
+    "normalized_application_matches": 218,
+    "missing": [],
+    "remote_extra_paths": [],
+    "different_after_line_ending_normalization": [
+      ".htaccess",
+      "public/.htaccess"
+    ]
+  },
+  "config": {
+    "environment": "staging",
+    "debug": false,
+    "app_url": "https://staging.qammarisparfum.id",
+    "php": "8.2.33",
+    "laravel": "12.69.2",
+    "database_driver": "mysql",
+    "session_driver": "file",
+    "session_secure": null,
+    "session_http_only": true,
+    "session_same_site": "lax",
+    "cache_store": "file",
+    "queue_default": "sync",
+    "product_media_disk": "public",
+    "storage_link": true,
+    "media_url": "https://staging.qammarisparfum.id/storage/products/sample.jpg",
+    "api_key": "terisi",
+    "webhook_secret": "terisi",
+    "integration_base_url": "https://api.qammarisapp.com/api/public/v1",
+    "app_key": "terisi",
+    "extensions": [
+      "pdo_mysql",
+      "mbstring",
+      "fileinfo",
+      "curl",
+      "openssl",
+      "zip",
+      "intl",
+      "dom",
+      "gd"
+    ]
+  },
+  "migration_count": 22,
+  "counts": {
+    "products": 446,
+    "product_variants": 391,
+    "product_images": 1017,
+    "brands": 36,
+    "categories": 6,
+    "users": 0,
+    "product_external_identities": 796,
+    "product_import_batches": 10,
+    "product_import_rows": 1385,
+    "qammaris_app_products": 452,
+    "qammaris_app_sync_states": 1,
+    "blog_posts": 0,
+    "store_info": 0,
+    "qammaris_app_changes": 451
+  },
+  "launch": {
+    "schema": "qammaris-launch-catalog-preview-v1",
+    "catalog_sha256": "285aed1dd35ca32e56776c9306f73844514fa2c23a2f9f01bcd83a681db967e1",
+    "launch_products": 350,
+    "drafts": 95,
+    "fixture_excluded": true,
+    "new_production_mapping_confirmed": false,
+    "launch_offer_count": 350,
+    "launch_image_count": 1016,
+    "gender_counts": {
+      "Wanita": 59,
+      "Unisex": 185,
+      "Pria": 106
+    },
+    "availability_counts": {
+      "available": 242,
+      "sold_out": 108
+    }
+  },
+  "media": {
+    "launch_media_count": 1016,
+    "unique_paths": 1016,
+    "primary_images": 350,
+    "bytes": 35974303,
+    "mime_types": [
+      "image/jpeg"
+    ],
+    "missing_files": 0,
+    "media_manifest_sha256": "e3df211b44675d9a7a3d7a4c8115b1f328edc2fedfdd3c54060bac94b6a22562"
+  },
+  "health": {
+    "at": "2026-10-06T06:20:46.103074Z",
+    "counts": {
+      "published": 351,
+      "drafts": 95,
+      "users": 0,
+      "stock_jobs": 0,
+      "image_jobs": 0,
+      "failed_jobs_retained": 3
+    },
+    "checkpoint": 457,
+    "sync_error_present": false,
+    "feed": {
+      "without_key": 401,
+      "with_key": 200,
+      "meta": {
+        "next_seq": 457,
+        "has_more": false,
+        "generated_at": "2026-10-06T06:20:46.063Z"
+      }
+    },
+    "cron": {
+      "p8-03-scheduler-last-run": {
+        "timestamp": "2026-10-06T06:20:03Z",
+        "age_seconds": 43
+      },
+      "p8-03-worker-watchdog-last-run": {
+        "timestamp": "2026-10-06T06:20:02Z",
+        "age_seconds": 44
+      }
+    }
+  },
+  "production_database_baseline": "Not confirmed",
+  "production_id_and_slug_mapping": "Not confirmed",
+  "final_backup_restore": "Not performed"
+}

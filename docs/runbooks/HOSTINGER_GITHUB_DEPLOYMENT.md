@@ -2,6 +2,8 @@
 
 **Status:** P1-03 selesai — staging dan release workflow terverifikasi
 
+Current production preparation (2026-10-06): [P1-04 preflight](PRODUCTION_CUTOVER_PREFLIGHT.md) records the 350-product launching manifest, media checksums, deployed source/build differences, legacy URL/account preservation and pending production read-only/backup/restore/cutover gates. Historical staging counts below are not the current launching baseline. This runbook does not authorize production activation.
+
 ## Tujuan
 
 Menjadikan repository GitHub sebagai source of truth source code Qammaris tanpa menjadikan Git sebagai penyimpanan `.env`, database, atau upload media.
