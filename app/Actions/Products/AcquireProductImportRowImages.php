@@ -52,7 +52,7 @@ class AcquireProductImportRowImages
                 continue;
             }
 
-            if ($row->batch->contract_version === PrepareQammarisAppDrafts::VERSION
+            if (in_array($row->batch->contract_version, [PrepareQammarisAppDrafts::VERSION, PairQammarisShopeeDrafts::VERSION], true)
                 && ($outcome['slot'] ?? '') !== 'foto_utama_url'
                 && ! collect($row->fresh()->image_acquisition_outcomes)->contains(fn ($candidate) => ($candidate['slot'] ?? '') === 'foto_utama_url' && ($candidate['status'] ?? '') === 'stored')) {
                 $this->recordOutcome($rowId, $index, 'blocked', 'Foto sampul harus berhasil sebelum foto tambahan.');
@@ -66,6 +66,17 @@ class AcquireProductImportRowImages
                 $this->recordOutcome($rowId, $index, 'blocked', 'Produk tidak lagi berupa draft; gambar tidak diubah.');
 
                 continue;
+            }
+
+            if ($row->batch->contract_version === PairQammarisShopeeDrafts::VERSION) {
+                try {
+                    app(PairQammarisShopeeDrafts::class)->assertEnvironment();
+                    PairQammarisShopeeDrafts::assertImageTarget($row, $product);
+                } catch (DomainException $exception) {
+                    $this->recordOutcome($rowId, $index, 'blocked', $exception->getMessage());
+
+                    continue;
+                }
             }
 
             if ($product->images()->count() >= ProductImage::MAX_PER_PRODUCT) {
@@ -95,6 +106,10 @@ class AcquireProductImportRowImages
 
                     if ($product->publication_status !== Product::PUBLICATION_DRAFT) {
                         throw new DomainException('Produk tidak lagi berupa draft; gambar tidak diubah.');
+                    }
+
+                    if ($lockedRow->batch->contract_version === PairQammarisShopeeDrafts::VERSION) {
+                        PairQammarisShopeeDrafts::assertImageTarget($lockedRow, $product);
                     }
 
                     $image = $this->attachProductImage->handle($product, $storedPath);

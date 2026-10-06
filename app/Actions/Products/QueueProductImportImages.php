@@ -23,8 +23,12 @@ class QueueProductImportImages
         DB::transaction(function () use ($batch, $actor, &$rowIds, &$candidateImages): void {
             $lockedBatch = ProductImportBatch::query()->lockForUpdate()->findOrFail($batch->getKey());
 
-            if ($actor === null && ($lockedBatch->contract_version !== PrepareQammarisAppDrafts::VERSION || $lockedBatch->actor_id !== null)) {
+            if ($actor === null && (! in_array($lockedBatch->contract_version, [PrepareQammarisAppDrafts::VERSION, PairQammarisShopeeDrafts::VERSION], true) || $lockedBatch->actor_id !== null)) {
                 throw new DomainException('Machine attribution is restricted to Owner-authorized Qammaris draft batches.');
+            }
+
+            if ($lockedBatch->contract_version === PairQammarisShopeeDrafts::VERSION) {
+                app(PairQammarisShopeeDrafts::class)->assertEnvironment();
             }
 
             if ($lockedBatch->status !== ProductImportBatch::STATUS_APPLIED) {

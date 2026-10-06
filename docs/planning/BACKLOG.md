@@ -2390,6 +2390,22 @@ Acceptance: exact 113 cohort; copy cleanup preserves product facts/notes, gender
 
 Verification 2026-10-06: fixed 113 cohort from existing exact Shopee identities; cleaned copy and evidence recorded. Actual text already has zero emoji/READY STOCK/shipping/hashtags. 76 clear audiences, 34 unknown, 3 conflicts retained for Owner correction. Fresh READ ONLY guard comparison of all 445 drafts passed. CI **37405845254** on **326aafc269c18968a18542ef7f2fbe5889e5d440** passed; four allowlisted PHP files overlaid on staging without env/cache/auth/assets/mode changes. Baseline server Git remains 1867d83; code originals retained, no new DB backup. Persisted **batch 2 / launch-copy-v1**, 113 valid rows; exact draft apply changed 113 descriptions/76 genders and timestamps only; replay product/audit digest identical. 76 have zero publication blockers, 37 only audience. All 332 other drafts, AOERA fixture, 316 offers, 519 images, 625 identities and 113 cover checksums retained; 266 without photos remain drafts; users 0; checkpoint 456. Feed 401/200, has_more=false; one worker, no schedule:work, fresh minute cron heartbeats. Private review has 113 covers, copy/evidence/search/filter/corrections; also served behind existing staging Basic Auth (anonymous 401, Owner browser renders) at `/owner-review/p8-06-wave-one/`. Chrome 390x844 and 1440x900: no overflow/broken loaded images, search/clear/review/conflict/empty/reset/keyboard tested; both actual OTW snapshots retain Habis · Restok segera in review. Local full suite 242/1591; replay assertions then copy suite 8/33; 7 Python checks and reproducible 5-file artifact verified; Pint/diff checks passed. Evidence `docs/verification/p8-06/README.md`, ADR-023 and runbook updated. Owner review/corrections and exact publication approval remain pending; no product publish, schema/production/app/credential/permission changes, database backup or cutover.
 
+### P8-07 Owner-approved Shopee SKU pairing and candidate review — IN_PROGRESS
+
+Owner direction 2026-10-06: use the app team's 371-row mapping CSV. Only 9 `sku` and 289 `kuat` rows may pair automatically through exact current feed SKU to UUID. Present 26 `perlu_cek` and 30 `ambigu` rows with their supplied candidates for Owner selection. Keep 17 unmatched and other unpaired products as drafts; never publish automatically.
+
+Outcome: additional visible staging drafts receive reviewed Shopee identity, cleaned description and website-stored cover plus at most two additional images; actual photo counts and missing SKUs are reported.
+
+In scope: bounded staging CLI contract; immutable preview/apply audit; exact unique SKU/UUID and existing identity guards; retain existing copy/media/IDs/slugs/prices/status; reuse safe image downloader/queue; private candidate-selection review with explicit export, no automatic candidate application; actual staging verification.
+
+Out of scope: published fixture edits, publication, production cutover, inferred/missing/duplicate SKU matching, replacing existing media or descriptions, audience/taxonomy/offer changes, migrations, packages, accounts, credentials, app changes or additional database backup.
+
+Dependencies: P8-04 mapped drafts/image operations and P8-06 copy cleanup; current synchronized app snapshots; Owner-provided media/basic workbooks and mapping CSV.
+
+Risks: approved rows may include protected records, changed SKUs, duplicate identities or failed downloads. Such records are reported without forcing a match; candidate choices require a fresh guarded preview before a later apply.
+
+Acceptance: approved rows only; missing/nonunique/hidden/protected/conflicting rows unchanged; draft writes transactional and replay no-op; safe cover-first downloads, existing media retained; all 56 review rows/candidates visible and selectable; anonymous review requests remain 401; actual counts verified; desktop/mobile review and meaningful regression tests recorded. Production and publication remain separate.
+
 ## P7 prerequisite — Qammaris UI quality gate
 
 Sebelum item UI pada P5 atau P7 masuk `IN_PROGRESS`:
