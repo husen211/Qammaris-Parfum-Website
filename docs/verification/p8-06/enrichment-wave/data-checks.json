@@ -1,0 +1,67 @@
+{
+  "catalog": {
+    "approved_published": 49,
+    "batch_id": 8,
+    "launch_products": 176,
+    "published_including_fixture": 177,
+    "drafts": 269,
+    "no_photo_drafts": 95,
+    "new_offers": 8,
+    "existing_318_offers_retained": true,
+    "other_397_product_records_retained": true,
+    "all_1017_images_retained": true,
+    "all_796_identities_retained": true,
+    "all_452_sources_and_checkpoint_retained": true,
+    "categories_unchanged": true,
+    "replay_no_op": true,
+    "remaining_121_enrichment_review_rows_unchanged": true
+  },
+  "health": {
+    "at": "2026-10-06T05:26:57.459944Z",
+    "protected_unchanged": true,
+    "old_media_checksums_retained": 519,
+    "all_previous_media_retained": 861,
+    "paired_images_integrity_verified": 498,
+    "feed_without_key": 401,
+    "feed_with_key": 200,
+    "feed_meta": {
+      "next_seq": 456,
+      "has_more": false,
+      "generated_at": "2026-10-06T05:26:57.417Z"
+    },
+    "checkpoint": 456,
+    "sync_error_present": false,
+    "cron": {
+      "p8-03-scheduler-last-run": {
+        "timestamp": "2026-10-06T05:26:02Z",
+        "file_age_seconds": 55
+      },
+      "p8-03-worker-watchdog-last-run": {
+        "timestamp": "2026-10-06T05:26:01Z",
+        "file_age_seconds": 56
+      }
+    },
+    "workers": {
+      "stock": 1,
+      "images": 0,
+      "schedule_work": 0,
+      "review_covers": 0
+    },
+    "image_jobs": 0,
+    "stock_jobs": 0,
+    "users": 0,
+    "published": 177,
+    "drafts": 269,
+    "publication_ready": 0,
+    "anonymous_review": {
+      "/owner-review/p8-06-launch-ready/": 401,
+      "/owner-review/p8-06-launch-ready/index.html": 401,
+      "/owner-review/p8-06-launch-ready/review.css": 401,
+      "/owner-review/p8-06-launch-ready/review.js": 401,
+      "/owner-review/p8-06-launch-ready/audience-corrections.csv": 401,
+      "/owner-review/p8-06-launch-ready/size-concentration-corrections.csv": 401,
+      "/owner-review/p8-06-launch-ready/publication-candidates.csv": 401
+    },
+    "batch5_applied": 46
+  }
+}

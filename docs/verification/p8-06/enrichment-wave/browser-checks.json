@@ -1,0 +1,33 @@
+[
+  {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 844,
+    "overflow": false,
+    "surface": "catalog-mobile",
+    "width": 390
+  },
+  {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 900,
+    "overflow": false,
+    "surface": "catalog-desktop",
+    "width": 1440
+  },
+  {
+    "brokenLoadedImages": 0,
+    "height": 900,
+    "overflow": false,
+    "price": 769000,
+    "size_ml": 150,
+    "surface": "new-offer-desktop",
+    "width": 1440
+  },
+  {
+    "surface": "new-offer-search",
+    "search": "Liquid Brun",
+    "results": 1,
+    "console_errors_observed": 0
+  }
+]
