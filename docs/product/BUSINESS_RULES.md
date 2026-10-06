@@ -100,7 +100,7 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 
 ## Media
 
-Owner update 2026-10-06 (P8-07): the app team's supplied Shopee→Majoo SKU CSV is the approved matching evidence. `sku`/`kuat` may pair only when the exact current feed SKU identifies one UUID and one visible website draft, with no provider conflict. `perlu_cek`/`ambigu` require explicit Owner selection; unmatched/missing/nonunique SKUs are not forced. This replaces the earlier name-matcher restriction for this supplied dataset. Existing descriptions/media and published records remain protected; no automatic publication. The previous 266-photo-gap count is a historical baseline, not a fixed manual-upload cohort.
+Owner update 2026-10-06 (P8-07): the app team's supplied Shopee→Majoo SKU CSV is the approved matching evidence. `sku`/`kuat` may pair only when the exact current feed SKU identifies one UUID and one visible website draft, with no provider conflict. `perlu_cek`/`ambigu` require explicit Owner selection; unmatched/missing/nonunique SKUs are not forced. This replaces the earlier name-matcher restriction for this supplied dataset. Existing descriptions/media and published records remain protected; no automatic publication. The previous 266-photo-gap count is a historical baseline, not a fixed manual-upload cohort. Owner subsequently supplied 53 explicit choices from the 56-row review: only unchanged, nonconflicting selected targets may receive supplemental copy/photos via a fresh audited preview. Three unselected rows remain held; choosing a conflicting candidate does not authorize rebinding.
 
 1. Database menyimpan object key/path dan metadata, bukan binary image.
 2. Source code repository tidak menyimpan upload produk production.
