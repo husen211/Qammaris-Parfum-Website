@@ -1,6 +1,6 @@
 # P1-04 preflight evidence — 2026-10-06
 
-Status: **IN_PROGRESS**, awaiting minimal production hosting scope and reviewed fresh-target transfer/activation gates; Owner later waived legacy matching and backup. [Runbook](../../runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md).
+Status: **IN_PROGRESS**, minimal hosting read complete; awaiting guarded fresh-target transfer/setup/activation gates; Owner later waived legacy matching and backup. [Runbook](../../runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md).
 
 ## Actual checks
 
@@ -34,3 +34,14 @@ Documentation: active backlog status and production preflight runbook. Business 
 
 
 Latest Owner override: legacy production data is dispensable; no legacy backup or merge. Earlier preservation/mapping/restore requirements in this checkpoint are superseded for the launch. Current plan uses350 public+95drafts in a separate fresh target, retains old files/database as-is for reversible routing, and still requires exact hosting/target/admin/runtime/cutover scope. No production mutation followed this approval; evidence files retain the facts captured before the revised plan.
+
+
+## Production hosting and local release packet continuation
+
+Owner authorizes the pending minimal production hosting read-only inspection with “lanjutt gas”. At13:37–13:38 Asia/Bangkok, SSH verifies production public root `public_html`, existing sibling `laravel_app`, and public storage link to `../laravel_app/storage/app/public`. CLI PHP8.2.33, required extensions, Composer PHP^8.2/Laravel^12 and locked Laravel12.39.0. Installed/web runtime and MySQL version Not confirmed; application was not bootstrapped and legacy database not queried. Actual app/database env fields report terisi; integration key/secret report tidak, values never printed/saved. Shell functions unavailable; filtered OS crontab returned zero explicit domain-path entries but hPanel task definitions/worker presence remain Not confirmed. No production writes or permission changes.
+
+Frozen private packet in `storage/app/private/p1-04-preflight/20261006/release-85ef088/`:241 curated Git source/static files; complete staging build manifest+8assets;1016photos; fresh445-product preview excluding fixture; proposed public entry-point adapter and checksums. Source text verified accounting for line endings; complete build and every photo checked against server SHA256/size. Archives checked for safe paths and no symlink/env/vendor/private-review/session artifacts. Complete build capture resolves the earlier local CSS filename mismatch without rebuilding or changing CSS. Packet components total79,572,205bytes; copied from staging only, not a legacy backup.
+
+Fresh13:40:46 catalog:350public+95draft,390offers,795identities (445qammaris_app),36referencedbrands/5categories. Zero published readiness blockers, relation orphans, duplicate UUIDs/slugs/offers; all95drafts lack photos/descriptions. All445IDs correspond to approved cohort and media path set equals verified1016photos. Only two view_count/updated_at pairs differ from preceding preview; business data unchanged. Source IDs require explicit target remapping; no account, sync state/checkpoint, queue/session or secret config in transfer packet.
+
+Evidence: [hosting baseline](production-hosting-baseline.json), [packet manifest](release-packet-manifest.json), current runbook. Source candidate remains85ef088 with previously inspected passing CI; no new broad suite/build/package installation. No new UI change/browser recheck needed for this read-only continuation. Existing390x844/1440x900 proof remains attached. Production target/new database/admin/env, guarded transfer writer, cron/worker and public cutover are still not prepared/authorized/executed. The next work stays inside P1-04: concrete new-target preparation scope, then guarded transfer and activation review.

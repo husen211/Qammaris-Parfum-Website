@@ -44,3 +44,7 @@ Sesuai instruksi owner, ditetapkan dua belas poin keputusan berikut:
 ## Owner override for the 2026-10-06 launch
 
 Owner explicitly waived preservation/migration and backup of legacy production data. For this approved launching catalog, the legacy backup/preservation requirements above no longer gate release. Use a separate fresh target for 350 public +95 drafts; retaining the old directory/database provides a routing fallback without making a backup. Permanent cleanup is not required or performed. Old IDs/URLs/accounts/content are not promised to transfer. The production inspection boundary and need for concrete public deployment/environment/account authorization remain; no production mutation is approved by this documentation update. See `docs/runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md` and the latest business rules.
+
+### Narrow production hosting inspection authorized and completed
+
+Owner's subsequent “lanjutt gas” authorizes the pending read-only hosting inspection on2026-10-06. The deferment above is lifted only for minimal runtime/layout/config-status/cron metadata; legacy database contents remain unread. Production files/database/env/accounts/permissions/public routing are unchanged. Confirmed public_html -> sibling laravel_app, CLI PHP8.2.33, lockLaravel12.39.0 and existing public storage symlink. Target preparation and public cutover require concrete separate scope; see P1-04 evidence/runbook.

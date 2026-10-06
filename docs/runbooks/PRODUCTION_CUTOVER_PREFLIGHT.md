@@ -2,7 +2,7 @@
 
 **2026-10-06 — IN_PROGRESS; production activation is not authorized.**
 
-Owner requested the next phase after publishing the photographed staging catalog. Latest Owner direction explicitly waives preservation/migration and backup of legacy production data: “data di production itu gpenting dihpus juga gpapa, gprlu backup”. Launch uses the approved new catalog. Earlier requirements for a legacy database merge and final legacy backup are superseded for this release. This does not require deleting the old system: leave its database/files in place and activate a separately prepared target. No deletion, new database, credential change or public cutover has been executed. Earlier SSH permission covers staging only; production hosting inspection still awaits explicit scope under [ADR-001](../architecture/decisions/ADR-001-legacy-production-and-clean-redeployment.md).
+Owner requested the next phase after publishing the photographed staging catalog. Latest Owner direction explicitly waives preservation/migration and backup of legacy production data: “data di production itu gpenting dihpus juga gpapa, gprlu backup”. Launch uses the approved new catalog. Earlier requirements for a legacy database merge and final legacy backup are superseded for this release. This does not require deleting the old system: leave its database/files in place and activate a separately prepared target. No deletion, new database, credential change or public cutover has been executed. Owner's subsequent “lanjutt gas” authorizes the pending minimal production hosting read-only inspection; that inspection is now completed, without reading the old database or changing the server. This lifts the inspection deferment in [ADR-001](../architecture/decisions/ADR-001-legacy-production-and-clean-redeployment.md) for this narrow scope only.
 
 ## Verified release baseline
 
@@ -40,7 +40,7 @@ No media was copied, moved or deleted. Refresh catalog fingerprints and checksum
 
 ## Production facts and the superseded merge plan
 
-The public `/products` page displays **208 products**. This is a public pagination count, not a confirmed database count. Production PHP/MySQL versions, migration history, schema, product/variant IDs, SKU coverage, media inventory, accounts/roles, blog/store content and deployment directory are **Not confirmed**. Read-only SSH inspection awaits explicit Owner scope; do not infer them from staging or the old local snapshot.
+The public `/products` page displays **208 products**. This is a public pagination count, not a confirmed database count. Production CLI PHP and deployment paths are now confirmed below. Production web-SAPI/MySQL versions, migration history, database schema, product/variant IDs, SKU coverage, media inventory, accounts/roles and blog/store content are **Not confirmed** and do not require investigation for the Owner-approved fresh launch.
 
 Existing public URLs already demonstrate the need for a target-specific preview:
 
@@ -52,7 +52,27 @@ Existing public URLs already demonstrate the need for a target-specific preview:
 
 The comparison above remains historical evidence; it no longer blocks launching and does not authorize automatic pairing. Owner accepts launching the fresh catalog instead of preserving legacy product IDs/URLs/data. No legacy database export, migration inspection, variant consolidation, account/password-hash copy or full old-media inventory is needed for this plan.
 
-Production hosting facts still required: correct website directory/document root, PHP/extensions, available database/storage layout, deployment entry point, cron/worker mechanism and HTTPS/environment status. Read only the minimum operational metadata; do not dump old database contents or secrets. Report secrets only as **terisi / tidak**. Permission for production inspection remains pending; existing access is staging-only.
+## Hosting inspection and frozen packet — 2026-10-06, 13:37–13:40 Asia/Bangkok
+
+- Production document root: `/home/u429527638/domains/qammarisparfum.id/public_html`. Its `index.php` loads `../laravel_app/vendor/autoload.php` and `../laravel_app/bootstrap/app.php`.
+- Existing application: `/home/u429527638/domains/qammarisparfum.id/laravel_app`; public `storage` symlink points to `../laravel_app/storage/app/public`.
+- CLI PHP 8.2.33 with required extensions. Composer requirement PHP^8.2/Laravel^12; production lock has Laravel v12.39.0. No Composer installation, bootstrap or database read was performed there; installed runtime/framework version remains Not confirmed.
+- In `laravel_app/.env`, existing app/database configuration reports terisi; Qammaris app API key and webhook secret report tidak. No `.env` is present in the public root; its earlier absence must not be mistaken for absent application configuration. Secret values never emitted or saved.
+- PHP shell command functions are unavailable. A separately filtered OS crontab read finds zero entries with explicit website paths; this does **not** prove hPanel has no jobs. hPanel cron definitions and actual production worker processes remain Not confirmed. No cron/process changed.
+
+Private packet: `storage/app/private/p1-04-preflight/20261006/release-85ef088/`. Public checksum/size evidence: [release manifest](../verification/p1-04/release-packet-manifest.json); [hosting metadata](../verification/p1-04/production-hosting-baseline.json).
+
+| Part | Verified content |
+| --- | --- |
+| `application-source.tar` | 241 curated tracked source/static files from candidate85ef088; source verified after CRLF/LF normalization; no env/vendor/runtime/private reviews |
+| `frontend-build.tar.gz` | Complete tested staging build manifest + eight declared assets; every SHA-256 and size matches server metadata, closing the local CSS provenance gap |
+| `launch-photos.tar.gz` | All1,016 approved launch photos, exact byte/checksum match; no fixture media |
+| `launch-catalog-preview.json` | Fresh13:40:46 local-time capture:350 public+95draft,390offers,795external identities including445 qammaris_app UUIDs,36 referenced brands/5categories; zero readiness/orphan/duplicate identity/slug/offer failures |
+| `production-public-index.php.template` | Private deployment adapter pointing from a prepared public root to proposed `../releases/qammaris-85ef088`; original application code and both servers unchanged |
+
+All95drafts still lack photos/descriptions. Compared with the preceding preview, only two view counts and their updated timestamps changed; no business data difference. Source IDs in the packet are references for target remapping, never direct production primary-key assignments. No sync-state/checkpoint, accounts, sessions, queues, failed jobs or protected env are included. The packet is a locally verified release input; no production-safe catalog writer has been deployed or run.
+
+Proposed new application path: `/home/u429527638/domains/qammarisparfum.id/releases/qammaris-85ef088`. Proposed prepared public root: `/home/u429527638/domains/qammarisparfum.id/public_html_next`. Neither exists as a prepared target yet. The deployment adapter is a template, not approval to create/activate these paths. Preserve existing `laravel_app`, database and public root until separately approved activation. The exact rename/routing method must be checked during approved target preparation; no permission changes or DNS changes are implied.
 
 ## Updated target strategy — new catalog, no legacy backup
 
@@ -88,4 +108,4 @@ Owner explicitly waived legacy backup; do not make one under this phase. Leave t
 
 ## Definition of Done
 
-Updated P1-04 gates: minimal hosting baseline, frozen source/assets/catalog transfer manifest, working Owner admin access plan, approved separate target/runtime setup, reversible activation plan and concrete Owner cutover authorization. Legacy data matching and backup/restore are explicitly waived for this release. At this checkpoint staging/preflight evidence and the target plan are prepared; production target, account setup, transfer and activation have not happened. Continue this same item; do not start another phase automatically.
+Updated P1-04 gates: minimal hosting baseline and frozen source/assets/catalog input manifest are now complete. Remaining: guarded target transfer implementation/preview, concrete Owner admin/database/env/runtime setup scope, verified target/reversible activation, and Owner cutover authorization. Legacy data matching and backup/restore are explicitly waived for this release. Production target, account setup, transfer and activation have not happened. Continue this same item; do not start another phase automatically.
