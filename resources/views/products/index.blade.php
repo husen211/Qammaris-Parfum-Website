@@ -57,6 +57,7 @@
     </div>
 
     <section data-catalog-discovery
+        data-catalog-url="{{ route('products.index', $catalogState->query()) }}"
         data-search="{{ $catalogState->search }}"
         data-brand-ids="{{ implode(',', $catalogState->brandIds) }}"
         data-category="{{ $catalogState->categoryId }}"
@@ -137,6 +138,18 @@
                         </div>
 
                         <fieldset>
+                            <legend class="font-bold text-xs uppercase tracking-widest mb-3 text-brand-black">Brand</legend>
+                            <div data-catalog-brand-list class="space-y-1 max-h-80 overflow-y-auto custom-scrollbar pr-2">
+                                @foreach ($brands as $brand)
+                                    <label class="min-h-11 flex items-center cursor-pointer gap-3 group">
+                                        <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} data-catalog-autosubmit class="checkbox checkbox-sm rounded-none border-gray-300 checked:bg-brand-black checked:border-brand-black">
+                                        <span class="text-sm text-gray-500 group-hover:text-brand-black transition-colors">{{ $brand->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
                             <legend class="font-bold text-xs uppercase tracking-widest mb-3 text-brand-black">Kategori</legend>
                             <div class="space-y-1">
                                 <label class="min-h-11 flex items-center cursor-pointer group">
@@ -153,9 +166,9 @@
                         </fieldset>
 
                         <div>
-                            <label for="desktop-catalog-gender" class="font-bold text-xs uppercase tracking-widest mb-3 text-brand-black block">Audience</label>
+                            <label for="desktop-catalog-gender" class="font-bold text-xs uppercase tracking-widest mb-3 text-brand-black block">Peruntukan</label>
                             <select id="desktop-catalog-gender" name="gender" data-catalog-autosubmit class="select select-bordered w-full min-h-11 rounded-none bg-white border-gray-200 focus:outline-none focus:border-brand-black">
-                                <option value="">Semua audience</option>
+                                <option value="">Semua peruntukan</option>
                                 @foreach (['Unisex', 'Pria', 'Wanita'] as $gender)
                                     <option value="{{ $gender }}" {{ $catalogState->gender === $gender ? 'selected' : '' }}>{{ $gender }}</option>
                                 @endforeach
@@ -167,7 +180,9 @@
                             <select id="desktop-catalog-availability" name="availability" data-catalog-autosubmit class="select select-bordered w-full min-h-11 rounded-none bg-white border-gray-200 focus:outline-none focus:border-brand-black">
                                 <option value="">Semua status</option>
                                 <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia</option>
-                                <option value="unknown" {{ $catalogState->availability === 'unknown' ? 'selected' : '' }}>Tanyakan ketersediaan</option>
+                                @if ($catalogState->availability === 'unknown')
+                                    <option value="unknown" selected hidden>Belum ada info stok</option>
+                                @endif
                                 <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Habis</option>
                             </select>
                         </div>
@@ -183,17 +198,7 @@
                             <button type="submit" class="mt-2 min-h-11 w-full border border-brand-black px-4 text-xs font-semibold uppercase tracking-wider hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black transition-colors">Terapkan harga</button>
                         </fieldset>
 
-                        <fieldset>
-                            <legend class="font-bold text-xs uppercase tracking-widest mb-3 text-brand-black">Brand</legend>
-                            <div class="space-y-1 max-h-80 overflow-y-auto custom-scrollbar pr-2">
-                                @foreach ($brands as $brand)
-                                    <label class="min-h-11 flex items-center cursor-pointer gap-3 group">
-                                        <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} data-catalog-autosubmit class="checkbox checkbox-sm rounded-none border-gray-300 checked:bg-brand-black checked:border-brand-black">
-                                        <span class="text-sm text-gray-500 group-hover:text-brand-black transition-colors">{{ $brand->name }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </fieldset>
+
 
                         @if ($activeFilterCount > 0)
                             <a href="{{ route('products.index') }}" class="min-h-11 w-full inline-flex items-center justify-center border border-gray-300 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Hapus semua filter</a>
@@ -277,6 +282,21 @@
                     <input id="mobile-catalog-search" type="search" name="search" value="{{ $catalogState->search }}" maxlength="100" placeholder="Nama produk atau brand" class="input input-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
                 </div>
 
+                <details class="group">
+                    <summary class="min-h-11 flex cursor-pointer list-none items-center justify-between text-xs font-bold uppercase tracking-widest text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
+                        <span>Brand{{ count($selectedBrands) > 0 ? ' ('.count($selectedBrands).')' : '' }}</span>
+                        <span aria-hidden="true" class="text-base group-open:rotate-180">⌄</span>
+                    </summary>
+                    <div class="grid grid-cols-2 gap-3">
+                        @foreach ($brands as $brand)
+                            <label class="min-h-11 flex items-center gap-3 px-3 py-2 border border-gray-200 cursor-pointer hover:border-brand-black focus-within:outline focus-within:outline-2 focus-within:outline-brand-black {{ in_array($brand->id, $selectedBrands, true) ? 'bg-brand-black text-white border-brand-black' : 'bg-white' }}">
+                                <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} class="checkbox checkbox-sm shrink-0 rounded-none {{ in_array($brand->id, $selectedBrands, true) ? 'border-white' : 'border-gray-300' }}">
+                                <span class="min-w-0 break-words text-xs uppercase font-medium leading-tight">{{ $brand->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </details>
+
                 <div>
                     <label for="mobile-catalog-category" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Kategori</label>
                     <select id="mobile-catalog-category" name="category" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
@@ -289,9 +309,9 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="mobile-catalog-gender" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Audience</label>
+                        <label for="mobile-catalog-gender" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Peruntukan</label>
                         <select id="mobile-catalog-gender" name="gender" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
-                            <option value="">Semua audience</option>
+                            <option value="">Semua peruntukan</option>
                             @foreach (['Unisex', 'Pria', 'Wanita'] as $gender)
                                 <option value="{{ $gender }}" {{ $catalogState->gender === $gender ? 'selected' : '' }}>{{ $gender }}</option>
                             @endforeach
@@ -302,7 +322,9 @@
                         <select id="mobile-catalog-availability" name="availability" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
                             <option value="">Semua status</option>
                             <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia</option>
-                            <option value="unknown" {{ $catalogState->availability === 'unknown' ? 'selected' : '' }}>Tanyakan ketersediaan</option>
+                            @if ($catalogState->availability === 'unknown')
+                                <option value="unknown" selected hidden>Belum ada info stok</option>
+                            @endif
                             <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Habis</option>
                         </select>
                     </div>
@@ -318,17 +340,7 @@
                     </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Brand</legend>
-                    <div class="grid grid-cols-2 gap-3">
-                        @foreach ($brands as $brand)
-                            <label class="min-h-11 flex items-center gap-3 px-3 py-2 border border-gray-200 cursor-pointer hover:border-brand-black focus-within:outline focus-within:outline-2 focus-within:outline-brand-black {{ in_array($brand->id, $selectedBrands, true) ? 'bg-brand-black text-white border-brand-black' : 'bg-white' }}">
-                                <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} class="checkbox checkbox-sm shrink-0 rounded-none {{ in_array($brand->id, $selectedBrands, true) ? 'border-white' : 'border-gray-300' }}">
-                                <span class="min-w-0 break-words text-xs uppercase font-medium leading-tight">{{ $brand->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </fieldset>
+
 
                 <div class="sticky bottom-0 -mx-5 -mb-5 mt-8 grid grid-cols-2 gap-3 border-t border-gray-100 bg-white p-5">
                     <a href="{{ route('products.index') }}" class="min-h-11 inline-flex items-center justify-center border border-gray-300 px-3 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">Hapus semua</a>

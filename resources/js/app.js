@@ -1,6 +1,8 @@
 import './bootstrap';
 import './ui/cart-drawer';
 import './ui/catalog-discovery';
+import './ui/catalog-navigation';
+import './ui/product-gallery';
 import './ui/catalog-images';
 import './ui/navbar';
 import './ui/reveal';

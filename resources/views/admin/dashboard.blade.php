@@ -76,10 +76,10 @@
         <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div class="space-y-3">
-                <a href="{{ route('admin.products.create') }}" class="block w-full text-center py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-all text-sm font-medium text-gray-600 hover:text-black">
+                <a href="{{ route('admin.products.create') }}" class="block w-full text-center py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600 hover:text-black">
                     + Add New Product
                 </a>
-                <a href="{{ route('home') }}" target="_blank" class="block w-full text-center py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all text-sm font-medium text-gray-600">
+                <a href="{{ route('home') }}" target="_blank" class="block w-full text-center py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600">
                     View Live Website
                 </a>
             </div>

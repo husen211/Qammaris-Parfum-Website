@@ -81,6 +81,7 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 10. Sort “Populer” memakai sinyal `view_count` yang dapat dijelaskan. Label “Terlaris” hanya berasal dari merchandising flag `is_best_seller`, bukan dari view count.
 11. Harga filter dan sort berasal dari satu offer aktif. `base_price` tidak boleh diam-diam menjadi fallback authority untuk row published yang belum direkonsiliasi.
 12. Detail product tidak boleh menerima arbitrary return URL. Context kembali ke katalog hanya dibangun dari query katalog allowlisted dan tervalidasi.
+13. Keputusan Owner 2026-10-06 (P7-08): Brand berada pertama pada filter publik, gender memakai label Peruntukan, pilihan baru availability hanya Semua/Tersedia/Habis. Domain unknown dan URL filter lama tetap kompatibel. Tombol detail memakai Kembali dan mempertahankan posisi katalog lokal untuk context query yang sama; kontrol Jumlah tetap ada tanpa penjelasan panjang di sebelahnya.
 
 ## Katalog dan inquiry publik
 
@@ -104,6 +105,7 @@ Owner update 2026-10-06 (P8-07): the app team's supplied Shopee→Majoo SKU CSV 
 
 1. Database menyimpan object key/path dan metadata, bukan binary image.
 2. Source code repository tidak menyimpan upload produk production.
+   Keputusan Owner 2026-10-06: upload manual tetap melalui product media storage pada disk public yang persisten; migrasi Cloudflare R2 tidak dibutuhkan untuk tahap admin berikutnya.
 3. Setiap produk published mempunyai tepat satu primary image.
 4. Penggantian gambar harus upload dan verifikasi gambar baru sebelum menghapus gambar lama.
 5. Menghapus record harus tidak meninggalkan file yatim; kegagalan storage tidak boleh dilaporkan sebagai sukses.
@@ -241,3 +243,20 @@ Owner supplied the final explicit ID/gender list and authorized staging publicat
 ## Clean production launch — Owner decision 2026-10-06
 
 Owner explicitly states legacy production data is dispensable and waives its backup. This supersedes earlier legacy preservation/merge and final legacy-backup requirements for this launch. Use the approved new catalog: 350 real public products +95 no-photo/no-description drafts; exclude the staging test fixture. Preserve staging source data/media; no wholesale staging DB clone or synthetic admin transfer. Legacy matching/URL mapping is no longer a launch blocker; old links/content/accounts are not promised to carry over. Existing legacy directory/database can remain untouched for reversible routing; deletion is not needed and has not been performed. Exact target/database/account/env/runtime setup and public cutover still need concrete authorization. No production activation or webhook destination switch has occurred.
+
+
+## Public UI interaction contract — Owner decision 2026-10-06
+
+Mouse-only hover must use `(hover: hover) and (pointer: fine)`, without resizing or moving clickable elements. Tappable cards, search results and menus display directly without staggered reveal. Touch uses active feedback; navigation occurs on click, never the start of a scroll gesture. Press/loading feedback must be immediate. A persistent navbar in any future client router must be retained between routes; current full-document Blade navigation has no such router. Actual iPhone Safari or genuine touch-emulation single-tap and scroll tests are a release gate. Implementation/review rules: `skills/qammaris-ui-review/SKILL.md`; current P7-08 evidence records the pending touch gate.
+
+## Recurring app catalog workflow — P8-08 Owner decision 2026-10-06
+
+Owner explicitly chooses: **Harga produk lama ikut otomatis**. On a newer accepted source revision, visible connected products follow the app's valid positive integer selling price within the existing website price range. This supersedes price-proposal-only rules in ADR-021/022 for recurring connected products. Invalid/null/zero/out-of-range prices retain the last valid website price and require review; hidden sources do not update the selling price. Admin/import offer writes cannot override the connected source price. A crossed-out comparison price is cleared if it would no longer exceed the synchronized selling price.
+
+Visible new UUIDs become unpublished website drafts automatically through the existing feed worker. Source name/brand and explicitly parsed size/concentration initialize the draft; description, photo and audience remain empty until reviewed. Department is not a website category. Ambiguous existing name/SKU candidates remain unlinked for review rather than creating duplicates or rebinding identities. Source-app products remain explicitly marked for Owner review. Publication is always a separate readiness-checked operation.
+
+Cached snapshots predating this workflow can be prepared via an actor-bound immutable admin preview and explicit draft apply. No automatic bulk replay of historical snapshots or publication. Manual images use the configured Laravel product disk, currently persistent website public storage; no cloud-provider migration. Existing canonical CSV is supplemental, not a raw Shopee XLSX uploader. See ADR-025 and P8-08 verification for rollout limits; local implementation does not establish production activation.
+
+## Approved production release exception — 2026-10-06
+
+After receiving the explicit unresolved touch/Safari limitation, Owner authorizes releasing the catalog-navigation and admin-app-inbox patches and selects **Lewati uji sentuh, rilis sekarang**. This waives the touch-test release gate for this concrete PR4/PR5 release only. Mouse verification remains the actual evidence; do not describe Safari or touch tests as passed. Retain the general touch-safe implementation rules and future release verification requirement. No automatic publication, historical catalog/price replay, credential change or raw Shopee import is authorized by this code release.

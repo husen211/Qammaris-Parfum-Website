@@ -10,7 +10,7 @@
             </div>
             <form method="dialog">
                 <button type="submit" aria-label="Tutup daftar inquiry"
-                    class="flex h-11 w-11 items-center justify-center hover:rotate-90 motion-reduce:transform-none transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white">
+                    class="flex h-11 w-11 items-center justify-center hover:bg-gray-50 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-white">
                     <svg class="w-5 h-5 text-gray-400 hover:text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </form>

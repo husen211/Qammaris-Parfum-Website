@@ -1,0 +1,34 @@
+[
+  {
+    "url": "https://qammarisparfum.id/up",
+    "status": 200
+  },
+  {
+    "url": "https://qammarisparfum.id/products",
+    "status": 200
+  },
+  {
+    "url": "https://qammarisparfum.id/products/hibiscus-magic-edp-80-ml",
+    "status": 200
+  },
+  {
+    "url": "https://qammarisparfum.id/build/assets/app-nfQNixF3.css",
+    "status": 200
+  },
+  {
+    "url": "https://qammarisparfum.id/build/assets/app-Du6o-KoY.js",
+    "status": 200
+  },
+  {
+    "url": "https://qammarisparfum.id/storage/products/M0aW1lj6O6nfFzMN4qp8CQpkUjJttWAXKlinn2TU.jpg",
+    "status": 200
+  },
+  {
+    "url": "https://qammarisparfum.id/.env",
+    "status": 403
+  },
+  {
+    "url": "https://qammarisparfum.id/vendor/autoload.php",
+    "status": 404
+  }
+]

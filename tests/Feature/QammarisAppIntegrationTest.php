@@ -160,26 +160,28 @@ class QammarisAppIntegrationTest extends TestCase
         $this->assertSame(0, $this->checkpoint());
     }
 
-    public function test_feed_paginates_using_checkpoint_and_does_not_overwrite_catalog_fields(): void
+    public function test_feed_paginates_and_updates_price_while_preserving_identity_copy_offer_and_media(): void
     {
         $id = (string) Str::uuid();
         $product = $this->product();
         app(MapExternalProductIdentity::class)->handle($product, 'qammaris_app', $id);
-        $before = $product->only(['id', 'slug', 'name', 'base_price', 'publication_status', 'is_active']);
+        $before = $product->only(['id', 'slug', 'name', 'publication_status', 'is_active']);
         $offer = ProductVariant::create([
             'product_id' => $product->id, 'volume' => 100, 'price' => 250000, 'stock' => 4, 'sku' => 'WEBSITE-SKU', 'is_active' => true,
         ]);
         $image = ProductImage::create([
             'product_id' => $product->id, 'image_path' => 'synthetic/preserved.jpg', 'is_primary' => true, 'sort_order' => 0,
         ]);
-        $beforeOffer = $offer->fresh()->getAttributes();
+        $beforeOffer = $offer->fresh()->only(['id', 'product_id', 'volume', 'stock', 'sku', 'is_active']);
         $beforeImage = $image->fresh()->getAttributes();
         $first = $this->row($id, 10, ['stock_status_at' => '2020-01-01T00:00:00Z']);
         Http::fakeSequence()->push($this->page([$first], 10, true))->push($this->page([], 10));
         $this->assertFalse(app(SyncQammarisAppFeed::class)->handle());
         $product->refresh();
         $this->assertSame($before, $product->only(array_keys($before)));
-        $this->assertSame($beforeOffer, $offer->fresh()->getAttributes());
+        $this->assertSame($beforeOffer, $offer->fresh()->only(array_keys($beforeOffer)));
+        $this->assertSame('598000.00', $offer->fresh()->price);
+        $this->assertSame('598000.00', $product->base_price);
         $this->assertSame($beforeImage, $image->fresh()->getAttributes());
         $this->assertSame('available', $product->effective_availability);
         $this->assertSame('qammaris_app', $product->availability_source);
@@ -218,18 +220,19 @@ class QammarisAppIntegrationTest extends TestCase
         $this->assertDatabaseCount('qammaris_app_changes', 3);
     }
 
-    public function test_unmapped_products_are_cached_and_explicit_mapping_replays_snapshot_after_checkpoint(): void
+    public function test_existing_candidate_is_not_duplicated_and_explicit_mapping_replays_snapshot_after_checkpoint(): void
     {
         $id = (string) Str::uuid();
         $row = $this->row($id, 25, ['costPrice' => 10, 'employee' => 'must not retain']);
+        $product = $this->product();
+        $product->update(['name' => $row['name']]);
         Http::fakeSequence()->push($this->page([$row], 25));
         app(SyncQammarisAppFeed::class)->handle();
-        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('products', 1);
         $this->assertDatabaseCount('qammaris_app_products', 1);
         $snapshot = DB::table('qammaris_app_products')->value('snapshot');
         $this->assertStringNotContainsString('costPrice', $snapshot);
         $this->assertStringNotContainsString('employee', $snapshot);
-        $product = $this->product();
         $this->artisan('qammaris-app:map', ['product_id' => $product->id, 'external_id' => $id])->assertSuccessful();
         $this->assertDatabaseCount('product_external_identities', 0);
         $this->artisan('qammaris-app:map', ['product_id' => $product->id, 'external_id' => $id, '--confirm' => true])->assertSuccessful();

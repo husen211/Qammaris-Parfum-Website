@@ -1,5 +1,23 @@
 const navCard = document.getElementById('navbar-card');
 
+document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link || event.defaultPrevented || event.button !== 0
+        || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey
+        || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+    const destination = new URL(link.href);
+    if (destination.origin !== window.location.origin
+        || (destination.pathname === window.location.pathname && destination.search === window.location.search)) return;
+
+    link.setAttribute('data-navigation-pending', '');
+});
+
+window.addEventListener('pageshow', () => {
+    document.querySelectorAll('[data-navigation-pending]').forEach((link) => {
+        link.removeAttribute('data-navigation-pending');
+    });
+});
+
 if (navCard) {
     const toggleNavbar = () => {
         const scrolled = window.scrollY > 12;

@@ -33,7 +33,7 @@
                     </div>
 
                     <div class="mt-6 h-1 bg-brand-black/10">
-                        <div id="quiz-progress" class="h-full bg-brand-gold transition-all duration-300" style="width: 0%;"></div>
+                        <div id="quiz-progress" class="h-full bg-brand-gold transition-colors duration-300" style="width: 0%;"></div>
                     </div>
 
                     <div id="quiz-steps" class="relative mt-10 min-h-[340px]">
@@ -42,7 +42,7 @@
                                 $selected = old($key, $answers[$key] ?? '');
                                 $stepIndex = $loop->index;
                             @endphp
-                            <div class="quiz-step absolute inset-0 opacity-0 translate-x-6 pointer-events-none transition-all duration-300"
+                            <div class="quiz-step absolute inset-0 opacity-0 translate-x-6 pointer-events-none transition-colors duration-300"
                                 data-quiz-step="{{ $stepIndex }}">
                                 <div class="flex items-start justify-between gap-4">
                                     <div>
@@ -61,7 +61,7 @@
                                     <label for="{{ $inputId }}" class="group cursor-pointer">
                                         <input id="{{ $inputId }}" type="radio" name="{{ $key }}" value="{{ $value }}"
                                             class="peer sr-only" @checked($selected === $value) />
-                                        <div class="relative flex items-center justify-between border border-brand-black/10 bg-white px-4 py-4 pr-12 text-sm text-brand-black/70 transition-all duration-300 peer-checked:border-brand-gold peer-checked:bg-brand-gold/10 peer-checked:text-brand-black group-hover:border-brand-gold/60 after:absolute after:right-4 after:top-1/2 after:h-4 after:w-4 after:-translate-y-1/2 after:border after:border-brand-black/30 after:bg-white after:transition-all after:content-[''] peer-checked:after:border-brand-gold peer-checked:after:bg-brand-gold">
+                                        <div class="relative flex items-center justify-between border border-brand-black/10 bg-white px-4 py-4 pr-12 text-sm text-brand-black/70 transition-colors duration-300 peer-checked:border-brand-gold peer-checked:bg-brand-gold/10 peer-checked:text-brand-black group-hover:border-brand-gold/60 after:absolute after:right-4 after:top-1/2 after:h-4 after:w-4 after:-translate-y-1/2 after:border after:border-brand-black/30 after:bg-white after:transition-colors after:content-[''] peer-checked:after:border-brand-gold peer-checked:after:bg-brand-gold">
                                             <span>{{ $label }}</span>
                                         </div>
                                     </label>
@@ -79,7 +79,7 @@
 
                     <div class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
                         <button id="quiz-next" type="button" data-next-label="Next" data-submit-label="Lihat Rekomendasi"
-                            class="inline-flex items-center justify-center bg-brand-black px-8 py-3 text-[11px] font-semibold uppercase tracking-widest text-white hover:bg-brand-gold hover:text-brand-black transition-all duration-300 active:scale-95">
+                            class="inline-flex items-center justify-center bg-brand-black px-8 py-3 text-[11px] font-semibold uppercase tracking-widest text-white hover:bg-brand-gold hover:text-brand-black transition-colors duration-300">
                             Next
                         </button>
                     </div>

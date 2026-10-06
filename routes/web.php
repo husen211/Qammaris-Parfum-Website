@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
 use App\Http\Controllers\Admin\AdminProductMaintenanceController;
+use App\Http\Controllers\Admin\AdminQammarisAppProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -56,6 +57,11 @@ Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name(
 Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+
+    Route::get('app-products', [AdminQammarisAppProductController::class, 'index'])->name('app-products.index');
+    Route::post('app-products/preview', [AdminQammarisAppProductController::class, 'preview'])->middleware('throttle:6,1')->name('app-products.preview');
+    Route::post('app-products/sync', [AdminQammarisAppProductController::class, 'sync'])->middleware('throttle:6,1')->name('app-products.sync');
+    Route::post('app-products/{productImportBatch}/apply', [AdminQammarisAppProductController::class, 'apply'])->name('app-products.apply');
 
     // Dashboard Admin Sederhana
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');

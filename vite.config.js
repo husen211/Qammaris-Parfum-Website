@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+import mouseOnlyHover from './tools/frontend/hover-guard.mjs';
 
 export default defineConfig({
     assetsInclude: ['**/*.glb'],
@@ -17,5 +18,6 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        mouseOnlyHover(),
     ],
 });

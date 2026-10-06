@@ -1,0 +1,77 @@
+[
+  {
+    "cards": 24,
+    "clippedNames": 0,
+    "columns": 3,
+    "height": 900,
+    "images": [
+      {
+        "fit": "contain",
+        "framing": "balanced",
+        "height": 307,
+        "loaded": true,
+        "width": 307
+      },
+      {
+        "fit": "contain",
+        "framing": "balanced",
+        "height": 307,
+        "loaded": true,
+        "width": 307
+      }
+    ],
+    "overflow": 0,
+    "url": "https://qammarisparfum.id/products",
+    "width": 1440
+  },
+  {
+    "cards": 24,
+    "clippedNames": 0,
+    "columns": 2,
+    "height": 844,
+    "images": [
+      {
+        "fit": "contain",
+        "framing": "balanced",
+        "height": 166,
+        "loaded": true,
+        "width": 166
+      },
+      {
+        "fit": "contain",
+        "framing": "balanced",
+        "height": 166,
+        "loaded": true,
+        "width": 166
+      }
+    ],
+    "overflow": 0,
+    "url": "https://qammarisparfum.id/products",
+    "width": 390
+  },
+  {
+    "cards": 24,
+    "clippedNames": 0,
+    "columns": 2,
+    "height": 844,
+    "images": [
+      {
+        "fit": "contain",
+        "framing": "balanced",
+        "height": 130,
+        "loaded": true,
+        "width": 130
+      },
+      {
+        "fit": "contain",
+        "framing": "balanced",
+        "height": 130,
+        "loaded": true,
+        "width": 130
+      }
+    ],
+    "overflow": 0,
+    "url": "https://qammarisparfum.id/products",
+    "width": 320
+  }
+]

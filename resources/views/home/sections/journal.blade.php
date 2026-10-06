@@ -13,7 +13,7 @@
                     <article class="group cursor-pointer" data-reveal data-reveal-delay="{{ $loop->index * 80 }}">
                         <div class="overflow-hidden mb-4">
                             <img src="{{ $post->featured_image_url }}" alt="{{ $post->title }}" loading="lazy" decoding="async"
-                                class="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-700">
+                                class="w-full aspect-video object-cover transition-transform duration-700">
                         </div>
                         <div class="text-xs font-bold text-brand-emerald uppercase tracking-widest mb-2">
                             {{ $post->category }}

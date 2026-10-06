@@ -33,7 +33,7 @@
                 width="480" height="640"
                 @if ($prioritizeImage) fetchpriority="high" @else loading="lazy" @endif
                 decoding="async"
-                class="h-full w-full object-cover object-center opacity-95 transition duration-500 ease-out group-hover:scale-[1.025] group-hover:opacity-100 motion-reduce:transform-none {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[35%]' : '' }}">
+                class="h-full w-full object-cover object-center opacity-95 transition-opacity duration-300 group-hover:opacity-100 {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[35%]' : '' }}">
 
             @if ($product->is_best_seller)
                 <span class="absolute left-0 top-0 bg-brand-black px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-white md:text-[10px]">Terlaris</span>

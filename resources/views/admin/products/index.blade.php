@@ -1,26 +1,21 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="mb-8">
-    <div class="flex items-center justify-between">
-        <div>
-            <div class="flex items-center gap-2 mb-1">
-                <a href="{{ route('admin.dashboard') }}" class="text-gray-400 hover:text-black transition-colors flex items-center gap-1 text-sm font-medium">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    Dashboard
-                </a>
-                <span class="text-gray-300">/</span>
-                <span class="text-gray-600 text-sm">Products</span>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Product Catalog</h1>
-        </div>
-        
-        <a href="{{ route('admin.products.create') }}" class="btn-primary flex items-center gap-2 shadow-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-            Add New Product
-        </a>
+<div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900">Produk website</h1>
+        <p class="mt-2 max-w-2xl text-sm text-gray-600">Produk baru dari aplikasi masuk sebagai draft. Lengkapi konten, lalu tayangkan saat siap.</p>
+    </div>
+    <div class="flex flex-col gap-2 sm:flex-row">
+        <a href="{{ route('admin.app-products.index', ['status' => 'draft']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2">Draft dari aplikasi</a>
+        <a href="{{ route('admin.products.create') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2">Tambah manual</a>
     </div>
 </div>
+<nav aria-label="Pekerjaan produk" class="mb-6 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+    <a class="inline-flex min-h-11 items-center underline" href="{{ route('admin.products.index', ['publication' => 'draft']) }}">Semua draft</a>
+    <a class="inline-flex min-h-11 items-center underline" href="{{ route('admin.app-products.index', ['status' => 'price_review']) }}">Periksa harga aplikasi</a>
+    <a class="inline-flex min-h-11 items-center underline" href="{{ route('admin.product-imports.create') }}">Impor CSV pelengkap</a>
+</nav>
 
 <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
     <form action="{{ route('admin.products.index') }}" method="GET" class="space-y-4">
@@ -109,11 +104,11 @@
         <table class="w-full">
             <thead class="hidden md:table-header-group">
                 <tr class="bg-gray-50 border-b border-gray-200">
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Product Info</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category & Brand</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Price Range</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Availability</th>
-                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Produk</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Merek & jenis</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Harga jual</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ketersediaan</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Tindakan</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 bg-white">
@@ -123,7 +118,7 @@
                         <div class="flex items-start md:items-center">
                             <div class="h-14 w-14 flex-shrink-0 rounded-md border border-gray-200 overflow-hidden bg-gray-100">
                                 @if($product->primaryImage)
-                                    <img src="{{ $product->primaryImage->image_url }}" alt="{{ $product->name }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img src="{{ $product->primaryImage->image_url }}" alt="{{ $product->name }}" class="h-full w-full object-cover transition-transform duration-500">
                                 @else
                                     <div class="flex items-center justify-center h-full text-xs text-gray-400">No Img</div>
                                 @endif

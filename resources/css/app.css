@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "./catalog.css";
 
+@custom-variant hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { @slot; }
+    }
+}
+
 @source "../**/*.blade.php";
 @source "../**/*.js";
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
@@ -30,11 +36,12 @@
     
     /* Hover effect yang halus (Zimaya Style) */
     .hover-luxury {
-        transition: all 0.4s ease;
+        transition: box-shadow 0.4s ease;
     }
-    .hover-luxury:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+    @media (hover: hover) and (pointer: fine) {
+        .hover-luxury:hover {
+            box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+        }
     }
 }
 
@@ -48,12 +55,13 @@
         letter-spacing: 0.05em;
         font-size: 0.875rem;
         padding: 1rem 2rem;
-        transition: all 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
     
-    .btn-primary:hover {
-        background-color: var(--color-brand-emerald);
-        transform: translateY(-2px);
+    @media (hover: hover) and (pointer: fine) {
+        .btn-primary:hover {
+            background-color: var(--color-brand-emerald);
+        }
     }
 
     .btn-outline-luxury {
@@ -64,24 +72,28 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
         padding: 1rem 2rem;
-        transition: all 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .btn-outline-luxury:hover {
-        background-color: var(--color-brand-black);
-        color: white;
+    @media (hover: hover) and (pointer: fine) {
+        .btn-outline-luxury:hover {
+            background-color: var(--color-brand-black);
+            color: white;
+        }
     }
     
     /* Product Card Clean */
     .card-product {
         background-color: white;
         border: 1px solid #f0f0f0;
-        transition: all 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
     
-    .card-product:hover {
-        border-color: var(--color-brand-gold);
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    @media (hover: hover) and (pointer: fine) {
+        .card-product:hover {
+            border-color: var(--color-brand-gold);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
     }
 
     .hover-3d {
@@ -92,8 +104,7 @@
     .hover-3d figure {
         position: relative;
         transform-style: preserve-3d;
-        transition: transform 0.6s ease, box-shadow 0.6s ease;
-        will-change: transform;
+        transition: box-shadow 0.6s ease;
     }
 
     .hover-3d figure::after {
@@ -114,13 +125,16 @@
         border-radius: 1rem;
     }
 
-    .hover-3d:hover figure {
-        transform: rotateX(4deg) rotateY(-6deg) translateY(-6px);
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+    @media (hover: hover) and (pointer: fine) {
+        .hover-3d:hover figure {
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+        }
     }
 
-    .hover-3d:hover figure::after {
-        opacity: 1;
+    @media (hover: hover) and (pointer: fine) {
+        .hover-3d:hover figure::after {
+            opacity: 1;
+        }
     }
 }
 
@@ -233,3 +247,14 @@ html { scroll-behavior: smooth; }
     .font-mayluxa {
         font-family: var(--font-sans);
     }
+
+/* Press feedback never changes geometry or intercepts ordinary click navigation. */
+:where(a[href], button, summary) {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+:where(a[href], button, summary):active,
+a[data-navigation-pending] {
+    background-color: rgb(197 160 89 / .15);
+    box-shadow: inset 0 0 0 1px var(--color-brand-gold);
+}

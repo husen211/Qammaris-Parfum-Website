@@ -37,7 +37,7 @@
             </div>
 
             <div class="pt-6">
-                <button type="submit" class="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-all duration-300 shadow-lg">
+                <button type="submit" class="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-colors duration-300 shadow-lg">
                     Masuk
                 </button>
             </div>
@@ -45,7 +45,7 @@
         </form>
 
         <div class="mt-8 text-center">
-            <a href="{{ route('home') }}" class="text-[10px] text-gray-400 hover:text-black uppercase tracking-widest border-b border-transparent hover:border-black transition-all pb-0.5">
+            <a href="{{ route('home') }}" class="text-[10px] text-gray-400 hover:text-black uppercase tracking-widest border-b border-transparent hover:border-black transition-colors pb-0.5">
                 Kembali ke Beranda
             </a>
         </div>

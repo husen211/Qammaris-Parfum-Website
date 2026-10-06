@@ -56,6 +56,16 @@ Avoid universal aesthetic bans. Existing brand decisions override generic taste 
 
 ## Mobile-first behavior
 
+### Touch-safe interaction contract (Owner, 2026-10-06)
+
+- All positive hover effects require `(hover: hover) and (pointer: fine)`, including custom CSS and compiled library styles. Preserve negated hover selectors that define base visibility rather than enabling hover effects.
+- Hover may change colors/shadows; it must not translate, scale, resize or reveal a hidden action. Do not use transition-all on tappable cards.
+- Tappable lists, product/search grids and menus appear immediately, without staggered entry/fade delays. Verify with the normal paginated catalog at production-size data volume (about300+ products).
+- Touch feedback uses active colors, touch-action: manipulation and transparent WebKit tap highlight. Photo swipe surfaces retain vertical pan/pinch support.
+- Navigation uses click/native links, never touchstart/pointerdown. Pointer events may track gallery gestures without navigating.
+- Show immediate pressed/pending feedback while a target loads; clear pending feedback on browser history restoration. Persistent client-side navigation must retain a shared navbar; the current Blade full-document navigation recreates DOM and must not be described as persistent. Do not introduce an SPA/PJAX rewrite implicitly.
+- Release gate: actual iPhone Safari or genuine touch emulation must prove a single tap navigates from menu/card, and scrolling does not leave hover effects. Viewport resizing and mouse clicks are not touch verification.
+
 - Design the narrow viewport and touch flow first, then expand to desktop.
 - Keep the primary action, product identity, size, price, and availability context visible without unnecessary scrolling.
 - Avoid horizontal overflow and layout shifts.

@@ -63,7 +63,8 @@ class PublicProductDetailTrustTest extends TestCase
             ->assertSee('Pemeriksaan terakhir')
             ->assertSee('data-detail-availability="available"', false)
             ->assertSee('data-variant-id="'.$offer->id.'"', false)
-            ->assertSee('Kembali ke hasil')
+            ->assertSee('data-catalog-return', false)
+            ->assertDontSee('Kembali ke hasil')
             ->assertSee(route('products.index', [
                 'search' => 'Trusted',
                 'sort' => 'popular',
@@ -92,6 +93,7 @@ class PublicProductDetailTrustTest extends TestCase
             ->assertSee('Ukuran dan harga belum tersedia untuk ditampilkan.')
             ->assertSee('Data produk belum lengkap')
             ->assertSee('Foto sedang dilengkapi')
+            ->assertDontSee('data-gallery-step', false)
             ->assertSee('Deskripsi sedang dilengkapi.')
             ->assertSee('Informasi notes sedang dilengkapi.')
             ->assertSee('Konfirmasi stok')
@@ -156,6 +158,8 @@ class PublicProductDetailTrustTest extends TestCase
             ->assertSee('aria-label="Pilihan foto produk"', false)
             ->assertSee('aria-pressed="true"', false)
             ->assertSee('aria-pressed="false"', false)
+            ->assertSee('aria-label="Foto sebelumnya" disabled', false)
+            ->assertSee('aria-label="Foto berikutnya"', false)
             ->assertSee('justify-center', false);
 
         $this->assertSame(2, substr_count($html, '<button type="button" data-gallery-thumbnail'));

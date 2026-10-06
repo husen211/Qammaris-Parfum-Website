@@ -1,4 +1,8 @@
-const revealItems = document.querySelectorAll('[data-reveal]');
+const revealItems = [...document.querySelectorAll('[data-reveal]')].filter((item) =>
+    !item.matches('a[href], button, input, select, textarea, nav, [role="menu"], [data-product-card]')
+    && !item.closest('a[href], button, nav, [role="menu"], [data-product-card], .catalog-grid')
+    && !item.querySelector('a[href], button, input, select, textarea'),
+);
 
 if (revealItems.length) {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

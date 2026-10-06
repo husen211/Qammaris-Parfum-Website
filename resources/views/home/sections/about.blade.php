@@ -98,7 +98,7 @@
 
                 @if ($showCta ?? true)
                     <a href="{{ route('store.about') }}"
-                        class="inline-block px-8 py-4 bg-brand-black text-white font-medium uppercase tracking-widest text-sm hover:bg-brand-gold transition-all duration-300">
+                        class="inline-block px-8 py-4 bg-brand-black text-white font-medium uppercase tracking-widest text-sm hover:bg-brand-gold transition-colors duration-300">
                         Tentang Qammaris
                     </a>
                 @endif

@@ -4,6 +4,8 @@ namespace App\Actions\Products;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use DomainException;
+use Illuminate\Support\Facades\DB;
 
 class SyncSingleOffer
 {
@@ -16,16 +18,41 @@ class SyncSingleOffer
 
         $offer->fill([
             'volume' => $attributes['volume'],
-            'price' => $attributes['price'],
+            'price' => $this->price($product, $offer, $attributes['price']),
             'stock' => $attributes['stock'] ?? 0,
             'sku' => $sku,
             'is_active' => true,
         ]);
         $offer->save();
 
-        $product->forceFill(['base_price' => $offer->price])->save();
+        $mirror = ['base_price' => $offer->price];
+        if ($product->availability_source === 'qammaris_app' && $product->compare_at_price !== null
+            && (float) $product->compare_at_price <= (float) $offer->price) {
+            $mirror['compare_at_price'] = null;
+        }
+        $product->forceFill($mirror)->save();
 
         return $offer;
+    }
+
+    private function price(Product $product, ProductVariant $offer, mixed $requested): mixed
+    {
+        $uuid = $product->externalIdentities()->where('provider', 'qammaris_app')->value('external_product_id');
+        if (! $uuid) {
+            return $requested;
+        }
+        $raw = DB::table('qammaris_app_products')->where('id', $uuid)->value('snapshot');
+        $source = $raw ? json_decode($raw, true, flags: JSON_THROW_ON_ERROR) : null;
+        $price = $source['price'] ?? null;
+        if ($source && ! $source['hidden'] && is_int($price) && $price > 0 && $price <= 99999999) {
+            return $price;
+        }
+        // All form/import callers retain the last valid price when the source cannot supply one.
+        $retained = $offer->exists ? $offer->price : $product->base_price;
+        if ((float) $retained > 0 && (float) $retained <= 99999999.99) {
+            return $retained;
+        }
+        throw new DomainException('Harga produk ini dikelola Qammaris App. Lengkapi harga di aplikasi dahulu.');
     }
 
     private function resolveOffer(Product $product, mixed $offerId): ProductVariant
