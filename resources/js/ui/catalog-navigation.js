@@ -83,10 +83,13 @@ if (catalog) {
                 .find((candidate) => candidate.dataset.catalogProduct === record.productId);
             // Pointer returns restore position without drawing a keyboard focus ring.
             if (record.keyboard === true) link?.focus({ preventScroll: true });
+            else if (link && document.activeElement === link) link.blur();
             if (sidebar) sidebar.scrollTop = record.sidebarY;
             const brands = sidebar?.querySelector('[data-catalog-brand-list]');
             if (brands && Number.isFinite(record.brandY)) brands.scrollTop = record.brandY;
             window.scrollTo({ top: record.y, behavior: 'instant' });
+            // A pointer can still sit over the returned card: keep it neutral until it leaves.
+            if (record.keyboard !== true) link?.setAttribute('data-catalog-activated', '');
         }));
     });
 }

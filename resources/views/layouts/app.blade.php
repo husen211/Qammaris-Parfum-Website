@@ -78,6 +78,11 @@
     
 </head>
 <body class="font-sans antialiased bg-white text-brand-black flex flex-col min-h-screen">
+    @if(request()->routeIs('products.index', 'products.show'))
+        <div data-catalog-navigation-status class="catalog-navigation-status" hidden role="status" aria-live="polite">
+            <span class="sr-only">Membuka halaman…</span>
+        </div>
+    @endif
     <a href="#main-content"
         class="sr-only fixed left-4 top-4 z-[120] bg-brand-black px-4 py-3 text-sm font-semibold text-white focus:not-sr-only focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold">
         Lewati ke konten utama
