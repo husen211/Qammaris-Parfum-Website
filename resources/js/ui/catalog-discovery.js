@@ -22,6 +22,7 @@ if (catalog) {
 
             document.querySelectorAll(`[name="${name}"]`).forEach((control) => {
                 const nextValue = String(value ?? '');
+                control.disabled = false;
 
                 if (control instanceof HTMLInputElement && control.type === 'radio') {
                     control.checked = control.value === nextValue;
@@ -38,6 +39,7 @@ if (catalog) {
 
         document.querySelectorAll('[name="brand[]"]').forEach((control) => {
             if (control instanceof HTMLInputElement) {
+                control.disabled = false;
                 control.checked = state.brand.has(control.value);
             }
         });
@@ -131,5 +133,5 @@ if (catalog) {
     });
 
     syncControls();
-    window.addEventListener('pageshow', syncControls, { once: true });
+    window.addEventListener('pageshow', syncControls);
 }

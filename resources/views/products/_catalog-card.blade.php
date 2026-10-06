@@ -6,7 +6,7 @@
 @endphp
 
 <article class="catalog-card" data-product-card data-effective-availability="{{ $availability }}">
-    <a href="{{ $detailUrl }}" class="catalog-card__link" aria-label="Lihat detail {{ $product->name }}">
+    <a href="{{ $detailUrl }}" data-catalog-product="{{ $product->id }}" class="catalog-card__link" aria-label="Lihat detail {{ $product->name }}">
         <div class="catalog-media" data-catalog-media>
             <img src="{{ $imageUrl }}"
                 alt="{{ $hasImage ? $product->name : 'Foto '.$product->name.' sedang dilengkapi' }}"

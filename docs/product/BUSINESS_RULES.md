@@ -81,6 +81,7 @@ Status: kontrak awal disetujui owner pada 2026-09-14 (`P0-02`); aturan kurasi im
 10. Sort “Populer” memakai sinyal `view_count` yang dapat dijelaskan. Label “Terlaris” hanya berasal dari merchandising flag `is_best_seller`, bukan dari view count.
 11. Harga filter dan sort berasal dari satu offer aktif. `base_price` tidak boleh diam-diam menjadi fallback authority untuk row published yang belum direkonsiliasi.
 12. Detail product tidak boleh menerima arbitrary return URL. Context kembali ke katalog hanya dibangun dari query katalog allowlisted dan tervalidasi.
+13. Keputusan Owner 2026-10-06 (P7-08): Brand berada pertama pada filter publik, gender memakai label Peruntukan, pilihan baru availability hanya Semua/Tersedia/Habis. Domain unknown dan URL filter lama tetap kompatibel. Tombol detail memakai Kembali dan mempertahankan posisi katalog lokal untuk context query yang sama; kontrol Jumlah tetap ada tanpa penjelasan panjang di sebelahnya.
 
 ## Katalog dan inquiry publik
 
@@ -104,6 +105,7 @@ Owner update 2026-10-06 (P8-07): the app team's supplied Shopee→Majoo SKU CSV 
 
 1. Database menyimpan object key/path dan metadata, bukan binary image.
 2. Source code repository tidak menyimpan upload produk production.
+   Keputusan Owner 2026-10-06: upload manual tetap melalui product media storage pada disk public yang persisten; migrasi Cloudflare R2 tidak dibutuhkan untuk tahap admin berikutnya.
 3. Setiap produk published mempunyai tepat satu primary image.
 4. Penggantian gambar harus upload dan verifikasi gambar baru sebelum menghapus gambar lama.
 5. Menghapus record harus tidak meninggalkan file yatim; kegagalan storage tidak boleh dilaporkan sebagai sukses.

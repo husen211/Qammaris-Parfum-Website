@@ -91,10 +91,10 @@
     <section class="min-h-screen bg-white pb-16 pt-20 md:pb-20 md:pt-24" aria-labelledby="product-title">
         <div class="container mx-auto px-4 lg:px-12">
             <div class="mb-5 flex flex-wrap items-center justify-between gap-3 md:mb-7">
-                <a href="{{ $catalogUrl }}"
+                <a href="{{ $catalogUrl }}" data-catalog-return
                     class="inline-flex min-h-11 items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-black underline decoration-gray-300 underline-offset-4 transition-colors hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                     <span aria-hidden="true">←</span>
-                    Kembali ke hasil
+                    Kembali
                 </a>
 
                 <nav aria-label="Breadcrumb" class="hidden min-w-0 items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400 md:flex">
@@ -109,10 +109,10 @@
             <div class="grid items-start gap-6 md:gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(24rem,0.95fr)] lg:gap-14 xl:gap-20">
                 <section class="order-1 min-w-0" aria-label="Galeri {{ $product->name }}" data-product-gallery>
                     <div class="mx-auto w-full max-w-[15rem] lg:max-w-sm">
-                        <div class="relative aspect-[4/5] overflow-hidden bg-white">
+                        <div class="product-gallery__frame relative aspect-[4/5] overflow-hidden bg-white" data-gallery-frame>
                             <img id="mainImage" src="{{ $mainImageUrl }}"
                                 alt="{{ $hasProductImage ? $product->name : 'Foto '.$product->name.' sedang dilengkapi' }}"
-                                width="720" height="900" fetchpriority="high" decoding="async"
+                                width="720" height="900" fetchpriority="high" decoding="async" draggable="false"
                                 class="h-full w-full object-contain object-center opacity-95 transition-opacity duration-300 motion-reduce:transition-none {{ $hasProductImage ? '' : 'p-8 lg:p-12' }} {{ $effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT ? 'grayscale-[25%]' : '' }}">
 
                             @if ($product->is_best_seller)
@@ -127,6 +127,13 @@
                         </div>
 
                         @if ($galleryImages->count() > 1)
+                            <div class="mt-2 flex items-center justify-between lg:hidden" aria-label="Navigasi foto produk">
+                                <button type="button" data-gallery-step="-1" aria-label="Foto sebelumnya" disabled
+                                    class="h-11 w-11 border border-gray-200 text-lg disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">←</button>
+                                <span data-gallery-position aria-live="polite" class="text-xs tabular-nums text-gray-500">1 / {{ $galleryImages->count() }}</span>
+                                <button type="button" data-gallery-step="1" aria-label="Foto berikutnya"
+                                    class="h-11 w-11 border border-gray-200 text-lg disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">→</button>
+                            </div>
                             <div class="mt-3 flex justify-center gap-3 overflow-x-auto pb-2 lg:justify-start" aria-label="Pilihan foto produk">
                                 @foreach ($galleryImages as $image)
                                     <button type="button" data-gallery-thumbnail
@@ -140,6 +147,8 @@
                                 @endforeach
                             </div>
                         @endif
+                        <p data-gallery-feedback role="status" class="mt-2 text-center text-xs text-gray-500"></p>
+                        <button type="button" data-gallery-retry hidden class="mx-auto min-h-11 text-xs underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">Coba lagi</button>
                     </div>
                 </section>
 
@@ -203,7 +212,6 @@
                                         <button type="button" data-quantity-change="1" aria-label="Tambah jumlah" class="flex h-11 w-11 items-center justify-center text-lg text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">+</button>
                                     </div>
                                 </div>
-                                <p class="max-w-44 text-right text-[10px] leading-4 text-gray-400">{{ $managedByApp ? 'Jumlah yang diminati, bukan reservasi.' : 'Ketersediaan tetap perlu dikonfirmasi.' }}</p>
                             </div>
 
                             <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}"
@@ -305,27 +313,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const mainImage = document.getElementById('mainImage');
-    const thumbnails = document.querySelectorAll('[data-gallery-thumbnail]');
-
-    thumbnails.forEach((thumbnail) => {
-        thumbnail.addEventListener('click', () => {
-            if (!mainImage) return;
-
-            mainImage.classList.add('opacity-40');
-            mainImage.src = thumbnail.dataset.gallerySrc;
-            mainImage.alt = thumbnail.dataset.galleryAlt;
-            mainImage.onload = () => mainImage.classList.remove('opacity-40');
-
-            thumbnails.forEach((item) => {
-                const selected = item === thumbnail;
-                item.setAttribute('aria-pressed', selected ? 'true' : 'false');
-                item.classList.toggle('border-brand-black', selected);
-                item.classList.toggle('border-gray-200', !selected);
-            });
-        });
-    });
-
     const quantityInput = document.getElementById('quantity');
     const addButton = document.querySelector('[data-add-to-cart]');
     const feedback = document.querySelector('[data-cart-feedback]');

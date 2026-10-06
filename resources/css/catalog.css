@@ -228,6 +228,12 @@
     }
 }
 
+@media (max-width: 1023px) {
+    .product-gallery__frame {
+        touch-action: pan-y pinch-zoom;
+    }
+}
+
 @media (min-width: 640px) {
     .catalog-container {
         padding-inline: 24px;
@@ -260,6 +266,11 @@
     }
     .catalog-sidebar {
         width: 224px;
+        max-height: var(--catalog-sidebar-height, calc(100dvh - 148px));
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
+        padding: 4px 12px 8px 4px;
     }
     .catalog-grid {
         gap: 40px 24px;

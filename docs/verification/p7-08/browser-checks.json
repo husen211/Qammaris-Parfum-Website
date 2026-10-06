@@ -1,0 +1,42 @@
+{
+  "viewports": [
+    {
+      "clippedNames": 0,
+      "height": 844,
+      "overflow": false,
+      "width": 320
+    },
+    {
+      "clippedNames": 0,
+      "height": 844,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "clippedNames": 0,
+      "height": 900,
+      "overflow": false,
+      "width": 768
+    },
+    {
+      "clippedNames": 0,
+      "height": 844,
+      "overflow": false,
+      "width": 390
+    },
+    {
+      "clippedNames": 0,
+      "height": 900,
+      "overflow": false,
+      "width": 1440
+    }
+  ],
+  "desktopReturn": {
+    "sidebarY": 392,
+    "y": 1325.5999755859375
+  },
+  "mobileReturn": {
+    "url": "http://127.0.0.1:8001/products?search=afnan&sort=price_low&page=2",
+    "y": 591.2000122070312
+  }
+}
