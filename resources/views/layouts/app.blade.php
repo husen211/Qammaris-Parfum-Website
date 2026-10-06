@@ -77,7 +77,7 @@
 
     
 </head>
-<body class="font-sans antialiased bg-white text-brand-black flex flex-col min-h-screen">
+<body data-navigation-shell="public" class="font-sans antialiased bg-white text-brand-black flex flex-col min-h-screen">
     <a href="#main-content"
         class="sr-only fixed left-4 top-4 z-[120] bg-brand-black px-4 py-3 text-sm font-semibold text-white focus:not-sr-only focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold">
         Lewati ke konten utama
@@ -85,7 +85,7 @@
 
     @include('components.navbar')
     
-    <main id="main-content" tabindex="-1" class="flex-grow focus:outline-none">
+    <main data-navigation-content id="main-content" tabindex="-1" class="flex-grow focus:outline-none">
         @yield('content')
     </main>
     
@@ -94,5 +94,6 @@
     
     @stack('scripts')
     @include('components.toast')
+    @include('components.navigation-skeleton')
 </body>
 </html>

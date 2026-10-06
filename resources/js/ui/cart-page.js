@@ -41,6 +41,7 @@ rows.forEach(row => row.querySelectorAll('[data-cart-quantity-change], [data-car
       });
       const data = await response.json();
       if (!response.ok || !data.success) throw new Error(data.message || 'Keranjang belum dapat diperbarui. Coba lagi.');
+      window.dispatchEvent(new CustomEvent('qammaris:page-reload'));
       window.location.reload();
     } catch {
       input.value = previous;

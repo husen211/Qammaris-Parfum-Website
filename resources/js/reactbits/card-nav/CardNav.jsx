@@ -52,6 +52,11 @@ const CardNav = ({
       window.removeEventListener('pageshow', refreshOnHistory);
     };
   }, [cartDataUrl]);
+  useEffect(() => {
+    const closeForNavigation = () => { setIsExpanded(false); setIsHamburgerOpen(false); };
+    window.addEventListener('qammaris:navigation-start', closeForNavigation);
+    return () => window.removeEventListener('qammaris:navigation-start', closeForNavigation);
+  }, []);
   const menuButtonRef = useRef(null);
   useEffect(() => {
     if (!isExpanded) return undefined;

@@ -281,3 +281,8 @@ Keputusan Owner 2026-10-07: ikon keranjang langsung membuka halaman `/cart`, tan
 ## Homepage best-seller presentation — Owner decision 2026-10-07
 
 Do not display prices in the homepage Produk Terlaris section for now. Catalog and product detail retain prices. This is presentation only; source prices, availability, publication and daily selection remain unchanged.
+
+
+## Destination loading feedback (Owner, 2026-10-07 — P7-13)
+
+Real same-tab page navigation must show immediate destination-shaped skeleton feedback instead of leaving the source content looking idle. Keep native Laravel document links/form requests and existing query/scroll context. Valid native submissions may show loading; invalid or prevented submissions, downloads, modified/new-tab clicks and external links retain their existing behavior. Ajax actions staying on the same page use their own feedback. Skeletons contain no fake product values, respect reduced motion and clear on history restoration. Slow-navigation recovery must not automatically resubmit mutations. This UI decision does not authorize a SPA, data changes or production release.

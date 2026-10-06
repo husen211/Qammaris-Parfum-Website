@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./catalog.css";
 @import "./cart-interactions.css";
+@import "./navigation-skeleton.css";
 
 @custom-variant hover {
     @media (hover: hover) and (pointer: fine) {
