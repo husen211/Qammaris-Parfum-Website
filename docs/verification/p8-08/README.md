@@ -64,6 +64,8 @@ No raw Shopee XLSX UI, photo/description curation, automated publish or new manu
 
 ## Data impact, rollout and recovery
 
+Owner release continuation2026-10-06 supersedes the preceding pending-approval/touch-blocking statements for this release: explicit production approval plus “Lewati uji sentuh, rilis sekarang”. Actual touch/Safari remains Not confirmed. Combine PR4/PR5 once through main/CI/production rather than deploying an intermediate public-only patch. No new business data test records, historical replay or publication. Deployment/post-release evidence will be recorded separately. The prior local browser viewport was subsequently reset successfully and its owned verification tab closed.
+
 No migrations, dependency changes, schema/data/media/env operations on staging/production. When deployed, newer feed revisions may create drafts/taxonomy/UUID/offer rows or update selling/base/comparison prices and existing audit rows; stock contract/checkpoint discipline remains. Existing names/slugs/IDs/media/publication stay protected. Inspect held/price-review groups after approved release; do not reset cursor for a broad replay.
 
 Review PR4 dependency and touch gate before approving release of this patch. On approved release, restart the normal queue worker through the existing deployment workflow, then verify a controlled new product creates one draft, source price changes apply, media saves and owner-driven publication remains explicit. No credentials or separate scheduler are introduced.
