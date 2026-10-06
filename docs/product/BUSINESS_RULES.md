@@ -273,3 +273,8 @@ After receiving the explicit unresolved touch/Safari limitation, Owner authorize
 ## Homepage best-seller presentation — Owner decision 2026-10-07
 
 Do not display prices in the homepage Produk Terlaris section for now. Catalog and product detail retain prices. This is presentation only; source prices, availability, publication and daily selection remain unchanged.
+
+
+## P7-10 release authorization — 2026-10-07
+
+After the completed implementation report disclosed that Safari was unverified, Owner explicitly requested immediate production deployment. This authorizes PR8, including homepage price hiding, compact cards, daily best sellers and illustration repair. It does not authorize unrelated pending PRs, data writes or broaden the earlier PR4/5 touch-test exception. Actual Safari remains Not confirmed; this deployment approval must not be reported as a successful touch test.

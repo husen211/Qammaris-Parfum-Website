@@ -2491,7 +2491,7 @@ Final report:
 5. Temuan baru dimasukkan ke backlog; jangan memperluas scope diam-diam.
 6. Blocker harus menyebut bukti, dampak, dan input/akses yang dibutuhkan.
 
-### P7-10 Best-seller discovery and daily home rotation — IN_REVIEW
+### P7-10 Best-seller discovery and daily home rotation — DONE
 
 Owner requests existing marked best sellers first in the default catalog, and a daily changing selection on the homepage. Scope: public catalog default ordering/state and the existing homepage best-seller section. Explicit latest/price/popular sorts retain their meanings; filtering, pagination and detail return retain normalized context. Reuse existing admin flags, visibility and catalog cards. Owner follow-up adds compact homepage photos and repair of the four missing static illustrations/quiz layout. No changes to flags, products, prices, availability, API, uploaded product media, schema, dependencies, admin or production deployment.
 
@@ -2589,3 +2589,6 @@ P8-08 release authorization2026-10-06: Owner explicitly requests production rele
 
 
 P7-10 Owner follow-up 2026-10-07: hide prices only in homepage Produk Terlaris using an optional shared-card display flag. Catalog/detail prices remain. Existing home expectation updated; 8 focused tests/94 assertions, scoped Pint, Vite build and whitespace pass. Chrome 390×844 and 1440×900 before/after captures: six homepage cards without prices, no document overflow; native detail/catalog links retain prices. No production data/media/API/deploy change. Safari/touch Not confirmed. Evidence: docs/verification/p7-10/home-price/README.md. PR8 remains IN_REVIEW; recommended next action is Owner review/release only.
+
+
+P7-10 production release 2026-10-07 WITA: Owner explicitly authorizes production after Safari limitation was disclosed. PR8 merged to ae86fc13274998dd6e50de439d5dfd014762cd37; main CI37501017533 passes282Laravel/1923assertions+12Node/build; production37501092201 build/deploy succeeds17:08:51UTC. Live371public results retained,24 best sellers first/default with catalog prices,6 rotating homepage cards without prices,detail price/links/search work;4 illustrations load/HTTP200. CSS1440×900 and391×844 no document overflow; Safari/touch/midnight observation Notconfirmed. No product/data/schema/API/env/upload mutation. Evidence/limitations/rollback: docs/verification/p7-10/production/README.md. P7-10 DONE within reported verification limits; next recommendation is separately review existing PR10, not deployed here.
