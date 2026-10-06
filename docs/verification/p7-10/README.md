@@ -2,6 +2,8 @@
 
 Owner request: existing marked best sellers first in the catalog, plus a changing daily homepage selection. Implementation is isolated on `codex/bestseller-discovery` from production/main `7b86b00`, without unreleased PR6/PR7 code. No production deployment or data operation.
 
+Review: [PR8](https://github.com/husen211/Qammaris-Parfum-Website/pull/8), implementation commit `c253d412a8e34af9eeae84ee551cc3e4db09719b`. PR is OPEN with merge state CLEAN. At the verification checkpoint GitHub reported no checks/runs for this new branch; hosted CI is **Not confirmed**, not a pass. All tests/build results below were actually run locally. Owner review/release gate remains.
+
 ## Outcome and rationale
 
 - Default `Terlaris dahulu` puts marked products ahead of ordinary products throughout pagination; publication date and ID preserve predictable ordering within groups.
