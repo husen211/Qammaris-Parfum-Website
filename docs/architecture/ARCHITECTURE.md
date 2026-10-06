@@ -1,5 +1,13 @@
 # Current application architecture
 
+## Best-seller discovery (P7-10, 2026-10-06)
+
+`ProductCatalogState::DEFAULT_SORT` is `best_sellers`, omitted only when it is the default. `ProductController::applySort` prepends the existing boolean flag to the stable latest ordering; explicit latest/price/popular retain their own order. Blade controls, filter forms, JavaScript submissions, pagination and detail-return context share that normalized choice. Legacy `sort=latest` URLs remain valid and explicit.
+
+`HomeController` reads eligible public best-seller IDs in stable order, takes a date-dependent circular window of at most six, then eager-loads only the selected product/brand/image/offer records. The offset advances daily in Asia/Makassar, without writes, cache invalidation jobs, new tables or global timezone changes. The existing homepage section reuses `products._catalog-card` with h3 headings, local media fallback, contain/white-margin balancing, price/size/source-aware availability and one native link per card. A scoped vanilla-JavaScript rail helper updates disabled arrow edges and honors reduced motion; horizontal native scrolling remains available without JavaScript. Other homepage sections and admin flags remain unchanged.
+
+Implementation/review evidence: `docs/verification/p7-10/README.md`. No production activation is implied.
+
 ## Qammaris app consumer (P8-01, 2026-10-05)
 
 ```text
