@@ -58,7 +58,7 @@
 
                     <div class="mt-8 grid gap-6 md:grid-cols-2">
                         @foreach ($result['products'] as $product)
-                            <div class="border border-brand-black/10 bg-white p-4 transition hover:-translate-y-1 hover:shadow-lg">
+                            <div class="border border-brand-black/10 bg-white p-4 transition hover:shadow-lg">
                                 <div class="aspect-[4/5] bg-[#F9F9F9] overflow-hidden">
                                     <img src="{{ $product->primaryImage?->image_url ?? 'https://placehold.co/400x500/F5F5F5/333?text=' . urlencode($product->brand->name) }}"
                                         alt="{{ $product->name }}" loading="lazy" decoding="async"

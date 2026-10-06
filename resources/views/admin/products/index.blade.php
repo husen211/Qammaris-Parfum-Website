@@ -123,7 +123,7 @@
                         <div class="flex items-start md:items-center">
                             <div class="h-14 w-14 flex-shrink-0 rounded-md border border-gray-200 overflow-hidden bg-gray-100">
                                 @if($product->primaryImage)
-                                    <img src="{{ $product->primaryImage->image_url }}" alt="{{ $product->name }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img src="{{ $product->primaryImage->image_url }}" alt="{{ $product->name }}" class="h-full w-full object-cover transition-transform duration-500">
                                 @else
                                     <div class="flex items-center justify-center h-full text-xs text-gray-400">No Img</div>
                                 @endif

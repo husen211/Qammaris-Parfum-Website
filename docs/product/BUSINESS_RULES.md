@@ -243,3 +243,8 @@ Owner supplied the final explicit ID/gender list and authorized staging publicat
 ## Clean production launch — Owner decision 2026-10-06
 
 Owner explicitly states legacy production data is dispensable and waives its backup. This supersedes earlier legacy preservation/merge and final legacy-backup requirements for this launch. Use the approved new catalog: 350 real public products +95 no-photo/no-description drafts; exclude the staging test fixture. Preserve staging source data/media; no wholesale staging DB clone or synthetic admin transfer. Legacy matching/URL mapping is no longer a launch blocker; old links/content/accounts are not promised to carry over. Existing legacy directory/database can remain untouched for reversible routing; deletion is not needed and has not been performed. Exact target/database/account/env/runtime setup and public cutover still need concrete authorization. No production activation or webhook destination switch has occurred.
+
+
+## Public UI interaction contract — Owner decision 2026-10-06
+
+Mouse-only hover must use `(hover: hover) and (pointer: fine)`, without resizing or moving clickable elements. Tappable cards, search results and menus display directly without staggered reveal. Touch uses active feedback; navigation occurs on click, never the start of a scroll gesture. Press/loading feedback must be immediate. A persistent navbar in any future client router must be retained between routes; current full-document Blade navigation has no such router. Actual iPhone Safari or genuine touch-emulation single-tap and scroll tests are a release gate. Implementation/review rules: `skills/qammaris-ui-review/SKILL.md`; current P7-08 evidence records the pending touch gate.

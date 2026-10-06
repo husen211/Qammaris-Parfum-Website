@@ -1,5 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import { useEffect, useRef, useState } from 'react';
 
 const ArrowIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor">
@@ -12,7 +11,6 @@ const CardNav = ({
   logoAlt = 'Logo',
   items = [],
   className = '',
-  ease = 'power3.out',
   baseColor = '#fff',
   menuColor,
   buttonBgColor,
@@ -25,143 +23,22 @@ const CardNav = ({
 }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const navRef = useRef(null);
   const menuButtonRef = useRef(null);
-  const cardsRef = useRef([]);
-  const tlRef = useRef(null);
-
-  const calculateHeight = () => {
-    const navEl = navRef.current;
-    if (!navEl) return 260;
-
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) {
-      const contentEl = navEl.querySelector('.card-nav-content');
-      if (contentEl) {
-        const wasVisible = contentEl.style.visibility;
-        const wasPointerEvents = contentEl.style.pointerEvents;
-        const wasPosition = contentEl.style.position;
-        const wasHeight = contentEl.style.height;
-
-        contentEl.style.visibility = 'visible';
-        contentEl.style.pointerEvents = 'auto';
-        contentEl.style.position = 'static';
-        contentEl.style.height = 'auto';
-
-        contentEl.offsetHeight;
-
-        const topBar = 60;
-        const padding = 16;
-        const contentHeight = contentEl.scrollHeight;
-
-        contentEl.style.visibility = wasVisible;
-        contentEl.style.pointerEvents = wasPointerEvents;
-        contentEl.style.position = wasPosition;
-        contentEl.style.height = wasHeight;
-
-        return topBar + contentHeight + padding;
-      }
-    }
-    return 260;
-  };
-
-  const createTimeline = () => {
-    const navEl = navRef.current;
-    if (!navEl) return null;
-
-    gsap.set(navEl, { height: 60, overflow: 'hidden' });
-    gsap.set(cardsRef.current, { y: 50, opacity: 0 });
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const duration = reduceMotion ? 0 : 0.4;
-    const tl = gsap.timeline({ paused: true });
-
-    tl.to(navEl, {
-      height: calculateHeight,
-      duration,
-      ease
-    });
-
-    tl.to(cardsRef.current, {
-      y: 0,
-      opacity: 1,
-      duration,
-      ease,
-      stagger: reduceMotion ? 0 : 0.08
-    }, reduceMotion ? 0 : '-=0.1');
-
-    return tl;
-  };
-
-  useLayoutEffect(() => {
-    const tl = createTimeline();
-    tlRef.current = tl;
-
-    return () => {
-      tl?.kill();
-      tlRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ease, items]);
-
-  useLayoutEffect(() => {
-    const handleResize = () => {
-      if (!tlRef.current) return;
-
-      if (isExpanded) {
-        const newHeight = calculateHeight();
-        gsap.set(navRef.current, { height: newHeight });
-
-        tlRef.current.kill();
-        const newTl = createTimeline();
-        if (newTl) {
-          newTl.progress(1);
-          tlRef.current = newTl;
-        }
-      } else {
-        tlRef.current.kill();
-        const newTl = createTimeline();
-        if (newTl) {
-          tlRef.current = newTl;
-        }
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isExpanded]);
-
   useEffect(() => {
     if (!isExpanded) return undefined;
-
     const closeOnEscape = event => {
       if (event.key !== 'Escape') return;
-
+      setIsExpanded(false);
       setIsHamburgerOpen(false);
-      tlRef.current?.eventCallback('onReverseComplete', () => {
-        setIsExpanded(false);
-        menuButtonRef.current?.focus();
-      });
-      tlRef.current?.reverse();
+      menuButtonRef.current?.focus();
     };
-
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [isExpanded]);
 
   const toggleMenu = () => {
-    const tl = tlRef.current;
-    if (!tl) return;
-    if (!isExpanded) {
-      setIsHamburgerOpen(true);
-      setIsExpanded(true);
-      tl.play(0);
-    } else {
-      setIsHamburgerOpen(false);
-      tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
-      tl.reverse();
-    }
+    setIsExpanded(open => !open);
+    setIsHamburgerOpen(open => !open);
   };
 
   const handleCartClick = () => {
@@ -182,10 +59,6 @@ const CardNav = ({
     }
   };
 
-  const setCardRef = i => el => {
-    if (el) cardsRef.current[i] = el;
-  };
-
   const cards = (items || []).slice(0, 3);
 
   return (
@@ -193,11 +66,10 @@ const CardNav = ({
       className={`card-nav-container fixed left-1/2 -translate-x-1/2 w-[92%] max-w-[1100px] z-[99] top-4 md:top-6 ${className}`}
     >
       <nav
-        ref={navRef}
-        className={`card-nav ${isExpanded ? 'open' : ''} block h-[60px] p-0 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] relative overflow-hidden will-change-[height]`}
+        className={`card-nav ${isExpanded ? 'open' : ''} block ${isExpanded ? 'h-auto' : 'h-[60px]'} p-0 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] relative overflow-hidden`}
         style={{ backgroundColor: baseColor }}
       >
-        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-5 z-[2]">
+        <div className="card-nav-top relative h-[60px] flex items-center justify-between p-2 pl-5 z-[2]">
           <button
             ref={menuButtonRef}
             type="button"
@@ -266,8 +138,8 @@ const CardNav = ({
 
         <div
           id="primary-navigation-menu"
-          className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1] ${
-            isExpanded ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
+          className={`card-nav-content max-h-[calc(100dvh-112px)] overflow-y-auto overscroll-contain p-2 flex-col items-stretch gap-2 justify-start z-[1] ${
+            isExpanded ? 'flex' : 'hidden'
           } md:flex-row md:items-end md:gap-[12px]`}
           aria-hidden={!isExpanded}
         >
@@ -275,7 +147,6 @@ const CardNav = ({
             <div
               key={`${item.label}-${idx}`}
               className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%]"
-              ref={setCardRef(idx)}
               style={{ backgroundColor: item.bgColor, color: item.textColor }}
             >
               <div className="nav-card-label font-normal tracking-[-0.5px] text-[18px] md:text-[22px]">
@@ -285,7 +156,7 @@ const CardNav = ({
                 {item.links?.map((lnk, i) => (
                   <a
                     key={`${lnk.label}-${i}`}
-                    className={`nav-card-link inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-300 text-[15px] md:text-[16px] ${
+                    className={`nav-card-link min-h-11 inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-300 text-[15px] md:text-[16px] ${
                       isActiveLink(lnk.href) ? 'opacity-100 font-semibold' : 'opacity-80 hover:opacity-100'
                     }`}
                     href={lnk.href}

@@ -15,7 +15,7 @@
         </div>
 
         <div class="mt-12 grid gap-8 md:grid-cols-3">
-            <div class="group flex flex-col border border-brand-black/10 bg-white/80 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:border-brand-gold/60" data-reveal data-reveal-delay="0">
+            <div class="group flex flex-col border border-brand-black/10 bg-white/80 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.08)] transition duration-300 hover:border-brand-gold/60" data-reveal data-reveal-delay="0">
                 <span class="text-sm font-semibold text-brand-gold">1.</span>
                 <h3 class="font-mayluxa text-2xl text-brand-black mt-4">Discover</h3>
                 <p class="text-sm text-brand-black/60 mt-3">
@@ -27,7 +27,7 @@
                 </div>
             </div>
 
-            <div class="group flex flex-col border border-brand-black/10 bg-white/80 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:border-brand-gold/60" data-reveal data-reveal-delay="80">
+            <div class="group flex flex-col border border-brand-black/10 bg-white/80 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.08)] transition duration-300 hover:border-brand-gold/60" data-reveal data-reveal-delay="80">
                 <span class="text-sm font-semibold text-brand-gold">2.</span>
                 <h3 class="font-mayluxa text-2xl text-brand-black mt-4">Select</h3>
                 <p class="text-sm text-brand-black/60 mt-3">
@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <div class="group flex flex-col border border-brand-black/10 bg-white/80 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:border-brand-gold/60" data-reveal data-reveal-delay="160">
+            <div class="group flex flex-col border border-brand-black/10 bg-white/80 p-6 shadow-[0_18px_36px_rgba(0,0,0,0.08)] transition duration-300 hover:border-brand-gold/60" data-reveal data-reveal-delay="160">
                 <span class="text-sm font-semibold text-brand-gold">3.</span>
                 <h3 class="font-mayluxa text-2xl text-brand-black mt-4">WhatsApp Checkout</h3>
                 <p class="text-sm text-brand-black/60 mt-3">

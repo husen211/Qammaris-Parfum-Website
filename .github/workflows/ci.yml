@@ -64,5 +64,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Run frontend regression tests
+        run: node --test tests/js/*.test.mjs
+
       - name: Build frontend assets
         run: npm run build

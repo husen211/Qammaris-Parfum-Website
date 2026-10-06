@@ -12,7 +12,7 @@
                     </p>
                     <div class="mt-8 flex flex-col sm:flex-row gap-4">
                         <a href="{{ route('quiz.index') }}"
-                            class="inline-flex items-center justify-center bg-brand-black px-10 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-gold hover:text-brand-black transition-all">
+                            class="inline-flex items-center justify-center bg-brand-black px-10 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-gold hover:text-brand-black transition-colors">
                             Mulai Tes
                         </a>
                         <a href="{{ route('products.index') }}"

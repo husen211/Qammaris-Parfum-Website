@@ -153,10 +153,12 @@
     overflow-wrap: anywhere;
 }
 
-.catalog-card__link:hover .catalog-card__name {
-    text-decoration: underline;
-    text-decoration-color: var(--color-brand-gold);
-    text-underline-offset: 4px;
+@media (hover: hover) and (pointer: fine) {
+    .catalog-card__link:hover .catalog-card__name {
+        text-decoration: underline;
+        text-decoration-color: var(--color-brand-gold);
+        text-underline-offset: 4px;
+    }
 }
 
 .catalog-card__offer {

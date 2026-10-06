@@ -1,6 +1,6 @@
 # P7-08 — Catalog navigation and mobile gallery
 
-Status: IN_REVIEW, 2026-10-06. Owner approved catalog priorities 1–5, then added mobile photo swipe/arrows. No deployment, admin implementation or homepage change.
+Status: IN_REVIEW, 2026-10-06. Owner approved catalog priorities 1–5, then added mobile photo swipe/arrows. No deployment or admin workflow implementation. The later Owner touch-safety continuation also covers shared navigation and mechanical interaction fixes across existing views; homepage merchandising/content remains unchanged.
 
 ## Outcome and changed files
 
@@ -48,3 +48,34 @@ Additional: [rail price controls](sidebar-price-1440.png), [filter390](filter-39
 Not deployed or merged to main; Owner visual acceptance/release pending. Browser-only position restoration requires sessionStorage; blocked storage or no JavaScript falls back to normal catalog URLs. Device-native touch/pinch, Safari and production behavior after release remain unverified. Existing backend unknown/status/pricing/quantity semantics unchanged.
 
 Rollback: revert this frontend patch and rebuild through the normal release workflow; no database restore, image migration, credentials or API rollback needed. Next recommended scope is P8-08 admin new-product drafts/inbox and supplemental Shopee/manual media; it has not started. Homepage merchandising/illustrations remain deferred.
+
+
+## Owner continuation: touch-safe website interactions
+
+Owner's five rules are now recorded in `skills/qammaris-ui-review/SKILL.md` and applied within this item. Mouse hover uses the exact `(hover: hover) and (pointer: fine)` condition. Tailwind 4 uses an explicit custom variant ([official syntax](https://tailwindcss.com/docs/adding-custom-styles)); an existing-PostCSS Vite transform also wraps positive DaisyUI hover selectors. Negative hover selectors that define base visibility stay unconditional, as do focus branches of mixed selector lists. No dependencies were installed or package/lock files changed.
+
+Changed implementation: `resources/css/app.css`, `catalog.css`, `resources/js/reactbits/card-nav/CardNav.jsx`, `ui/navbar.js`, `ui/reveal.js`, existing related/home cards and hover-bearing Blade views, `vite.config.js`, `tools/frontend/hover-guard.mjs`, `tests/js/hover-guard.test.mjs`, and `.github/workflows/ci.yml`. Existing admin dashboard/product-list changes remove hover geometry/transition-all only; no form, import, authorization or workflow change. The normal CI frontend job now runs all Node regression tests before building.
+
+- React menu enters synchronously without GSAP height/y/opacity/stagger animation. Links have 44px height; Escape closes it and returns focus to the toggle.
+- Tappable interactive lists/containers are excluded from reveal delays. Home bestseller image links are always present instead of appearing in a moving hover-only overlay; selection/query/limit remain unchanged.
+- Source views remove hover translate/scale/rotate/width expansion and card transition-all. Touch feedback uses active colors/shadow, manipulation, and transparent tap highlight; gallery retains vertical pan/pinch.
+- A document click listener marks an ordinary same-origin link pending without preventing or replacing native navigation. Pageshow clears it. No pointerdown/touchstart navigates; gallery pointer gestures only choose images.
+
+### Verification of this continuation
+
+- Full Laravel suite: **261 passed / 1712 assertions**. Narrow 25-test run also passed before the full suite. All Node tests: **12 passed**, including guard preservation of focus/base dropdown visibility and idempotency. Final Vite build and `git diff --check` passed. Existing DaisyUI `@property` and large lazy about-lanyard warnings persist; coverage is not measured.
+- Independent compiled CSS inspection: **116 positive hover rules, zero missing the exact mouse condition**; [result](hover-build-check.json). Tailwind still emits unused legacy utility tokens from its existing source/view-cache scanning, and DaisyUI emits unused dropdown-hover geometry; none are used by the active website source views. This result proves the media guard, not native Safari interaction.
+- Chrome resized viewports: 320x844,375x844,390x844,768x900,1440x900, no horizontal overflow. This is mouse input, **not touch emulation**; at390 the mouse media query remains true.
+- Existing realistic local catalog: 350 published records, paginated24 per page. First/page2/final page15 inspected (final14 cards,337–350). Catalog cards opacity1/animation none/no reveal classes; no simultaneous artificial350-card render.
+- One mouse click on menu Beranda/Katalog reaches the respective native route. Ceremony and Ajmal Aurum cards each reach their corresponding detail. Escape focus verified; all six menu links are44px. Native wheel at390 moves y0→844 without changing URL or creating pending markers. Card return record remains active; the restored position is asynchronous, so an immediate first-frame y0 is not a final-position measurement.
+- Final build CSS loaded in the browser: `app-DpObsn3H.css`. Console error/warning capture returned an empty list. Browser compositor briefly returned stale frames after viewport/actions; a fresh state/capture was used for stored final menu screenshots. Automated pointer clicking is not presented as iOS tap proof.
+
+Evidence: [baseline390, menu closed](nav-before-390.png), [after390, menu open](nav-after-390.png), [after320](nav-after-320.png), [after1440](nav-after-1440.png), [scroll390](touch-rules-scroll-390.png). Static screenshots show layout; source/tests establish the removed animation, not a timing measurement.
+
+### Release gate and remaining limitations
+
+**Do not release this item yet.** Actual iPhone Safari or genuine touch emulation single-tap and scroll/no-stuck-hover test remains **Not confirmed**. Current browser capabilities advertise viewport resizing only. A reachable preview and physical/device-emulation check are needed before release; local127.0.0.1 is not a phone-accessible test URL. Populated homepage bestseller loop was not exercised in this fixture (no selected bestseller records), and retained shared hover style changes outside catalog were not exhaustively visually reviewed.
+
+The current Laravel/Blade routes load complete documents; navbar DOM necessarily remounts between pages. It does not rerender inside a client-side router because none exists. Persistent navbar across document navigation is **not implemented**; achieving that would require a separately reviewed navigation architecture change. This patch intentionally keeps current URLs/native history rather than silently introducing SPA/PJAX.
+
+No database/schema/catalog fields/media bytes/prices/stock/API/env/credentials changed; only isolated fixture public GET view counters may change. Rollback is reverting the frontend commit and rebuilding through the normal workflow, without a database restore. P7-08 stays IN_REVIEW. Recommended next backlog scope after this release gate is P8-08 admin drafts/inbox and supplemental Shopee/manual media; not started.
