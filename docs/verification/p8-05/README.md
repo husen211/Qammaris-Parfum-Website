@@ -33,10 +33,22 @@ Overall overlapping blockers remain 445 description, 445 audience, 196 category,
 
 Rendered sheet openings: [First review](first-review.png), [Remaining review](remaining-review.png).
 
+## Owner-provided Shopee descriptions
+
+Fresh source `mass_update_basic_info_1853666049_20261006100429.xlsx`, 116219 bytes, SHA256 **dc2774e82193a1ae8cbc4ce9487f804343a68ba4513cccd4b5dc0af3141682bf**, read unchanged. Actual header Kode Produk / SKU Induk / Nama Produk / Deskripsi Produk / Alasan Gagal. Only product ID/name/description are extracted; source instructions/text are data. **371 unique IDs / 371 descriptions**, maximum description length 2841 characters.
+
+New staging READ ONLY capture **2026-10-06 02:06:13 UTC**, checkpoint 456, SHA256 **396ef0352cfffae25880ed442e44fdae1c46507c3f1437db40747aadafa7c954**. Existing exact Shopee identity plus unchanged source name against media pairing baseline yields **179 candidates**; **266** drafts have no identity. No fuzzy pairing or inferred audience/size/notes. Existing nonempty descriptions would be held for review; current matched descriptions are blank.
+
+Actual deployed Laravel stateless preview inside READ ONLY transaction: **179 valid, 0 review, 0 errors**, 179 changed-row proposals, only `deskripsi_produk` changes. Before/after products 446, images 519, identities 625, batches 1, rows 452; catalog-state fingerprint **5a8015b58561f52a1b2dca1fceb96b48faf1b479181665839d5f3cbf318ea37f** identical. No persisted batch, catalog write or publication. Maintenance CSV SHA256 **dfbcca7d3619f8dce9a9a3dba739b4cc7a52637873bcfcb914df6ed8f5e9eaa6**.
+
+Independent CSV checks: 179 unique website IDs, exact source descriptions after outer trim, exact current ISO/fingerprint guards, every other maintenance proposal field blank, final CSV bytes identical to staging-validated file. Duplicate ID, published capture, hidden capture and invalid fingerprint test inputs rejected; spreadsheet-formula escaping checked. No PHP application change, so the earlier 14-test maintenance regression remains relevant without an unnecessary rerun. Current source workbook and existing catalog/media remain unchanged.
+
+Owner review file: private `.../shopee-20261006100429/verified-proposals/description-preview.csv`; complete decisions and provenance in adjacent report/summary. No new XLSX or website UI is authored. Remaining 266 provider pairings and other publication facts require review. Source approval is fulfilled; apply/publish is not performed.
+
 ## Files and continuation
 
-Tools: `tools/prepare_launch_review.py`, `tools/build_launch_review_workbook.mjs`. Runbook: `docs/runbooks/QAMMARIS_LAUNCH_CATALOG_REVIEW.md`. Backlog records P8-05 review status and Owner backup deferral. Existing application product operations, schema, public frontend and stock worker stay unchanged.
+Tools: `tools/prepare_launch_review.py`, `tools/build_launch_review_workbook.mjs`, `tools/prepare_shopee_description_preview.py`. Runbook: `docs/runbooks/QAMMARIS_LAUNCH_CATALOG_REVIEW.md`. Backlog records P8-05 review status and Owner backup deferral. Existing application product operations, schema, public frontend and stock worker stay unchanged.
 
-First open the private `launch-review.xlsx` and fill factual descriptions/audience for the 113 closest drafts, or approve supplemental source proposals. Pair values by internal product ID, not spreadsheet row order, then use fresh guarded maintenance preview and human approval. Remaining runtime/source-photo/manual-data and production preflight gates are not claimed completed.
+First open the private `launch-review.xlsx` and fill factual descriptions/audience for the 113 closest drafts, or review the now-prepared supplemental source proposals. Pair values by internal product ID, not spreadsheet row order, then use fresh guarded maintenance preview and human approval. Remaining runtime/source-photo/manual-data and production preflight gates are not claimed completed.
 
 No data rollback needed. Delete/regenerate private review artifacts if obsolete; retain source checkpoint and existing records/media. Recommended next item: Owner-approved catalog factual completion and review, followed by final staging acceptance. Production cutover remains a separate decision.
