@@ -1,0 +1,93 @@
+{
+  "https": {
+    "checked_at": "2026-10-06T07:49:19+00:00",
+    "release": "87959623d03c33b99c400e242cb35856b7f1e7a9",
+    "public_https": {
+      "/up": 200,
+      "/products": 200,
+      "/products/bsp-kuta-7-am-100ml": 200,
+      "/products?search=BSP+Kuta+7+am+-+100ml": 200,
+      "/products/pink-drops-50ml": 404,
+      "/login": 200,
+      "/admin": 302,
+      "/.env": 403,
+      "/vendor/autoload.php": 404,
+      "/owner-review/p8-06-launch-ready/": 301
+    },
+    "feed_without_key": 401,
+    "feed_with_key": 200,
+    "snapshots": 452,
+    "checkpoint": 457,
+    "has_more": false,
+    "first_page_count": 200,
+    "example_product": {
+      "name": "BSP Kuta 7 am - 100ml",
+      "slug": "bsp-kuta-7-am-100ml",
+      "availability": "available"
+    },
+    "unsigned_webhook": 401,
+    "signed_webhook": 202,
+    "duplicate_wakeup": 202,
+    "older_revision_wakeup": 422,
+    "snapshot_revision_before": 457,
+    "published": 350,
+    "drafts": 95
+  },
+  "target": {
+    "checked_at": "2026-10-06T07:51:43+00:00",
+    "public_follow_redirect_checks": {
+      "/": 200,
+      "/blog": 200,
+      "/store/location": 200,
+      "/store/about": 200,
+      "/owner-review/p8-06-launch-ready/": 404,
+      "/products/p8-03-aoera-majestic-50-ml": 404
+    },
+    "valid_older_revision_wakeup": 202,
+    "snapshot_id": "7914a351-e857-40d0-96ed-55b6fbaebd67",
+    "snapshot_revision_before": 457,
+    "public_root": "/home/u429527638/domains/qammarisparfum.id/current/public",
+    "current": "/home/u429527638/domains/qammarisparfum.id/releases/qammaris-87959623d03c33b99c400e242cb35856b7f1e7a9",
+    "env_mode": "600",
+    "cached_config_mode": "600",
+    "api_key": "terisi",
+    "webhook_secret": "terisi",
+    "legacy_retained": true,
+    "media_files": 1016
+  },
+  "runtime": {
+    "revision": "87959623d03c33b99c400e242cb35856b7f1e7a9",
+    "current": "/home/u429527638/domains/qammarisparfum.id/releases/qammaris-87959623d03c33b99c400e242cb35856b7f1e7a9",
+    "published": 350,
+    "draft": 95,
+    "users": 1,
+    "worker_php_count": 1,
+    "schedule_work_count": 0,
+    "queued": 0,
+    "failed_jobs": 0,
+    "checkpoint": 457,
+    "last_error": null,
+    "worker_heartbeat": "2026-10-06T07:51:01Z",
+    "scheduler_heartbeat": "2026-10-06T07:51:01Z",
+    "public_activation": true
+  },
+  "main_ci_run": 37431709979,
+  "production_release_run": 37431774330,
+  "production_release_build": "success",
+  "production_release_deploy": "success",
+  "backend_deployment": "01a1102f-8403-735c-8d4e-37cc7883dee2",
+  "backend_commit": "921569b4",
+  "backend_status": "Selesai",
+  "backend_webhook_url": "https://qammarisparfum.id/integrations/qammaris-app/webhook",
+  "browser": {
+    "desktop": "1440x900",
+    "mobile": "390x844",
+    "overflow": false,
+    "visible_catalog_photos_loaded": true,
+    "admin_login": "passed",
+    "admin_catalog_count": 445,
+    "native_search_BSP_Kuta_results": 2,
+    "captured_console_errors": 0
+  },
+  "source_stock_event_production_latency": "Not confirmed; no new stock mutation requested"
+}

@@ -1,3 +1,5 @@
+> Current status: production live. See [cutover evidence](PRODUCTION_CUTOVER.md) for actual results, observation limits and rollback. Earlier captures below are historical.
+
 # P1-04 preflight evidence — 2026-10-06
 
 Status: **IN_PROGRESS**. Fresh production target/catalog/Owner admin/live feed/worker/cron and GitHub release are now prepared; public activation remains pending. See [current target evidence](PRODUCTION_TARGET_PREPARATION.md) and [runbook](../../runbooks/PRODUCTION_CUTOVER_PREFLIGHT.md). Older dated captures below retain their original facts; Owner waived legacy matching/backup.

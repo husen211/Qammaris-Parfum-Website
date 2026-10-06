@@ -1,6 +1,6 @@
 # Production target preparation — 2026-10-06
 
-Status: target prepared; **public cutover and production webhook destination pending Owner approval**. Continue P1-04 only.
+Current status: **production live; auto-deploy and backend destination verified**. See [current cutover evidence](PRODUCTION_CUTOVER.md). Preparation statements below are historical; P1-04 IN_REVIEW for Owner acceptance.
 
 ## Actual evidence
 
