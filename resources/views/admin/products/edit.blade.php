@@ -2,6 +2,7 @@
 
 @section('content')
 @php($editingPublished = $product->isPublished())
+@php($appManaged = $product->externalIdentities()->where('provider', 'qammaris_app')->exists())
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -26,6 +27,13 @@
             &larr; Cancel
         </a>
     </div>
+
+    @if($appManaged)
+        <div class="mb-6 border-l-2 border-brand-gold bg-white px-4 py-3 text-sm text-gray-600">
+            Stok dan harga jual mengikuti Qammaris App. Di sini, lengkapi deskripsi, foto, ukuran, klasifikasi, dan status tayang.
+            <a href="{{ route('admin.app-products.index') }}" class="ml-1 font-semibold underline">Lihat data aplikasi</a>
+        </div>
+    @endif
 
     @if ($errors->any())
     <div class="bg-red-50 border border-red-200 p-4 mb-6 rounded-lg">
@@ -131,6 +139,11 @@
                         </div>
 
                         <div class="border-t border-gray-100 pt-5">
+                            @if($appManaged)
+                                <h4 class="text-sm font-semibold text-gray-900">Ketersediaan dari aplikasi</h4>
+                                <p class="mt-2 text-sm text-gray-700">{{ match ($product->availability_status) { 'available' => 'Tersedia', 'sold_out' => 'Habis', default => 'Tanyakan ketersediaan' } }}{{ $product->availability_status === 'sold_out' && $product->availability_restock_eta ? ' · Restok segera' : '' }}</p>
+                                <p class="mt-1 text-xs leading-relaxed text-gray-500">Perubahan status dilakukan di Qammaris App. Status tersimpan dipertahankan saat koneksi terputus.</p>
+                            @else
                             <div class="mb-3">
                                 <h4 class="text-sm font-semibold text-gray-900">Ketersediaan katalog</h4>
                                 <p class="mt-1 text-xs leading-relaxed text-gray-500">
@@ -177,6 +190,7 @@
                                     @endif
                                 @endif
                             </p>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -228,11 +242,14 @@
                         </div>
                         <div>
                             <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
-                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ old('variants.0.price', $offer?->price) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
+                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
+                        @if($appManaged)
+                            <input type="hidden" name="variants[0][stock]" value="{{ $offer?->stock ?? 0 }}">
+                        @else
                         <div>
                             <label for="offer-stock" class="block text-xs font-medium text-gray-600 mb-1">Snapshot Stok <span class="text-gray-400">Opsional</span></label>
                             <input id="offer-stock" type="number" name="variants[0][stock]" value="{{ old('variants.0.stock', $offer?->stock ?? 0) }}" min="0" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.stock') border-red-500 @enderror">
@@ -241,6 +258,7 @@
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
+                        @endif
                     </div>
                 </div>
             </div>

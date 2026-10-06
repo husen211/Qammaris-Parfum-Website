@@ -12,7 +12,7 @@
         <div>
             <p class="text-sm font-semibold text-amber-700">Preview, review, lalu apply ke draft</p>
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Import Produk</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Upload CSV hasil kurasi Claude. Sistem menyimpan preview immutable; apply hanya membuat draft baru atau memperbarui draft existing yang aman.</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Jalur utama produk baru adalah Qammaris App. Halaman ini menerima CSV format Qammaris untuk pelengkap data; file XLSX Shopee mentah belum dapat diunggah langsung. Pratinjau wajib sebelum perubahan diterapkan.</p>
         </div>
         <div>
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
@@ -29,6 +29,8 @@
             <p class="mt-2 text-xs leading-relaxed text-gray-500 sm:text-right">Snapshot bersifat read-only dan tidak dapat langsung diimport.</p>
         </div>
     </div>
+
+    <p class="mt-5 text-sm"><a href="{{ route('admin.app-products.index') }}" class="font-semibold underline">Lihat produk dari aplikasi</a> · Foto manual dapat ditambahkan di editor produk.</p>
 
     <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="upload-title">

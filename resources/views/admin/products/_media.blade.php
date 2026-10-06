@@ -86,6 +86,6 @@
             </div>
         @endif
 
-        <p class="mt-3 text-xs leading-relaxed text-gray-400">Foto yang diarsipkan keluar dari galeri aktif, tetapi file tetap disimpan untuk recovery.</p>
+        <p class="mt-3 text-xs leading-relaxed text-gray-400">Foto diunggah ke storage produk website dan tetap tersimpan saat pembaruan kode. Foto yang diarsipkan keluar dari galeri aktif, tetapi file tetap disimpan untuk recovery.</p>
     </div>
 </div>

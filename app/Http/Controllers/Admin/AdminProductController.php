@@ -406,6 +406,7 @@ class AdminProductController extends Controller
     private function catalogReturnPath(mixed $returnTo): string
     {
         $indexPath = route('admin.products.index', [], false);
+        $appIndexPath = route('admin.app-products.index', [], false);
 
         if (! is_string($returnTo) || $returnTo === '' || strlen($returnTo) > 2048) {
             return $indexPath;
@@ -419,12 +420,20 @@ class AdminProductController extends Controller
             || isset($parts['pass'])
             || isset($parts['port'])
             || isset($parts['fragment'])
-            || ($parts['path'] ?? '') !== $indexPath) {
+            || ! in_array($parts['path'] ?? '', [$indexPath, $appIndexPath], true)) {
             return $indexPath;
         }
 
         $query = [];
         parse_str($parts['query'] ?? '', $query);
+
+        if ($parts['path'] === $appIndexPath) {
+            return route('admin.app-products.index', array_filter([
+                'page' => $this->positiveInteger($query['page'] ?? null),
+                'search' => is_string($query['search'] ?? null) ? mb_substr(trim($query['search']), 0, 100) : null,
+                'status' => in_array($query['status'] ?? null, ['all', 'draft', 'unlinked', 'hidden', 'price_review'], true) ? $query['status'] : null,
+            ]), false);
+        }
 
         return route('admin.products.index', $this->normalizeCatalogContext($query), false);
     }

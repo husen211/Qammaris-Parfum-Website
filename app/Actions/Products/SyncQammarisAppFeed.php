@@ -8,7 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 class SyncQammarisAppFeed
 {
-    public function __construct(private QammarisAppClient $client, private ApplyQammarisAppAvailability $apply) {}
+    public function __construct(
+        private QammarisAppClient $client,
+        private ApplyQammarisAppAvailability $apply,
+        private PrepareQammarisAppDrafts $drafts,
+    ) {}
 
     public function handle(): bool
     {
@@ -35,6 +39,8 @@ class SyncQammarisAppFeed
                         ->where('external_product_id', $snapshot['id'])->first();
                     if ($identity) {
                         $this->apply->handle($identity->product, $snapshot);
+                    } else {
+                        $this->drafts->createFromSnapshot($snapshot);
                     }
                 }
                 DB::table('qammaris_app_sync_states')->where('id', 'products')->update([

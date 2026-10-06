@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductExternalIdentity;
 use App\Models\ProductImportBatch;
 use App\Models\ProductVariant;
+use App\Models\User;
 use App\Services\ImportedProductName;
 use App\Services\ProductImportPayloadHasher;
 use App\Services\ProductImportPreviewer;
@@ -33,9 +34,9 @@ class PrepareQammarisAppDrafts
         private ProductImportProductSnapshot $productSnapshot,
     ) {}
 
-    public function preview(array $media): ProductImportBatch
+    public function preview(array $media, ?User $actor = null): ProductImportBatch
     {
-        return DB::transaction(function () use ($media): ProductImportBatch {
+        return DB::transaction(function () use ($media, $actor): ProductImportBatch {
             // Same lock order as feed consumption: checkpoint -> source -> product.
             DB::table('qammaris_app_sync_states')->where('id', 'products')->lockForUpdate()->first();
             $sources = DB::table('qammaris_app_products')->orderBy('id')->lockForUpdate()->get()
@@ -57,7 +58,7 @@ class PrepareQammarisAppDrafts
             $matches = $this->media->match(array_values(array_filter($sources, fn ($s) => ! $s['hidden'])), $media);
             $sourceHash = $this->hash([$sources, $media]);
             $catalogHash = $this->catalogHash();
-            $key = $this->hash([self::VERSION, 'owner-authorized-cli', $sourceHash, $catalogHash]);
+            $key = $this->hash([self::VERSION, 'owner-authorized-cli', $actor?->id, $sourceHash, $catalogHash]);
             $existing = ProductImportBatch::where('idempotency_key', $key)->first();
             if ($existing) {
                 return $existing->load('rows');
@@ -120,7 +121,7 @@ class PrepareQammarisAppDrafts
                 ];
             }
             $batch = ProductImportBatch::create([
-                'actor_id' => null, 'source_filename' => 'owner-authorized-qammaris-feed', 'source_size' => strlen(json_encode($sources)),
+                'actor_id' => $actor?->id, 'source_filename' => $actor ? 'qammaris-feed-admin' : 'owner-authorized-qammaris-feed', 'source_size' => strlen(json_encode($sources)),
                 'source_fingerprint' => $sourceHash, 'contract_version' => self::VERSION, 'catalog_state_fingerprint' => $catalogHash,
                 'idempotency_key' => $key, 'status' => 'previewed', 'total_rows' => count($rows), 'valid_rows' => 0,
                 'review_rows' => count(array_filter($rows, fn ($r) => $r['status'] === 'review')),
@@ -132,12 +133,12 @@ class PrepareQammarisAppDrafts
         }, 3);
     }
 
-    public function apply(int $batchId): ProductImportBatch
+    public function apply(int $batchId, ?User $actor = null): ProductImportBatch
     {
-        return DB::transaction(function () use ($batchId): ProductImportBatch {
+        return DB::transaction(function () use ($batchId, $actor): ProductImportBatch {
             DB::table('qammaris_app_sync_states')->where('id', 'products')->lockForUpdate()->first();
             $batch = ProductImportBatch::whereKey($batchId)->lockForUpdate()->firstOrFail();
-            if ($batch->contract_version !== self::VERSION) {
+            if ($batch->contract_version !== self::VERSION || $batch->actor_id !== $actor?->id) {
                 throw new DomainException('Not a Qammaris draft batch.');
             }
             if ($batch->status === 'applied') {
@@ -166,31 +167,70 @@ class PrepareQammarisAppDrafts
                 if (ProductExternalIdentity::where('provider', 'qammaris_app')->where('external_product_id', $row->external_product_id)->exists()) {
                     throw new DomainException('UUID mapping changed.');
                 }
-                $product = Product::create([
-                    'name' => $data['nama_produk'], 'brand_id' => $this->taxonomy(Brand::class, $data['brand']),
-                    'category_id' => $this->taxonomy(Category::class, $data['kategori']), 'base_price' => $data['harga'],
-                    'description' => null, 'gender' => null, 'is_active' => false, 'publication_status' => 'draft',
-                    'published_at' => null, 'stock_quantity' => null, 'availability_status' => 'unknown',
-                ]);
-                $this->map->handle($product, 'qammaris_app', $row->external_product_id);
-                if ($data['shopee_id'] !== null) {
-                    $this->map->handle($product, 'shopee', $data['shopee_id']);
-                }
-                if ($data['ukuran_ml'] !== null && $data['harga'] !== null) {
-                    // Upstream SKU may be truncated/nonunique. UUID stays the integration key.
-                    $this->offers->handle($product, ['volume' => $data['ukuran_ml'], 'price' => $data['harga'], 'sku' => null]);
-                }
-                $this->availability->handle($product, $data['source_snapshot']);
+                $product = $this->createDraft($data, $row->external_product_id);
                 $row->update(['apply_status' => 'created', 'applied_product_id' => $product->id,
-                    'apply_message' => 'Owner-authorized CLI created draft; source/app fields and publish completeness require review.',
+                    'apply_message' => 'Qammaris feed created draft; source/app fields and publish completeness require review.',
                     'before_snapshot' => null, 'after_snapshot' => $this->productSnapshot->capture($product), 'applied_at' => now()]);
                 $created++;
             }
-            $batch->update(['status' => 'applied', 'applied_at' => now(), 'applied_by' => null,
+            $batch->update(['status' => 'applied', 'applied_at' => now(), 'applied_by' => $actor?->id,
                 'applied_rows' => $created, 'blocked_rows' => $rows->count() - $created]);
 
             return $batch->load('rows');
         }, 3);
+    }
+
+    /** Caller holds checkpoint/source locks in the same transaction as the feed. */
+    public function createFromSnapshot(array $source): ?Product
+    {
+        if ($source['hidden'] || trim($source['name']) === '' || mb_strlen($source['name']) > 255) {
+            return null;
+        }
+        $identity = ProductExternalIdentity::where('provider', 'qammaris_app')->where('external_product_id', $source['id'])->first();
+        if ($identity) {
+            return $identity->product;
+        }
+        $catalog = Product::with(['brand', 'variants', 'externalIdentities'])->orderBy('id')->get()->map(fn ($p) => [
+            'id' => $p->id, 'name' => $p->name, 'slug' => $p->slug, 'publication_status' => $p->publication_status,
+            'brand' => $p->brand?->name, 'size_ml' => $p->variants->where('is_active', true)->first()?->volume,
+            'sku' => $p->variants->where('is_active', true)->first()?->sku,
+            'source_uuid' => $p->externalIdentities->firstWhere('provider', 'qammaris_app')?->external_product_id,
+        ])->all();
+        $candidate = collect($this->mappingReview->rows($catalog, [$source], 'feed'))
+            ->contains(fn ($row) => $row['source_uuid'] === $source['id'] && ! str_starts_with($row['review_status'], 'mapped'));
+        if ($candidate) {
+            return null;
+        }
+        $price = $source['price'];
+
+        return $this->createDraft([
+            'nama_produk' => $source['name'], 'brand' => $source['brand'],
+            'kategori' => $this->names->concentration($source['name']),
+            'ukuran_ml' => $this->names->size($source['name']),
+            'harga' => is_int($price) && $price > 0 && $price <= 99999999 ? $price : null,
+            'shopee_id' => null, 'source_snapshot' => $source,
+        ], $source['id']);
+    }
+
+    private function createDraft(array $data, string $uuid): Product
+    {
+        $product = Product::create([
+            'name' => $data['nama_produk'], 'brand_id' => $this->taxonomy(Brand::class, $data['brand']),
+            'category_id' => $this->taxonomy(Category::class, $data['kategori']), 'base_price' => $data['harga'],
+            'description' => null, 'gender' => null, 'is_active' => false, 'publication_status' => 'draft',
+            'published_at' => null, 'stock_quantity' => null, 'availability_status' => 'unknown',
+        ]);
+        $this->map->handle($product, 'qammaris_app', $uuid);
+        if ($data['shopee_id'] !== null) {
+            $this->map->handle($product, 'shopee', $data['shopee_id']);
+        }
+        if ($data['ukuran_ml'] !== null && $data['harga'] !== null) {
+            // Upstream SKU may be truncated/nonunique. UUID stays the integration key.
+            $this->offers->handle($product, ['volume' => $data['ukuran_ml'], 'price' => $data['harga'], 'sku' => null]);
+        }
+        $this->availability->handle($product, $data['source_snapshot'], true);
+
+        return $product;
     }
 
     private function taxonomy(string $model, ?string $name): ?int
