@@ -86,7 +86,7 @@ class PublicInquiryFlowTest extends TestCase
         $this->assertEmpty(session('cart', []));
     }
 
-    public function test_inquiry_page_and_drawer_data_use_current_values_and_local_placeholder(): void
+    public function test_cart_page_and_compatibility_data_use_current_values_and_local_placeholder(): void
     {
         [$product, $offer] = $this->createCatalogItem();
         $sessionItem = $this->sessionItem($product, $offer);
@@ -98,6 +98,8 @@ class PublicInquiryFlowTest extends TestCase
             ->get(route('cart.index'));
 
         $page->assertOk()
+            ->assertDontSee('cartDrawer', false)
+            ->assertSee('data-cart-href="'.route('cart.index').'"', false)
             ->assertSee('Keranjang')
             ->assertSee('Brand Current')
             ->assertSee('Product Current')

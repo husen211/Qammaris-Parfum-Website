@@ -22,6 +22,8 @@ if (mount) {
       homeHref={mount.dataset.homeHref || '/'}
       activeUrl={mount.dataset.activeUrl || ''}
       cartCount={cartCount}
+      cartHref={mount.dataset.cartHref || '/cart'}
+      cartDataUrl={mount.dataset.cartDataUrl}
     />
   );
 }

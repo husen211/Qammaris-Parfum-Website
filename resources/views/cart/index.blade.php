@@ -64,7 +64,7 @@
                                         default => 'text-amber-700',
                                     };
                                 @endphp
-                                <article class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-4 py-6 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center" data-inquiry-row data-id="{{ $item['id'] }}">
+                                <article class="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-4 py-6 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:items-center" data-inquiry-row data-id="{{ $item['id'] }}" data-cart-update-url="{{ route('cart.update', $item['id']) }}" data-cart-remove-url="{{ route('cart.remove', $item['id']) }}">
                                     <a href="{{ $item['product_url'] }}" class="h-24 w-18 sm:h-32 sm:w-24 overflow-hidden bg-[#FAF8F3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                                         <img src="{{ $item['image'] }}" alt="{{ $item['product_name'] }}" width="96" height="128" loading="lazy" decoding="async" class="h-full w-full object-contain">
                                     </a>
@@ -76,7 +76,7 @@
                                         </h3>
                                         <p class="mt-2 text-sm text-gray-500">{{ $item['volume'] }} ml · {{ $item['formatted_unit_price'] }} per item</p>
                                         <p class="mt-2 text-xs font-semibold {{ $availabilityClass }}">{{ $item['availability_label'] }}</p>
-                                        <button type="button" onclick="removeInquiryItem('{{ $item['id'] }}')"
+                                        <button type="button" data-cart-remove
                                             class="mt-4 min-h-11 text-xs font-semibold uppercase tracking-widest text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                                             Hapus produk
                                         </button>
@@ -86,10 +86,10 @@
                                         <p class="text-lg font-semibold tabular-nums text-brand-black">{{ $item['formatted_price'] }}</p>
                                         <div>
                                             <span class="mb-2 block text-[10px] font-semibold uppercase tracking-widest text-gray-400">Jumlah</span>
-                                            <div class="flex h-11 items-center border border-gray-300">
-                                                <button type="button" onclick="updateInquiryQuantity('{{ $item['id'] }}', -1)" aria-label="Kurangi jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-gray-500 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">−</button>
-                                                <input type="number" id="qty-{{ $item['id'] }}" value="{{ $item['quantity'] }}" min="1" max="99" aria-label="Jumlah {{ $item['product_name'] }}" class="h-11 w-11 border-none p-0 text-center text-sm font-semibold focus:ring-0" readonly>
-                                                <button type="button" onclick="updateInquiryQuantity('{{ $item['id'] }}', 1)" aria-label="Tambah jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">+</button>
+                                            <div class="quantity-stepper">
+                                                <button type="button" data-cart-quantity-change="-1" aria-label="Kurangi jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-gray-500 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">−</button>
+                                                <input type="number" id="qty-{{ $item['id'] }}" value="{{ $item['quantity'] }}" min="1" max="99" aria-label="Jumlah {{ $item['product_name'] }}" class="focus:ring-0" readonly>
+                                                <button type="button" data-cart-quantity-change="1" aria-label="Tambah jumlah {{ $item['product_name'] }}" class="flex h-11 w-11 items-center justify-center text-lg text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">+</button>
                                             </div>
                                         </div>
                                     </div>
@@ -138,7 +138,7 @@
                 </div>
             @else
                 <div class="mx-auto flex max-w-xl flex-col items-center justify-center py-12 text-center md:py-20">
-                    <div class="flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 text-3xl text-gray-300" aria-hidden="true">?</div>
+                    <div class="flex h-20 w-20 items-center justify-center border border-gray-200 text-gray-300"><x-cart-bag-icon class="h-8 w-8" /></div>
                     <h2 class="mt-6 font-mayluxa text-2xl text-brand-black">Keranjang masih kosong</h2>
                     <p class="mt-3 max-w-md text-sm font-light leading-6 text-gray-500">Temukan parfum pilihan Anda, lalu tambahkan ke keranjang.</p>
                     <a href="{{ route('products.index') }}" class="mt-8 inline-flex min-h-12 items-center justify-center bg-brand-black px-8 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
@@ -149,73 +149,3 @@
         </div>
     </section>
 @endsection
-
-@push('scripts')
-<script>
-const inquiryFeedback = document.querySelector('[data-inquiry-feedback]');
-
-function setInquiryFeedback(message, isError = false) {
-    if (!inquiryFeedback) return;
-    inquiryFeedback.textContent = message;
-    inquiryFeedback.classList.toggle('text-red-700', isError);
-    inquiryFeedback.classList.toggle('text-gray-600', !isError);
-}
-
-async function updateInquiryQuantity(itemId, change) {
-    const input = document.getElementById(`qty-${itemId}`);
-    if (!input) return;
-
-    const previous = Number.parseInt(input.value, 10);
-    const quantity = Math.min(Math.max(previous + change, 1), 99);
-    if (quantity === previous) return;
-
-    input.value = quantity;
-    setInquiryFeedback('Memperbarui daftar…');
-
-    try {
-        const response = await fetch(`/cart/update/${encodeURIComponent(itemId)}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ quantity }),
-        });
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Jumlah belum dapat diperbarui.');
-        }
-
-        window.location.reload();
-    } catch (error) {
-        input.value = previous;
-        setInquiryFeedback(error.message || 'Jumlah belum dapat diperbarui. Coba lagi.', true);
-    }
-}
-
-async function removeInquiryItem(itemId) {
-    setInquiryFeedback('Menghapus produk dari daftar…');
-
-    try {
-        const response = await fetch(`/cart/remove/${encodeURIComponent(itemId)}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json',
-            },
-        });
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Produk belum dapat dihapus.');
-        }
-
-        window.location.reload();
-    } catch (error) {
-        setInquiryFeedback(error.message || 'Produk belum dapat dihapus. Coba lagi.', true);
-    }
-}
-</script>
-@endpush

@@ -206,17 +206,18 @@
                             <div class="flex items-end justify-between gap-4">
                                 <div>
                                     <label for="quantity" class="block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">Jumlah</label>
-                                    <div class="mt-2 flex h-11 w-fit items-center border border-gray-300">
+                                    <div class="quantity-stepper mt-2">
                                         <button type="button" data-quantity-change="-1" aria-label="Kurangi jumlah" class="flex h-11 w-11 items-center justify-center text-lg text-gray-500 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">−</button>
-                                        <input type="number" id="quantity" value="1" min="1" class="h-11 w-11 border-none p-0 text-center text-sm font-semibold focus:ring-0" readonly>
+                                        <input type="number" id="quantity" value="1" min="1" max="99" class="focus:ring-0" readonly>
                                         <button type="button" data-quantity-change="1" aria-label="Tambah jumlah" class="flex h-11 w-11 items-center justify-center text-lg text-brand-black hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black">+</button>
                                     </div>
                                 </div>
                             </div>
 
-                            <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}"
-                                class="flex min-h-14 w-full items-center justify-center gap-3 bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300">
-                                Tambah ke keranjang
+                            <button type="button" data-add-to-cart data-variant-id="{{ $offer->id }}" data-cart-add-url="{{ route('cart.add') }}" data-phase="idle" aria-label="Tambah ke keranjang" class="cart-add-button">
+                                <span data-cart-state="idle"><x-cart-bag-icon />Tambah ke keranjang</span>
+                                <span data-cart-state="loading" hidden><svg class="cart-add-spinner h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" opacity=".25" /><path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>Menambahkan…</span>
+                                <span data-cart-state="added" hidden><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Ditambahkan</span>
                             </button>
                         @elseif ($effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT)
                             @if ($productInquiryUrl)
@@ -306,68 +307,6 @@
         </section>
     @endif
 @endsection
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const quantityInput = document.getElementById('quantity');
-    const addButton = document.querySelector('[data-add-to-cart]');
-    const feedback = document.querySelector('[data-cart-feedback]');
-    const maxQuantity = 99;
-
-    document.querySelectorAll('[data-quantity-change]').forEach((button) => {
-        button.addEventListener('click', () => {
-            if (!quantityInput) return;
-
-            const change = Number.parseInt(button.dataset.quantityChange, 10);
-            const current = Number.parseInt(quantityInput.value, 10);
-            quantityInput.value = Math.min(Math.max(current + change, 1), Math.max(maxQuantity, 1));
-        });
-    });
-
-    addButton?.addEventListener('click', async () => {
-        const originalText = addButton.textContent;
-        addButton.textContent = 'Menambahkan…';
-        addButton.disabled = true;
-        if (feedback) feedback.textContent = '';
-
-        try {
-            const response = await fetch('{{ route('cart.add') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    variant_id: Number.parseInt(addButton.dataset.variantId, 10),
-                    quantity: Number.parseInt(quantityInput?.value ?? '1', 10),
-                }),
-            });
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Produk belum dapat ditambahkan.');
-            }
-
-            const cartBadge = document.getElementById('cartBadge');
-            if (cartBadge) {
-                cartBadge.textContent = data.cart_count;
-                cartBadge.classList.remove('hidden');
-            }
-
-            if (feedback) feedback.textContent = 'Produk ditambahkan ke keranjang.';
-            document.getElementById('cartDrawer')?.showModal();
-        } catch (error) {
-            if (feedback) feedback.textContent = error.message || 'Produk belum dapat ditambahkan. Coba lagi.';
-        } finally {
-            addButton.textContent = originalText;
-            addButton.disabled = false;
-        }
-    });
-});
-</script>
-@endpush
 
 @push('jsonld')
 <script type="application/ld+json">

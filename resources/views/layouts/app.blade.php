@@ -91,7 +91,6 @@
     
     @include('components.footer')
     
-    @include('components.cart-drawer')
     
     @stack('scripts')
     @include('components.toast')

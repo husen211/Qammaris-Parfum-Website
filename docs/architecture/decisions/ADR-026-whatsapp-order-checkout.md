@@ -19,3 +19,7 @@ WhatsApp message contains items, quantities, current prices, subtotal and recipi
 3. Choose a provider after these rules are settled. Keep payment calls in a focused Laravel operation, validate signed provider notifications, enforce idempotent status transitions/amount checks and reconcile payment failures. Use a sandbox first, then approved release.
 
 No provider, database schema, shipping price or payment claim is invented in P7-12. No new dependencies. Revert the bounded code commit to restore the old journey; existing sessions/catalog/media remain compatible.
+
+## Owner follow-up — 2026-10-07
+
+Header basket is a native link to `/cart`; remove the extra drawer step. Add keeps the customer on the detail page and gives immediate loading feedback, followed by an added state only after successful server validation. A small product-image copy follows a quadratic arc into the header basket, adapting the requested 21st.dev motion reference with the Web Animations API. No Motion/shadcn package or React conversion of Blade forms is justified. Reduced motion skips the flight and digit motion while retaining success text. Quantity controls use click/keyboard activation, bounded values and a pending mutation lock; no pointer-down hold repeat on scrollable mobile content. Existing checkout guards remain authoritative. This authorizes implementation, not production release.

@@ -275,6 +275,8 @@ Bagian inquiry publik sebelumnya adalah historis dan digantikan untuk alur pemes
 
 Rincian pesanan + penerima disiapkan dalam composer WhatsApp; customer menekan Kirim di WhatsApp. Ongkir/pembayaran dilanjutkan di WhatsApp, tidak diasumsikan gratis/sudah dibayar. Tidak ada konfirmasi pengiriman/nomor order palsu. Keranjang tetap tersedia untuk retry. Data penerima tidak masuk database/log aplikasi; input gagal dapat berada sementara di session untuk koreksi. Status available adalah status sumber; jumlah stok numerik/reservasi tetap tidak tersedia. Payment gateway adalah rencana berikutnya, belum diimplementasikan.
 
+Keputusan Owner 2026-10-07: ikon keranjang langsung membuka halaman `/cart`, tanpa drawer. Tambah produk tetap di detail dengan status menambahkan/berhasil dan animasi foto menuju keranjang setelah server mengonfirmasi. Reduced motion tetap mendapat teks berhasil tanpa animasi terbang. Kontrol jumlah tetap 1–99; jumlah bukan reservasi stok. Tidak ada izin deployment baru dari keputusan UI ini.
+
 
 ## Homepage best-seller presentation — Owner decision 2026-10-07
 
