@@ -18,7 +18,11 @@ concurrency:
 
 jobs:
   build:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -62,15 +66,35 @@ jobs:
 
   deploy:
     needs: build
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'main' && vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main' &&
+      vars.PRODUCTION_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
     steps:
+      - name: Refuse a superseded main revision
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REVISION: ${{ needs.build.outputs.revision }}
+        run: |
+          current="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          if [ "$current" = "$RELEASE_REVISION" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+            echo 'A newer main revision exists; retaining current production code.'
+          fi
       - uses: actions/download-artifact@v8
+        if: steps.current.outputs.deploy == 'true'
         with:
           name: production-${{ needs.build.outputs.revision }}
       - name: Deploy verified code to activated production only
+        if: steps.current.outputs.deploy == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
