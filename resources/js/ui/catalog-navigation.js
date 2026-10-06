@@ -61,6 +61,7 @@ if (catalog) {
             y: window.scrollY,
             sidebarY: sidebar?.scrollTop ?? 0,
             brandY: sidebar?.querySelector('[data-catalog-brand-list]')?.scrollTop ?? 0,
+            keyboard: event.detail === 0,
             pending: false,
         });
     });
@@ -80,7 +81,8 @@ if (catalog) {
         requestAnimationFrame(() => requestAnimationFrame(() => {
             const link = [...catalog.querySelectorAll('[data-catalog-product]')]
                 .find((candidate) => candidate.dataset.catalogProduct === record.productId);
-            link?.focus({ preventScroll: true });
+            // Pointer returns restore position without drawing a keyboard focus ring.
+            if (record.keyboard === true) link?.focus({ preventScroll: true });
             if (sidebar) sidebar.scrollTop = record.sidebarY;
             const brands = sidebar?.querySelector('[data-catalog-brand-list]');
             if (brands && Number.isFinite(record.brandY)) brands.scrollTop = record.brandY;
@@ -93,6 +95,6 @@ returnLink?.addEventListener('click', (event) => {
     if (!sameTabClick(event)) return;
     const record = matchingPosition(readPosition(), returnLink.href);
     if (record) {
-        writePosition({ ...record, pending: true });
+        writePosition({ ...record, keyboard: event.detail === 0, pending: true });
     }
 });

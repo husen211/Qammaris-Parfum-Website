@@ -258,3 +258,15 @@ a[data-navigation-pending] {
     background-color: rgb(197 160 89 / .15);
     box-shadow: inset 0 0 0 1px var(--color-brand-gold);
 }
+
+/* Editorial links use text feedback rather than painting the whole card. */
+a[data-catalog-product]:is(:active, [data-navigation-pending]),
+a[data-catalog-return]:is(:active, [data-navigation-pending]) {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+a[data-catalog-product]:is(:active, [data-navigation-pending]) .catalog-card__name,
+a[data-catalog-return]:is(:active, [data-navigation-pending]) {
+    color: var(--color-brand-gold);
+}
