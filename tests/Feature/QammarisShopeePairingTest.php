@@ -7,6 +7,7 @@ use App\Actions\Products\MapExternalProductIdentity;
 use App\Actions\Products\PairQammarisShopeeDrafts;
 use App\Actions\Products\QueueProductImportImages;
 use App\Models\Product;
+use App\Services\ProductCatalogRowFingerprint;
 use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class QammarisShopeePairingTest extends TestCase
@@ -195,6 +197,109 @@ class QammarisShopeePairingTest extends TestCase
         $this->artisan('qammaris-app:shopee-pairs', ['--apply' => '1', '--confirm' => true])->assertFailed();
         $this->expectException(DomainException::class);
         app(PairQammarisShopeeDrafts::class)->preview($this->input('A'));
+    }
+
+    public function test_explicit_owner_choice_pairs_only_selected_candidate_and_records_provenance(): void
+    {
+        [$p, $source] = $this->target('choice');
+        [$choices, $review, $original] = $this->ownerChoice($p, $source);
+        $action = app(PairQammarisShopeeDrafts::class);
+        $batch = $action->previewOwnerChoices($choices, $review, $original->id);
+        $this->assertSame(1, $batch->valid_rows);
+        $this->assertSame('owner-selected-shopee-candidates', $batch->source_filename);
+        $this->assertSame($batch->id, $action->previewOwnerChoices($choices, $review, $original->id)->id);
+        $this->assertSame($choices['data'][0], $batch->rows->sole()->normalized_data['owner_selection']['choice']);
+        $result = $action->apply($batch->id);
+        $this->assertSame(1, $result->applied_rows);
+        $this->assertSame('draft', $p->fresh()->publication_status);
+        $this->assertSame('Factual Shopee description.', $p->fresh()->description);
+        $before = $result->rows->sole()->getAttributes();
+        $this->assertSame($before, $action->apply($batch->id)->rows->sole()->getAttributes());
+        $this->assertSame(3, app(QueueProductImportImages::class)->handle($result, null)['candidate_images']);
+        $this->assertSame('blocked_protected', $original->rows->sole()->fresh()->apply_status);
+        $this->assertDatabaseCount('products', 1);
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_stale_owner_choice_or_occupied_identity_is_held_without_rebinding(): void
+    {
+        foreach (['stale', 'occupied'] as $scenario) {
+            [$p, $source] = $this->target($scenario);
+            if ($scenario === 'occupied') {
+                app(MapExternalProductIdentity::class)->handle($p, 'shopee', '999');
+            }
+            [$choices, $review, $original] = $this->ownerChoice($p, $source);
+            if ($scenario === 'stale') {
+                $p->update(['description' => 'Owner edit']);
+            }
+            $before = $p->fresh()->getAttributes();
+            $action = app(PairQammarisShopeeDrafts::class);
+            $batch = $action->previewOwnerChoices($choices, $review, $original->id);
+            $this->assertSame(0, $batch->valid_rows);
+            $action->apply($batch->id);
+            $this->assertSame($before, $p->fresh()->getAttributes());
+        }
+        $this->assertDatabaseMissing('product_external_identities', ['provider' => 'shopee', 'external_product_id' => '123']);
+        Http::assertNothingSent();
+    }
+
+    public function test_owner_choices_reject_non_candidate_tampered_review_duplicate_targets_and_changed_provenance(): void
+    {
+        [$p, $source] = $this->target('choice');
+        [$choices, $review, $original] = $this->ownerChoice($p, $source);
+        foreach (['sku', 'review', 'provenance', 'duplicate', 'uuid'] as $scenario) {
+            $c = $choices;
+            $r = $review;
+            if ($scenario === 'sku') {
+                $c['data'][0]['majoo_sku'] = 'not-supplied';
+            }
+            if ($scenario === 'review') {
+                $r['data'][0]['description'] = 'Changed source text';
+            }
+            if ($scenario === 'provenance') {
+                $c['capture_sha256'] = str_repeat('f', 64);
+            }
+            if ($scenario === 'duplicate') {
+                $c['data'][] = $c['data'][0];
+            }
+            if ($scenario === 'uuid') {
+                $c['data'][0]['uuid'] = (string) Str::uuid();
+            }
+            try {
+                app(PairQammarisShopeeDrafts::class)->previewOwnerChoices($c, $r, $original->id);
+                $this->fail('Invalid Owner choice accepted: '.$scenario);
+            } catch (DomainException|ValidationException) {
+                $this->assertDatabaseCount('product_import_batches', 1);
+            }
+        }
+        $this->assertNull($p->fresh()->description);
+    }
+
+    public function test_direct_mapping_json_cannot_claim_owner_selection(): void
+    {
+        $this->target('choice');
+        $this->expectException(ValidationException::class);
+        app(PairQammarisShopeeDrafts::class)->preview($this->input('choice', ['status' => 'owner']));
+    }
+
+    private function ownerChoice(Product $p, array $source): array
+    {
+        $input = $this->input($source['sku'], ['status' => 'ambigu', 'candidates' => [['sku' => $source['sku'], 'name' => $source['name'], 'score' => '0.8']]]);
+        $action = app(PairQammarisShopeeDrafts::class);
+        $original = $action->apply($action->preview($input)->id);
+        $existing = $p->externalIdentities()->where('provider', 'shopee')->value('external_product_id');
+        $fingerprint = app(ProductCatalogRowFingerprint::class)->hash($p->fresh());
+        $choice = ['shopee_id' => '123', 'shopee_name' => $input['data'][0]['shopee_name'], 'majoo_sku' => $source['sku'],
+            'uuid' => $source['id'], 'website_id' => $p->id, 'expected_fingerprint' => $fingerprint,
+            'requires_conflict_review' => $existing !== null && $existing !== '123', 'existing_shopee_id' => $existing];
+        $choices = ['schema' => 'qammaris-shopee-owner-choices-v1', 'provenance' => $input['provenance'],
+            'capture_sha256' => str_repeat('d', 64), 'captured_at' => '2026-10-06T03:26:17Z', 'data' => [$choice]];
+        $review = ['schema' => 'qammaris-shopee-pair-review-v1', 'provenance' => $input['provenance'],
+            'capture_sha256' => $choices['capture_sha256'], 'captured_at' => $choices['captured_at'],
+            'data' => [array_merge($input['data'][0], ['candidates' => [['sku' => $source['sku'], 'uuid' => $source['id'],
+                'website_id' => $p->id, 'fingerprint' => $fingerprint, 'existing_shopee_id' => $existing]]])]];
+
+        return [$choices, $review, $original];
     }
 
     private function target(string $sku, array $source = [], array $product = []): array

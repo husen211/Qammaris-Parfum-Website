@@ -7,6 +7,7 @@ use App\Models\ProductExternalIdentity;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
 use App\Models\ProductVariant;
+use App\Services\ProductCatalogRowFingerprint;
 use App\Services\ProductImportPayloadHasher;
 use App\Services\ProductImportPreviewer;
 use App\Services\ProductImportProductSnapshot;
@@ -34,6 +35,83 @@ class PairQammarisShopeeDrafts
 
     public function preview(array $input): ProductImportBatch
     {
+        return $this->previewInput($input);
+    }
+
+    public function previewOwnerChoices(array $choices, array $review, int $sourceBatchId): ProductImportBatch
+    {
+        $this->assertEnvironment();
+        Validator::make($choices, [
+            'schema' => ['required', 'in:qammaris-shopee-owner-choices-v1'],
+            'provenance' => ['required', 'array:mapping_sha256,media_sha256,basic_sha256'],
+            'capture_sha256' => ['required', 'regex:/^[a-f0-9]{64}$/'],
+            'captured_at' => ['required', 'string', 'max:64'],
+            'data' => ['required', 'array', 'min:1', 'max:1000'],
+            'data.*' => ['required', 'array:shopee_id,shopee_name,majoo_sku,uuid,website_id,expected_fingerprint,requires_conflict_review,existing_shopee_id'],
+            'data.*.shopee_id' => ['required', 'string', 'regex:/^[0-9]{1,30}$/', 'distinct:strict'],
+            'data.*.shopee_name' => ['required', 'string', 'max:255'],
+            'data.*.majoo_sku' => ['required', 'string', 'max:255', 'distinct:strict'],
+            'data.*.uuid' => ['required', 'uuid', 'distinct:strict'],
+            'data.*.website_id' => ['required', 'integer', 'min:1', 'distinct:strict'],
+            'data.*.expected_fingerprint' => ['required', 'regex:/^[a-f0-9]{64}$/'],
+            'data.*.requires_conflict_review' => ['required', 'boolean'],
+            'data.*.existing_shopee_id' => ['present', 'nullable', 'string', 'max:30'],
+        ])->validate();
+        if (! array_is_list($choices['data']) || ($review['schema'] ?? null) !== 'qammaris-shopee-pair-review-v1'
+            || ($review['provenance'] ?? null) !== $choices['provenance']
+            || ($review['capture_sha256'] ?? null) !== $choices['capture_sha256']
+            || ($review['captured_at'] ?? null) !== $choices['captured_at'] || ! is_array($review['data'] ?? null)) {
+            throw new DomainException('Owner choice review provenance mismatch.');
+        }
+        $source = ProductImportBatch::with('rows')->findOrFail($sourceBatchId);
+        if ($source->contract_version !== self::VERSION || $source->actor_id !== null || $source->status !== 'applied') {
+            throw new DomainException('Expected the original applied pairing batch.');
+        }
+        $reviewRows = collect($review['data'])->keyBy('shopee_id');
+        if ($reviewRows->count() !== count($review['data'])) {
+            throw new DomainException('Duplicate review source.');
+        }
+        $rows = [];
+        $evidence = [];
+        foreach ($choices['data'] as $choice) {
+            $original = $source->rows->firstWhere('external_product_id', $choice['shopee_id']);
+            $shown = $reviewRows->get($choice['shopee_id']);
+            if (! $original || ! $shown || $original->candidate_action !== 'review'
+                || ! in_array($original->normalized_data['status'], ['perlu_cek', 'ambigu'], true)
+                || ! hash_equals($original->payload_hash, $this->hasher->hash($original->normalized_data, $original->issues, $original->candidate_action))) {
+                throw new DomainException('Not an unchanged candidate-review source row.');
+            }
+            $raw = $original->normalized_data;
+            foreach (['shopee_id', 'shopee_name', 'description', 'photos', 'status'] as $field) {
+                if (($shown[$field] ?? null) !== $raw[$field]) {
+                    throw new DomainException('Review content differs from audited source.');
+                }
+            }
+            $matches = collect($shown['candidates'])->filter(fn ($c) => ($c['sku'] ?? null) === $choice['majoo_sku']
+                && ($c['uuid'] ?? null) === $choice['uuid'] && ($c['website_id'] ?? null) === $choice['website_id']);
+            $candidate = $matches->count() === 1 ? $matches->first() : null;
+            $conflict = $candidate && ! empty($candidate['existing_shopee_id']) && $candidate['existing_shopee_id'] !== $choice['shopee_id'];
+            if ($raw['provenance'] !== $choices['provenance'] || $choice['shopee_name'] !== $raw['shopee_name']
+                || ! collect($raw['candidates'])->contains(fn ($c) => $c['sku'] === $choice['majoo_sku'])
+                || ! $candidate || ($candidate['fingerprint'] ?? null) !== $choice['expected_fingerprint']
+                || ($candidate['existing_shopee_id'] ?? null) !== $choice['existing_shopee_id']
+                || $choice['requires_conflict_review'] !== (bool) $conflict) {
+                throw new DomainException('Choice is not an exact supplied review candidate.');
+            }
+            $rows[] = array_merge(array_intersect_key($raw, array_flip(['shopee_id', 'shopee_name', 'majoo_sku', 'status', 'description', 'photos', 'candidates'])), [
+                'majoo_sku' => $choice['majoo_sku'], 'status' => 'owner',
+            ]);
+            $evidence[$choice['shopee_id']] = [
+                'choice' => $choice, 'source_batch_id' => $source->id, 'capture_sha256' => $choices['capture_sha256'],
+                'choices_sha256' => $this->hash($choices), 'review_sha256' => $this->hash($review),
+            ];
+        }
+
+        return $this->previewInput(['schema' => self::VERSION, 'provenance' => $choices['provenance'], 'data' => $rows], $evidence);
+    }
+
+    private function previewInput(array $input, array $ownerEvidence = []): ProductImportBatch
+    {
         $this->assertEnvironment();
         Validator::make($input, [
             'schema' => ['required', 'in:'.self::VERSION],
@@ -47,7 +125,7 @@ class PairQammarisShopeeDrafts
             'data.*.shopee_id' => ['required', 'string', 'regex:/^[0-9]{1,30}$/', 'distinct:strict'],
             'data.*.shopee_name' => ['required', 'string', 'max:255'],
             'data.*.majoo_sku' => ['present', 'nullable', 'string', 'max:255'],
-            'data.*.status' => ['required', 'in:sku,kuat,perlu_cek,ambigu,tidak_ketemu'],
+            'data.*.status' => ['required', 'in:sku,kuat,perlu_cek,ambigu,tidak_ketemu'.($ownerEvidence ? ',owner' : '')],
             'data.*.description' => ['required', 'string', 'max:20000'],
             'data.*.photos' => ['required', 'array', 'size:3'],
             'data.*.photos.*' => ['nullable', 'string', 'max:2048', 'url:https'],
@@ -62,14 +140,14 @@ class PairQammarisShopeeDrafts
             }
         }
 
-        return DB::transaction(function () use ($input): ProductImportBatch {
+        return DB::transaction(function () use ($input, $ownerEvidence): ProductImportBatch {
             DB::table('qammaris_app_sync_states')->where('id', 'products')->lockForUpdate()->first();
             $sources = DB::table('qammaris_app_products')->orderBy('id')->lockForUpdate()->get()
                 ->map(fn ($s) => json_decode($s->snapshot, true, flags: JSON_THROW_ON_ERROR));
             $bySku = $sources->filter(fn ($s) => is_string($s['sku'] ?? null) && $s['sku'] !== '')->groupBy('sku');
-            $approvedSkus = collect($input['data'])->filter(fn ($r) => in_array($r['status'], ['sku', 'kuat'], true))->countBy('majoo_sku');
+            $approvedSkus = collect($input['data'])->filter(fn ($r) => in_array($r['status'], ['sku', 'kuat', 'owner'], true))->countBy('majoo_sku');
             $catalogHash = $this->catalogHash();
-            $sourceHash = $this->hash($input);
+            $sourceHash = $this->hash([$input, $ownerEvidence]);
             $key = $this->hash([self::VERSION, $sourceHash, $this->hash($sources->all()), $catalogHash]);
             if ($existing = ProductImportBatch::where('idempotency_key', $key)->first()) {
                 return $existing->load('rows');
@@ -80,7 +158,7 @@ class PairQammarisShopeeDrafts
                 $product = null;
                 $action = 'review';
                 $issue = $raw['status'];
-                if (in_array($raw['status'], ['sku', 'kuat'], true)) {
+                if (in_array($raw['status'], ['sku', 'kuat', 'owner'], true)) {
                     $matches = $bySku->get($raw['majoo_sku'], collect());
                     $action = 'blocked';
                     $issue = 'sku_missing_or_nonunique';
@@ -94,8 +172,9 @@ class PairQammarisShopeeDrafts
                             $current = $product->externalIdentities()->where('provider', 'shopee')->first();
                             $issue = 'shopee_identity_conflict';
                             if ((! $other || $other->product_id === $product->id) && (! $current || $current->external_product_id === $raw['shopee_id'])) {
-                                $issue = 'existing_description_conflict';
-                                if (trim((string) $product->description) === '' || $product->description === $raw['description']) {
+                                $issue = $raw['status'] === 'owner' ? 'owner_choice_changed_or_description_conflict' : 'existing_description_conflict';
+                                if ((trim((string) $product->description) === '' || $product->description === $raw['description'])
+                                    && $this->ownerTargetMatches($ownerEvidence[$raw['shopee_id']] ?? null, $source, $product, $raw)) {
                                     $action = 'pair';
                                     $issue = '';
                                 }
@@ -105,6 +184,7 @@ class PairQammarisShopeeDrafts
                 }
                 $data = array_merge($raw, [
                     'provenance' => $input['provenance'],
+                    'owner_selection' => $ownerEvidence[$raw['shopee_id']] ?? null,
                     'source_uuid' => $source['id'] ?? null,
                     'source_hash' => $source ? $this->hash($source) : null,
                     // Existing media is retained. Only image-less drafts acquire these candidates.
@@ -122,7 +202,7 @@ class PairQammarisShopeeDrafts
             }
             $valid = count(array_filter($rows, fn ($r) => $r['status'] === 'valid'));
             $batch = ProductImportBatch::create([
-                'actor_id' => null, 'source_filename' => 'owner-authorized-shopee-mapping', 'source_size' => strlen(json_encode($input)),
+                'actor_id' => null, 'source_filename' => $ownerEvidence ? 'owner-selected-shopee-candidates' : 'owner-authorized-shopee-mapping', 'source_size' => strlen(json_encode($input)),
                 'source_fingerprint' => $sourceHash, 'contract_version' => self::VERSION, 'catalog_state_fingerprint' => $catalogHash,
                 'idempotency_key' => $key, 'status' => 'previewed', 'total_rows' => count($rows), 'valid_rows' => $valid,
                 'review_rows' => count($rows) - $valid, 'error_rows' => 0,
@@ -181,7 +261,9 @@ class PairQammarisShopeeDrafts
                     $product->update(['description' => $row->normalized_data['description']]);
                 }
                 $row->update(['apply_status' => 'updated', 'applied_product_id' => $product->id,
-                    'apply_message' => 'Owner-approved exact SKU/UUID Shopee pair; existing fields/media and draft status retained.',
+                    'apply_message' => $row->normalized_data['status'] === 'owner'
+                        ? 'Explicit Owner candidate choice; existing fields/media and draft status retained.'
+                        : 'Owner-approved exact SKU/UUID Shopee pair; existing fields/media and draft status retained.',
                     'before_snapshot' => $before, 'after_snapshot' => $this->snapshots->capture($product), 'applied_at' => now()]);
                 $applied++;
             }
@@ -207,6 +289,18 @@ class PairQammarisShopeeDrafts
         if ($row->apply_status === 'updated' && ! $shopee) {
             throw new DomainException('Shopee pair ownership missing.');
         }
+    }
+
+    private function ownerTargetMatches(?array $evidence, array $source, Product $product, array $raw): bool
+    {
+        if ($raw['status'] !== 'owner') {
+            return true;
+        }
+        $choice = $evidence['choice'] ?? null;
+
+        return $choice && $choice['requires_conflict_review'] === false
+            && $choice['uuid'] === $source['id'] && $choice['website_id'] === $product->id
+            && hash_equals($choice['expected_fingerprint'], app(ProductCatalogRowFingerprint::class)->hash($product));
     }
 
     private function hash(array $value): string

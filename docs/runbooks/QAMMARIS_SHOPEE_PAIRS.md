@@ -28,3 +28,15 @@ New standalone public artifact directories/files use the host's normal creation 
 Verify retained IDs/slugs/offers/publication/availability, unchanged old media metadata/bytes and existing descriptions, expected new identities/descriptions/photos, exact missing-SKU list, sync checkpoint/worker/cron health and replay audit equality. Report actual draft photo count separately from published test fixture and review-only source covers.
 
 Recovery: stop only the bounded image worker if necessary, disable the new command or restore exact PHP originals without chmod/env changes. Keep successful image files and audit; forward corrections require a fresh guarded preview. Code rollback does not undo draft data. Never replace production with staging data.
+
+## Explicit Owner candidate choices (P8-07 follow-up)
+
+Retain the submitted `qammaris-shopee-owner-choices-v1` file and the original review JSON privately. A choice is not permission to rebind an occupied Shopee identity. Unselected rows are absent from the new batch and remain unchanged. No automatic relabeling to `kuat`.
+
+```sh
+php artisan qammaris-app:shopee-pairs --choices=storage/app/private/<run>/owner-choices.json --review=storage/app/private/<run>/original-review.json --source-batch=3
+```
+
+Preview verifies the exact source batch, immutable source row hash, original description/photos/provenance, supplied candidate SKU, exported UUID/website ID/fingerprint and capture provenance. Current unique SKU/UUID, draft visibility, target fingerprint, provider ownership and blank/equal description remain mandatory. Invalid evidence rejects preview; stale/conflicting targets are held. Inspect the exact persisted preview before using the existing `--apply=<id> --confirm` and `--images=<id> --confirm` commands. The batch source is `owner-selected-shopee-candidates`; each row retains explicit choice and source/review hashes under the same bounded contract. No human account is invented.
+
+Replay the exact applied batch to verify a no-op. Do not refresh a changed Owner fingerprint silently, override conflict flags or move an existing provider binding. Retain prior media and audit snapshots; correction needs a fresh guarded preview. No publication, schema or production changes are authorized here.
