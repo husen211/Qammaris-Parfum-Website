@@ -55,6 +55,7 @@
                         'detailUrl' => route('products.show', $product->slug),
                         'prioritizeImage' => false,
                         'headingLevel' => 3,
+                        'showPrice' => false,
                     ])
                 </div>
             @endforeach

@@ -268,3 +268,8 @@ Cached snapshots predating this workflow can be prepared via an actor-bound immu
 ## Approved production release exception — 2026-10-06
 
 After receiving the explicit unresolved touch/Safari limitation, Owner authorizes releasing the catalog-navigation and admin-app-inbox patches and selects **Lewati uji sentuh, rilis sekarang**. This waives the touch-test release gate for this concrete PR4/PR5 release only. Mouse verification remains the actual evidence; do not describe Safari or touch tests as passed. Retain the general touch-safe implementation rules and future release verification requirement. No automatic publication, historical catalog/price replay, credential change or raw Shopee import is authorized by this code release.
+
+
+## Homepage best-seller presentation — Owner decision 2026-10-07
+
+Do not display prices in the homepage Produk Terlaris section for now. Catalog and product detail retain prices. This is presentation only; source prices, availability, publication and daily selection remain unchanged.

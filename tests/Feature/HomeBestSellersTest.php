@@ -35,7 +35,7 @@ class HomeBestSellersTest extends TestCase
 
         $this->travelTo(Carbon::parse('2026-10-06 10:00:00', 'Asia/Makassar'));
         $response = $this->get(route('home'));
-        $response->assertOk()->assertSee('Rp 150.000')->assertSee('100 ml');
+        $response->assertOk()->assertDontSee('Rp 150.000')->assertSee('100 ml');
         $selection = $response->viewData('bestSellers');
         $first = $selection->pluck('id')->all();
         $this->assertCount(6, array_unique($first));

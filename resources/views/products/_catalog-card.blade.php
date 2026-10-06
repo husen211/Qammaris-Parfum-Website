@@ -32,7 +32,9 @@
             <div class="catalog-card__offer">
                 @if ($offer)
                     <p class="catalog-card__size">{{ $offer->volume }} ml</p>
-                    <p class="catalog-card__price">{{ format_rupiah($offer->price) }}</p>
+                    @if ($showPrice ?? true)
+                        <p class="catalog-card__price">{{ format_rupiah($offer->price) }}</p>
+                    @endif
                 @else
                     <p class="catalog-card__size">Data sedang dilengkapi</p>
                 @endif
