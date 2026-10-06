@@ -1,0 +1,32 @@
+{
+  "catalogBefore": 298,
+  "catalogAfter": 351,
+  "mobile": {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 844,
+    "overflow": false,
+    "width": 390
+  },
+  "desktop": {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 900,
+    "overflow": false,
+    "width": 1440
+  },
+  "searchVerification": {
+    "query": "9 AM Dive",
+    "method": "direct observed GET form route; search-button action did not navigate",
+    "results": 1,
+    "audience": "Unisex",
+    "filteredResults": 1,
+    "name": "9 AM Dive Homme Edp 100 Ml",
+    "sizeMl": 100,
+    "price": 498000,
+    "availability": "Tersedia"
+  },
+  "consoleErrors": 0,
+  "inquiryMutations": false,
+  "whatsappSent": false
+}
