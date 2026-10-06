@@ -1,0 +1,122 @@
+{
+  "at": "2026-10-06T06:38:04+00:00",
+  "scope": "hosting-read-only-no-bootstrap-no-database",
+  "root": "/home/u429527638/domains/qammarisparfum.id/laravel_app",
+  "php": "8.2.33",
+  "extensions": [
+    "pdo_mysql",
+    "mbstring",
+    "fileinfo",
+    "curl",
+    "openssl",
+    "zip",
+    "intl",
+    "dom",
+    "gd"
+  ],
+  "paths": {
+    "artisan": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "composer.json": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "composer.lock": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "bootstrap/app.php": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "public/index.php": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "index.php": {
+      "exists": false,
+      "directory": false,
+      "link": false
+    },
+    ".env": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    ".htaccess": {
+      "exists": false,
+      "directory": false,
+      "link": false
+    },
+    "public/.htaccess": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "public/build/manifest.json": {
+      "exists": true,
+      "directory": false,
+      "link": false
+    },
+    "storage": {
+      "exists": true,
+      "directory": true,
+      "link": false
+    },
+    "storage/app/public": {
+      "exists": true,
+      "directory": true,
+      "link": false
+    },
+    "public/storage": {
+      "exists": false,
+      "directory": false,
+      "link": false
+    }
+  },
+  "composer_require": {
+    "php": "^8.2",
+    "laravel/framework": "^12.0"
+  },
+  "locked_laravel": "v12.39.0",
+  "env_present": {
+    "APP_KEY": "terisi",
+    "DB_HOST": "terisi",
+    "DB_DATABASE": "terisi",
+    "DB_USERNAME": "terisi",
+    "DB_PASSWORD": "terisi",
+    "QAMMARIS_APP_API_KEY": "tidak",
+    "QAMMARIS_APP_WEBHOOK_SECRET": "tidak"
+  },
+  "routing": {
+    "public/.htaccess": {
+      "sha256": "b7e379c77639fd56144947dbae84c84eb466d9c686ea81f2f013ae85421da923",
+      "rewrites_to_public": false,
+      "basic_auth_directive": false
+    }
+  },
+  "cron": {
+    "status": "Not confirmed",
+    "reason": "PHP shell_exec disabled; OS crontab matching website paths returned zero, but producer/hPanel task definitions unconfirmed"
+  },
+  "workers": {
+    "status": "Not confirmed",
+    "reason": "PHP process probe unavailable; production process configuration not modified"
+  },
+  "web_root": "/home/u429527638/domains/qammarisparfum.id/public_html",
+  "web_entrypoint_references": [
+    "../laravel_app/vendor/autoload.php",
+    "../laravel_app/bootstrap/app.php"
+  ],
+  "public_storage_symlink": "../laravel_app/storage/app/public",
+  "env_present_location": "laravel_app/.env (not public_html)",
+  "database_read": false,
+  "production_writes": false
+}

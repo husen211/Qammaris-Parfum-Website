@@ -1,0 +1,33 @@
+{
+  "catalogBefore": 177,
+  "catalogAfter": 298,
+  "mobile": {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 844,
+    "overflow": false,
+    "width": 390
+  },
+  "desktop": {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 900,
+    "overflow": false,
+    "width": 1440
+  },
+  "newCategoryFilters": {
+    "bodyspray": 6,
+    "perfumeOil": 1
+  },
+  "newOfferDetail": {
+    "name": "SAFF & CO. EXTRAIT DE PARFUM - MALEALI",
+    "sizeMl": 30,
+    "price": 252000,
+    "availability": "Tersedia",
+    "storedGalleryPhotos": 3,
+    "descriptionVisible": true
+  },
+  "consoleErrors": 0,
+  "inquiryMutations": false,
+  "whatsappSent": false
+}

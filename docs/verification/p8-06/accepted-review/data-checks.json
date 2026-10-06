@@ -1,0 +1,82 @@
+{
+  "verification": {
+    "approved_published": 121,
+    "batch_id": 9,
+    "launch_products": 297,
+    "published_including_fixture": 298,
+    "drafts": 148,
+    "no_photo_drafts": 95,
+    "other_audience_only_drafts": 53,
+    "unclear_audience_set_unisex": 52,
+    "new_offers": 65,
+    "existing_326_offers_retained": true,
+    "other_325_products_retained": true,
+    "images_retained": 1017,
+    "identities_retained": 796,
+    "sources_retained": 452,
+    "checkpoint": 457,
+    "new_categories": [
+      {
+        "id": 7,
+        "name": "bodyspray",
+        "slug": "bodyspray"
+      },
+      {
+        "id": 8,
+        "name": "Perfume Oil",
+        "slug": "perfume-oil"
+      }
+    ],
+    "old_categories_retained": true,
+    "replay_no_op": true,
+    "prices_urls_stock_copy_retained": true
+  },
+  "health": {
+    "at": "2026-10-06T05:36:46.072367Z",
+    "protected_unchanged": true,
+    "old_media_checksums_retained": 519,
+    "all_previous_media_retained": 861,
+    "paired_images_integrity_verified": 498,
+    "feed_without_key": 401,
+    "feed_with_key": 200,
+    "feed_meta": {
+      "next_seq": 457,
+      "has_more": false,
+      "generated_at": "2026-10-06T05:36:46.029Z"
+    },
+    "checkpoint": 457,
+    "sync_error_present": false,
+    "cron": {
+      "p8-03-scheduler-last-run": {
+        "timestamp": "2026-10-06T05:36:02Z",
+        "file_age_seconds": 44
+      },
+      "p8-03-worker-watchdog-last-run": {
+        "timestamp": "2026-10-06T05:36:02Z",
+        "file_age_seconds": 44
+      }
+    },
+    "workers": {
+      "stock": 1,
+      "images": 0,
+      "schedule_work": 0,
+      "review_covers": 0
+    },
+    "image_jobs": 0,
+    "stock_jobs": 0,
+    "users": 0,
+    "published": 298,
+    "drafts": 148,
+    "publication_ready": 0,
+    "anonymous_review": {
+      "/owner-review/p8-06-launch-ready/": 401,
+      "/owner-review/p8-06-launch-ready/index.html": 401,
+      "/owner-review/p8-06-launch-ready/review.css": 401,
+      "/owner-review/p8-06-launch-ready/review.js": 401,
+      "/owner-review/p8-06-launch-ready/audience-corrections.csv": 401,
+      "/owner-review/p8-06-launch-ready/size-concentration-corrections.csv": 401,
+      "/owner-review/p8-06-launch-ready/publication-candidates.csv": 401
+    },
+    "batch5_applied": 46
+  }
+}

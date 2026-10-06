@@ -1,0 +1,73 @@
+{
+  "prepared_at": "2026-10-06",
+  "candidate_commit": "85ef088f4f9481c6f061141ee1d0a987ddf13832",
+  "existing_ci_run": 37421516661,
+  "scope": "Private local preparation; no server writes or cutover",
+  "target_proposed": "/home/u429527638/domains/qammarisparfum.id/releases/qammaris-85ef088",
+  "public_target_proposed": "/home/u429527638/domains/qammarisparfum.id/public_html_next",
+  "production_database_created": false,
+  "production_admin_created": false,
+  "catalog_transfer_executed": false,
+  "webhook_destination_changed": false,
+  "legacy_backup_created": false,
+  "secrets_included": false,
+  "files": {
+    "application-source.tar": {
+      "bytes": 43069440,
+      "sha256": "11b90eb8b48a33f0ae0014c409a4e10a3c943cce1e0c4051c5930643bf598329"
+    },
+    "frontend-build.tar.gz": {
+      "bytes": 1482835,
+      "sha256": "85c34c09e97d007ea2c2fc8f0b1c9e2223aab31421dd2e6e1344d9cfcc74cab5"
+    },
+    "launch-photos.tar.gz": {
+      "bytes": 33771483,
+      "sha256": "de2db28ecafe9380d87153ade167340d1539c24f66fd14b90078d8743f3d6ff4"
+    },
+    "launch-catalog-preview.json": {
+      "bytes": 1206600,
+      "sha256": "95727b88b62b856dcdbb1de13e4ee269475634b357017ea3a724590728946e3b"
+    },
+    "source-files.json": {
+      "bytes": 38219,
+      "sha256": "debfa1aaac8fbd17c802f9e46416857da6426c7346f97aebe8fc456fe63a74cf"
+    },
+    "catalog-summary.json": {
+      "bytes": 728,
+      "sha256": "ee9d2f492fadc3f2dd64d01faa024b6ab6fa9666739041424da6e6ee2fd9c308"
+    },
+    "production-public-index.php.template": {
+      "bytes": 641,
+      "sha256": "f8f065fb5f9cfe321946c23fce14991c4de0463da3293c66c098f41a35514e11"
+    },
+    "README.txt": {
+      "bytes": 2259,
+      "sha256": "868deb554e6e25c90feb3d742978f74a9c350c9032096d2289cb3a5472dbb9da"
+    }
+  },
+  "catalog": {
+    "captured_at": "2026-10-06T06:40:46.148039Z",
+    "target_write_authorized": false,
+    "launch_products": 350,
+    "drafts": 95,
+    "all_drafts_without_photos_or_description": true,
+    "offers": 390,
+    "media": 1016,
+    "primary_images": 350,
+    "qammaris_app_identities": 445,
+    "all_identities": 795,
+    "brands": 36,
+    "categories": 5,
+    "fixture_excluded": true,
+    "readiness_failures": 0,
+    "relationship_orphans": 0,
+    "duplicate_slugs_or_uuid_or_offers": 0,
+    "changes_since_previous_preview": {
+      "view_count": 2,
+      "updated_at": 2
+    },
+    "source_snapshot_count": 452,
+    "catalog_sha256": "95727b88b62b856dcdbb1de13e4ee269475634b357017ea3a724590728946e3b",
+    "legacy_migration_or_backup": false
+  }
+}

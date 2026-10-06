@@ -1,15 +1,21 @@
 <?php
-use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\Admin\AdminBlogPostController;
+use App\Http\Controllers\Admin\AdminBrandController;
+use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminProductImageController;
+use App\Http\Controllers\Admin\AdminProductImportController;
+use App\Http\Controllers\Admin\AdminProductMaintenanceController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\FragranceQuizController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\BlogController;
 use App\Http\Controllers\StoreController;
-use App\Http\Controllers\Admin\AdminProductController;
-use App\Http\Controllers\Admin\AdminBlogPostController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\FragranceQuizController;
+use Illuminate\Support\Facades\Route;
 
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -26,11 +32,10 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::put('/update/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
-    Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout'); 
-    //cart data for drawer
+    Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
+    // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
 });
-
 
 // Blog
 Route::prefix('blog')->name('blog.')->group(function () {
@@ -50,22 +55,46 @@ Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('
 Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name('quiz.store');
 Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
 
-
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
-    
+
     // Dashboard Admin Sederhana
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // === TAMBAHAN BARU (Untuk fitur hapus gambar saat Edit) ===
     Route::delete('products/image/{productImage}', [AdminProductController::class, 'destroyImage'])->name('products.delete-image');
 
+    // Archive is reversible; product hard deletion is intentionally unavailable in admin.
+    Route::patch('products/{product}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
+    Route::patch('products/{product}/images/{productImage}/primary', [AdminProductImageController::class, 'primary'])->name('products.images.primary');
+    Route::patch('products/{product}/images/{productImage}/move', [AdminProductImageController::class, 'move'])->name('products.images.move');
+    Route::delete('products/{product}/images/{productImage}', [AdminProductImageController::class, 'destroy'])->name('products.images.destroy');
+
+    Route::get('product-imports', [AdminProductImportController::class, 'create'])->name('product-imports.create');
+    Route::get('product-imports/template', [AdminProductImportController::class, 'template'])->name('product-imports.template');
+    Route::get('product-imports/catalog-snapshot.csv', [AdminProductImportController::class, 'catalogSnapshot'])->name('product-imports.catalog-snapshot');
+    Route::get('product-imports/{productImportBatch}/report.csv', [AdminProductImportController::class, 'report'])->name('product-imports.report');
+    Route::post('product-imports/preview', [AdminProductImportController::class, 'preview'])->name('product-imports.preview');
+    Route::post('product-imports/{productImportBatch}/apply', [AdminProductImportController::class, 'apply'])->name('product-imports.apply');
+    Route::post('product-imports/{productImportBatch}/images', [AdminProductImportController::class, 'acquireImages'])->name('product-imports.images');
+    Route::post('product-imports/{productImportBatch}/rows/{productImportRow}/resolve-protected', [AdminProductImportController::class, 'resolveProtected'])->name('product-imports.resolve-protected');
+
+    Route::get('product-maintenance', [AdminProductMaintenanceController::class, 'create'])->name('product-maintenance.create');
+    Route::get('product-maintenance/template', [AdminProductMaintenanceController::class, 'template'])->name('product-maintenance.template');
+    Route::post('product-maintenance/preview', [AdminProductMaintenanceController::class, 'preview'])->name('product-maintenance.preview');
+    Route::post('product-maintenance/{productImportBatch}/apply', [AdminProductMaintenanceController::class, 'apply'])->name('product-maintenance.apply');
+
     // CRUD Produk (Bawaan)
     Route::resource('products', AdminProductController::class);
+
+    // Taxonomy records are never hard-deleted; status changes are reversible.
+    Route::patch('brands/{brand}/status', [AdminBrandController::class, 'updateStatus'])->name('brands.status');
+    Route::resource('brands', AdminBrandController::class)->except(['show', 'destroy']);
+    Route::patch('categories/{category}/status', [AdminCategoryController::class, 'updateStatus'])->name('categories.status');
+    Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
 
     // CRUD Blog Posts
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 });
-
 
 // === ROUTE AUTHENTICATION (MANUAL) ===
 Route::middleware('guest')->group(function () {

@@ -47,6 +47,13 @@ class BlogPost extends Model
         return 'slug';
     }
 
+    public function isPubliclyVisible(): bool
+    {
+        return $this->is_published
+            && $this->published_at !== null
+            && $this->published_at->lte(now());
+    }
+
     /**
      * Accessor: Formatted published date
      */

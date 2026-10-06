@@ -1,0 +1,55 @@
+# ADR-023 — Restricted staging launch copy
+
+Status: Accepted — Owner instructions 2026-10-06; exact 122-product staging publication subsequently approved.
+
+## Problem and decision
+
+113 photographed feed drafts have only description/audience blockers. Owner authorizes cleaned Shopee copy and clear audience evidence, but staging has zero human Laravel users. Creating a fake admin to call maintenance would misattribute audit and expand access without authorization.
+
+Reuse `ProductMaintenancePreviewer`, recorder and transactional apply instead. A small `launch-copy-v1` CLI contract permits description/gender only on visible, nonactive, connected Shopee drafts whose other publication requirements are met. It refuses production. The operator uses the already authorized staging SSH session; null human actor IDs, contract version and `owner-authorized-cli-` source label distinguish this operation from human administration. No credential, role, route, schema or public API is added.
+
+Preview retains immutable source/catalog/row hashes and before snapshots. Apply rechecks payload, current catalog, row timestamp/fingerprint, mapped providers, draft visibility and publication prerequisites under existing product locks. Replay returns the persisted result. Failures preserve transactional behavior. Human maintenance routes keep their own contract; machine apply refuses a human maintenance batch. No publication, source availability, offer, slug, image or identity mutation is allowed.
+
+The offline curation tool pairs existing Shopee IDs and unchanged media-baseline names. It records original text, cleanup removals and exact audience evidence. Comparison/inspiration and aroma/bottle color do not establish audience; missing/conflicting evidence remains blank. A private offline HTML review shows verified existing website covers and exact proposed copy, with separate correction CSVs. It has no publication operation.
+
+The same five-file review can be served on staging behind its existing HTTP Basic Auth after confirming anonymous 401 and an authenticated Owner browser render. No protection/account is created or changed. Raw sources/captures/maintenance input stay private; the review is a snapshot, with no product mutation or published-scope bypass.
+
+## Tradeoff
+
+The existing Laravel operations already supply the needed transaction/audit/concurrency behavior. A separate bounded contract and nullable machine actor add a few checks, avoiding a second mutation implementation, generic write API, new account or new audit schema. This is a trusted operator tool, not a substitute for future scoped API authorization. Attribution identifies the authorized CLI operation, not a specific human identity; preserve the operational deployment record and Owner approval alongside batch ID.
+
+## Production and recovery
+
+All 113 remain drafts until Owner reviews the concrete package; unclear audience still blocks publication. The 266 image-less drafts are untouched. Production backup is deferred until immediately before separately approved cutover. Staging data must never replace the production database wholesale.
+
+Code rollback restores the exact prior recorder/apply files and disables the new command, retaining audit and curated data. It does not undo applied fields. Forward corrections require fresh guarded preview; before snapshots are evidence, not permission for automatic restore.
+
+## Approved continuation after pairing
+
+Owner requests continuation of photographed launch products while leaving all image-less drafts alone. The original113 cohort is historical; a fresh structurally complete175 cohort is derived from current exact provider mappings and actual Laravel readiness. Reuse the same unchanged CLI/application guards for46 clear blank-audience updates; do not loosen structural or publication protection. The supplemental read-only preparation tool records original Shopee copy/evidence, current guards and exact publication-candidate IDs. Other taxonomy/offer facts and ambiguous audience stay in review. No new mutation layer/contract, role, account or deployment is justified. Owner approval of a concrete current subset still precedes publication.
+
+## Approved publication of the concrete subset
+
+Owner's subsequent explicit approval covers exactly 122 reviewed staging IDs in CSV SHA256 `c9eda30849a7e439fdcdeb6be4cd958e6f5f71a146da81b0550b652d35b48013`. Existing `PublishProduct` is sufficient for each mutation; the admin HTTP flow requires a human account while staging has none. A fixed one-off SSH operator script supplies the existing operation with immutable preview, identity/source/media/readiness guards, ordered locks and one transaction, recording nullable-actor before/after audit as `launch-publish-v1`. It is deliberately bound to this exact list and staging database rather than creating a reusable bulk-write API, synthetic admin or another application layer. The separate audit contract prevents copy/maintenance tools from interpreting publication rows as field edits. The real publisher and audit writes were rehearsed with complete rollback, including failure on the last row, before approved apply; replay is a no-op.
+
+This adds only an operator script and existing-table audit, not a new product mutation abstraction, schema, account or web route. Keep the original lists, sources and audit private. Production remains separately approved; staging is never copied wholesale into production. Recovery requires an explicitly scoped forward unpublish/correction using before snapshots; removing the script or rolling back code does not undo publication.
+
+## Five explicitly approved factual corrections
+
+Owner subsequently approves four named perfumes represented by five existing records29/34/35/36/350, including two BaliCliff1 sizes. Existing launch-copy contract cannot alter category or offers; retain that restriction. Existing Eloquent field writes, `SyncSingleOffer` for exactly two missing offers and `PublishProduct` suffice, composed in a fixed staging operator `staging_publish_owner_corrections.php`. Exact immutable CSV/hash/IDs, expected before blockers, original price/identity/source guards, persisted preview, atomic rehearsal/apply and replay give reviewable safety without a generic mutation API, new service layer, synthetic admin or relaxed application authorization. New existing-table audit contract `owner-correct-v1` distinguishes this approved correction/publication from the earlier122 publication-only batch. Cost: a one-off bounded operator retained with its private input; it is not generalized or adapted for production. Batch7 before/after supports a later explicitly approved guarded forward correction, never automatic rollback of newer stock.
+
+## Owner-approved49-row enrichment wave
+
+A further concrete49-row list is approved from the supplied175-row research JSON. Preserve earlier immutable operator scopes. Separate fixed staging tool `staging_publish_enrichment_wave.php` composes the same existing Eloquent/SyncSingleOffer/PublishProduct operations and audit contract owner-enrich-v1(batch8), retaining supplied-source hash and explicit Owner approval. Allows approvedWanita plus existingEDP/EDT/Extrait for the exact input; no guessing, brand aliases, defaultUnisex, category-conflict override or taxonomy creation. Supplied verified/input labels are provenance rather than independent research certification. This costs a retained one-off tool/input; avoid broadening machine maintenance rights or creating a genericwriteAPI. Existing contracts/auth/application deployment remain untouched.
+
+## Owner acceptance of the remaining121 proposals
+
+A later explicit Owner decision accepts sizes/concentrations previously held as estimates, eight Extrait->EDP conflicts, and Unisex for52 estimated/default audience rows. Earlier bounded tools and general maintenance guards remain unchanged. Fixed staging operator tools/staging_publish_accepted_review.php binds exact121IDs to private manifest hash0a3724459548a4ec9cd5184740803a46b43fc9b023d480ae00e47ee42c9e046e and source enrichment hashd73aede6609e29b03da532aee9039a5d26796ea3a6dec585e9899b87607699ff. It checks actual staging MySQL, immutable preview, current fingerprints/timestamps, expected category/blockers, UUID/source visibility, media and unchanged selling price under ordered locks. Existing Eloquent category/gender writes, SyncSingleOffer only for65 absent offers, and PublishProduct remain sufficient. Only two missing active taxonomy names bodyspray/Perfume Oil may be created inside the same outer transaction, with original category records guarded and retained.
+
+Existing-table contract owner-accept-v1 (batch9) explicitly records accepted uncertainty, source/approval hashes, before/after snapshots and nullable machine actor attribution; no fabricated human account. Preview creates no taxonomy/product writes. Real rehearsal rolls back categories/offers/products/audit; apply121 commits atomically; repeated apply returns the same audit digest without writes. Cost is one bounded retained operator, not a generic bulk/API mutation interface, new schema/service or relaxed publication gate. Existing name/copy mentioning Extrait remains protected where category changes to Owner-accepted EDP. Recovery is separately authorized fresh guarded forward correction/unpublish, preserving newer stock, identifiers/media/audit; code removal alone does not revert data. Production remains separate.
+
+## Final 53 explicit genders and publication
+
+Owner resolves the remaining 53 audience-only drafts with an exact ID/gender list. Keep all earlier operators and general maintenance contracts unchanged. Fixed staging operator `tools/staging_publish_final_audience.php` binds exactly those 53 IDs and private CSV hash `bd85112bb23b5f12fe4c19c44a5cc86b204467ff296515203d715c3ec623f7b8`; actual staging MySQL guard, UUID/provider visibility, timestamps/fingerprints, immutable source/product preview and exact gender-only readiness guard precede any mutation. Eloquent writes only the approved gender; existing `PublishProduct` supplies the unchanged readiness/publication gate. No category/offer/media mutation or new abstraction is needed.
+
+Existing-table contract `owner-gender-v1`, batch 10, records explicit Owner approval, nullable machine attribution, source hash and before/after snapshots. Ordered checkpoint/source/product locks and one outer transaction provide atomic rehearsal/apply; replay returns the same applied audit digest without writes. Cost is one fixed retained operator/input, not a generic write API or expanded human/machine permissions. Original names/copy remain even where they conflict with the final Owner gender. Recovery requires a separately authorized fresh guarded forward correction/unpublish, preserving newer stock, identifiers/media/audit; code removal does not undo data. Production remains separate.

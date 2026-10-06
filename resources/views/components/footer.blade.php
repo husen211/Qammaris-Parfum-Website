@@ -10,7 +10,7 @@
             <div class="space-y-6">
                 <div class="space-y-3">
                     <p class="text-xs uppercase tracking-[0.3em] text-white/40">Qammaris Perfumes</p>
-                    <h3 class="font-mayluxa text-3xl text-white tracking-wide">Qammaris.</h3>
+                    <h2 class="font-mayluxa text-3xl text-white tracking-wide">Qammaris.</h2>
                 </div>
                 <p class="text-white/65 text-sm leading-relaxed font-light max-w-md">
                     Kurasi parfum premium Timur Tengah. Menghadirkan kemewahan dan keharuman otentik dalam setiap tetesnya. 100% Original.
@@ -33,7 +33,7 @@
             </div>
 
             <div>
-                <h4 class="font-bold text-xs uppercase tracking-widest text-white/50 mb-6">Jelajahi</h4>
+                <h3 class="font-bold text-xs uppercase tracking-widest text-white/50 mb-6">Jelajahi</h3>
                 <ul class="space-y-4 text-sm font-light">
                     <li>
                         <a href="{{ route('products.index') }}" class="group inline-flex items-center text-white/65 hover:text-brand-gold transition-colors">
@@ -53,17 +53,11 @@
                             Lokasi Toko
                         </a>
                     </li>
-                    <li>
-                        <a href="#how-to-order" class="group inline-flex items-center text-white/65 hover:text-brand-gold transition-colors">
-                            <span class="h-px w-5 bg-white/30 mr-3 transition-all group-hover:w-8 group-hover:bg-brand-gold"></span>
-                            Cara Pesan
-                        </a>
-                    </li>
                 </ul>
             </div>
 
             <div>
-                <h4 class="font-bold text-xs uppercase tracking-widest text-white/50 mb-6">Koleksi</h4>
+                <h3 class="font-bold text-xs uppercase tracking-widest text-white/50 mb-6">Koleksi</h3>
                 <ul class="space-y-4 text-sm font-light">
                     @foreach($footerCategories as $category)
                     <li>
@@ -77,7 +71,7 @@
             </div>
 
             <div>
-                <h4 class="font-bold text-xs uppercase tracking-widest text-white/50 mb-6">Belanja Online</h4>
+                <h3 class="font-bold text-xs uppercase tracking-widest text-white/50 mb-6">Belanja Online</h3>
                 <div class="space-y-3">
                     @if(!empty($storeInfo->tokopedia_url))
                     <a href="{{ $storeInfo->tokopedia_url }}" target="_blank" rel="noopener noreferrer"
@@ -115,10 +109,6 @@
         <div class="container mx-auto px-6 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center text-xs text-white/50">
                 <p>&copy; {{ date('Y') }} Qammaris Perfumes. Hak cipta dilindungi.</p>
-                <div class="flex space-x-6 mt-4 md:mt-0">
-                    <a href="#" class="hover:text-white transition-colors">Kebijakan Privasi</a>
-                    <a href="#" class="hover:text-white transition-colors">Syarat &amp; Ketentuan</a>
-                </div>
             </div>
         </div>
     </div>

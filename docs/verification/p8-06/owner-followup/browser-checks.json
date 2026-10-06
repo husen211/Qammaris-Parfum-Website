@@ -1,0 +1,57 @@
+[
+  {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 844,
+    "overflow": false,
+    "surface": "catalog-mobile",
+    "width": 390
+  },
+  {
+    "brokenLoadedImages": 0,
+    "height": 844,
+    "overflow": false,
+    "surface": "iliad-mobile",
+    "width": 390
+  },
+  {
+    "surface": "iliad-inquiry",
+    "size_ml": 30,
+    "quantity": 2,
+    "total": 510000,
+    "test_entry_removed": true,
+    "whatsapp_sent": false
+  },
+  {
+    "brokenLoadedImages": 0,
+    "externalImages": 0,
+    "height": 900,
+    "overflow": false,
+    "surface": "catalog-desktop",
+    "width": 1440
+  },
+  {
+    "brokenLoadedImages": 0,
+    "height": 900,
+    "overflow": false,
+    "surface": "nero-desktop",
+    "width": 1440
+  },
+  {
+    "surface": "bali-pria-filter",
+    "results": 2,
+    "sizes_ml": [
+      37,
+      100
+    ],
+    "gender": "Pria",
+    "url": "https://staging.qammarisparfum.id/products?search=Bali+Cliff&gender=Pria"
+  },
+  {
+    "brokenLoadedImages": 0,
+    "height": 900,
+    "overflow": false,
+    "surface": "toffee-desktop",
+    "width": 1440
+  }
+]

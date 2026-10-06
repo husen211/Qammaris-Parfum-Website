@@ -1,0 +1,128 @@
+name: Production release
+
+on:
+  push:
+    branches: [codex/p8-03-staging-api]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qammaris-production-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      revision: ${{ steps.revision.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_mysql, fileinfo, zip, gd
+          coverage: none
+          tools: composer:v2
+      - name: Install locked runtime dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress --no-scripts --optimize-autoloader
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+      - name: Package code without runtime data or credentials
+        env:
+          RELEASE_REVISION: ${{ steps.revision.outputs.sha }}
+        run: |
+          python3 tools/hostinger/package-production-release.py
+          sha256sum production-release.tar.gz > production-release.tar.gz.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: production-${{ steps.revision.outputs.sha }}
+          path: |
+            production-release.tar.gz
+            production-release.tar.gz.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main' &&
+      vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Refuse a superseded main revision
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REVISION: ${{ needs.build.outputs.revision }}
+        run: |
+          current="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          if [ "$current" = "$RELEASE_REVISION" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+            echo 'A newer main revision exists; retaining current production code.'
+          fi
+      - uses: actions/download-artifact@v8
+        if: steps.current.outputs.deploy == 'true'
+        with:
+          name: production-${{ needs.build.outputs.revision }}
+      - name: Deploy verified code to activated production only
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_SSH_PORT }}
+          SSH_USERNAME: ${{ secrets.PRODUCTION_SSH_USERNAME }}
+          RELEASE_REVISION: ${{ needs.build.outputs.revision }}
+        run: |
+          set -euo pipefail
+          umask 077
+          sha256sum -c production-release.tar.gz.sha256
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          unset SSH_PRIVATE_KEY SSH_KNOWN_HOSTS
+          destination=/home/u429527638/domains/qammarisparfum.id/releases
+          scp -i ~/.ssh/id_ed25519 -P "$SSH_PORT" production-release.tar.gz "$SSH_USERNAME@$SSH_HOST:$destination/.incoming-$RELEASE_REVISION.tar.gz"
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" "bash -s '$RELEASE_REVISION'" <<'REMOTE'
+          set -euo pipefail
+          revision="$1"
+          [[ "$revision" =~ ^[a-f0-9]{40}$ ]]
+          root=/home/u429527638/domains/qammarisparfum.id
+          # This gate is created only during the separately approved first cutover.
+          test -f "$root/shared/qammaris-website/.production-active"
+          archive="$root/releases/.incoming-$revision.tar.gz"
+          temporary="$root/releases/.deploy-$revision"
+          test ! -e "$temporary"
+          mkdir "$temporary"
+          tar -xzf "$archive" -C "$temporary" tools/hostinger/deploy-production-release.sh
+          bash "$temporary/tools/hostinger/deploy-production-release.sh" "$archive" "$revision"
+          REMOTE

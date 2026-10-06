@@ -38,7 +38,7 @@ class SitemapController extends Controller
                 ],
             ];
 
-            $products = Product::active()->get(['slug', 'updated_at']);
+            $products = Product::published()->get(['slug', 'updated_at']);
             foreach ($products as $product) {
                 $urls[] = [
                     'loc' => route('products.show', $product->slug),
@@ -69,10 +69,10 @@ class SitemapController extends Controller
 
         foreach ($urls as $url) {
             $loc = htmlspecialchars($url['loc'], ENT_XML1);
-            $xml .= '<url><loc>' . $loc . '</loc>';
+            $xml .= '<url><loc>'.$loc.'</loc>';
 
-            if (!empty($url['lastmod'])) {
-                $xml .= '<lastmod>' . $url['lastmod'] . '</lastmod>';
+            if (! empty($url['lastmod'])) {
+                $xml .= '<lastmod>'.$url['lastmod'].'</lastmod>';
             }
 
             $xml .= '</url>';

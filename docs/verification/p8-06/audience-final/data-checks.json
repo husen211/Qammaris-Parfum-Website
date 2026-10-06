@@ -1,0 +1,73 @@
+{
+  "verification": {
+    "approved_published": 53,
+    "batch_id": 10,
+    "gender_counts": {
+      "Unisex": 30,
+      "Pria": 9,
+      "Wanita": 14
+    },
+    "launch_products": 350,
+    "published_including_fixture": 351,
+    "drafts": 95,
+    "all_drafts_without_photo_and_description": true,
+    "other_393_products_retained": true,
+    "all_391_offers_retained": true,
+    "images_retained": 1017,
+    "identities_retained": 796,
+    "sources_retained": 452,
+    "checkpoint": 457,
+    "categories_retained": true,
+    "replay_no_op": true,
+    "audit_digest": "d9dbcc20685c89299d31eec7a1b8ea193412a428bce6c68f72f4ddebb3599316",
+    "prices_urls_stock_copy_retained": true
+  },
+  "health": {
+    "at": "2026-10-06T05:57:35.351748Z",
+    "protected_unchanged": true,
+    "old_media_checksums_retained": 519,
+    "all_previous_media_retained": 861,
+    "paired_images_integrity_verified": 498,
+    "feed_without_key": 401,
+    "feed_with_key": 200,
+    "feed_meta": {
+      "next_seq": 457,
+      "has_more": false,
+      "generated_at": "2026-10-06T05:57:35.309Z"
+    },
+    "checkpoint": 457,
+    "sync_error_present": false,
+    "cron": {
+      "p8-03-scheduler-last-run": {
+        "timestamp": "2026-10-06T05:57:02Z",
+        "file_age_seconds": 33
+      },
+      "p8-03-worker-watchdog-last-run": {
+        "timestamp": "2026-10-06T05:57:02Z",
+        "file_age_seconds": 33
+      }
+    },
+    "workers": {
+      "stock": 1,
+      "images": 0,
+      "schedule_work": 0,
+      "review_covers": 0
+    },
+    "image_jobs": 0,
+    "stock_jobs": 0,
+    "users": 0,
+    "published": 351,
+    "drafts": 95,
+    "publication_ready": 0,
+    "anonymous_review": {
+      "/owner-review/p8-06-launch-ready/": 401,
+      "/owner-review/p8-06-launch-ready/index.html": 401,
+      "/owner-review/p8-06-launch-ready/review.css": 401,
+      "/owner-review/p8-06-launch-ready/review.js": 401,
+      "/owner-review/p8-06-launch-ready/audience-corrections.csv": 401,
+      "/owner-review/p8-06-launch-ready/size-concentration-corrections.csv": 401,
+      "/owner-review/p8-06-launch-ready/publication-candidates.csv": 401
+    },
+    "batch5_applied": 46
+  }
+}
