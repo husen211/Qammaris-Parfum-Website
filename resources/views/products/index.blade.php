@@ -15,20 +15,14 @@
 @endphp
 
 @section('content')
-    <div class="bg-white pt-20 pb-5 md:pt-24 md:pb-7">
-        <div class="container mx-auto px-4">
-            <div class="bg-brand-black text-white py-7 px-5 md:py-9 md:px-6 text-center relative overflow-hidden rounded-sm shadow-sm">
-                <div class="absolute inset-x-5 top-4 h-px bg-white/10 md:inset-x-8" aria-hidden="true"></div>
-                <div class="absolute inset-x-5 bottom-4 h-px bg-brand-gold/40 md:inset-x-8" aria-hidden="true"></div>
-                <div class="relative z-10">
-                    <h1 class="font-mayluxa text-3xl md:text-4xl tracking-wide mb-2 text-white">Koleksi Parfum</h1>
-                    <p class="text-[10px] md:text-xs uppercase tracking-[0.3em] text-brand-gold font-light">Parfum pilihan Qammaris</p>
-                </div>
-            </div>
+    <header class="catalog-header">
+        <div class="catalog-container">
+            <p class="catalog-header__eyebrow">Parfum pilihan Qammaris</p>
+            <h1 class="catalog-header__title font-mayluxa">Koleksi Parfum</h1>
         </div>
-    </div>
+    </header>
 
-    <div class="lg:hidden sticky top-[70px] z-30 bg-white border-y border-gray-100 shadow-sm">
+    <div class="catalog-toolbar lg:hidden sticky z-30 bg-white border-y border-gray-200">
         <div class="grid grid-cols-2 divide-x divide-gray-100">
             <button type="button" data-catalog-filter-trigger aria-controls="mobileFilter" aria-haspopup="dialog" aria-expanded="false"
                 class="min-h-11 px-3 flex items-center justify-center gap-2 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black transition-colors">
@@ -71,8 +65,20 @@
         data-price-max="{{ $catalogState->priceMax }}"
         data-availability="{{ $catalogState->availability }}"
         data-sort="{{ $catalogState->sort }}"
-        class="bg-white pb-20 pt-8 min-h-screen" aria-label="Hasil katalog">
-        <div class="container mx-auto px-4">
+        class="catalog-surface pb-20 pt-6 min-h-screen" aria-label="Hasil katalog">
+        <div class="catalog-container">
+            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="lg:hidden relative mb-5">
+                @include('products._catalog-state-inputs', ['catalogState' => $catalogState, 'exclude' => ['search']])
+                <label for="mobile-quick-catalog-search" class="sr-only">Cari produk atau brand</label>
+                <input id="mobile-quick-catalog-search" type="search" name="search" value="{{ $catalogState->search }}"
+                    data-catalog-quick-search maxlength="100" placeholder="Cari produk atau brand"
+                    class="w-full min-h-11 border border-gray-300 bg-white py-2 pl-3 pr-12 text-sm focus:outline-none focus:border-brand-black">
+                <button type="submit" aria-label="Cari katalog" class="absolute right-0 top-0 w-11 h-11 inline-flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+            </form>
             <div class="hidden lg:flex justify-between items-end mb-8 border-b border-gray-100 pb-4">
                 <p class="text-sm text-gray-500" aria-live="polite">
                     <span class="font-bold text-brand-black">{{ $products->total() }}</span> produk ditemukan
@@ -109,8 +115,8 @@
                 </p>
             @endif
 
-            <div class="flex flex-col lg:flex-row gap-12">
-                <aside class="hidden lg:block w-64 shrink-0 sticky top-32 h-fit" aria-label="Filter katalog">
+            <div class="catalog-layout">
+                <aside class="catalog-sidebar hidden lg:block shrink-0 sticky top-32 h-fit" aria-label="Filter katalog">
                     <form method="GET" action="{{ route('products.index') }}" id="desktopFilterForm" data-catalog-form autocomplete="off" class="space-y-8">
                         @if ($catalogState->sort !== 'latest')
                             <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
@@ -197,12 +203,12 @@
 
                 <div class="flex-1 min-w-0">
                     @if ($products->count() > 0)
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 sm:gap-x-4 md:gap-x-6 md:gap-y-11">
+                        <div class="catalog-grid">
                             @foreach ($products as $product)
                                 @php
                                     $detailUrl = route('products.show', array_merge(['product' => $product->slug], $detailContext));
                                 @endphp
-                                @include('products._card', [
+                                @include('products._catalog-card', [
                                     'product' => $product,
                                     'detailUrl' => $detailUrl,
                                     'prioritizeImage' => $loop->first,
@@ -213,7 +219,7 @@
                         <nav class="mt-16 border-t border-gray-100 pt-10" aria-label="Pagination katalog">
                             <div class="flex flex-col items-center justify-center gap-6">
                                 <p class="text-[10px] text-gray-400 uppercase tracking-widest font-light">Menampilkan {{ $products->firstItem() ?? 0 }}–{{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} produk</p>
-                                <div class="flex items-center gap-2 sm:gap-4">
+                                <div class="catalog-pagination">
                                     @if ($products->onFirstPage())
                                         <span aria-disabled="true" class="min-h-11 px-4 sm:px-8 border border-gray-100 text-gray-300 text-xs uppercase tracking-widest inline-flex items-center cursor-not-allowed">Sebelumnya</span>
                                     @else
@@ -317,8 +323,8 @@
                     <div class="grid grid-cols-2 gap-3">
                         @foreach ($brands as $brand)
                             <label class="min-h-11 flex items-center gap-3 px-3 py-2 border border-gray-200 cursor-pointer hover:border-brand-black focus-within:outline focus-within:outline-2 focus-within:outline-brand-black {{ in_array($brand->id, $selectedBrands, true) ? 'bg-brand-black text-white border-brand-black' : 'bg-white' }}">
-                                <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} class="checkbox checkbox-sm rounded-none {{ in_array($brand->id, $selectedBrands, true) ? 'border-white' : 'border-gray-300' }}">
-                                <span class="text-xs uppercase font-medium leading-tight">{{ $brand->name }}</span>
+                                <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} class="checkbox checkbox-sm shrink-0 rounded-none {{ in_array($brand->id, $selectedBrands, true) ? 'border-white' : 'border-gray-300' }}">
+                                <span class="min-w-0 break-words text-xs uppercase font-medium leading-tight">{{ $brand->name }}</span>
                             </label>
                         @endforeach
                     </div>

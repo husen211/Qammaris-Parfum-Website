@@ -43,6 +43,10 @@ if (catalog) {
         });
     };
 
+    document.querySelector('[data-catalog-quick-search]')?.addEventListener('input', (event) => {
+        state.search = event.target.value;
+    });
+
     const syncHiddenControls = (form) => {
         Object.entries(state).forEach(([name, value]) => {
             if (name === 'brand') {
