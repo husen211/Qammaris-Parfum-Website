@@ -7,6 +7,7 @@
     $activeFilterCount = $catalogState->activeFilterCount();
     $detailContext = $catalogState->query();
     $sortLabels = [
+        'best_sellers' => 'Terlaris dahulu',
         'latest' => 'Terbaru',
         'price_low' => 'Harga terendah',
         'price_high' => 'Harga tertinggi',
@@ -119,7 +120,7 @@
             <div class="catalog-layout">
                 <aside class="catalog-sidebar hidden lg:block shrink-0 sticky top-32 h-fit" aria-label="Filter katalog">
                     <form method="GET" action="{{ route('products.index') }}" id="desktopFilterForm" data-catalog-form autocomplete="off" class="space-y-8">
-                        @if ($catalogState->sort !== 'latest')
+                        @if ($catalogState->sort !== \App\Support\ProductCatalogState::DEFAULT_SORT)
                             <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
                         @endif
 
@@ -273,7 +274,7 @@
             </div>
 
             <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="flex-1 overflow-y-auto p-5 space-y-7">
-                @if ($catalogState->sort !== 'latest')
+                @if ($catalogState->sort !== \App\Support\ProductCatalogState::DEFAULT_SORT)
                     <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
                 @endif
 

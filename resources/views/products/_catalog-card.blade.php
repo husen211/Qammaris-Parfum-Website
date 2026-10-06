@@ -24,11 +24,17 @@
                     <span class="catalog-card__badge">Terlaris</span>
                 @endif
             </div>
-            <h2 class="catalog-card__name">{{ $product->name }}</h2>
+            @if (($headingLevel ?? 2) === 3)
+                <h3 class="catalog-card__name">{{ $product->name }}</h3>
+            @else
+                <h2 class="catalog-card__name">{{ $product->name }}</h2>
+            @endif
             <div class="catalog-card__offer">
                 @if ($offer)
                     <p class="catalog-card__size">{{ $offer->volume }} ml</p>
-                    <p class="catalog-card__price">{{ format_rupiah($offer->price) }}</p>
+                    @if ($showPrice ?? true)
+                        <p class="catalog-card__price">{{ format_rupiah($offer->price) }}</p>
+                    @endif
                 @else
                     <p class="catalog-card__size">Data sedang dilengkapi</p>
                 @endif

@@ -20,6 +20,10 @@ Katalog existing mempunyai form GET untuk search, kategori, brand, serta sort, t
 
 ## Consequences
 
+### P7-10 Owner-approved default ordering (2026-10-06)
+
+The default catalog sort is now `best_sellers` (Terlaris dahulu), using the existing admin flag before the stable latest tie-breakers. Only this default sort is omitted from normalized queries. Explicit `sort=latest` remains chronological and is preserved in forms, pagination and detail-return context; price/popular behavior is unchanged. This extends the existing allowlist without a new query architecture or data migration. Homepage daily merchandising remains a separate read-only selection described in BUSINESS_RULES.md and ARCHITECTURE.md.
+
 - URL hasil dapat dibagikan, direload, dipaginasi, serta dikembalikan dari detail secara konsisten.
 - Satu validation boundary mencegah drift antara mobile, desktop, query, dan link.
 - Customer tidak menerima klaim stok yang lebih kuat daripada data yang dimiliki Qammaris.

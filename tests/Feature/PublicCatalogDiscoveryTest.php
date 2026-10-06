@@ -112,7 +112,7 @@ class PublicCatalogDiscoveryTest extends TestCase
 
     public function test_price_sort_uses_active_offer_and_keeps_missing_offer_last(): void
     {
-        $expensive = $this->createProduct('Expensive Offer', ['base_price' => 1000], price: 300000);
+        $expensive = $this->createProduct('Expensive Offer', ['base_price' => 1000, 'is_best_seller' => true], price: 300000);
         $cheap = $this->createProduct('Cheap Offer', ['base_price' => 900000], price: 100000);
         $middle = $this->createProduct('Middle Offer', ['base_price' => 2000], price: 200000);
         $missing = $this->createProduct('Missing Offer', ['base_price' => 500], price: null);
@@ -133,6 +133,7 @@ class PublicCatalogDiscoveryTest extends TestCase
     public function test_latest_and_popular_sorts_have_deterministic_tie_breakers(): void
     {
         $older = $this->createProduct('Older Product', [
+            'is_best_seller' => true,
             'published_at' => now()->subDay(),
             'view_count' => 5,
         ]);
@@ -145,7 +146,10 @@ class PublicCatalogDiscoveryTest extends TestCase
             'view_count' => 10,
         ]);
 
-        $latest = $this->get(route('products.index'))->viewData('products');
+        $latestResponse = $this->get(route('products.index', ['sort' => 'latest']));
+        $latest = $latestResponse->viewData('products');
+        $this->assertSame(['sort' => 'latest'], $latestResponse->viewData('catalogState')->query());
+        $latestResponse->assertSee('name="sort" value="latest"', false);
         $popular = $this->get(route('products.index', ['sort' => 'popular']))->viewData('products');
 
         $this->assertSame(
@@ -231,11 +235,50 @@ class PublicCatalogDiscoveryTest extends TestCase
         $html = $response->getContent();
 
         $this->assertSame([], $state->query());
-        $this->assertSame('latest', $state->sort);
+        $this->assertSame('best_sellers', $state->sort);
         $this->assertSame(1, $state->page);
-        $this->assertSame(2, substr_count($html, '<option value="latest" selected>Terbaru</option>'));
+        $this->assertSame(2, substr_count($html, '<option value="best_sellers" selected>Terlaris dahulu</option>'));
         $this->assertStringNotContainsString('Inactive Brand', $html);
         $this->assertStringNotContainsString('Inactive Category', $html);
+    }
+
+    public function test_default_best_sellers_precede_newer_ordinary_products_across_pages_and_filters(): void
+    {
+        $ordinary = $this->createProduct('Catalog Ordinary', ['published_at' => now()]);
+        $bestSellers = collect();
+        foreach (range(1, 26) as $index) {
+            $bestSellers->push($this->createProduct('Catalog Best Seller '.$index, [
+                'is_best_seller' => true,
+                'published_at' => now()->subDay(),
+            ]));
+        }
+        $this->createProduct('Hidden Best Seller', ['is_best_seller' => true])->forceFill(['qammaris_app_hidden' => true])->save();
+        $this->createProduct('Draft Best Seller', ['is_best_seller' => true, 'publication_status' => Product::PUBLICATION_DRAFT]);
+
+        $response = $this->get(route('products.index'));
+        $response->assertOk();
+        $this->assertSame([], $response->viewData('catalogState')->query());
+        $this->assertSame($bestSellers->reverse()->take(24)->pluck('id')->values()->all(), $response->viewData('products')->pluck('id')->all());
+        $this->assertStringNotContainsString('sort=', $response->viewData('products')->nextPageUrl());
+
+        $secondPage = $this->get(route('products.index', ['page' => 2]));
+        $this->assertSame([$bestSellers[1]->id, $bestSellers[0]->id, $ordinary->id], $secondPage->viewData('products')->pluck('id')->all());
+        $detailUrl = route('products.show', ['product' => $bestSellers[1]->slug, 'page' => 2]);
+        $secondPage->assertSee($detailUrl);
+        $this->get($detailUrl)->assertOk()->assertSee(route('products.index', ['page' => 2]));
+
+        $filtered = $this->get(route('products.index', ['search' => 'Catalog', 'brand' => [$this->brand->id]]));
+        $this->assertSame($bestSellers->reverse()->take(24)->pluck('id')->values()->all(), $filtered->viewData('products')->pluck('id')->all());
+    }
+
+    public function test_default_order_uses_latest_then_id_within_each_group_and_null_dates_last(): void
+    {
+        $older = $this->createProduct('Older Best Seller', ['is_best_seller' => true, 'published_at' => now()->subDay()]);
+        $newer = $this->createProduct('New Best Seller', ['is_best_seller' => true]);
+        $tie = $this->createProduct('Tied Best Seller', ['is_best_seller' => true, 'published_at' => $newer->published_at]);
+        $undated = $this->createProduct('Undated Best Seller', ['is_best_seller' => true, 'published_at' => null]);
+        $ordinary = $this->createProduct('New Ordinary');
+        $this->assertSame([$tie->id, $newer->id, $older->id, $undated->id, $ordinary->id], $this->get(route('products.index'))->viewData('products')->pluck('id')->all());
     }
 
     private function createProduct(string $name, array $overrides = [], ?int $price = 100000): Product

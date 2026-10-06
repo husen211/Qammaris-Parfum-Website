@@ -130,6 +130,10 @@ class ProductController extends Controller
             return;
         }
 
+        if ($sort === ProductCatalogState::DEFAULT_SORT) {
+            $query->orderByDesc('is_best_seller');
+        }
+
         $query->orderByRaw('CASE WHEN published_at IS NULL THEN 1 ELSE 0 END')
             ->orderByDesc('published_at')
             ->orderByDesc('products.id');
