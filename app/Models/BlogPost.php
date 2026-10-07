@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
@@ -20,6 +21,7 @@ class BlogPost extends Model
     protected $attributes = ['seo_indexable' => true, 'seo_followable' => true];
 
     protected $fillable = [
+        'featured_media_id', 'related_product_ids', 'related_article_ids', 'faqs', 'references',
         'title',
         'slug',
         'excerpt',
@@ -44,6 +46,8 @@ class BlogPost extends Model
     ];
 
     protected $casts = [
+        'featured_media_id' => 'integer',
+        'related_product_ids' => 'array', 'related_article_ids' => 'array', 'faqs' => 'array', 'references' => 'array',
         'is_published' => 'boolean',
         'published_at' => 'datetime',
         'view_count' => 'integer',
@@ -61,6 +65,23 @@ class BlogPost extends Model
             ->generateSlugsFrom('title')
             ->saveSlugsTo('slug')
             ->doNotGenerateSlugsOnUpdate();
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(BlogMedia::class);
+    }
+
+    public function featuredMedia(): BelongsTo
+    {
+        return $this->belongsTo(BlogMedia::class)->whereNull('archived_at');
+    }
+
+    public function getHeroMediaAttribute(): ?BlogMedia
+    {
+        $media = $this->featuredMedia;
+
+        return $media && $media->blog_post_id === $this->id ? $media : null;
     }
 
     public function getRouteKeyName(): string

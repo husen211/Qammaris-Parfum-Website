@@ -18,7 +18,7 @@ final class JournalSearch
         foreach ($candidates as $post) {
             $htmlByPost[$post->id] = $this->sanitizer->sanitize($post->content);
             preg_match_all('/<div data-qammaris-product="([1-9][0-9]*)"/', $htmlByPost[$post->id], $matches);
-            $idsByPost[$post->id] = $matches[1];
+            $idsByPost[$post->id] = array_unique(array_merge($post->related_product_ids ?? [], $matches[1]));
         }
         $productIds = array_unique(array_merge([], ...array_values($idsByPost)));
         $products = Product::published()->with('brand:id,name')->whereIn('id', $productIds)->get(['id', 'name', 'brand_id'])->keyBy('id');

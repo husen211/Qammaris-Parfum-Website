@@ -2,3 +2,15 @@
 @media(hover:hover) and (pointer:fine){.journal-editor button:hover{background:#f0ede7}.journal-editor .journal-primary:hover{background:#383838}.journal-editor a:hover{color:#86632e}}
 @media(max-width:600px){.journal-heading{display:block}.journal-editor h1{font-size:24px}.journal-section>summary{padding:14px}.journal-section>summary span{display:block;margin:4px 0 0}.journal-section-body{padding:14px}.journal-row{grid-template-columns:1fr}.journal-editor .tiptap{padding:14px}.journal-taxonomy-row{flex-wrap:wrap}}
 @media(max-width:600px){.journal-editor input:not([type=checkbox]),.journal-editor textarea,.journal-editor select{font-size:16px}}
+.journal-editor fieldset[data-repeat]{margin:24px 0;padding:16px 0;border-top:1px solid #ddd;min-width:0}
+.journal-editor legend{font-weight:600}
+.journal-editor [data-repeat-row]{padding:12px 0;border-bottom:1px solid #e5e2dc}
+.journal-editor [data-repeat-row] label{display:block;margin:8px 0}
+.journal-row-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.journal-editor [data-qammaris-media],.journal-editor [data-qammaris-gallery],.journal-editor [data-qammaris-article],.journal-editor [data-qammaris-callout],.journal-editor [data-qammaris-cta],.journal-editor [data-qammaris-youtube]{padding:12px;border-left:2px solid #a37b3a;background:#f7f5ef;margin:16px 0;overflow-wrap:anywhere}
+.journal-crop-preview{width:100%;max-width:480px;max-height:600px;position:relative;overflow:hidden;background:#f7f5ef;aspect-ratio:16/9;margin:20px 0}
+.journal-crop-preview img{position:absolute;max-width:none}
+.journal-media-result{max-width:480px;margin:24px 0}
+.journal-media-result img{max-width:100%;height:auto}
+.journal-editor [data-media-form]>label{display:block;margin-top:16px}
+.journal-editor .journal-inserts>label{margin-top:16px}

@@ -6,9 +6,10 @@ use App\Exceptions\BlogPostConflict;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\BlogTag;
-use App\Models\Product;
 use App\Models\User;
+use App\Services\BlogImageProcessor;
 use App\Services\BlogMediaStorage;
+use App\Support\BlogComponentRules;
 use App\Support\BlogHtmlSanitizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -19,26 +20,30 @@ use Throwable;
 
 class SaveBlogPost
 {
-    private const EDITORIAL_FIELDS = ['title', 'excerpt', 'content', 'category_id', 'category', 'author', 'featured_image', 'featured_image_disk', 'subtitle', 'featured_image_alt', 'is_featured'];
+    private const EDITORIAL_FIELDS = ['title', 'excerpt', 'content', 'category_id', 'category', 'author', 'featured_image', 'featured_image_disk', 'subtitle', 'featured_image_alt', 'is_featured', 'featured_media_id', 'related_product_ids', 'related_article_ids', 'faqs', 'references'];
 
     public function __construct(
         private BlogHtmlSanitizer $sanitizer,
         private BlogMediaStorage $storage,
         private RecordBlogPostChange $audit,
+        private BlogImageProcessor $processor,
+        private BlogComponentRules $components,
     ) {}
 
     public function handle(array $data, User $actor, ?BlogPost $post = null, ?UploadedFile $image = null): BlogPost
     {
         abort_unless($actor->exists && $actor->role === 'admin', 403);
         $path = null;
+        $prepared = null;
 
         try {
             // File IO precedes the short DB transaction; failure never removes the current image.
             if ($image !== null) {
                 $path = $this->storage->store($image);
+                $prepared = $this->processor->prepare($image, $this->storage->diskName(), $path);
             }
 
-            return DB::transaction(function () use ($data, $actor, $post, $path): BlogPost {
+            return DB::transaction(function () use ($data, $actor, $post, $path, $prepared): BlogPost {
                 $creating = $post === null;
                 if (! $creating) {
                     $post = BlogPost::query()->whereKey($post->getKey())->lockForUpdate()->firstOrFail();
@@ -75,11 +80,16 @@ class SaveBlogPost
                     'is_published' => $publish,
                     'published_at' => $publish ? ($date ? Carbon::parse($date) : ($post->published_at ?? now())) : $post->published_at,
                 ]);
-                preg_match_all('/data-qammaris-product="([1-9][0-9]*)"/', $post->content, $markers);
-                $productIds = array_unique($markers[1]);
-                if (Product::whereIn('id', $productIds)->count() !== count($productIds)) {
-                    throw ValidationException::withMessages(['content' => 'Salah satu produk yang ditautkan tidak ditemukan. Pilih ulang produknya.']);
+                foreach (['related_product_ids', 'related_article_ids', 'faqs', 'references'] as $field) {
+                    if (array_key_exists($field, $data)) {
+                        $value = $data[$field] ?? [];
+                        // An empty legacy field and an empty editor list mean the same thing.
+                        if ($value !== [] || $post->{$field} !== null) {
+                            $post->{$field} = $value;
+                        }
+                    }
                 }
+                $this->components->validate($post);
                 // Retain the original enum column; new taxonomy does not rewrite legacy rows.
                 if ($creating || $post->category_id !== null || $oldCategory !== $category->name) {
                     $post->category_id = $category->id;
@@ -94,6 +104,18 @@ class SaveBlogPost
                 if ($path !== null) {
                     $post->featured_image = $path;
                     $post->featured_image_disk = $this->storage->diskName();
+                } elseif (! empty($data['featured_media_id'])) {
+                    $media = $post->exists ? $post->media()->whereNull('archived_at')->find($data['featured_media_id']) : null;
+                    if (! $media) {
+                        throw ValidationException::withMessages(['featured_media_id' => 'Pilih media aktif milik artikel ini.']);
+                    }
+                    $changingMedia = $post->featured_media_id !== $media->id;
+                    $post->featured_media_id = $media->id;
+                    $post->featured_image = $media->path;
+                    $post->featured_image_disk = $media->disk;
+                    if ($changingMedia) {
+                        $post->featured_image_alt = $media->alt;
+                    }
                 }
                 if ($publish) {
                     $errors = [];
@@ -131,6 +153,17 @@ class SaveBlogPost
 
                 $post->revision = $creating ? 1 : $post->revision + 1;
                 $post->save();
+                if ($prepared !== null) {
+                    $media = $post->media()->create($prepared + ['alt' => $post->featured_image_alt ?? '', 'license' => 'Milik Qammaris']);
+                    $post->featured_media_id = $media->id;
+                    $post->save();
+                } elseif ($post->featured_media_id) {
+                    $featured = $post->media()->whereKey($post->featured_media_id)->whereNull('archived_at')->first();
+                    if ($featured && $featured->alt !== ($post->featured_image_alt ?? '')) {
+                        $featured->alt = $post->featured_image_alt ?? '';
+                        $featured->save();
+                    }
+                }
                 if ($tagsChanged) {
                     $post->tags()->sync($tagIds);
                 }
@@ -141,6 +174,9 @@ class SaveBlogPost
                 return $post;
             });
         } catch (Throwable $error) {
+            if ($prepared !== null) {
+                $this->processor->discard($prepared);
+            }
             if ($path !== null) {
                 $this->storage->discard($path);
             }

@@ -20,14 +20,16 @@ class BlogController extends Controller
         abort_unless($post->isPubliclyVisible(), 404);
 
         $post->incrementViewCount();
-        $document = $renderer->document($post->content);
+        $document = $renderer->document($post->content, $post);
         $post->setAttribute('content', $document['html']);
 
-        $relatedPosts = BlogPost::with('editorialCategory')->published()
+        $selected = BlogPost::with('editorialCategory')->published()->whereIn('id', $post->related_article_ids ?? [])->where('id', '!=', $post->id)->get()->keyBy('id');
+        $relatedPosts = collect($post->related_article_ids ?? [])->map(fn ($id) => $selected->get((int) $id))->filter()->values();
+        $relatedPosts = $relatedPosts->concat(BlogPost::with('editorialCategory')->published()
             ->byCategory($post->category)
-            ->where('id', '!=', $post->id)
+            ->whereNotIn('id', $relatedPosts->pluck('id')->push($post->id))
             ->orderByDesc('published_at')->orderByDesc('id')->take(3)
-            ->get();
+            ->get())->take(3);
 
         $nextPost = BlogPost::with('editorialCategory')->published()
             ->whereNotIn('id', $relatedPosts->pluck('id')->push($post->id))
@@ -44,7 +46,7 @@ class BlogController extends Controller
     private function listing(Request $request, JournalSearch $searcher, string $category)
     {
         $search = SearchMatcher::term($request->query('search'));
-        $query = BlogPost::with('editorialCategory')->published();
+        $query = BlogPost::with(['editorialCategory', 'featuredMedia'])->published();
         if ($category !== '') {
             $query->byCategory($category);
         }

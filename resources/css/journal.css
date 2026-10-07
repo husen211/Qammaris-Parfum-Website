@@ -9,6 +9,55 @@
     padding: 124px 0 72px;
     overflow-wrap: anywhere;
 }
+.journal-media{margin:28px 0;min-width:0}
+.journal-media img{display:block;width:100%;max-width:100%;height:auto;margin:0}
+.journal-media figcaption{font-size:13px;color:var(--journal-muted);line-height:1.6;margin-top:10px}
+.journal-media figcaption span{display:block}
+.journal-hero-media{max-width:1000px;margin:0 auto 40px}
+.journal-hero-media .journal-media img{max-height:560px;object-fit:contain}
+.journal-gallery{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin:28px 0 10px;padding-bottom:12px;max-width:100%}
+.journal-gallery .journal-media{flex:0 0 85%;scroll-snap-align:start;margin:0}
+.journal-gallery .journal-media img{height:auto;aspect-ratio:4/3;object-fit:contain;background:var(--journal-cream)}
+.journal-gallery-help{font-size:13px;color:var(--journal-muted)}
+.journal-callout{padding:20px;border-left:2px solid #a37b3a;background:var(--journal-cream);margin:32px 0}
+.journal-callout p{margin:8px 0 0;white-space:pre-line}
+.journal-callout-warning{border-color:#8b4d37}
+.journal-inline-cta{margin:28px 0}
+.journal-body .journal-button{color:#fff;text-decoration:none}
+.journal-inline-article{padding:20px 0;border-block:1px solid var(--journal-line);margin:28px 0}
+.journal-inline-article span{display:block;font-size:13px;color:var(--journal-muted);margin-bottom:8px}
+.journal-video{margin:28px 0}
+.journal-video iframe{width:100%;aspect-ratio:16/9;border:0;background:var(--journal-cream)}
+.journal-video>a{font-size:14px;display:inline-flex;min-height:44px;align-items:center}
+.journal-product{max-width:320px;margin:28px 0;min-width:0}
+.journal-body .journal-product a{text-decoration:none;color:var(--journal-ink)}
+.journal-product .catalog-card{width:100%}
+.journal-product .catalog-card__name{font-size:18px;margin:0;line-height:1.4}
+.journal-product .catalog-media img{margin:0;height:100%;object-fit:contain}
+.journal-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.journal-product-grid .journal-product{margin:0;max-width:none}
+.journal-recommended,.journal-faq,.journal-references{margin:40px 0}
+.journal-faq details{border-bottom:1px solid var(--journal-line);padding:12px 0}
+.journal-faq summary{cursor:pointer;min-height:44px;display:list-item;font-weight:500;line-height:1.6}
+.journal-faq p{line-height:1.85;white-space:pre-line;margin:12px 0}
+.journal-references ol{padding-left:24px;list-style:decimal}
+.journal-references a{display:inline-block;padding:8px 0;text-decoration:underline}
+.journal-public .journal-product [class*="availability"]{font-size:13px}
+
+@media(max-width:374px){.journal-product-grid{grid-template-columns:1fr}}
+.journal-body .journal-product p{margin:0;line-height:1.5}
+.journal-body .journal-product .catalog-card__brand{font-size:10px}
+.journal-body .journal-product .catalog-card__size{font-size:13px}
+.journal-body .journal-product .catalog-card__price{font-size:18px;font-weight:600}
+.journal-body .journal-product .catalog-card__availability{font-size:13px}
+.journal-gallery-controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:0 0 28px}
+.journal-gallery-controls[hidden]{display:none}
+.journal-gallery-controls button{min-width:44px;min-height:44px;border:1px solid var(--journal-line);background:#fff;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.journal-gallery-controls button:disabled{opacity:.4}
+.journal-gallery-controls button:active{background:var(--journal-cream)}
+.journal-gallery-controls p{margin:0;line-height:1.5}
+.journal-gallery-controls button:focus-visible{outline:2px solid #a37b3a;outline-offset:3px}
+
 .journal-public h1, .journal-public h2, .journal-public h3 { font-weight: 500; line-height: 1.25; }
 .journal-public h1 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -.025em; }
 .journal-public h2 { font-size: 26px; }

@@ -40,5 +40,6 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-032 | [Blog write foundation](ADR-032-blog-write-foundation.md) |
 | ADR-033 | [Blog editorial CMS and transient preview](ADR-033-blog-editorial-cms.md) |
 | ADR-034 | [Public Journal search, rendering and SEO](ADR-034-public-journal-search-seo.md) |
+| ADR-035 | [Journal owned media and complete components](ADR-035-journal-media-and-components.md) |
 
 Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.

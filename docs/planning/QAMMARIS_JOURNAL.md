@@ -21,7 +21,7 @@ Use Tiptap with vanilla JavaScript via a Vite entry loaded only by the admin edi
 
 Dependency order: foundation → CMS → public Journal/SEO → complete media/blocks → agent API → acceptance/release. Do not install Tiptap/Sanctum or implement later stages during BLOG-01. Foundation is on a review branch, not deployed.
 
-Execution update: Owner selected BLOG-02, then BLOG-03 with “gas lanjut”; order work remains assigned separately to Claude Code. CMS/editor/taxonomy/transient preview/readiness and public Journal/search/SEO are implemented in isolated dependent review branches. [BLOG-02 evidence](../verification/blog-02/README.md), [BLOG-03 evidence](../verification/blog-03/README.md). BLOG-04–06 remain unstarted; no production release or API credentials authorized by this implementation.
+Execution update: Owner selected BLOG-02–04 with successive continuations; order work remains assigned separately to Claude Code. CMS/editor/taxonomy/transient preview/readiness, public Journal/search/SEO, and owned responsive media/complete components are implemented in isolated dependent review branches. [BLOG-02 evidence](../verification/blog-02/README.md), [BLOG-03 evidence](../verification/blog-03/README.md), [BLOG-04 evidence](../verification/blog-04/README.md). BLOG-05/06 remain unstarted; no production release or API credentials authorized by this implementation.
 
 ## Approved CMS and editorial target
 

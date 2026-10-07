@@ -13,6 +13,11 @@ class BlogPostStoreRequest extends FormRequest
         if ($this->boolean('tags_present')) {
             $this->merge(['tag_ids' => $this->input('tag_ids', [])]);
         }
+        if ($this->boolean('components_present')) {
+            foreach (['related_product_ids', 'related_article_ids', 'faqs', 'references'] as $field) {
+                $this->merge([$field => $this->input($field, [])]);
+            }
+        }
     }
 
     public function authorize(): bool

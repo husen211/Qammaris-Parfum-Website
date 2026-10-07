@@ -97,6 +97,8 @@ class AdminBlogPostController extends Controller
             'categories' => BlogCategory::where('is_active', true)->orWhere('name', $post?->category ?? '')->orderBy('name')->get(),
             'tags' => BlogTag::where('is_active', true)->orWhereIn('id', $post?->tags()->pluck('blog_tags.id') ?? [])->orderBy('name')->get(),
             'products' => Product::published()->orderBy('name')->get(['id', 'name', 'slug']),
+            'articleChoices' => BlogPost::whereNull('archived_at')->where('id', '!=', $post?->id ?? 0)->orderBy('title')->get(['id', 'title']),
+            'mediaChoices' => $post?->media()->whereNull('archived_at')->orderBy('id')->get() ?? collect(),
         ];
     }
 
@@ -109,11 +111,17 @@ class AdminBlogPostController extends Controller
         // A preview is transient: no file, article, view count or history is written.
         $post->setRelation('editorialCategory', null);
         $post->category_id = null;
-        $document = $renderer->document($post->content);
+        $document = $renderer->document($post->content, $post);
         $post->content = $document['html'];
         $image = $request->file('featured_image');
         $previewImage = $image ? 'data:'.$image->getMimeType().';base64,'.base64_encode($image->getContent()) : ($post->featured_image ? $post->featured_image_url : asset('images/product-placeholder.svg'));
-        $html = view('blog.show', ['post' => $post, 'relatedPosts' => collect(), 'nextPost' => null, 'isPreview' => true, 'previewImage' => $previewImage] + $document)->render();
+        if ($post->featured_media_id && $post->exists) {
+            $selectedMedia = $post->media()->whereNull('archived_at')->find($post->featured_media_id);
+            $post->setRelation('featuredMedia', $selectedMedia);
+        }
+        $choices = BlogPost::published()->whereIn('id', $post->related_article_ids ?? [])->where('id', '!=', $post->id ?? 0)->get()->keyBy('id');
+        $related = collect($post->related_article_ids ?? [])->map(fn ($id) => $choices->get((int) $id))->filter()->values();
+        $html = view('blog.show', ['post' => $post, 'relatedPosts' => $related, 'nextPost' => null, 'isPreview' => true, 'previewImage' => $previewImage, 'previewHasUpload' => $image !== null] + $document)->render();
 
         return response()->view('admin.blog-posts.preview', compact('html'))
             ->header('X-Robots-Tag', 'noindex, nofollow')

@@ -23,7 +23,7 @@
 
     @if($featured)
         <section class="journal-featured" aria-labelledby="featured-title">
-            <a href="{{ route('blog.show', $featured->slug) }}" class="journal-cover" aria-label="Baca {{ $featured->title }}"><img class="journal-image" src="{{ $featured->featured_image_url }}" alt="{{ $featured->featured_image_alt ?: $featured->title }}" width="1200" height="800" fetchpriority="high" decoding="async" data-journal-fallback="{{ asset('images/product-placeholder.svg') }}"></a>
+            <a href="{{ route('blog.show', $featured->slug) }}" class="journal-cover" aria-label="Baca {{ $featured->title }}"><img class="journal-image" src="{{ $featured->featured_image_url }}" @if($featured->hero_media?->srcset()) srcset="{{ $featured->hero_media->srcset() }}" sizes="(max-width: 767px) calc(100vw - 40px), 700px" @endif alt="{{ $featured->featured_image_alt ?: $featured->title }}" width="1200" height="800" fetchpriority="high" decoding="async" data-journal-fallback="{{ asset('images/product-placeholder.svg') }}"></a>
             <div>
                 <p class="journal-kicker">Pilihan editorial · {{ $featured->category }}</p>
                 <h2 id="featured-title"><a href="{{ route('blog.show', $featured->slug) }}">{{ $featured->title }}</a></h2>

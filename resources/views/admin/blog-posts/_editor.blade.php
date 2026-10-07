@@ -32,6 +32,7 @@
                 <div data-editor-inserts class="journal-inserts">
                     <details><summary>Tambahkan tautan</summary><label for="editor-link">URL tautan</label><input id="editor-link" type="url" placeholder="https://…"><button type="button" data-insert-link>Pasang tautan pada teks terpilih</button><button type="button" data-remove-link>Hapus tautan</button></details>
                     <details><summary>Tambahkan gambar dalam artikel</summary><label for="editor-image">URL gambar milik Anda</label><input id="editor-image" placeholder="/storage/blog/…"><label for="editor-image-alt">Teks alternatif gambar</label><input id="editor-image-alt" maxlength="255"><button type="button" data-insert-image>Tambahkan gambar</button></details>
+                    @include('admin.blog-posts._components')
                 </div>
             </div>
             <textarea id="content" name="content" rows="16" maxlength="500000" spellcheck="false" aria-invalid="{{ $errors->has('content') ? 'true' : 'false' }}" aria-describedby="editor-feedback content-error">{{ old('content', $blogPost?->content) }}</textarea>
@@ -42,6 +43,10 @@
             <x-journal-field name="featured_image" label="Gambar utama" type="file" accept="image/jpeg,image/png,image/webp"/>
             <p>JPEG, PNG, atau WebP · maksimal 5 MB. Gambar sebelumnya tetap disimpan.</p>
             <x-journal-field name="featured_image_alt" label="Teks alternatif gambar utama" :value="$blogPost?->featured_image_alt" maxlength="255" placeholder="Jelaskan isi gambar secara singkat"/>
+            @if($editing)
+                <p>Simpan perubahan artikel terlebih dahulu, lalu buka pengelola media. Kembali ke editor akan memuat revision terbaru.</p><a href="{{ route('admin.blog-media.index', $blogPost) }}">Upload media dan tinjau crop →</a>
+                @if($mediaChoices->isNotEmpty())<label for="featured_media_id">Pilih gambar utama dari media artikel</label><select id="featured_media_id" name="featured_media_id"><option value="">Pertahankan gambar saat ini</option>@foreach($mediaChoices as $media)<option value="{{ $media->id }}" @selected((int)old('featured_media_id', $blogPost->featured_media_id) === $media->id)>{{ $media->alt ?: 'Media '.$media->id }}</option>@endforeach</select><p>Upload file utama baru didahulukan bila keduanya dipilih.</p>@endif
+            @else<p>Simpan draft untuk mengunggah media tambahan, galeri, metadata hak pakai dan crop.</p>@endif
         </div></details>
         <details class="journal-section" @if(collect(['seo_title', 'meta_description', 'canonical_url', 'og_title', 'og_description', 'og_image_url', 'seo_indexable', 'seo_followable'])->contains(fn ($field) => $errors->has($field))) open @endif><summary>SEO <span>Pencarian dan berbagi</span></summary><div class="journal-section-body">
             <x-journal-field name="seo_title" label="Judul SEO (opsional)" :value="$blogPost?->seo_title" maxlength="255"/><p>Kosongkan untuk memakai judul artikel.</p>
@@ -60,6 +65,7 @@
             <input type="hidden" name="tags_present" value="1"><fieldset id="tag_ids"><legend>Tag artikel</legend><div class="journal-tags">@forelse($tags as $tag)<label><input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" @checked(in_array($tag->id, $selectedTags, true))>{{ $tag->name }}{{ !$tag->is_active ? ' (nonaktif)' : '' }}</label>@empty<p>Belum ada tag.</p>@endforelse</div></fieldset>
             <a href="{{ route('admin.blog-taxonomy.index') }}" target="_blank" rel="noopener">Kelola kategori dan tag ↗</a>
             <div data-product-insert hidden><label for="editor-product">Produk katalog</label><select id="editor-product"><option value="">Pilih produk</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select><button type="button" data-insert-product>Tambahkan tautan produk ke artikel</button></div>
+            @include('admin.blog-posts._relations')
         </div></details>
         <details open class="journal-section"><summary>Publikasi <span>Draft, jadwal, dan artikel unggulan</span></summary><div class="journal-section-body">
             <input type="hidden" name="is_featured" value="0"><label class="journal-check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $blogPost?->is_featured))>Tandai sebagai artikel unggulan</label>

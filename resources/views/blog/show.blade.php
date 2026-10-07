@@ -40,7 +40,11 @@
             <p class="journal-meta">Diperbarui <time datetime="{{ $post->content_updated_at->toAtomString() }}">{{ $post->content_updated_at->translatedFormat('d F Y') }}</time></p>
         @endif
     </header>
-    <div class="journal-hero"><img class="journal-image" src="{{ $previewImage ?? $post->featured_image_url }}" alt="{{ $post->featured_image_alt ?: $post->title }}" width="1600" height="900" fetchpriority="high" decoding="async" data-journal-fallback="{{ asset('images/product-placeholder.svg') }}"></div>
+    @if($post->hero_media && !($previewHasUpload ?? false))
+        <div class="journal-hero-media">@include('blog._media', ['media' => $post->hero_media, 'priority' => true, 'alt' => $post->featured_image_alt ?: $post->title, 'sizes' => '(max-width: 767px) calc(100vw - 40px), 1000px'])</div>
+    @else
+        <div class="journal-hero"><img class="journal-image" src="{{ $previewImage ?? $post->featured_image_url }}" alt="{{ $post->featured_image_alt ?: $post->title }}" width="1600" height="900" fetchpriority="high" decoding="async" data-journal-fallback="{{ asset('images/product-placeholder.svg') }}"></div>
+    @endif
 
     <div @class(['journal-reading-layout', 'journal-with-aside' => count($toc ?? []) || ($linkedProducts ?? collect())->isNotEmpty()])>
         @if(count($toc ?? []) || ($linkedProducts ?? collect())->isNotEmpty())
@@ -55,6 +59,15 @@
         @endif
         <div class="journal-reading-main">
             <div class="journal-body">{!! $post->content !!}</div>
+            @if($post->faqs)
+                <section class="journal-faq"><h2>Pertanyaan umum</h2>@foreach($post->faqs as $faq)<details><summary>{{ $faq['question'] }}</summary><p>{{ $faq['answer'] }}</p></details>@endforeach</section>
+            @endif
+            @if($post->references)
+                <section class="journal-references"><h2>Referensi</h2><ol>@foreach($post->references as $reference)<li><a href="{{ $reference['url'] }}" target="_blank" rel="noopener noreferrer">{{ $reference['title'] }} ↗</a></li>@endforeach</ol></section>
+            @endif
+            @if(($post->related_product_ids ?? []) && ($linkedProducts ?? collect())->isNotEmpty())
+                <section class="journal-recommended"><h2>Produk pilihan</h2><div class="journal-product-grid">@foreach($linkedProducts->whereIn('id', $post->related_product_ids) as $product) @include('blog._product', ['product' => $product]) @endforeach</div></section>
+            @endif
             @unless($preview)
                 <section class="journal-share" aria-labelledby="share-heading" data-journal-share data-share-url="{{ $shareUrl }}" data-share-title="{{ $post->title }}">
                     <h2 id="share-heading">Bagikan artikel</h2>
@@ -72,10 +85,10 @@
         </div>
     </div>
 
-    @unless($preview)
         @if($relatedPosts->isNotEmpty())
             <section class="journal-related"><div class="journal-section-heading"><h2>Artikel terkait</h2><a href="{{ route('blog.index') }}">Lihat Journal →</a></div><div class="journal-grid">@foreach($relatedPosts as $relatedPost) @include('blog._card', ['post' => $relatedPost]) @endforeach</div></section>
         @endif
+    @unless($preview)
         @if($nextPost ?? null)<nav class="journal-next" aria-label="Artikel berikutnya"><span>Artikel berikutnya</span><a href="{{ route('blog.show', $nextPost->slug) }}">{{ $nextPost->title }} →</a></nav>@endif
     @endunless
 </article>

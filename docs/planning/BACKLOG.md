@@ -17,7 +17,7 @@ Owner approved the [Journal implementation plan](QAMMARIS_JOURNAL.md), then sele
 | BLOG-01 | IN_REVIEW | Foundation implemented on `modernization/blog-01-foundation`: shared writes, revision conflict, retained/verified media, archive/restore-as-draft, transactional admin history and editorial time. Local verification passed; staging MySQL/runtime and genuine touch remain unconfirmed. Not deployed. [Evidence](../verification/blog-01/README.md), [ADR-032](../architecture/decisions/ADR-032-blog-write-foundation.md) |
 | BLOG-02 | IN_REVIEW | CMS fields, Tiptap visual/HTML editor, managed categories/tags, authenticated transient desktop/mobile preview, new-publication readiness and existing scheduling. Branch modernization/blog-02-editor depends on BLOG-01. Local tests/browser passed within limits; native upload, genuine touch and staging MySQL remain unconfirmed. Not deployed. [Evidence](../verification/blog-02/README.md), [ADR-033](../architecture/decisions/ADR-033-blog-editorial-cms.md) |
 | BLOG-03 | IN_REVIEW | Public Journal landing/search/detail, TOC/table containment/share, SEO fields/schema and scheduled sitemap cache boundaries. Isolated dependent branch modernization/blog-03-journal; not deployed. 423 Laravel tests/2993 assertions and31 JS tests passed; Chrome320/375/390/768/1440 checked. Genuine touch, staging MySQL and external SEO validation remain open. [Evidence](../verification/blog-03/README.md), [ADR-034](../architecture/decisions/ADR-034-public-journal-search-seo.md) |
-| BLOG-04 | BACKLOG | Responsive media and complete content components/relations |
+| BLOG-04 | IN_REVIEW | Owned media, verified originals/WebP variants/focal crops, gallery/callout/CTA/video, FAQ/references and ordered live catalog/article relations. Dependent branch modernization/blog-04-media; not deployed. 439 Laravel tests/3134 assertions and31 JS tests passed; Chrome320/375/390/768/1440 checked. Native upload, genuine touch and staging MySQL/GD remain unconfirmed. [Evidence](../verification/blog-04/README.md), [ADR-035](../architecture/decisions/ADR-035-journal-media-and-components.md) |
 | BLOG-05 | BACKLOG | Actor-owned draft-only API; credentials separate approval |
 | BLOG-06 | BACKLOG | Staging/Owner acceptance and separately approved production release |
 
@@ -26,6 +26,8 @@ BLOG-01 acceptance implemented: failed file/DB/audit write keeps current article
 ## Original catalog program board
 
 Unrelated finding SEC-DEP-01 (BACKLOG, not authorized for automatic package upgrades): npm audit reports concurrently9.2.4/shell-quote1.9.0 (critical) and source-map-js1.2.1 (high). Versions are identical in cb0a1c3 and BLOG-02; not introduced by Tiptap. Assess/update in a separately scoped dependency task, then repeat audit before release.
+
+Unrelated finding SEC-DEP-02 (BACKLOG): BLOG-04 locked Composer audit reports two existing league/commonmark advisories, medium GHSA-97jj-33gv-5xf9 and high GHSA-3q6v-r5mr-hxv8. BLOG-04 does not change either lockfile; Journal content uses the existing HTML sanitizer, not Markdown conversion. Assess affected application paths and package update separately; dependency audits are not clean.
 
 | ID | Phase | Status retained | Current meaning / evidence |
 |---|---|---|---|

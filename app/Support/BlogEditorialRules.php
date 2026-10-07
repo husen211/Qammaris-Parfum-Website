@@ -9,7 +9,7 @@ final class BlogEditorialRules
 {
     public static function fields(): array
     {
-        return [
+        return BlogComponentRules::fields() + [
             'title' => ['nullable', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string', 'max:1000'],
             'content' => ['nullable', 'string', 'max:500000'],

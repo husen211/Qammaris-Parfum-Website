@@ -3,6 +3,7 @@ import { Editor, Node, mergeAttributes } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { TableKit } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
+import { journalNodes, installJournalInserts } from './blog-components';
 
 const form = document.querySelector('#journal-form');
 if (form) {
@@ -19,7 +20,7 @@ if (form) {
     try {
         const editor = new Editor({
             element: form.querySelector('[data-visual-editor]'),
-            extensions: [StarterKit.configure({ heading: { levels: [2, 3, 4] }, link: { openOnClick: false } }), TableKit, Image, ProductMarker],
+            extensions: [StarterKit.configure({ heading: { levels: [2, 3, 4] }, link: { openOnClick: false } }), TableKit, Image, ProductMarker, ...journalNodes],
             content: source.value,
             editorProps: { attributes: { role: 'textbox', 'aria-label': 'Isi artikel visual', 'aria-multiline': 'true', 'aria-describedby': 'content-error editor-feedback', 'aria-invalid': source.getAttribute('aria-invalid') } },
             onUpdate: ({ editor }) => { if (mode === 'visual') source.value = editor.getHTML(); },
@@ -34,6 +35,7 @@ if (form) {
             });
         }
         controls.hidden = false;
+        installJournalInserts(form, editor, feedback, () => mode);
         source.hidden = true;
         form.querySelector('[data-product-insert]').hidden = false;
         feedback.textContent = 'Editor visual siap. Isian baru disimpan ketika Anda menekan Simpan.';

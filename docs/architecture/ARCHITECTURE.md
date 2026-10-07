@@ -130,6 +130,12 @@ Additive migration000004 adds canonical/OG overrides and index/follow defaults. 
 
 No resize/full product cards/API in this phase. Existing content/media/IDs/slugs/authors retained; current catalog remains read-only. [ADR-034](decisions/ADR-034-public-journal-search-seo.md), [operator guide](../runbooks/JOURNAL_PUBLIC.md), [verification](../verification/blog-03/README.md).
 
+## BLOG-04 review branch — owned media and components
+
+modernization/blog-04-media depends on BLOG-03, not deployed. Additive000005 creates article-owned BlogMedia metadata/variant rows and nullable featured pointer/ordered JSON lists. BlogImageProcessor verifies originals, enforces5MB/6000px/12MP/estimated memory limits, generates immutable bounded WebP original+chosen crop generations and compensates only new derivatives. GD/WebP unavailable uses original with warning; no automatic backfill or purge. SaveBlogMedia scopes parent IDs, revision/row locks and existing transactional audit; featured alt stays synchronized, feature archive is blocked until replacement. Media form saves separately from writing and requires editor reload after revision changes.
+
+BlogComponentRules validates owned active media/gallery and bounded existing catalog/article IDs, structured FAQ/references and no self-reference. Sanitizer retains canonical ID/plain-text markers; RenderBlogContent reconstructs trusted media/gallery/callout/CTA/fixed YouTube/related article HTML and current public catalog cards. Ordered hidden/draft/archive targets disappear on read. JSON IDs normalize to integers, explicit clear differs from omitted fields, and no catalog write occurs. Tiptap atomic nodes and native repeaters preserve visual/HTML content; public native gallery/FAQ remain usable without scripts. Existing preview sandbox limits persist. [ADR-035](decisions/ADR-035-journal-media-and-components.md), [runbook](../runbooks/JOURNAL_MEDIA.md), [evidence](../verification/blog-04/README.md).
+
 ## Runtime, deployment, and verification boundaries (current)
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.

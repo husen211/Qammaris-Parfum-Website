@@ -13,6 +13,12 @@ class RecordBlogPostChange
     public function snapshot(BlogPost $post): array
     {
         return $post->only(['title', 'slug', 'author', 'category', 'category_id', 'is_featured', 'is_published', 'featured_image_disk', 'seo_indexable', 'seo_followable']) + [
+            'featured_media_id' => $post->featured_media_id,
+            'related_product_ids' => $post->related_product_ids ?? [],
+            'related_article_ids' => $post->related_article_ids ?? [],
+            'faqs_hash' => $this->hash(json_encode($post->faqs ?? [], JSON_THROW_ON_ERROR)),
+            'references_hash' => $this->hash(json_encode($post->references ?? [], JSON_THROW_ON_ERROR)),
+            'media_hash' => $this->hash($post->exists ? json_encode($post->media()->orderBy('id')->get()->map(fn ($media) => $media->getAttributes())->all(), JSON_THROW_ON_ERROR) : '[]'),
             'canonical_hash' => $this->hash($post->canonical_url),
             'og_title_hash' => $this->hash($post->og_title),
             'og_description_hash' => $this->hash($post->og_description),
@@ -35,7 +41,7 @@ class RecordBlogPostChange
         if (DB::transactionLevel() < 1) {
             throw new LogicException('Blog history must commit with the article mutation.');
         }
-        if (! in_array($action, ['created', 'updated', 'archived', 'restored'], true)
+        if (! in_array($action, ['created', 'updated', 'archived', 'restored', 'media_uploaded', 'media_updated', 'media_archived'], true)
             || ! $actor->exists || $actor->role !== 'admin') {
             throw new InvalidArgumentException('An authenticated admin and known blog action are required.');
         }
