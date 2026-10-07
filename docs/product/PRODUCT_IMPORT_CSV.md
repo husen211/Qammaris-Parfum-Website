@@ -36,7 +36,7 @@ provider,kode_produk,nama_produk,deskripsi_produk,harga,brand,gender,stok,terlar
 | `kode_produk` | Ya | Teks maksimum 191 karakter; jangan diubah menjadi angka |
 | `nama_produk` | Ya | Teks maksimum 255 karakter |
 | `deskripsi_produk` | Untuk publish | Teks maksimum 20.000 karakter; boleh kosong pada draft |
-| `harga` | Untuk publish | Angka positif, contoh `599000`; tanpa `Rp`, titik, koma, atau pemisah ribuan |
+| `harga` | Untuk publish | Rupiah bulat positif, contoh `599000`; tanpa `Rp`, koma, atau pemisah ribuan. Zeroes database seperti `599000.00` diterima; pecahan bukan nol ditolak (AUD-06). |
 | `brand` | Untuk publish | Nama exact case-insensitive dari admin; tidak dibuat otomatis |
 | `gender` | Untuk publish | `Unisex`, `Pria`, atau `Wanita` |
 | `stok` | Tidak | Snapshot bilangan bulat `0–999999`; bukan klaim live stock |

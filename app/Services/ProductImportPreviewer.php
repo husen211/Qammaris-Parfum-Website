@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductExternalIdentity;
+use App\Support\Rupiah;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 
@@ -364,10 +365,10 @@ class ProductImportPreviewer
      */
     private function validateNumbers(array $data, array &$issues): void
     {
-        if ($data['harga'] !== '' && (! preg_match('/^\d+(?:\.\d{1,2})?$/', $data['harga'])
+        if ($data['harga'] !== '' && (! preg_match(Rupiah::WHOLE_PRICE_PATTERN, $data['harga'])
             || (float) $data['harga'] <= 0
             || (float) $data['harga'] > 99999999.99)) {
-            $issues[] = $this->issue('error', 'harga', 'Harga harus angka positif tanpa pemisah ribuan.');
+            $issues[] = $this->issue('error', 'harga', 'Harga harus rupiah bulat positif, tanpa pecahan atau pemisah ribuan.');
         }
 
         if ($data['stok'] !== '' && (! ctype_digit($data['stok']) || (int) $data['stok'] > 999999)) {

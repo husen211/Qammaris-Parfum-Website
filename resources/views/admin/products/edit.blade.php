@@ -35,6 +35,12 @@
         </div>
     @endif
 
+    @if ($hasLegacyFractionalPrice)
+        <div class="mb-6 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
+            Harga lama mengandung pecahan dan belum dibulatkan. Periksa harga jual dan harga coret; harga baru harus rupiah bulat.
+        </div>
+    @endif
+
     @if ($errors->any())
     <div class="bg-red-50 border border-red-200 p-4 mb-6 rounded-lg">
         <div class="flex">
@@ -113,7 +119,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Compare At Price (Rp) <span class="text-gray-400 text-xs">(Optional)</span></label>
-                            <input type="number" name="compare_at_price" value="{{ old('compare_at_price', $product->compare_at_price) }}" min="0" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
+                            <input type="number" name="compare_at_price" value="{{ old('compare_at_price', $product->compare_at_price) }}" min="1" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
                             <p class="mt-1 text-xs text-gray-400">Kosongkan jika tidak ingin harga coret.</p>
                             @error('compare_at_price')
                             <p id="compare-at-price-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>

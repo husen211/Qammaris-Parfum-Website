@@ -38,7 +38,8 @@ Keputusan: [ADR-004](../architecture/decisions/ADR-004-drafts-and-single-offer-p
 - Harga produk manual tetap dapat diedit; bulk maintenance memakai preview/conflict guard. Perubahan schema tidak memberi izin membetulkan harga massal.
 - Kategori adalah jenis/konsentrasi (misalnya EDP, Extrait, EDT, mist/oil), bukan brand/departemen. Peruntukan memakai Unisex/Pria/Wanita; SKU, notes, comparison price, meta description dan flag terlaris opsional.
 - Ukuran/peruntukan/konsentrasi tidak ditebak. Persetujuan estimasi/default Unisex untuk gelombang launching tertentu hanya berlaku pada daftar historis itu, bukan default impor berikutnya.
-- Perlakuan pecahan rupiah lintas konsumen masih temuan audit untuk keputusan terpisah; konsolidasi ini tidak menetapkan unit/rounding baru atau mengubah harga.
+- Keputusan final Owner AUD-06: **harga baru menggunakan rupiah bulat**, ditampilkan tanpa `,00` (contoh `Rp 175.000`). Form harga jual/coret dan impor CSV menolak pecahan bukan nol; representasi database `175000.00` tetap valid. Ini menggantikan pilihan desimal sebelumnya dalam task yang sama.
+- Tidak ada pembulatan/rewrite harga existing. Jika harga lama berpecahan ditemukan, editor menandainya untuk koreksi; tampilan dan perhitungan tetap mempertahankan nilainya sampai koreksi eksplisit. Checkout tidak boleh membulatkan atau memangkas harga diam-diam. Schema decimal(10,2) dipertahankan. [ADR-030](../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md).
 
 ## Media
 

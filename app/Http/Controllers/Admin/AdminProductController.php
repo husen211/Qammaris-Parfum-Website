@@ -13,6 +13,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Throwable;
@@ -124,13 +125,18 @@ class AdminProductController extends Controller
             ->get();
         $catalogReturnPath = $this->catalogReturnPath($request->query('return_to'));
         $publicationBlockers = $evaluatePublicationReadiness->handle($product);
+        $hasLegacyFractionalPrice = $product->variants->where('is_active', true)->pluck('price')
+            ->push($product->base_price)->push($product->compare_at_price)
+            ->filter(fn ($price) => $price !== null)
+            ->contains(fn ($price) => Rupiah::minorUnits($price) % 100 !== 0);
 
         return view('admin.products.edit', compact(
             'product',
             'brands',
             'categories',
             'catalogReturnPath',
-            'publicationBlockers'
+            'publicationBlockers',
+            'hasLegacyFractionalPrice'
         ));
     }
 

@@ -2,6 +2,8 @@
 
 Status: investigation complete, **AUD-01 IN_REVIEW**. This report proposes follow-up work; no application refactor or deployment is included. Owner explicitly advanced to this audit after P9-01. P9's remaining device/upload/event limits are not silently closed.
 
+Follow-up: AUD-06 now implements the final whole-rupiah rule and current-catalog cart totals on its review branch; see [verification](../verification/aud-06/README.md) and [ADR-030](../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md). Findings below describe the original audited baseline, not a production release claim.
+
 ## 1. Executive assessment
 
 Keep the current Laravel monolith. The repository already has useful boundaries: Form Requests, Eloquent scopes/relationships, focused product operations, guarded import batches, two database queues, and a Laravel filesystem adapter. A rewrite, generic repository layer, new search engine or new framework would add complexity without solving a demonstrated current requirement.

@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\StoreInfo;
 use App\Support\CatalogAvailability;
 use App\Support\InquiryWhatsApp;
+use App\Support\Rupiah;
 
 class CartController extends Controller
 {
@@ -21,7 +22,7 @@ class CartController extends Controller
         $resolvedItems = $cart === [] ? [] : $this->resolveCartItems($cart);
         $hasUnavailableItems = $cart !== [] && $resolvedItems === null;
         $items = $resolvedItems ?? [];
-        $estimateTotal = array_sum(array_column($items, 'line_total'));
+        $estimateTotal = Rupiah::sum(array_column($items, 'line_total'));
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
         $canCheckout = $items !== [] && $this->canOrder($items) && $whatsappAvailable;
 
@@ -77,7 +78,7 @@ class CartController extends Controller
             'success' => true,
             'message' => 'Produk ditambahkan ke keranjang.',
             'cart_count' => cart_count(),
-            'cart_total' => cart_total(),
+            'cart_total' => $this->currentCartTotal($cart),
         ]);
     }
 
@@ -99,7 +100,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'cart_count' => cart_count(),
-            'cart_total' => cart_total(),
+            'cart_total' => $this->currentCartTotal($cart),
         ]);
     }
 
@@ -117,7 +118,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'cart_count' => cart_count(),
-            'cart_total' => cart_total(),
+            'cart_total' => $this->currentCartTotal($cart),
         ]);
     }
 
@@ -136,7 +137,7 @@ class CartController extends Controller
         }
         $checkoutQuote = $this->quote($items);
         session(['checkout_quote' => $checkoutQuote]);
-        $subtotal = array_sum(array_column($items, 'line_total'));
+        $subtotal = Rupiah::sum(array_column($items, 'line_total'));
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
 
         return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable'))
@@ -191,7 +192,7 @@ class CartController extends Controller
         if ($cart === []) {
             return response()->json([
                 'items' => [],
-                'formatted_total' => 'Rp 0',
+                'formatted_total' => Rupiah::format(0),
                 'count' => 0,
             ]);
         }
@@ -205,11 +206,14 @@ class CartController extends Controller
             ], 409);
         }
 
-        $total = array_sum(array_column($items, 'line_total'));
+        $total = Rupiah::sum(array_column($items, 'line_total'));
 
         return response()->json([
-            'items' => $items,
-            'formatted_total' => $this->formatRupiah($total),
+            // Preserve the existing numeric JSON fields; arithmetic uses exact decimal strings internally.
+            'items' => array_map(fn ($item) => array_replace($item, [
+                'price' => (float) $item['price'], 'line_total' => (float) $item['line_total'],
+            ]), $items),
+            'formatted_total' => Rupiah::format($total),
             'count' => array_sum(array_column($items, 'quantity')),
             'notice' => $this->inquiryWhatsApp->listNotice($items),
         ]);
@@ -264,7 +268,8 @@ class CartController extends Controller
             }
 
             $product = $variant->product;
-            $lineTotal = (int) $variant->price * $quantity;
+            $price = Rupiah::minorUnits($variant->price);
+            $lineTotal = Rupiah::decimal($price * $quantity);
 
             $items[] = [
                 'id' => $variant->id,
@@ -274,10 +279,10 @@ class CartController extends Controller
                 'image' => $product->primaryImage?->image_url ?? asset('images/product-placeholder.svg'),
                 'volume' => $variant->volume,
                 'quantity' => $quantity,
-                'price' => (int) $variant->price,
+                'price' => Rupiah::decimal($price),
                 'line_total' => $lineTotal,
-                'formatted_price' => $this->formatRupiah($lineTotal),
-                'formatted_unit_price' => $this->formatRupiah($variant->price),
+                'formatted_price' => Rupiah::format($lineTotal),
+                'formatted_unit_price' => Rupiah::format($variant->price),
                 'slug' => $product->slug,
                 'product_url' => route('products.show', $product),
                 'effective_availability' => $product->effective_availability,
@@ -294,8 +299,10 @@ class CartController extends Controller
         return (StoreInfo::query()->first() ?? new StoreInfo)->whatsapp_number;
     }
 
-    private function formatRupiah(int|float|string $amount): string
+    private function currentCartTotal(array $cart): ?float
     {
-        return 'Rp '.number_format((float) $amount, 0, ',', '.');
+        $items = $this->resolveCartItems($cart);
+
+        return $items === null ? null : (float) Rupiah::sum(array_column($items, 'line_total'));
     }
 }

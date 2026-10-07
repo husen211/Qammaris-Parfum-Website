@@ -46,7 +46,7 @@
                 </div>
             @elseif ($items !== [])
                 <div class="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16">
-                    <section aria-labelledby="inquiry-items-title">
+                    <section class="min-w-0" aria-labelledby="inquiry-items-title">
                         <div class="flex items-end justify-between gap-4 border-b border-gray-200 pb-4">
                             <div>
                                 <h2 id="inquiry-items-title" class="font-mayluxa text-2xl text-brand-black">Pilihan Anda</h2>
@@ -116,7 +116,7 @@
                         <h2 id="inquiry-summary-title" class="font-mayluxa text-2xl text-brand-black">Ringkasan pesanan</h2>
 
                         <div class="mt-6 border-y border-gray-200 py-5">
-                            <div class="flex items-end justify-between gap-4">
+                            <div class="flex flex-wrap items-end justify-between gap-4">
                                 <div>
                                     <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Subtotal produk</p>
                                     <p class="mt-1 text-xs leading-5 text-gray-500">Berdasarkan harga yang tampil saat ini.</p>

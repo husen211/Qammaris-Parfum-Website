@@ -1,20 +1,21 @@
 <?php
 
 use App\Models\StoreInfo;
+use App\Support\Rupiah;
 
-if (!function_exists('setting')) {
+if (! function_exists('setting')) {
     /**
      * Mengambil nilai setting dari database StoreInfo
      *
-     * @param string|null $key
+     * @param  string|null  $key
      * @return mixed|null
      */
     function setting($key = null)
     {
         $storeInfo = StoreInfo::first();
 
-        if (!$storeInfo) {
-            return $key ? null : new StoreInfo();
+        if (! $storeInfo) {
+            return $key ? null : new StoreInfo;
         }
 
         if ($key) {
@@ -25,23 +26,23 @@ if (!function_exists('setting')) {
     }
 }
 
-if (!function_exists('format_rupiah')) {
+if (! function_exists('format_rupiah')) {
     /**
      * Format angka ke rupiah
      *
-     * @param float|int $amount
+     * @param  float|int|string|null  $amount
      * @return string
      */
     function format_rupiah($amount)
     {
-        return 'Rp ' . number_format($amount, 0, ',', '.');
+        return Rupiah::format($amount ?? 0);
     }
 }
 
-if (!function_exists('cart_count')) {
+if (! function_exists('cart_count')) {
     /**
      * Hitung total item di keranjang (session)
-     * 
+     *
      * @return int
      */
     function cart_count()
@@ -54,24 +55,5 @@ if (!function_exists('cart_count')) {
         }
 
         return $count;
-    }
-}
-
-if (!function_exists('cart_total')) {
-    /**
-     * Hitung total harga di keranjang (session)
-     * 
-     * @return float
-     */
-    function cart_total()
-    {
-        $cart = session('cart', []);
-        $total = 0;
-
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
-        }
-
-        return $total;
     }
 }

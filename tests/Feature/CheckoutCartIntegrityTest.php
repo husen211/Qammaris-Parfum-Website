@@ -128,6 +128,65 @@ class CheckoutCartIntegrityTest extends TestCase
         $this->assertStringContainsString('No. HP: +6281234567890', $query['text']);
     }
 
+    public function test_legacy_fractional_prices_are_not_silently_rounded_in_catalog_cart_checkout_json_or_whatsapp(): void
+    {
+        [$product, $variant] = $this->createCatalogItem();
+        $variant->update(['price' => '100.90']);
+        $product->update(['base_price' => '100.90', 'compare_at_price' => '110.95']);
+        $this->assertSame('Rp 100,90', $product->fresh()->price_range);
+        $this->assertSame('Rp 100,90', $variant->fresh()->formatted_price);
+        $this->review($variant);
+        $this->get(route('cart.index'))->assertOk()->assertSee('Rp 100,90')->assertSee('Rp 201,80');
+        $this->get(route('cart.data'))->assertOk()
+            ->assertJsonPath('items.0.price', 100.9)->assertJsonPath('items.0.line_total', 201.8)
+            ->assertJsonPath('items.0.formatted_unit_price', 'Rp 100,90')
+            ->assertJsonPath('formatted_total', 'Rp 201,80');
+        $response = $this->post(route('cart.checkout'), $this->customerData());
+        parse_str((string) parse_url($response->headers->get('Location'), PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('Harga: Rp 100,90 / item', $query['text']);
+        $this->assertStringContainsString('Total produk: Rp 201,80', $query['text']);
+        $this->assertStringContainsString('Subtotal: Rp 201,80', $query['text']);
+    }
+
+    public function test_one_cent_change_invalidates_the_checkout_quote(): void
+    {
+        [, $variant] = $this->createCatalogItem();
+        $variant->update(['price' => '100.90']);
+        $this->review($variant);
+        $data = $this->customerData();
+        $variant->update(['price' => '100.91']);
+        $this->post(route('cart.checkout'), $data)->assertRedirect(route('cart.checkout.show'))->assertSessionHas('error');
+        $this->get(route('cart.checkout.show'))->assertOk()->assertSee('Rp 201,82');
+    }
+
+    public function test_mutation_totals_resolve_current_prices_for_all_remaining_items(): void
+    {
+        [, $variant] = $this->createCatalogItem();
+        [, $other] = $this->createCatalogItem();
+        $variant->update(['price' => '100.90']);
+        $other->update(['price' => '0.29']);
+        $this->withSession(['cart' => [$variant->id => $this->staleSessionItem($variant)]])
+            ->postJson(route('cart.add'), ['variant_id' => $other->id, 'quantity' => 3])
+            ->assertOk()->assertJsonPath('cart_total', 202.67);
+        $variant->update(['price' => '101.90']);
+        $this->putJson(route('cart.update', $variant->id), ['quantity' => 3])
+            ->assertOk()->assertJsonPath('cart_total', 306.57);
+        $this->deleteJson(route('cart.remove', $other->id))->assertOk()->assertJsonPath('cart_total', 305.7);
+        $this->deleteJson(route('cart.remove', $variant->id))->assertOk()->assertJsonPath('cart_total', 0);
+        $this->get(route('cart.data'))->assertJsonPath('formatted_total', 'Rp 0');
+    }
+
+    public function test_mutation_does_not_report_a_partial_total_when_another_item_is_unavailable(): void
+    {
+        [$product, $variant] = $this->createCatalogItem();
+        [, $other] = $this->createCatalogItem();
+        $product->update(['publication_status' => 'draft']);
+        $this->withSession(['cart' => [$variant->id => $this->staleSessionItem($variant)]])
+            ->postJson(route('cart.add'), ['variant_id' => $other->id, 'quantity' => 1])
+            ->assertOk()->assertJsonPath('cart_total', null);
+        $this->get(route('cart.data'))->assertStatus(409)->assertJsonPath('items', []);
+    }
+
     private function review(ProductVariant $variant): void
     {
         $this->withSession(['cart' => [$variant->id => $this->staleSessionItem($variant)]])

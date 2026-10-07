@@ -1,6 +1,6 @@
 # Qammaris — backlog current
 
-Updated 2026-10-07, AUD-04. This board is the entry point; detailed prior scope/acceptance/results remain in the [historical backlog](../history/2026-10-07-context/BACKLOG.md), [audit](../audits/2026-10-07-maintainability.md), ADRs and linked verification. Historical “next/unstarted/pending” paragraphs are relative to their date. Do not implement them again or treat them as new authorization. Current rules: [BUSINESS_RULES](../product/BUSINESS_RULES.md); executable flow: [ARCHITECTURE](../architecture/ARCHITECTURE.md).
+Updated 2026-10-07, AUD-06. This board is the entry point; detailed prior scope/acceptance/results remain in the [historical backlog](../history/2026-10-07-context/BACKLOG.md), [audit](../audits/2026-10-07-maintainability.md), ADRs and linked verification. Historical “next/unstarted/pending” paragraphs are relative to their date. Do not implement them again or treat them as new authorization. Current rules: [BUSINESS_RULES](../product/BUSINESS_RULES.md); executable flow: [ARCHITECTURE](../architecture/ARCHITECTURE.md).
 
 ## Status and working limit
 
@@ -20,7 +20,7 @@ BACKLOG = proposed/not approved for execution; READY = accepted bounded scope re
 | P7 | Public UX | DONE | Catalog/search/cart/recipient WhatsApp flow released; device gates tracked under P9 |
 | P8 | App/integration/import | IN_PROGRESS | Feed/automatic drafts/prices/Shopee released; older acceptance consolidated for review with P9, no website write API claimed |
 | P9 | Acceptance/observation | IN_PROGRESS | P9-01 IN_REVIEW; exact remaining limits below |
-| AUD | Maintainability/context | IN_PROGRESS | AUD-01–05 IN_REVIEW; AUD-03/04/05 implemented on review branches; AUD-06/07 not started |
+| AUD | Maintainability/context | IN_PROGRESS | AUD-01–06 IN_REVIEW; AUD-03–06 implemented on review branches; AUD-07 not started |
 
 Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked complete merely because the current code is live. [MASTER_PLAN](../architecture/MASTER_PLAN.md) defines closure and future-program boundaries.
 
@@ -29,6 +29,18 @@ Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked compl
 Owner approval 2026-10-07: explicitly correct the observed production Pink/Purple mismatch. Exact scope: Shopee42131600634 previously assigned to Purple879, belongs to Pink686. One transaction reassigns that Shopee identity only, completes Pink with the verified100ml/Wanita/EDP copy and three checksum-verified independent photo copies, publishes Pink, returns Purple to draft and soft-archives its incorrect Pink photos. Original application UUIDs, source prices/status, product IDs and slugs retained; no source-system/database/schema/credential/deployment changes.
 
 Production audit batch8 stores two before/after rows; private preview/receipt retain recovery evidence and original media files. Shared importer rebind guards remain unchanged. Local53tests/264assertions passed; production preview/rehearsal rollback and verify passed; public Pink200/Purple404 and all three Pink gallery images loaded. Original applied batch6 remains historical evidence, not rewritten. Details, limits and scoped recovery: [correction verification](../verification/supremacy-pink/README.md). This correction does not start AUD-03 or close P9.
+
+## AUD-06 — Whole rupiah and current-catalog cart totals — IN_REVIEW
+
+Owner execution approval: “gas aud 06”. Final money decision: “gajadi pake bilangan bulat aja … gausa desimal”, superseding the earlier decimal reply. Scope: AUD-F08/F09 only. Whole new prices in editor/CSV/shared manual offer operation, truthful legacy price handling, exact cart/WhatsApp calculation and current-catalog mutation totals. No schema/package/data rewrite, source contract change, production mutation or deployment.
+
+Acceptance implemented:
+- New selling/comparison prices reject nonzero fractions; database decimal zeroes remain accepted. Whole amounts have no decimal suffix. Hypothetical legacy fractions remain unchanged, visible accurately and flagged in the editor; no implicit rounding/unpublishing.
+- Add/update/remove totals resolve all remaining current offers, never session prices; unresolved totals are null, `/cart/data` retains 409. Numeric JSON compatibility and quote/availability/publication/recipient guards remain.
+- Read-only local historical snapshots:180 and445 products, zero fractional base/comparison/offer prices. Current production and local default MySQL were not measured (connection unavailable).
+- Final Laravel368tests/2556assertions,31Node tests, changed-PHP Pint, strict Composer metadata, Vite build and diff checks passed. Browser390×844/1440×900 money flows and320px longer amounts checked; a detected320px cart overflow is fixed. Genuine Safari/touch and live WA handoff not claimed; complete matched desktop-before screenshots were not captured.
+
+Changed modules, consumer trace, screenshots, temporary-fixture cleanup, limits and code-only recovery: [AUD-06 verification](../verification/aud-06/README.md), [ADR-030](../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md). No main merge; review/release pending. Recommended next: **AUD-07**, only after Owner direction; not started.
 
 ## AUD-05 — Editor save/validation and explicit dependencies — IN_REVIEW
 
@@ -40,7 +52,7 @@ Acceptance implemented:
 - Baseline68tests/425assertions; expanded94tests/616assertions; full Laravel354tests/2467assertions,31Node tests, targeted Pint, strict Composer metadata, Vite build and diff checks passed.
 - No UI changes or browser check claimed. SQLite does not verify live MySQL contention/webhook timing; existing UI/device acceptance limits remain. Existing build warnings and Blade duplication are documented, not fixed by this item.
 
-Evidence/changed files/limits/code-only rollback: [AUD-05 verification](../verification/aud-05/README.md), [ADR-029](../architecture/decisions/ADR-029-shared-product-editor-save.md). Review/release pending, no main merge. Recommended next: **AUD-06**, only after Owner direction; not started.
+Evidence/changed files/limits/code-only rollback: [AUD-05 verification](../verification/aud-05/README.md), [ADR-029](../architecture/decisions/ADR-029-shared-product-editor-save.md). Review/release pending, no main merge. Owner subsequently approved AUD-06; its status/evidence is recorded above. AUD-05 release limits remain open.
 
 ## AUD-04 — Shared related-product cards — IN_REVIEW
 
@@ -120,7 +132,6 @@ Previous detailed items/acceptance remain in [history](../history/2026-10-07-con
 
 | Item | Problem / bounded direction | Dependency | Priority / scope |
 |---|---|---|---|
-| AUD-06 | Decide money unit/rounding; trace fractional legacy JSON/session totals before any validation/data change | Owner business decision + read-only data evidence; AUD-F08/09 | Medium / M |
 | AUD-07 | Narrow human actor audit/diagnostics only if needed; no generic audit/event framework | AUD-05 + retention/scopes decision; AUD-F11 | Medium / M |
 
 Payment gateway, machine-write website API, cloud migration and arbitrary normalization are not active backlog items or launch prerequisites. New requests require a concrete approved scope. Measured query/compatibility-route/name cleanup remains later work only after benchmark/consumer evidence (AUD-F10/F13/F14), not a new approved phase. Unrelated audit findings stay in the [register](../audits/2026-10-07-maintainability.md).

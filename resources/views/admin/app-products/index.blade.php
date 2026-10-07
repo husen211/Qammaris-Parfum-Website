@@ -60,7 +60,7 @@
                     <div class="min-w-0 text-sm">
                         <p class="font-semibold text-gray-900">{{ $source['hidden'] ? 'Disembunyikan aplikasi' : ($product?->publication_status === 'published' ? 'Tayang' : ($product?->publication_status === 'archived' ? 'Diarsipkan website' : ($product ? 'Draft' : 'Belum dipasangkan'))) }}</p>
                         <p class="mt-1 text-gray-600">{{ ['available' => 'Tersedia', 'sold_out' => 'Habis', 'unknown' => 'Tanyakan ketersediaan'][$source['availability']] }}{{ $source['availability'] === 'sold_out' && $source['restock_eta'] ? ' · Restok segera' : '' }}</p>
-                        <p class="mt-1 text-gray-600">Harga aplikasi: {{ $source['price'] > 0 && $source['price'] <= 99999999 ? 'Rp '.number_format($source['price'], 0, ',', '.') : 'belum valid' }}</p>
+                        <p class="mt-1 text-gray-600">Harga aplikasi: {{ $source['price'] > 0 && $source['price'] <= 99999999 ? format_rupiah($source['price']) : 'belum valid' }}</p>
                         @if($row['price_review'])<p class="mt-1 text-xs text-amber-800">Periksa harga atau ukuran di aplikasi/editor. Harga terakhir tetap dipertahankan.</p>@endif
                         @if($row['blockers'])
                             <details class="mt-2 text-xs text-amber-800" open>

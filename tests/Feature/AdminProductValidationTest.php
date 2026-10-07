@@ -296,6 +296,54 @@ class AdminProductValidationTest extends TestCase
         $this->assertSame('150000.00', $product->fresh()->compare_at_price);
     }
 
+    public function test_editor_accepts_whole_rupiah_and_database_decimal_zeroes_on_create_and_update(): void
+    {
+        $payload = $this->validStorePayload();
+        $payload['variants'][0]['price'] = '100.00';
+        $payload['compare_at_price'] = '110.00';
+        $this->actingAs($this->admin)->post(route('admin.products.store'), $payload)->assertSessionHasNoErrors();
+        $product = Product::sole();
+        $offer = $product->activeOffer;
+        $this->assertSame('100.00', $offer->price);
+        $this->assertSame('110.00', $product->compare_at_price);
+        $payload = $this->validUpdatePayload($product);
+        $payload['variants'][0]['price'] = '1.00';
+        $payload['compare_at_price'] = '2.00';
+        $this->put(route('admin.products.update', $product->id), $payload)->assertSessionHasNoErrors();
+        $this->assertSame('1.00', $offer->fresh()->price);
+        $this->assertSame('1.00', $product->fresh()->base_price);
+        $this->assertSame('2.00', $product->fresh()->compare_at_price);
+    }
+
+    public function test_editor_rejects_excess_precision_before_any_write(): void
+    {
+        $payload = $this->validStorePayload();
+        $payload['variants'][0]['price'] = '100.90';
+        $payload['compare_at_price'] = '110.95';
+        $this->actingAs($this->admin)->post(route('admin.products.store'), $payload)
+            ->assertSessionHasErrors(['variants.0.price', 'compare_at_price']);
+        $this->assertDatabaseCount('products', 0);
+        $product = $this->createExistingProduct();
+        $payload = $this->validUpdatePayload($product);
+        $payload['variants'][0]['price'] = '100.90';
+        $payload['compare_at_price'] = '110.95';
+        $this->put(route('admin.products.update', $product->id), $payload)
+            ->assertSessionHasErrors(['variants.0.price', 'compare_at_price']);
+        $this->assertSame('100000.00', $product->fresh()->base_price);
+    }
+
+    public function test_legacy_fraction_is_flagged_without_rewriting_stored_prices(): void
+    {
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        $product->activeOffer->update(['price' => '100.90']);
+        $product->update(['base_price' => '100.90', 'compare_at_price' => '110.95']);
+        $this->actingAs($this->admin)->get(route('admin.products.edit', $product->id))
+            ->assertOk()->assertSee('Harga lama mengandung pecahan dan belum dibulatkan.');
+        $this->assertSame('100.90', $product->fresh()->base_price);
+        $this->assertSame('110.95', $product->fresh()->compare_at_price);
+    }
+
     private function validStorePayload(): array
     {
         return [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\Rupiah;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -24,14 +25,14 @@ abstract class ProductEditorRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => [Rule::requiredIf($complete), 'nullable', 'string', 'max:20000'],
-            'compare_at_price' => ['nullable', 'numeric', 'gt:0', 'max:99999999.99'],
+            'compare_at_price' => ['nullable', 'numeric', 'regex:'.Rupiah::WHOLE_PRICE_PATTERN, 'gt:0', 'max:99999999.99'],
             'gender' => [Rule::requiredIf($complete), 'nullable', Rule::in(['Unisex', 'Pria', 'Wanita'])],
             'top_notes' => ['nullable', 'string', 'max:1000'],
             'middle_notes' => ['nullable', 'string', 'max:1000'],
             'base_notes' => ['nullable', 'string', 'max:1000'],
             'variants' => [Rule::requiredIf($complete), 'nullable', 'array', 'max:1'],
             'variants.*.volume' => [Rule::requiredIf($complete), 'nullable', 'required_with:variants.*.price', 'integer', 'min:1', 'max:10000'],
-            'variants.*.price' => [Rule::requiredIf($complete), 'nullable', 'required_with:variants.*.volume', 'numeric', 'gt:0', 'max:99999999.99'],
+            'variants.*.price' => [Rule::requiredIf($complete), 'nullable', 'required_with:variants.*.volume', 'numeric', 'regex:'.Rupiah::WHOLE_PRICE_PATTERN, 'gt:0', 'max:99999999.99'],
             'variants.*.stock' => ['nullable', 'integer', 'min:0', 'max:999999'],
         ];
     }
@@ -46,6 +47,8 @@ abstract class ProductEditorRequest extends FormRequest
             'variants.required' => 'Isi satu ukuran dan harga sebelum mempublikasikan produk.',
             'variants.*.volume.required' => 'Isi ukuran produk sebelum mempublikasikan produk.',
             'variants.*.price.required' => 'Isi harga jual sebelum mempublikasikan produk.',
+            'variants.*.price.regex' => 'Harga jual harus rupiah bulat, tanpa pecahan atau pemisah ribuan.',
+            'compare_at_price.regex' => 'Harga coret harus rupiah bulat, tanpa pecahan atau pemisah ribuan.',
         ];
     }
 

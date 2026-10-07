@@ -14,6 +14,19 @@ class ProductDraftAndOfferTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_manual_offer_operation_rejects_fractional_prices_without_writes(): void
+    {
+        $product = $this->createDraft('Whole-price draft');
+        try {
+            app(SyncSingleOffer::class)->handle($product, ['volume' => 100, 'price' => '100.90']);
+            $this->fail('A fractional new price must not reach storage.');
+        } catch (\DomainException $exception) {
+            $this->assertStringContainsString('rupiah bulat', $exception->getMessage());
+        }
+        $this->assertDatabaseCount('product_variants', 0);
+        $this->assertNull($product->fresh()->base_price);
+    }
+
     public function test_minimal_draft_can_be_saved_with_only_a_working_name(): void
     {
         $draft = Product::create([

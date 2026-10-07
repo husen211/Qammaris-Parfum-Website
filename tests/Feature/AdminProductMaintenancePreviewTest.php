@@ -269,6 +269,15 @@ class AdminProductMaintenancePreviewTest extends TestCase
             ->assertDontSee('maintenance.csv');
     }
 
+    public function test_fractional_maintenance_price_is_blocked_without_mutating_product(): void
+    {
+        $product = $this->product();
+        $this->actingAs($this->admin)->post(route('admin.product-maintenance.preview'), [
+            'maintenance_file' => $this->file([$this->row($product, ['harga' => '100.90', 'ukuran_ml' => '100'])]),
+        ])->assertOk()->assertSee('Harga harus rupiah bulat positif, tanpa pecahan atau pemisah ribuan.');
+        $this->assertSame('500000.00', $product->fresh()->variants()->firstOrFail()->price);
+    }
+
     private function product(): Product
     {
         $brand = Brand::create(['name' => 'Brand Existing', 'is_active' => true]);

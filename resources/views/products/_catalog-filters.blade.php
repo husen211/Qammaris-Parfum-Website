@@ -68,7 +68,7 @@
         <summary aria-labelledby="{{ $filterSurface }}-price-label {{ $filterSurface }}-price-value">
             <span id="{{ $filterSurface }}-price-value">
                 @if ($catalogState->priceMin !== null || $catalogState->priceMax !== null)
-                    {{ $catalogState->priceMin !== null ? 'Rp '.number_format($catalogState->priceMin, 0, ',', '.') : 'Rp 0' }} – {{ $catalogState->priceMax !== null ? 'Rp '.number_format($catalogState->priceMax, 0, ',', '.') : 'ke atas' }}
+                    {{ $catalogState->priceMin !== null ? format_rupiah($catalogState->priceMin) : format_rupiah(0) }} – {{ $catalogState->priceMax !== null ? format_rupiah($catalogState->priceMax) : 'ke atas' }}
                 @else
                     Semua harga
                 @endif

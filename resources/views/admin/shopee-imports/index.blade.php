@@ -73,7 +73,7 @@
                     @if($held)<p role="alert" class="mt-3 border-l-2 border-amber-600 bg-amber-50 p-3 text-sm text-amber-900">{{ $row->apply_message }}</p>@endif
                     @if($row->apply_status === 'skipped_no_changes')<p class="mt-2 text-sm text-gray-600">Sudah lengkap untuk impor ini; tidak ada perubahan konten atau unduhan ulang.</p>@endif
                     @if($product)
-                        <p class="mt-3 break-words text-sm">Website: <strong>{{ $product->name }}</strong> · {{ $product->brand?->name }} @if($product->variants->first()) · {{ $product->variants->first()->volume }} ml @endif · Rp {{ number_format((float) $product->base_price, 0, ',', '.') }}</p>
+                        <p class="mt-3 break-words text-sm">Website: <strong>{{ $product->name }}</strong> · {{ $product->brand?->name }} @if($product->variants->first()) · {{ $product->variants->first()->volume }} ml @endif · {{ format_rupiah($product->base_price) }}</p>
                         @if($product->images->isNotEmpty())
                             <div class="mt-3 flex flex-wrap gap-3" aria-label="Foto yang tersimpan di website">
                                 @foreach($product->images as $image)<figure><img src="{{ $image->image_url }}" alt="{{ $product->name }} — {{ $image->is_primary ? 'sampul' : 'foto tambahan' }}" width="80" height="80" loading="lazy" class="h-20 w-20 border border-gray-200 bg-white object-contain p-1"><figcaption class="mt-1 text-xs text-gray-500">{{ $image->is_primary ? 'Sampul' : 'Foto tambahan' }}</figcaption></figure>@endforeach

@@ -4,6 +4,7 @@ namespace App\Actions\Products;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\Rupiah;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
@@ -39,6 +40,10 @@ class SyncSingleOffer
     {
         $uuid = $product->externalIdentities()->where('provider', 'qammaris_app')->value('external_product_id');
         if (! $uuid) {
+            if (! is_scalar($requested) || ! preg_match(Rupiah::WHOLE_PRICE_PATTERN, (string) $requested)) {
+                throw new DomainException('Harga jual harus rupiah bulat, tanpa pecahan atau pemisah ribuan.');
+            }
+
             return $requested;
         }
         $raw = DB::table('qammaris_app_products')->where('id', $uuid)->value('snapshot');

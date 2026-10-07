@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -38,7 +39,7 @@ class ProductVariant extends Model
      */
     public function getFormattedPriceAttribute(): string
     {
-        return 'Rp ' . number_format($this->price, 0, ',', '.');
+        return Rupiah::format($this->price);
     }
 
     /**
@@ -46,7 +47,7 @@ class ProductVariant extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        return $this->volume . 'ml';
+        return $this->volume.'ml';
     }
 
     /**
@@ -54,7 +55,7 @@ class ProductVariant extends Model
      */
     public function getFullDisplayAttribute(): string
     {
-        return $this->display_name . ' - ' . $this->formatted_price;
+        return $this->display_name.' - '.$this->formatted_price;
     }
 
     /**
@@ -70,7 +71,7 @@ class ProductVariant extends Model
      */
     public function getStockStatusAttribute(): string
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'Tidak Tersedia';
         }
 
