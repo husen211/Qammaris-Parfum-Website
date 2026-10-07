@@ -40,13 +40,13 @@ class ConnectedAvailabilityPresentationTest extends TestCase
     {
         [$product, $offer] = $this->item('available', 'Connected available');
         $response = $this->get(route('products.show', $product));
-        $response->assertOk()->assertSee('Tersedia')->assertSee('Tambah ke daftar inquiry')
+        $response->assertOk()->assertSee('Tersedia')->assertSee('Tambah ke keranjang')
             ->assertDontSee('Pemeriksaan terakhir')->assertDontSee('Tersedia saat diperiksa')
             ->assertDontSee('Konfirmasi kembali sebelum')->assertDontSee('Ketersediaan tetap perlu dikonfirmasi');
         $message = $this->message(app(InquiryWhatsApp::class)->productUrl('6281234567890', $product, $offer, 'stock'));
         $this->assertStringContainsString('Status website: Tersedia', $message);
         $this->assertStringNotContainsString('Mohon konfirmasi', $message);
-        $this->assertStringContainsString('belum menjadi transaksi atau reservasi', $message);
+        $this->assertStringNotContainsString('Inquiry', $message);
     }
 
     public function test_connected_sold_out_detail_only_offers_restock_and_unknown_remains_neutral(): void
@@ -55,7 +55,7 @@ class ConnectedAvailabilityPresentationTest extends TestCase
         $product->forceFill(['availability_restock_eta' => '2026-10-12'])->save();
         $this->get(route('products.show', $product))->assertOk()
             ->assertSee('Habis · Restok segera')->assertSee('Tanya restock via WhatsApp')
-            ->assertDontSee('Tambah ke daftar inquiry')->assertDontSee('Pemeriksaan terakhir');
+            ->assertDontSee('Tambah ke keranjang')->assertDontSee('Pemeriksaan terakhir');
         $product->forceFill(['availability_status' => 'unknown', 'availability_restock_eta' => null])->save();
         $this->get(route('products.show', $product))->assertOk()->assertSee('Tanyakan ketersediaan')
             ->assertDontSee('Website tidak menampilkan stok secara real-time')->assertDontSee('Pemeriksaan terakhir');
@@ -75,12 +75,8 @@ class ConnectedAvailabilityPresentationTest extends TestCase
         $product->forceFill(['availability_status' => 'sold_out', 'availability_restock_eta' => '2026-10-12'])->save();
         $this->withSession($session)->getJson(route('cart.data'))->assertOk()
             ->assertJsonPath('items.0.availability_label', 'Habis · Restok segera');
-        $response = $this->withSession($session)->post(route('cart.checkout'));
-        $message = $this->message($response->headers->get('Location'));
-        $this->assertStringContainsString('Status website: Habis · Restok segera', $message);
-        $this->assertStringNotContainsString('Mohon konfirmasi stok', $message);
-        $this->assertStringNotContainsString('FORGED STALE LABEL', $message);
-        $this->assertStringContainsString('belum menjadi transaksi atau reservasi', $message);
+        $this->withSession($session)->get(route('cart.checkout.show'))->assertRedirect(route('cart.index'))->assertSessionHas('error');
+
     }
 
     public function test_mixed_inquiry_keeps_legacy_confirmation_without_downgrading_connected_label(): void
@@ -95,8 +91,8 @@ class ConnectedAvailabilityPresentationTest extends TestCase
         $this->withSession($session)->getJson(route('cart.data'))->assertOk()
             ->assertJsonPath('items.0.availability_label', 'Tersedia')
             ->assertJsonPath('items.1.availability_label', 'Tersedia saat diperiksa')
-            ->assertJsonPath('notice', 'Admin akan mengonfirmasi stok dan harga terbaru. Mengirim inquiry tidak menyimpan stok atau membuat transaksi.');
-        $this->withSession($session)->get(route('cart.index'))->assertOk()->assertSee('Admin akan mengonfirmasi stok');
+            ->assertJsonPath('notice', 'Lengkapi data penerima saat checkout. Ongkir dan pembayaran dilanjutkan di WhatsApp.');
+        $this->withSession($session)->get(route('cart.index'))->assertOk()->assertDontSee('Admin akan mengonfirmasi stok')->assertSee('Lanjut ke checkout');
     }
 
     private function item(string $status, string $name): array

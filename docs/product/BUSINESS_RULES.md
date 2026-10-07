@@ -269,6 +269,14 @@ Cached snapshots predating this workflow can be prepared via an actor-bound immu
 
 After receiving the explicit unresolved touch/Safari limitation, Owner authorizes releasing the catalog-navigation and admin-app-inbox patches and selects **Lewati uji sentuh, rilis sekarang**. This waives the touch-test release gate for this concrete PR4/PR5 release only. Mouse verification remains the actual evidence; do not describe Safari or touch tests as passed. Retain the general touch-safe implementation rules and future release verification requirement. No automatic publication, historical catalog/price replay, credential change or raw Shopee import is authorized by this code release.
 
+## Pemesanan WhatsApp — keputusan Owner 2026-10-06 (P7-12)
+
+Bagian inquiry publik sebelumnya adalah historis dan digantikan untuk alur pemesanan oleh keputusan ini. Produk Tersedia masuk keranjang; checkout wajib nama penerima, nomor HP, dan alamat lengkap. Kode pos/catatan opsional. Harga, status, publikasi dan offer dibaca ulang dari katalog server; perubahan isi/harga setelah review meminta customer meninjau ringkasan terbaru. Habis/OTW tetap Habis dan tidak dipesan; unknown tetap netral dengan kontak ketersediaan. Tidak ada kedaluwarsa baru untuk data qammaris_app.
+
+Rincian pesanan + penerima disiapkan dalam composer WhatsApp; customer menekan Kirim di WhatsApp. Ongkir/pembayaran dilanjutkan di WhatsApp, tidak diasumsikan gratis/sudah dibayar. Tidak ada konfirmasi pengiriman/nomor order palsu. Keranjang tetap tersedia untuk retry. Data penerima tidak masuk database/log aplikasi; input gagal dapat berada sementara di session untuk koreksi. Status available adalah status sumber; jumlah stok numerik/reservasi tetap tidak tersedia. Payment gateway adalah rencana berikutnya, belum diimplementasikan.
+
+Keputusan Owner 2026-10-07: ikon keranjang langsung membuka halaman `/cart`, tanpa drawer. Tambah produk tetap di detail dengan status menambahkan/berhasil dan animasi foto menuju keranjang setelah server mengonfirmasi. Reduced motion tetap mendapat teks berhasil tanpa animasi terbang. Kontrol jumlah tetap 1–99; jumlah bukan reservasi stok. Tidak ada izin deployment baru dari keputusan UI ini.
+
 
 ## Homepage best-seller presentation — Owner decision 2026-10-07
 

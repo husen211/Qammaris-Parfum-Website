@@ -1,0 +1,15 @@
+{
+  "badge": "5",
+  "flight": [
+    {
+      "ariaHidden": "true",
+      "opacity": "1",
+      "pointerEvents": "none",
+      "transform": "matrix(1, 0, 0, 1, 28, 382.3)"
+    }
+  ],
+  "phase": "added",
+  "visibleLabel": [
+    "Ditambahkan"
+  ]
+}

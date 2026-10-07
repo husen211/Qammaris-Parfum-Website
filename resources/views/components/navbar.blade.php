@@ -43,6 +43,8 @@
     data-button-text="#FFFFFF"
     data-active-url="{{ url()->current() }}"
     data-cart-count="{{ cart_count() }}"
+    data-cart-href="{{ route('cart.index') }}"
+    data-cart-data-url="{{ route('cart.data') }}"
     data-home-href="{{ route('home') }}"
 ></div>
 
