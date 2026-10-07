@@ -18,6 +18,8 @@ class ShopeeContentPreviewer
 {
     public const VERSION = 'shopee-content-v1';
 
+    public const FINGERPRINT_VERSION = 'content-v2';
+
     public function __construct(private ShopeeContentXlsx $reader, private ShopeeProductCopy $copy,
         private ImportedProductName $names, private ProductImportPayloadHasher $hasher) {}
 
@@ -103,8 +105,22 @@ class ShopeeContentPreviewer
 
     public function fingerprint(Product $product): string
     {
-        return hash('sha256', app(ProductCatalogRowFingerprint::class)->hash($product->fresh(['variants']))
-            .'|'.json_encode($this->images($product), JSON_THROW_ON_ERROR));
+        $p = $product->fresh(['variants', 'externalIdentities']);
+
+        // Price, stock and view timestamps change independently of Shopee content.
+        return hash('sha256', json_encode([
+            'product' => $p->only(['id', 'name', 'slug', 'brand_id', 'category_id', 'description', 'gender', 'publication_status', 'qammaris_app_hidden']),
+            'offers' => $p->variants->sortBy('id')->values()->map->only(['id', 'volume', 'is_active'])->all(),
+            'identities' => $p->externalIdentities->sortBy('id')->values()->map->only(['provider', 'external_product_id'])->all(),
+            'images' => $this->images($p),
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function hasChanges(array $data, Product $p): bool
+    {
+        return $data['fields'] !== [] || $data['offer_ml'] !== null
+            || $data['foto_utama_url'] !== '' || $data['foto_2_url'] !== '' || $data['foto_3_url'] !== ''
+            || ! $p->externalIdentities->contains(fn ($id) => $id->provider === 'shopee' && $id->external_product_id === $data['source']['id']);
     }
 
     public function images(Product $product): array
@@ -125,10 +141,12 @@ class ShopeeContentPreviewer
         }
     }
 
-    public function plan(array $source, ?Product $p, bool $replace = false): array
+    public function plan(array $source, ?Product $p, bool $replace = false, ?int $confirmedWebsiteMl = null): array
     {
         $data = ['source' => $source, 'product_id' => $p?->id, 'target_fingerprint' => null, 'fields' => [], 'offer_ml' => null,
-            'replace_description' => $replace, 'baseline_images' => [], 'issues' => [], 'foto_utama_url' => '', 'foto_2_url' => '', 'foto_3_url' => ''];
+            'replace_description' => $replace, 'fingerprint_version' => self::FINGERPRINT_VERSION,
+            'selected_product_id' => $p?->id, 'size_mismatch' => null, 'confirmed_website_ml' => null,
+            'baseline_images' => [], 'issues' => [], 'foto_utama_url' => '', 'foto_2_url' => '', 'foto_3_url' => ''];
         if (! $p) {
             $data['issues'][] = 'Pilih produk website yang sesuai. Produk baru harus masuk dari Qammaris App terlebih dahulu.';
 
@@ -144,14 +162,26 @@ class ShopeeContentPreviewer
         }
         $size = $this->names->size($source['name']);
         $offers = $p->variants;
-        if ($offers->count() > 1 || ($size !== null && $offers->count() === 1 && (int) $offers->first()->volume !== $size)) {
+        if ($offers->count() > 1) {
             $data['product_id'] = null;
-            $data['issues'][] = 'Ukuran Shopee berbeda dari produk website. Pilih ukuran yang tepat; ukuran lama tidak diganti.';
+            $data['issues'][] = 'Produk website memiliki beberapa ukuran. Pilih produk dengan satu ukuran melalui editor terlebih dahulu.';
 
             return $data;
         }
+        if ($size !== null && $offers->count() === 1 && (int) $offers->first()->volume !== $size) {
+            $websiteMl = (int) $offers->first()->volume;
+            $data['size_mismatch'] = ['shopee_ml' => $size, 'website_ml' => $websiteMl];
+            if ($confirmedWebsiteMl !== $websiteMl) {
+                $data['product_id'] = null;
+                $data['issues'][] = "Shopee tertulis {$size} ml; website {$websiteMl} ml. Pilih produk lain, atau konfirmasikan ukuran Shopee salah pada baris ini. Ukuran/harga website tetap.";
+
+                return $data;
+            }
+            $data['confirmed_website_ml'] = $websiteMl;
+            $data['issues'][] = "Ukuran website {$websiteMl} ml dipertahankan sesuai konfirmasi Anda. Deskripsi Shopee tidak diimpor karena menyebut ukuran berbeda; periksa deskripsi di editor.";
+        }
         $clean = $this->copy->clean($source['description']);
-        if ($clean !== '' && ($replace || trim((string) $p->description) === '') && $p->description !== $clean) {
+        if ($data['size_mismatch'] === null && $clean !== '' && ($replace || trim((string) $p->description) === '') && $p->description !== $clean) {
             $data['fields']['description'] = $clean;
         }
         if (! $p->gender && ($gender = $this->copy->gender($source['name'], $clean))) {

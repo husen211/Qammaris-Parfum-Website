@@ -1,6 +1,6 @@
 # P7-15 — Relevant, typo-tolerant search
 
-Status: implementation in review, 2026-10-07. No production deployment.
+Status: released and verified on production, 2026-10-07. The initial implementation record below is historical; the final release checkpoint supersedes pending deployment statements.
 
 ## Diagnosis and change
 
@@ -36,3 +36,25 @@ Physical iPhone/Safari/touch, screen reader, production MySQL/runtime and produc
 Metadata scanning is intentionally sized for the current hundreds of records and adds a scoped metadata read. Profile before substantially growing catalog/import batches; do not infer suitability for arbitrary scale. Default best-seller ordering remains unchanged when no search is entered. Manual import selections remain human decisions.
 
 Rollback: revert this feature's code/assets and rebuild using the existing pipeline. No database/data/media rollback is needed. Next action: review P7-15 and release/device acceptance, without beginning another feature.
+
+## Owner-authorized release — 2026-10-07
+
+After reviewing the proposed order (release the ready search, perform final checks, then a separate read-only repository audit before overall planning closure), Owner agrees: “oke setuju”. This authorizes the concrete P7-15 release through the existing main CI/production pipeline, without data/credential/schema changes or a refactor. Physical Safari/touch remains an explicitly unverified device scenario.
+
+Preflight: current production d7a511504068720a31be510d16588e12b39a9f06,22 migrations Ran, worker/scheduler heartbeats02:27:02UTC,448 products/1080 image records, jobs0/failed0, checkpoint467, last sync02:00:04UTC/errorabsent,454 cached sources. Read-only browser `rverie` still showed0 before deployment. PR14 head58ec754 had both checks green and was merged as669de1130093ad0391e9beeee7f068c40555ac6a. Main CI37562107686 passed. Production run37562153305 and live verification are pending at this checkpoint.
+
+## Final production checkpoint
+
+[PR14](https://github.com/husen211/Qammaris-Parfum-Website/pull/14) is merged; main CI37562107686 and [production run37562153305](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37562153305) succeeded. First deploy attempt failed before upload with runner-to-host SSH connection timeout; previous code remained active. One retry of the same failed job/artifact succeeded, with no credential/configuration change. Server revision is669de1130093ad0391e9beeee7f068c40555ac6a; deployment log02:33:23UTC (09:33:23Asia/Bangkok).
+
+Actual MySQL/read-only post-release query:448 products,371 public/77 drafts,1080 image records, jobs0/failed0, checkpoint467/errorabsent, last sync02:30:03UTC. Scheduler heartbeat02:34:01UTC and worker watchdog02:34:02UTC. Feed without key401/with existing key200, has_morefalse/next_seq467. Credentials stayed in server memory; only presence/status printed. Exact/typo query each returned only Reverie; `reverie 50ml` and nonsense returned no products.
+
+HTTP `/up`200, public typo search200/one card, wrong-size search200/zero cards; `.env` HEAD403. Automatic review rejected an initial GET proposal for `.env` because it could retrieve secrets; that command did not run. The accepted status-only HEAD alternative did not retrieve file content. No server security or file permissions were changed.
+
+Actual Chrome production390x844 and1440x900 measured390/document375 and1440/document1425, with loaded product photo and no horizontal overflow. Native search submission, correct detail link and Kembali with retained query passed. Desktop `afnna` brand search shows Afnan-related options without selecting them; Escape closes/focuses the disclosure. Existing authenticated Owner session: admin product `rverie` and app inbox `rverie` each show one correct product. No login/reset/new account, admin POST/import/apply/publication, cart or customer submission. Normal detail viewing can increment its existing view counter; no catalog identity/content/price/stock/media mutation was submitted. Console showed only browser-extension deprecation warnings, no captured application errors.
+
+Screenshots: [production before390](production-before-mobile.png), [after390](production-after-mobile.png), [after1440](production-after-desktop.png), [authenticated admin1440](production-admin-search.png). Additional requested320/375/768 overrides did not resize the inactive public tab (measurements stayed1440); no new production proof is claimed at those widths. Their earlier local checks remain valid. Temporary viewport reset and owned tabs closed.
+
+Physical Safari/touch, production native file chooser/Shopee upload/apply, real new upstream stock/price event latency, screen-reader and broader post-release observation remain **Not confirmed**; retain these as bounded P9 verification, not P7-15 search regressions. Overall program is not closed. Next is P9 verification, then the Owner-approved separate evidence-first clean-code/documentation audit; no audit/refactor started in this release.
+
+Recovery: retain previous d7a511504068720a31be510d16588e12b39a9f06. Revert/forward-fix code through the existing CI/release pipeline if needed; no schema/data/media restoration or cursor reset. Follow-up release evidence is documentation/screenshots only and does not request a second code deployment.

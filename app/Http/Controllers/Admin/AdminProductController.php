@@ -432,6 +432,8 @@ class AdminProductController extends Controller
             return route('admin.shopee-imports.index', array_filter([
                 'batch' => $this->positiveInteger($query['batch'] ?? null),
                 'page' => $this->positiveInteger($query['page'] ?? null),
+                'filter' => in_array($query['filter'] ?? null, ['work', 'all', 'complete', 'review', 'ready', 'images_failed'], true) ? $query['filter'] : null,
+                'search' => is_string($query['search'] ?? null) ? mb_substr(trim($query['search']), 0, 100) : null,
             ]), false);
         }
 
