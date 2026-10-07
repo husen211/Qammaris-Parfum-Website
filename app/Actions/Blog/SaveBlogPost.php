@@ -86,7 +86,7 @@ class SaveBlogPost
                 }
                 $post->category = in_array($category->name, BlogPost::CATEGORY_OPTIONS, true) ? $category->name : $post->getRawOriginal('category') ?? 'Tips';
                 $post->setRelation('editorialCategory', $category);
-                foreach (['subtitle', 'featured_image_alt', 'is_featured', 'seo_title'] as $field) {
+                foreach (['subtitle', 'featured_image_alt', 'is_featured', 'seo_title', 'canonical_url', 'seo_indexable', 'seo_followable', 'og_title', 'og_description', 'og_image_url'] as $field) {
                     if (array_key_exists($field, $data)) {
                         $post->{$field} = $data[$field] ?? ($field === 'is_featured' ? false : null);
                     }

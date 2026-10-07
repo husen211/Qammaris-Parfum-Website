@@ -120,6 +120,16 @@ BlogPostStore/Update/PreviewRequest share BlogEditorialRules. SaveBlogPost locks
 
 POST/PUT preview routes remain behind admin/session/CSRF. They render transient data through the same blog.show/RenderBlogContent as public reads, without saving uploads/articles or incrementing views/history. noindex/no-store/no-referrer plus sandboxed desktop/mobile frames. Product markers retain only validated ID; child HTML is discarded and public current name/URL resolved at read time. Rich price/status cards, ordered relations and responsive media remain BLOG-04; no catalog writes. [ADR-033](decisions/ADR-033-blog-editorial-cms.md), [editor guide](../runbooks/BLOG_EDITOR.md), [evidence](../verification/blog-02/README.md).
 
+## BLOG-03 review branch — public Journal and SEO
+
+modernization/blog-03-journal depends on BLOG-02; not deployed. BlogController shares public/category/search listing and current visibility guard. JournalSearch applies bounded metadata matching to titles/excerpts/active tags/eligible marker-product and brand names; sanitized body is literal normalized phrase only. Candidate scan is linear, product resolution batched; no search infrastructure or new dependency.
+
+RenderBlogContent returns safe HTML, unique H2/H3 anchors, optional TOC after three H2, table overflow wrappers and eligible current product links. Public/preview renderer stays shared; no persisted body rewrite. Dedicated journal.js/CSS load only on public Journal views. Native navigation/search/pagination keep shared destination skeleton; copy has selectable-URL retry and images have one-shot placeholder fallback.
+
+Additive migration000004 adds canonical/OG overrides and index/follow defaults. BlogEditorialRules validates HTTPS URLs without credentials/fragments, SaveBlogPost writes existing revision/audit transaction; sensitive SEO text/URLs are hashes in history. JournalMetadata renders safe BlogPosting/BreadcrumbList based on visible facts. Layout defaults remain for other pages. Sitemap caches XML plus absolute expiry, caps TTL/HTTP max-age at next publication boundary, uses editorial/publication lastmod, excludes nonindexable/external-canonical articles and keeps existing cache invalidation key.
+
+No resize/full product cards/API in this phase. Existing content/media/IDs/slugs/authors retained; current catalog remains read-only. [ADR-034](decisions/ADR-034-public-journal-search-seo.md), [operator guide](../runbooks/JOURNAL_PUBLIC.md), [verification](../verification/blog-03/README.md).
+
 ## Runtime, deployment, and verification boundaries (current)
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.

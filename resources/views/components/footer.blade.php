@@ -25,7 +25,7 @@
                     <ul class="footer-links">
                         <li><a href="{{ route('products.index') }}" class="footer-link">Katalog Parfum</a></li>
                         <li><a href="{{ route('quiz.index') }}" class="footer-link">Tes Parfum</a></li>
-                        <li><a href="{{ route('blog.index') }}" class="footer-link">Jurnal</a></li>
+                        <li><a href="{{ route('blog.index') }}" class="footer-link">Qammaris Journal</a></li>
                         <li><a href="{{ route('store.location') }}" class="footer-link">Lokasi Toko</a></li>
                     </ul>
                 </nav>

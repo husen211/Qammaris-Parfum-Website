@@ -109,10 +109,11 @@ class AdminBlogPostController extends Controller
         // A preview is transient: no file, article, view count or history is written.
         $post->setRelation('editorialCategory', null);
         $post->category_id = null;
-        $post->content = $renderer->handle($post->content);
+        $document = $renderer->document($post->content);
+        $post->content = $document['html'];
         $image = $request->file('featured_image');
         $previewImage = $image ? 'data:'.$image->getMimeType().';base64,'.base64_encode($image->getContent()) : ($post->featured_image ? $post->featured_image_url : asset('images/product-placeholder.svg'));
-        $html = view('blog.show', ['post' => $post, 'relatedPosts' => collect(), 'isPreview' => true, 'previewImage' => $previewImage])->render();
+        $html = view('blog.show', ['post' => $post, 'relatedPosts' => collect(), 'nextPost' => null, 'isPreview' => true, 'previewImage' => $previewImage] + $document)->render();
 
         return response()->view('admin.blog-posts.preview', compact('html'))
             ->header('X-Robots-Tag', 'noindex, nofollow')

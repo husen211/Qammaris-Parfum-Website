@@ -3,27 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
+use App\Support\JournalSearch;
 use App\Support\RenderBlogContent;
+use App\Support\SearchMatcher;
 use Illuminate\Http\Request;
 
 class BlogController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, JournalSearch $searcher)
     {
-        $query = BlogPost::with('editorialCategory')->published()->latest('published_at');
-
-        if ($request->filled('category')) {
-            $query->byCategory($request->category);
-        }
-
-        $posts = $query->paginate(9)->withQueryString();
-        $categories = $this->visibleCategories();
-
-        if ($categories->isEmpty()) {
-            $categories = collect(BlogPost::CATEGORY_OPTIONS);
-        }
-
-        return view('blog.index', compact('posts', 'categories'));
+        return $this->listing($request, $searcher, SearchMatcher::term($request->query('category')));
     }
 
     public function show(BlogPost $post, RenderBlogContent $renderer)
@@ -31,32 +20,44 @@ class BlogController extends Controller
         abort_unless($post->isPubliclyVisible(), 404);
 
         $post->incrementViewCount();
-        $post->setAttribute('content', $renderer->handle($post->content));
+        $document = $renderer->document($post->content);
+        $post->setAttribute('content', $document['html']);
 
         $relatedPosts = BlogPost::with('editorialCategory')->published()
             ->byCategory($post->category)
             ->where('id', '!=', $post->id)
-            ->take(3)
+            ->orderByDesc('published_at')->orderByDesc('id')->take(3)
             ->get();
 
-        return view('blog.show', compact('post', 'relatedPosts'));
+        $nextPost = BlogPost::with('editorialCategory')->published()
+            ->whereNotIn('id', $relatedPosts->pluck('id')->push($post->id))
+            ->orderByDesc('published_at')->orderByDesc('id')->first();
+
+        return view('blog.show', compact('post', 'relatedPosts', 'nextPost') + $document);
     }
 
-    public function category($category)
+    public function category(Request $request, JournalSearch $searcher, string $category)
     {
-        $posts = BlogPost::with('editorialCategory')->published()
-            ->byCategory($category)
-            ->latest('published_at')
-            ->paginate(9)
-            ->withQueryString();
+        return $this->listing($request, $searcher, $category);
+    }
 
+    private function listing(Request $request, JournalSearch $searcher, string $category)
+    {
+        $search = SearchMatcher::term($request->query('search'));
+        $query = BlogPost::with('editorialCategory')->published();
+        if ($category !== '') {
+            $query->byCategory($category);
+        }
+        if ($search !== '') {
+            $searcher->apply($query, $search);
+        }
+        $featured = $category === '' && $search === '' && (int) $request->query('page', 1) === 1
+            ? (clone $query)->where('is_featured', true)->orderByDesc('published_at')->orderByDesc('id')->first() : null;
+        // Featured presentation does not remove the article from later paginated results.
+        $posts = $query->orderByDesc('published_at')->orderByDesc('id')->paginate(9)->withQueryString();
         $categories = $this->visibleCategories();
 
-        if ($categories->isEmpty()) {
-            $categories = collect(BlogPost::CATEGORY_OPTIONS);
-        }
-
-        return view('blog.index', compact('posts', 'category', 'categories'));
+        return view('blog.index', compact('posts', 'category', 'categories', 'search', 'featured'));
     }
 
     private function visibleCategories()

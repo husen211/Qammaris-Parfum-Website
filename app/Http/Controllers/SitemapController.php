@@ -4,13 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use App\Models\Product;
+use App\Support\JournalMetadata;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 
 class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $xml = cache()->remember('sitemap.xml', 3600, function () {
+        $cached = cache()->get('sitemap.xml');
+        if (! is_array($cached) || ($cached['expires_at'] ?? 0) <= now()->timestamp) {
+            $next = BlogPost::whereNull('archived_at')->where('is_published', true)->where('published_at', '>', now())->min('published_at');
+            $expiresAt = min(now()->timestamp + 3600, $next ? Carbon::parse($next)->timestamp : PHP_INT_MAX);
             $urls = [
                 [
                     'loc' => url('/'),
@@ -46,20 +51,25 @@ class SitemapController extends Controller
                 ];
             }
 
-            $posts = BlogPost::published()->get(['slug', 'updated_at', 'published_at']);
+            $posts = BlogPost::published()->where('seo_indexable', true)
+                ->get(['slug', 'canonical_url', 'content_updated_at', 'published_at']);
             foreach ($posts as $post) {
+                if (! JournalMetadata::selfCanonical($post)) {
+                    continue;
+                }
                 $urls[] = [
                     'loc' => route('blog.show', $post->slug),
-                    'lastmod' => ($post->published_at ?? $post->updated_at)?->toAtomString(),
+                    'lastmod' => ($post->content_updated_at ?? $post->published_at)?->toAtomString(),
                 ];
             }
 
-            return $this->renderXml($urls);
-        });
+            $cached = ['xml' => $this->renderXml($urls), 'expires_at' => $expiresAt];
+            cache()->put('sitemap.xml', $cached, max(1, $expiresAt - now()->timestamp));
+        }
 
-        return response($xml, 200)
+        return response($cached['xml'], 200)
             ->header('Content-Type', 'application/xml; charset=UTF-8')
-            ->header('Cache-Control', 'public, max-age=3600');
+            ->header('Cache-Control', 'public, max-age='.max(0, $cached['expires_at'] - now()->timestamp));
     }
 
     private function renderXml(array $urls): string

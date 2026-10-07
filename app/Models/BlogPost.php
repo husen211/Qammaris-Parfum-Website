@@ -17,6 +17,8 @@ class BlogPost extends Model
 
     public const CATEGORY_OPTIONS = ['Tips', 'Review', 'Panduan', 'Berita'];
 
+    protected $attributes = ['seo_indexable' => true, 'seo_followable' => true];
+
     protected $fillable = [
         'title',
         'slug',
@@ -33,6 +35,12 @@ class BlogPost extends Model
         'featured_image_alt',
         'is_featured',
         'seo_title',
+        'canonical_url',
+        'seo_indexable',
+        'seo_followable',
+        'og_title',
+        'og_description',
+        'og_image_url',
     ];
 
     protected $casts = [
@@ -43,6 +51,8 @@ class BlogPost extends Model
         'archived_at' => 'datetime',
         'content_updated_at' => 'datetime',
         'is_featured' => 'boolean',
+        'seo_indexable' => 'boolean',
+        'seo_followable' => 'boolean',
     ];
 
     public function getSlugOptions(): SlugOptions

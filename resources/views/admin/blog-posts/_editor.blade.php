@@ -43,9 +43,18 @@
             <p>JPEG, PNG, atau WebP · maksimal 5 MB. Gambar sebelumnya tetap disimpan.</p>
             <x-journal-field name="featured_image_alt" label="Teks alternatif gambar utama" :value="$blogPost?->featured_image_alt" maxlength="255" placeholder="Jelaskan isi gambar secara singkat"/>
         </div></details>
-        <details class="journal-section" @if($errors->has('seo_title') || $errors->has('meta_description')) open @endif><summary>SEO <span>Judul dan ringkasan pencarian</span></summary><div class="journal-section-body">
+        <details class="journal-section" @if(collect(['seo_title', 'meta_description', 'canonical_url', 'og_title', 'og_description', 'og_image_url', 'seo_indexable', 'seo_followable'])->contains(fn ($field) => $errors->has($field))) open @endif><summary>SEO <span>Pencarian dan berbagi</span></summary><div class="journal-section-body">
             <x-journal-field name="seo_title" label="Judul SEO (opsional)" :value="$blogPost?->seo_title" maxlength="255"/><p>Kosongkan untuk memakai judul artikel.</p>
             <x-journal-field name="meta_description" label="Deskripsi pencarian (opsional)" type="textarea" :rows="2" :value="$blogPost?->meta_description" maxlength="160"/><p>Kosongkan untuk memakai ringkasan.</p>
+            <x-journal-field name="canonical_url" label="Canonical pengganti (opsional)" type="url" :value="$blogPost?->canonical_url" maxlength="2048"/>
+            <p>Kosongkan untuk URL artikel ini. Ganti hanya bila artikel utama ada di URL HTTPS lain.</p>
+            @foreach(['seo_indexable'=>'Izinkan artikel diindeks mesin pencari', 'seo_followable'=>'Izinkan mesin pencari mengikuti tautan'] as $field=>$label)
+                <input type="hidden" name="{{ $field }}" value="0"><label class="journal-check"><input type="checkbox" id="{{ $field }}" name="{{ $field }}" value="1" @checked(old($field, $blogPost?->{$field} ?? true))>{{ $label }}</label>
+            @endforeach
+            <x-journal-field name="og_title" label="Judul saat dibagikan (opsional)" :value="$blogPost?->og_title" maxlength="255"/>
+            <x-journal-field name="og_description" label="Ringkasan saat dibagikan (opsional)" type="textarea" :rows="2" :value="$blogPost?->og_description" maxlength="1000"/>
+            <x-journal-field name="og_image_url" label="URL HTTPS gambar saat dibagikan (opsional)" type="url" :value="$blogPost?->og_image_url" maxlength="2048"/>
+            <p>Kosongkan untuk gambar utama. Jika diganti, gunakan URL file gambar milik Anda yang sudah tersedia; URL ini hanya metadata dan tidak diunduh.</p>
         </div></details>
         <details class="journal-section" @if($errors->has('tag_ids') || $errors->has('tag_ids.*')) open @endif><summary>Relasi <span>Tag dan tautan produk</span></summary><div class="journal-section-body">
             <input type="hidden" name="tags_present" value="1"><fieldset id="tag_ids"><legend>Tag artikel</legend><div class="journal-tags">@forelse($tags as $tag)<label><input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" @checked(in_array($tag->id, $selectedTags, true))>{{ $tag->name }}{{ !$tag->is_active ? ' (nonaktif)' : '' }}</label>@empty<p>Belum ada tag.</p>@endforelse</div></fieldset>
