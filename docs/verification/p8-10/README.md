@@ -1,6 +1,6 @@
 # P8-10 — Shopee import recovery and focused review
 
-Status: implementation verified locally, awaiting review/release. No production POST, import apply, publication, deployment, schema, credential or media write occurred in this task.
+Status: released to production on 2026-10-07 after Owner approval. Implementation and release evidence are separated below. No production import POST, apply, publication, schema, credential or media write occurred during this verification.
 
 ## Evidence before changing code
 
@@ -44,4 +44,20 @@ Release requires Owner approval through the existing GitHub pipeline; do not aut
 
 Actual new-code production/MySQL runtime, Owner's live apply, real CDN downloads, updated production work counts and physical iPhone Safari/touch are **Not confirmed**. Local mouse/viewport checks are not touch testing. The code remains in review. Code-only rollback retains all source/audit/media/data; old code cannot apply content-v2 proposals using its broader hash, so prefer forward fix/recheck. Never delete batch rows/media or reset the feed checkpoint for rollback. Re-upload a current pair if source text/photos themselves have changed; recheck uses the source already stored in this batch.
 
-Next: P8-10 review/release approval and bounded live verification. The separately approved clean-code/documentation audit remains unstarted.
+The preceding review/release notes describe the pre-release checkpoint and are superseded by the release evidence below.
+
+## Owner-approved production release — 2026-10-07
+
+Owner approves the concrete P8-10 release with “oke setuju gas”. [PR15](https://github.com/husen211/Qammaris-Parfum-Website/pull/15) merged as `0dc6924479ae108177c467a380b3978b1f89c70b`; main CI37565895505 and [production run37565946279](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37565946279) succeeded. The server revision matches; deployment timestamp03:17:25UTC /10:17:25Asia/Bangkok. The existing pipeline installed code/assets, retained shared env/storage, refused pending migrations, checked `/up`, and restarted the existing worker. No manual File Manager/config/permission change or migration was performed.
+
+Read-only production metadata before and after:448products,371published/77draft,1080image records; batch6still375rows/0applied/status previewed. Jobs0/failed0, checkpoint467, last sync03:00:05UTC/errorabsent. Scheduler heartbeat03:18:01UTC and watchdog03:18:02UTC; one PHP database worker consumes qammaris-app and product-import-images, retry_after120/timeout90. `/up` and `/products` each HTTP200; the new refresh route is active. This is a runtime/metadata check, not a fresh upstream event or photo-download test.
+
+Existing authenticated Owner Chrome session checked only GET navigation and unsubmitted controls. Batch6default is37work/338complete, not the synthetic7/368 fixture. Existing complete products with additional photo proposals legitimately remain work. Complete filter returns338with25-row pagination. Source search silk + review filter finds Silk Noir. Searching the product selector and choosing website75ml shows source100ml/website75ml, an unchecked explicit confirmation and disabled mismatched-description replacement. No choose/refresh/apply/publish POST was sent, and the selected value was discarded on returning to the batch overview.
+
+Production viewport1440×900 and390×844: main client width equals scroll width (1154/1154 and360/360), no horizontal overflow; native keyboard focus reaches the size checkbox and Perbarui pilihan. Captured console errors:0. Screenshots: [desktop overview](production-desktop.jpg), [size desktop](production-size-desktop.jpg), [size mobile](production-size-mobile.jpg). Temporary viewport reset; Owner's existing tab remains on batch6.
+
+Production GET/MySQL/runtime and current work counts are now confirmed. Production native upload, refresh/apply writes, real new CDN acquisitions and physical iPhone Safari/touch remain **Not confirmed**. For the existing batch, Owner first clicks **Periksa ulang perubahan**, reviews remaining proposals, then separately confirms incorrect sizes only where appropriate and applies. No automatic publication; no re-upload needed solely to recover the old preview.
+
+Recovery: retain previous `669de1130093ad0391e9beeee7f068c40555ac6a` and all data/source/audit/media. Prefer forward fix/recheck; old code's broader target hash cannot safely apply content-v2 proposals. Do not delete batches/media or reset the source checkpoint. Documentation follow-up does not request a second production deployment.
+
+Next backlog item: bounded P9 Owner/device/live-admin acceptance, then the separately approved evidence-first clean-code/documentation audit. Neither started in this release.

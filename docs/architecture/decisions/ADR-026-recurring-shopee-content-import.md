@@ -33,7 +33,7 @@ Feature branch tidak mengaktifkan production. Sebelum release, pastikan ekstensi
 
 Rollback kode mempertahankan audit, identitas, copy dan foto yang sudah berhasil. Hentikan worker foto secara terkendali untuk rollback; lanjutkan dengan forward fix lalu retry hanya kandidat gagal. Tidak ada checkpoint reset, database restore, penghapusan media atau unpublish otomatis.
 
-## P8-10 — Pemulihan impor berulang (2026-10-07, in review)
+## P8-10 — Pemulihan impor berulang (released 2026-10-07 through PR15)
 
 Batch Owner375/368dikenali/7review gagal karena fingerprint katalog umum mencakup harga, stok dan updated_at, dan satu konflik membatalkan semua baris. Kontrak `shopee-content-v1` tetap dipakai untuk batch/job lama; proposal baru menambahkan marker `content-v2`. Fingerprint khusus konten melindungi nama/URL/taksonomi/copy, ukuran/identitas offer, identitas eksternal, publikasi/hidden dan baseline media. Harga/stok/bestseller/timestamps dikecualikan karena tidak ditulis impor ini. Fingerprint umum untuk operasi bulk lain tidak diubah.
 
