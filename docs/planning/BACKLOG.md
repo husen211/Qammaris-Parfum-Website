@@ -38,7 +38,7 @@ Owner requested and approved ORD-01 on 2026-10-07, developed in parallel with th
 | ORD-04 | BACKLOG | Authenticated staff accounts instead of bearer links; permission change |
 | ORD-05 | BACKLOG | Customer-data retention/anonymization policy; currently no automatic deletion |
 
-ORD-01 local verification: 12 new tests/121 assertions; full suite and browser flow at 320/375/390/1440 on an isolated synthetic SQLite DB; staging MySQL, genuine touch/Safari and real WhatsApp sending not confirmed.
+ORD-01 local verification: 14 new tests/142 assertions; full suite and browser flow at 320/375/390/1440 on an isolated synthetic SQLite DB; staging MySQL, genuine touch/Safari and real WhatsApp sending not confirmed.
 
 ## FIX-SUPREMACY — Correct Pink Shopee content assigned to Purple — DONE
 

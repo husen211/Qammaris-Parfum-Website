@@ -14,8 +14,6 @@ class OnlineOrder extends Model
 
     public const STAGE_PAID = 'paid';
 
-    public const STAGE_COURIER_BOOKED = 'courier_booked';
-
     public const STAGE_SHIPPED = 'shipped';
 
     public const STAGE_COMPLETED = 'completed';
@@ -95,10 +93,13 @@ class OnlineOrder extends Model
         return self::query()->where('staff_token_hash', self::tokenHash($token))->first();
     }
 
-    /** Ordered steps for this order's fulfillment; pickup has no separate shipping step. */
+    /**
+     * Ordered steps for this order's fulfillment. Owner keeps manual tracking short: "Dikirim" means the
+     * driver/J&T is booked and the parcel leaves; pickup goes straight from paid to collected.
+     */
     public function steps(): array
     {
-        $steps = [self::STAGE_AWAITING_CUSTOMER, self::STAGE_DETAILS_RECEIVED, self::STAGE_PAID, self::STAGE_COURIER_BOOKED];
+        $steps = [self::STAGE_AWAITING_CUSTOMER, self::STAGE_DETAILS_RECEIVED, self::STAGE_PAID];
         if ($this->fulfillment !== 'pickup') {
             $steps[] = self::STAGE_SHIPPED;
         }
@@ -165,8 +166,7 @@ class OnlineOrder extends Model
             self::STAGE_AWAITING_CUSTOMER => 'Menunggu data customer',
             self::STAGE_DETAILS_RECEIVED => 'Data diterima',
             self::STAGE_PAID => 'Dibayar',
-            self::STAGE_COURIER_BOOKED => $pickup ? 'Siap diambil' : ($jnt ? 'Pickup J&T diminta' : 'Driver dipesan'),
-            self::STAGE_SHIPPED => $jnt ? 'Dipickup J&T' : 'Dikirim',
+            self::STAGE_SHIPPED => $jnt ? 'Dikirim via J&T' : 'Dikirim',
             self::STAGE_COMPLETED => $pickup ? 'Sudah diambil' : 'Diterima',
             self::STAGE_CANCELLED => 'Dibatalkan',
             default => $stage,

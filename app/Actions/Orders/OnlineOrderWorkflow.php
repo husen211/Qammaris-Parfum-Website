@@ -18,7 +18,7 @@ class OnlineOrderWorkflow
 {
     private const CUSTOMER_FIELDS = ['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'packaging', 'customer_note'];
 
-    private const STAFF_STAGES = [OnlineOrder::STAGE_COURIER_BOOKED, OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED];
+    private const STAFF_STAGES = [OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED];
 
     private const STALE = 'Status pesanan sudah berubah. Muat ulang halaman untuk melihat data terbaru.';
 
@@ -71,6 +71,11 @@ class OnlineOrderWorkflow
         return $this->mutate($order, function (OnlineOrder $order) use ($from, $to, $actorType, $actor, $staffName, $extra): void {
             if ($actorType === 'admin') {
                 $this->assertAdmin($actor);
+            } elseif ($actorType === 'customer') {
+                // Customers may only confirm receipt of a shipped delivery; staff/admin can confirm it for them.
+                if ($to !== OnlineOrder::STAGE_COMPLETED || $order->fulfillment === 'pickup') {
+                    throw new OnlineOrderRejected('Langkah ini dikonfirmasi oleh toko.');
+                }
             } elseif (! in_array($to, self::STAFF_STAGES, true)) {
                 throw new OnlineOrderRejected('Langkah ini hanya dapat ditandai oleh admin.');
             }
@@ -81,7 +86,11 @@ class OnlineOrderWorkflow
                 throw new OnlineOrderRejected(self::STALE);
             }
 
-            $fields = $actorType === 'admin' ? ['payment_method', 'courier', 'tracking_number'] : ['courier', 'tracking_number'];
+            $fields = match ($actorType) {
+                'admin' => ['payment_method', 'courier', 'tracking_number'],
+                'staff' => ['courier', 'tracking_number'],
+                default => [],
+            };
             foreach ($fields as $field) {
                 if (filled($extra[$field] ?? null)) {
                     $order->{$field} = $extra[$field];
@@ -92,10 +101,9 @@ class OnlineOrderWorkflow
                     ?: throw new OnlineOrderRejected('Lengkapi nama, nomor HP, cara menerima, dan kemasan terlebih dahulu.'),
                 OnlineOrder::STAGE_PAID => $order->payment_method
                     ?: throw new OnlineOrderRejected('Pilih metode pembayaran sebelum menandai Dibayar.'),
-                OnlineOrder::STAGE_COURIER_BOOKED => $order->fulfillment === 'pickup' || $order->courier
-                    ?: throw new OnlineOrderRejected('Pilih kurir sebelum menandai driver/J&T dipesan.'),
-                OnlineOrder::STAGE_SHIPPED => $order->courier !== 'jnt' || $order->tracking_number
-                    ?: throw new OnlineOrderRejected('Isi nomor resi J&T sebelum menandai dikirim.'),
+                OnlineOrder::STAGE_SHIPPED => ($order->courier ?: throw new OnlineOrderRejected('Pilih kurir sebelum menandai dikirim.'))
+                    && ($order->courier !== 'jnt' || $order->tracking_number
+                        ?: throw new OnlineOrderRejected('Isi nomor resi J&T sebelum menandai dikirim.')),
                 default => true,
             };
 

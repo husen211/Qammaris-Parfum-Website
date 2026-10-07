@@ -70,8 +70,9 @@ final class OnlineOrderTimeline
             return match ($stage) {
                 OnlineOrder::STAGE_DETAILS_RECEIVED => $audience === 'customer' ? 'Data penerima sudah kami terima.' : null,
                 OnlineOrder::STAGE_PAID => 'Pembayaran sudah dikonfirmasi'.($order->payment_method ? ' ('.OnlineOrder::PAYMENT_METHODS[$order->payment_method].').' : '.'),
-                OnlineOrder::STAGE_COURIER_BOOKED => $pickup ? 'Pesanan siap diambil di toko.' : ($jnt ? 'Menunggu J&T menjemput paket.' : $courier.' sedang menuju toko.'),
-                OnlineOrder::STAGE_SHIPPED => $jnt && $order->tracking_number ? 'No. resi: '.$order->tracking_number : 'Pesanan dalam perjalanan.',
+                OnlineOrder::STAGE_SHIPPED => $jnt
+                    ? 'Paket dikirim lewat J&T'.($order->tracking_number ? '. No. resi: '.$order->tracking_number : '.')
+                    : $courier.' sudah dipesan, pesanan segera diantar.',
                 default => null,
             };
         }
@@ -82,9 +83,9 @@ final class OnlineOrderTimeline
         return match ($stage) {
             OnlineOrder::STAGE_DETAILS_RECEIVED => 'Menunggu data penerima.',
             OnlineOrder::STAGE_PAID => $audience === 'customer' ? 'Ongkir dan pembayaran dikonfirmasi lewat WhatsApp.' : 'Menunggu pembayaran.',
-            OnlineOrder::STAGE_COURIER_BOOKED => $pickup ? 'Pesanan sedang disiapkan.' : 'Pesanan sedang disiapkan untuk dikirim.',
-            OnlineOrder::STAGE_SHIPPED => $jnt ? 'Menunggu paket dijemput J&T.' : 'Menunggu driver menjemput pesanan.',
-            OnlineOrder::STAGE_COMPLETED => $pickup ? 'Menunggu pesanan diambil.' : 'Pesanan sedang diantar.',
+            OnlineOrder::STAGE_SHIPPED => 'Pesanan sedang disiapkan untuk dikirim.',
+            OnlineOrder::STAGE_COMPLETED => $pickup ? 'Pesanan siap diambil di toko.'
+                : ($audience === 'customer' ? 'Sudah menerima pesanan? Tekan tombol di bawah.' : 'Pesanan dalam perjalanan.'),
             default => null,
         };
     }

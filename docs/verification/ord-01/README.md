@@ -16,7 +16,7 @@ Date: 2026-10-07. Owner approval: rencana ORD-01 disetujui di sesi ini (data cus
 
 ## Checks actually run
 
-- `php artisan test --filter=OnlineOrderTest`: **12 passed / 121 assertions** (`tests/Feature/OnlineOrderTest.php`). Coverage:
+- `php artisan test --filter=OnlineOrderTest`: **14 passed / 142 assertions** (`tests/Feature/OnlineOrderTest.php`). Coverage:
   - snapshot price and hashed/encrypted token;
   - rejection of draft/zero-price offers and non-admins;
   - customer submit with normalization and private headers;
@@ -25,11 +25,12 @@ Date: 2026-10-07. Owner approval: rencana ORD-01 disetujui di sesi ini (data cus
   - unknown/expired/replaced links (customer and staff);
   - transition validation and idempotent replay;
   - staff limited to shipping steps (no payment), J&T tracking number required, advance → reimburse, no internal data shown to the customer;
+  - simplified steps (paid → shipped → received; pickup paid → collected); the customer can confirm receipt only while shipped; staff/admin can confirm otherwise; replay is idempotent;
   - revision conflict, revert, cancel/restore;
   - both group-message variants and the location URL allowlist;
   - escaping/flattening of untrusted text;
   - cart checkout still stores no order.
-- `php artisan test` full suite, final state after all view tweaks: **394 passed / 2787 assertions**.
+- `php artisan test` full suite, final state after all view tweaks: **396 passed / 2808 assertions**.
 - `node --test tests/js/*.test.mjs`: 31 passed. Pint `--test` on all changed/new PHP: passed. `npm run build`: passed, with the existing large 3D chunk warning unrelated. `git diff --check` and `composer validate --strict`: passed.
 - Migration up → rollback → up on an isolated SQLite DB holding the browser test data: clean; product rows unchanged (3 → 3).
 
@@ -52,9 +53,10 @@ Real Chrome (headless, driven through the DevTools Protocol by a scratch script)
 | After submit | Location-sharing CTA + timeline + recipient data + "Ubah data". [screenshot](customer-status-submitted-390.png) |
 | Reduced motion | Active icon: `animation-name: pulse` normally, `none` with `prefers-reduced-motion: reduce` |
 | Admin paid + staff-books mode | Group message "MOHON DIPESANKAN MAXIM …" with HP, location, fee/talangan note, staff link. [1440](admin-show-paid-1440.png), [390 no overflow](admin-show-paid-390.png) |
-| Staff | Name remembered after the first step; driver booked → shipped → talangan recorded. [task](staff-task-390.png), [after](staff-after-shipped-390.png) |
-| Completion | Admin reimburses + marks Received; full timeline + activity log. [screenshot](admin-show-completed-1440.png), list [1440](admin-index-1440.png)/[390](admin-index-390.png) |
-| Customer final | 6 steps completed; staff name not visible. [390](customer-status-completed-390.png), [1440](customer-status-completed-1440.png) |
+| Staff (after Owner simplification) | The "Tandai: Dikirim" action sits above the fold at 320/360/390 with no overflow; the resi field appears only for J&T; the name is remembered; next step is Diterima; talangan recorded. [390](staff-task-390.png), [320](staff-task-320.png), [360](staff-task-360.png), [after](staff-after-shipped-390.png) |
+| Customer confirms receipt | While Dikirim the customer sees "Pesanan sudah saya terima" and tapping it completes the order. [shipped](customer-status-shipped-390.png) |
+| Completion | Admin reimburses (order already received by the customer); full timeline + activity log. [screenshot](admin-show-completed-1440.png), list [1440](admin-index-1440.png)/[390](admin-index-390.png) |
+| Customer final | 5 steps completed; staff name not visible. [390](customer-status-completed-390.png), [1440](customer-status-completed-1440.png) |
 | Invalid link | Neutral 404 page with a WhatsApp button. [screenshot](customer-invalid-link-390.png) |
 | Console | Only the expected 404 resource for the invalid link; no JS exception |
 

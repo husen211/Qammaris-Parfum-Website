@@ -12,7 +12,7 @@ WhatsApp orders are coordinated by hand: product, recipient, sharelok/address, s
 2. Scope: admin-created order with a customer link and a mobile form, admin status/shipping/payment, a staff group message, tracking timeline, and a staff task link.
 3. Delivery location inside Palu stays a **WhatsApp share location**. No browser geolocation.
 4. The customer may correct details through the same link **until the admin marks Paid**. After that, the link is a read-only status page. An unfilled link expires after 7 days and can be regenerated.
-5. Staff use a **secret per-order task link without login**. Holding the link is the only credential. The staff name is typed and remembered on the device, not authenticated. Staff may move shipping steps only (driver/J&T booked, shipped, received) and record an advanced shipping fee. They cannot touch payment, prices, or customer data.
+5. Staff use a **secret per-order task link without login**. Holding the link is the only credential. The staff name is typed and remembered on the device, not authenticated. Staff may move shipping steps only (shipped, received/collected) and record an advanced shipping fee. They cannot touch payment, prices, or customer data.
 6. Customers see a simplified timeline without staff names, funding, or internal notes.
 7. Timeline UI follows the 21st.dev Timeline (preetsuthar17). It is reimplemented as a Blade/Tailwind component because the original is React + Radix + cva, and repository rules forbid a React conversion or new dependency.
 
@@ -27,13 +27,15 @@ No soft-delete, purge, or cascade from catalog/users. Cancellation is a state.
 
 **Tokens.** 40 random characters. The SHA-256 hash is the lookup key, and an `encrypted`-cast copy (APP_KEY) lets admins re-copy links. Regeneration replaces the hash, so old links fail immediately. Unknown, replaced, and expired links share one neutral 404 page. Customer/staff responses send `no-store`, `no-referrer`, and `noindex`. Throttles are 30/min for GET and 10/min for POST.
 
+**Steps (Owner simplification after review, 2026-10-07).** Manual tracking stays short: created → details → paid → shipped (driver/J&T booked and parcel leaving; courier required, J&T tracking number required) → received. Pickup: paid → collected. The customer link may mark received only while shipped; staff/admin can mark it otherwise.
+
 **Single transition authority.** `App\Actions\Orders\OnlineOrderWorkflow` handles every edit and step:
 - Each mutation locks the row and records its event in the same transaction.
 - A step requires `from` = current stage and `to` = the next step for this fulfillment (pickup has no shipping step).
 - Replaying an already-applied step is a no-op, so double taps are safe.
 - Admin detail edits require the current `revision`, so customer/staff/other-tab changes are never overwritten.
 - Admins can revert one step or restore a cancelled order; both are recorded as events.
-- Payment requires a method, a courier booking requires a courier, and J&T shipment requires a tracking number.
+- Payment requires a method; shipment requires a courier, and a J&T shipment also requires a tracking number.
 
 `CreateOnlineOrder` accepts published products with an active positive-price offer regardless of availability, because the admin confirms stock in the chat. There is no reservation. The snapshot price is never rewritten by later catalog changes.
 

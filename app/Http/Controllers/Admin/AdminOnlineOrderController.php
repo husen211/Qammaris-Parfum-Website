@@ -26,7 +26,7 @@ class AdminOnlineOrderController extends Controller
         'active' => 'Aktif',
         'awaiting_customer' => 'Menunggu customer',
         'needs_payment' => 'Perlu dibayar',
-        'needs_shipping' => 'Perlu disiapkan/dikirim',
+        'needs_shipping' => 'Perlu dikirim/diambil',
         'in_transit' => 'Dalam pengiriman',
         'completed' => 'Selesai',
         'cancelled' => 'Dibatalkan',
@@ -45,7 +45,7 @@ class AdminOnlineOrderController extends Controller
         match ($filter) {
             'active' => $query->whereNotIn('stage', [OnlineOrder::STAGE_COMPLETED, OnlineOrder::STAGE_CANCELLED]),
             'needs_payment' => $query->where('stage', OnlineOrder::STAGE_DETAILS_RECEIVED),
-            'needs_shipping' => $query->whereIn('stage', [OnlineOrder::STAGE_PAID, OnlineOrder::STAGE_COURIER_BOOKED]),
+            'needs_shipping' => $query->where('stage', OnlineOrder::STAGE_PAID),
             'in_transit' => $query->where('stage', OnlineOrder::STAGE_SHIPPED),
             'reimburse' => $query->where('driver_funding', 'staff_advance')->whereNotNull('staff_advance_amount')->whereNull('staff_reimbursed_at'),
             'all' => null,

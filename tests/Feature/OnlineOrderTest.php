@@ -97,7 +97,8 @@ class OnlineOrderTest extends TestCase
 
         $this->post(route('orders.customer.submit', $token), $this->details(['fulfillment' => 'pickup', 'address' => 'Should be ignored']))->assertRedirect();
         $this->assertNull($order->fresh()->address);
-        $this->assertSame(['awaiting_customer', 'details_received', 'paid', 'courier_booked', 'completed'], $order->fresh()->steps());
+        $this->assertSame(['awaiting_customer', 'details_received', 'paid', 'completed'], $order->fresh()->steps());
+        $this->assertSame('Sudah diambil', $order->fresh()->stageLabel('completed'));
     }
 
     public function test_customer_may_correct_details_until_paid_then_link_is_read_only(): void
@@ -144,7 +145,43 @@ class OnlineOrderTest extends TestCase
         $this->advance($order, 'details_received', 'paid', ['payment_method' => 'qris'])->assertSessionHas('success');
         $this->advance($order, 'details_received', 'paid', ['payment_method' => 'qris'])->assertSessionHas('success');
         $this->assertSame(1, $order->events()->where('kind', 'advance')->where('stage', 'paid')->count());
-        $this->advance($order, 'paid', 'courier_booked')->assertSessionHas('error', 'Pilih kurir sebelum menandai driver/J&T dipesan.');
+        $this->advance($order, 'paid', 'shipped')->assertSessionHas('error', 'Pilih kurir sebelum menandai dikirim.');
+        $this->assertSame(['awaiting_customer', 'details_received', 'paid', 'shipped', 'completed'], $order->fresh()->steps());
+    }
+
+    public function test_customer_confirms_receipt_only_after_shipping(): void
+    {
+        [$order, $token] = $this->order();
+        $this->post(route('orders.customer.submit', $token), $this->details());
+        $this->post(route('orders.customer.received', $token))->assertSessionHas('error');
+        $this->advance($order, 'details_received', 'paid', ['payment_method' => 'qris']);
+        $this->post(route('orders.customer.received', $token))->assertSessionHas('error');
+        $this->get(route('orders.customer.show', $token))->assertDontSee('Pesanan sudah saya terima');
+
+        $this->advance($order, 'paid', 'shipped', ['courier' => 'maxim'])->assertSessionHas('success');
+        $this->get(route('orders.customer.show', $token))->assertSee('Pesanan sudah saya terima')->assertSee('Maxim sudah dipesan');
+        $this->post(route('orders.customer.received', $token))->assertRedirect(route('orders.customer.show', $token))->assertSessionHas('success');
+        $this->post(route('orders.customer.received', $token))->assertSessionHas('success');
+
+        $order->refresh();
+        $this->assertSame('completed', $order->stage);
+        $this->assertNotNull($order->closed_at);
+        $this->assertSame(1, $order->events()->where('stage', 'completed')->where('actor_type', 'customer')->count());
+        $this->get(route('orders.customer.show', $token))->assertDontSee('Pesanan sudah saya terima');
+    }
+
+    public function test_staff_or_admin_can_confirm_receipt_when_customer_does_not(): void
+    {
+        [$order, $token] = $this->order();
+        $this->post(route('orders.customer.submit', $token), $this->details());
+        $this->advance($order, 'details_received', 'paid', ['payment_method' => 'qris']);
+        $this->post(route('orders.staff.advance', $order->staff_token_encrypted), ['from' => 'paid', 'to' => 'shipped', 'staff_name' => 'Andi', 'courier' => 'gosend'])
+            ->assertSessionHas('success');
+        $this->post(route('orders.staff.advance', $order->staff_token_encrypted), ['from' => 'shipped', 'to' => 'completed', 'staff_name' => 'Andi'])
+            ->assertSessionHas('success');
+        $this->assertSame('completed', $order->fresh()->stage);
+        $this->post(route('orders.customer.received', $token))->assertSessionHas('success');
+        $this->assertSame(1, $order->events()->where('stage', 'completed')->count());
     }
 
     public function test_staff_link_moves_shipping_steps_only_and_records_advance(): void
@@ -158,11 +195,10 @@ class OnlineOrderTest extends TestCase
         $this->get(route('orders.staff.show', $staffToken))->assertOk()->assertSee('Menunggu admin mengonfirmasi pembayaran');
 
         $this->advance($order, 'details_received', 'paid', ['payment_method' => 'transfer']);
-        $this->post(route('orders.staff.advance', $staffToken), ['from' => 'paid', 'to' => 'courier_booked', 'staff_name' => 'Andi', 'courier' => 'jnt'])
-            ->assertSessionHas('success');
-        $this->post(route('orders.staff.advance', $staffToken), ['from' => 'courier_booked', 'to' => 'shipped', 'staff_name' => 'Andi'])
+        $this->post(route('orders.staff.advance', $staffToken), ['from' => 'paid', 'to' => 'shipped', 'staff_name' => 'Andi', 'courier' => 'jnt'])
             ->assertSessionHas('error', 'Isi nomor resi J&T sebelum menandai dikirim.');
-        $this->post(route('orders.staff.advance', $staffToken), ['from' => 'courier_booked', 'to' => 'shipped', 'staff_name' => 'Andi', 'tracking_number' => 'JX123456'])
+        $this->assertSame('paid', $order->fresh()->stage);
+        $this->post(route('orders.staff.advance', $staffToken), ['from' => 'paid', 'to' => 'shipped', 'staff_name' => 'Andi', 'courier' => 'jnt', 'tracking_number' => 'JX123456'])
             ->assertSessionHas('success');
 
         $this->post(route('orders.staff.advance-cost', $staffToken), ['staff_name' => 'Ikrar', 'amount' => '11.500'])->assertSessionHas('success');

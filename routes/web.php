@@ -50,6 +50,7 @@ Route::middleware('throttle:30,1')->group(function () {
 });
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
+    Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
     Route::post('/tugas-pesanan/{token}/langkah', [OnlineOrderStaffController::class, 'advance'])->name('orders.staff.advance');
     Route::post('/tugas-pesanan/{token}/talangan', [OnlineOrderStaffController::class, 'recordAdvance'])->name('orders.staff.advance-cost');
 });

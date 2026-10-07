@@ -30,7 +30,7 @@ class OnlineOrderStaffController extends Controller
             'token' => $token,
             'timeline' => OnlineOrderTimeline::items($order, 'staff'),
             'customerChatUrl' => $order->customer_phone ? $whatsApp->textUrl($order->customer_phone, 'Halo Kak '.$whatsApp->plainText((string) $order->customer_name).', kami dari Qammaris terkait pesanan '.$order->code.'.') : null,
-            'staffStep' => in_array($order->nextStage(), [OnlineOrder::STAGE_COURIER_BOOKED, OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED], true)
+            'staffStep' => in_array($order->nextStage(), [OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED], true)
                 && $order->stepIndex() >= $order->stepIndex(OnlineOrder::STAGE_PAID),
         ]));
     }

@@ -149,7 +149,16 @@
                 </div>
             </form>
         @else
-            @if ($locationUrl && $order->stepIndex() < $order->stepIndex('courier_booked') && $order->stage !== 'cancelled')
+            @if ($order->stage === 'shipped' && $order->fulfillment !== 'pickup')
+                <form method="POST" action="{{ route('orders.customer.received', $token) }}" class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" data-received-form>
+                    @csrf
+                    <p class="text-base font-semibold text-brand-black">Pesanan sedang dikirim</p>
+                    <p class="mt-1 text-sm leading-6 text-gray-700">Sudah sampai di tangan Anda? Tekan tombol di bawah supaya kami tahu.</p>
+                    <button type="submit" class="mt-3 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-gray-700 hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:bg-gray-500">Pesanan sudah saya terima</button>
+                </form>
+            @endif
+
+            @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="location-title">
                     <h2 id="location-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim lokasi</h2>
                     <p class="mt-1 text-sm leading-6 text-gray-700">Tekan tombol di bawah. Setelah WhatsApp terbuka, tekan Kirim, lalu bagikan lokasi lewat ikon lampiran → Lokasi.</p>
@@ -188,6 +197,18 @@
     </div>
 </section>
 @endsection
+
+@unless ($editing)
+@push('scripts')
+<script>
+document.querySelector('[data-received-form]')?.addEventListener('submit', (event) => {
+    const button = event.currentTarget.querySelector('button');
+    button.disabled = true;
+    button.textContent = 'Menyimpan…';
+});
+</script>
+@endpush
+@endunless
 
 @if ($editing)
 @push('scripts')

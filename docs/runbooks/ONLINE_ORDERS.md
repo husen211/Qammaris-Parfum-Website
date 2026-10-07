@@ -26,10 +26,11 @@ Link customer yang kedaluwarsa (7 hari belum diisi) atau link yang tersebar ke o
 
 1. Buka link tugas dari grup.
 2. Isi nama Anda (HP akan mengingatnya).
-3. Bila tertulis **Tugas: pesankan …** → pesan Maxim/GoSend ke lokasi penerima atau request pickup J&T ke alamat yang tertera → tekan **Tandai: Driver dipesan**.
-4. Saat paket diserahkan ke driver/J&T → **Tandai: Dikirim** (J&T wajib nomor resi).
-5. Bila Anda membayar ongkir dulu → buka **Saya menalangi ongkir driver** → isi nominal → **Catat talangan**.
-6. Pembayaran dan harga tidak bisa diubah dari link staf; hubungi admin.
+3. Bila tertulis **Tugas: pesankan …** → pesan Maxim/GoSend ke lokasi penerima atau request pickup J&T ke alamat yang tertera.
+4. Setelah driver/J&T dipesan dan barang diserahkan → pilih kurir → **Tandai: Dikirim** (J&T wajib nomor resi). Tombol ada paling atas halaman.
+5. Customer bisa menekan "Pesanan sudah saya terima". Bila tidak, setelah dipastikan sampai tekan **Tandai: Diterima**. Ambil di toko: **Tandai: Sudah diambil**.
+6. Bila Anda membayar ongkir dulu → buka **Saya menalangi ongkir driver** → isi nominal → **Catat talangan**.
+7. Pembayaran dan harga tidak bisa diubah dari link staf; hubungi admin.
 
 ## Privasi dan operasional
 

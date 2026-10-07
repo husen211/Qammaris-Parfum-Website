@@ -59,6 +59,21 @@ class OnlineOrderController extends Controller
             ->with('success', $firstSubmit ? 'Terima kasih, data pesanan sudah kami terima.' : 'Perubahan data sudah disimpan.'));
     }
 
+    public function confirmReceived(string $token, OnlineOrderWorkflow $workflow)
+    {
+        $order = $this->usableOrder($token);
+        abort_unless($order, 404);
+
+        try {
+            $workflow->advance($order, OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED, 'customer');
+        } catch (OnlineOrderRejected $error) {
+            return $this->private(redirect()->route('orders.customer.show', $token)->with('error', $error->getMessage()));
+        }
+
+        return $this->private(redirect()->route('orders.customer.show', $token)
+            ->with('success', 'Terima kasih! Pesanan ditandai sudah diterima.'));
+    }
+
     private function usableOrder(string $token): ?OnlineOrder
     {
         // Unknown, replaced and expired links share one response so a link reveals nothing about other orders.

@@ -46,22 +46,23 @@
                                     @foreach (OnlineOrder::PAYMENT_METHODS as $value => $label)<option value="{{ $value }}" @selected($order->payment_method === $value)>{{ $label }}</option>@endforeach
                                 </select>
                             </label>
-                        @elseif ($next === OnlineOrder::STAGE_COURIER_BOOKED && $order->fulfillment !== 'pickup')
+                        @elseif ($next === OnlineOrder::STAGE_SHIPPED)
                             <label class="text-sm font-medium text-gray-700">Kurir
                                 <select name="courier" required class="{{ $input }} sm:w-48">
                                     <option value="">Pilih…</option>
                                     @foreach (OnlineOrder::COURIERS as $value => $label)<option value="{{ $value }}" @selected(($order->courier ?? ($order->fulfillment === 'intercity' ? 'jnt' : null)) === $value)>{{ $label }}</option>@endforeach
                                 </select>
                             </label>
-                        @elseif ($next === OnlineOrder::STAGE_SHIPPED && $order->courier === 'jnt')
-                            <label class="text-sm font-medium text-gray-700">Nomor resi J&T
-                                <input name="tracking_number" value="{{ $order->tracking_number }}" required maxlength="40" class="{{ $input }} sm:w-56">
+                            <label class="text-sm font-medium text-gray-700">Nomor resi <span class="font-normal text-gray-500">(wajib J&T)</span>
+                                <input name="tracking_number" value="{{ $order->tracking_number }}" maxlength="40" class="{{ $input }} sm:w-56">
                             </label>
                         @endif
                         <button class="{{ $copyButton }}">Tandai: {{ $order->stageLabel($next) }}</button>
                     </form>
-                    @if ($order->courier_booked_by === 'staff' && in_array($next, [OnlineOrder::STAGE_COURIER_BOOKED, OnlineOrder::STAGE_SHIPPED], true))
-                        <p class="mt-2 text-sm text-gray-500">Staf juga bisa menandai langkah ini dari link tugas.</p>
+                    @if ($next === OnlineOrder::STAGE_SHIPPED)
+                        <p class="mt-2 text-sm text-gray-500">Dikirim = driver/J&T sudah dipesan dan barang segera jalan.{{ $order->courier_booked_by === 'staff' ? ' Staf juga bisa menandai dari link tugas.' : '' }}</p>
+                    @elseif ($next === OnlineOrder::STAGE_COMPLETED && $order->fulfillment !== 'pickup')
+                        <p class="mt-2 text-sm text-gray-500">Customer bisa menandai sendiri dari link-nya; staf juga bisa.</p>
                     @endif
                 @elseif ($order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER)
                     <p class="mt-2 text-sm text-gray-600">Menunggu customer mengisi link. Bila customer kesulitan, isi datanya di form Detail pesanan.</p>

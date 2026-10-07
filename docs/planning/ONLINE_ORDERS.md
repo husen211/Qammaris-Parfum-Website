@@ -25,7 +25,8 @@ Tidak ada tahap yang dimulai otomatis. Payment gateway, integrasi Majoo, dan pen
 3. Pengiriman dalam kota: customer menekan **Kirim lokasi lewat WhatsApp**, lalu share location seperti biasa. Admin boleh menempel link Google Maps ke pesanan.
 4. Admin mengisi ongkir, siapa yang membayar ongkir, cara toko membayar driver, dan siapa yang memesan driver. Setelah dana masuk, admin menandai **Dibayar** (kunci data customer) dan mencentang "Sudah dicatat di Majoo".
 5. **Salin untuk grup** → tempel di grup staf. Pesan berisi link tugas staf.
-6. Staf membuka link → menandai **Driver dipesan / Pickup J&T diminta**, **Dikirim** (resi J&T wajib), **Diterima**, dan mencatat talangan ongkir bila ada.
-7. Admin mengganti talangan dan memantau timeline. Customer melihat status lewat link yang sama.
+6. Staf membuka link → setelah driver/J&T dipesan dan barang diserahkan, menandai **Dikirim** (resi J&T wajib), dan mencatat talangan ongkir bila ada.
+7. Customer menekan **Pesanan sudah saya terima** di link-nya; bila tidak, staf/admin menandai **Diterima**. Ambil di toko: staf/admin menandai **Sudah diambil**.
+8. Admin mengganti talangan dan memantau timeline. Customer melihat status lewat link yang sama.
 
 Panduan harian: [runbook](../runbooks/ONLINE_ORDERS.md). Bukti: [verifikasi ORD-01](../verification/ord-01/README.md).
