@@ -123,6 +123,6 @@ Existing public/admin GET -> bounded SearchMatcher term -> existing eligibility/
 
 Released2026-10-07 through PR14/main669de113 and production run37562153305 after green CI. Server/MySQL and native public/admin search verified; schema/runtime/provider boundaries unchanged. Detailed proof/device limits: docs/verification/p7-15/README.md.
 
-## Shopee recovery boundary — P8-10 (implementation in review)
+## Shopee recovery boundary — P8-10 (released 2026-10-07, PR15)
 
 Existing actor-owned batch -> default work/complete filters -> explicit scoped choice/size confirmation or POST recheck -> immutable source + content-v2 proposal hash + actor/before/after review metadata. Recheck changes audit/proposals only. Confirmed apply -> existing checkpoint/source/product locks -> all-row payload validation -> per-row current identity/content/media checks -> hold recoverable conflicts, skip no-op, or reuse product operations. Feed price/stock/timestamps do not invalidate these content proposals. Confirmed wrong Shopee size preserves website offer and suppresses source description import. Shopee photo enqueue holds conflicting media rows independently; attach/downloader guards remain. Existing job contract/tables/disks/publication gate stay in place; no production activation in this task. Evidence and recovery: `docs/verification/p8-10/README.md` and ADR-026.

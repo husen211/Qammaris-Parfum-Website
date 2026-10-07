@@ -298,7 +298,7 @@ Real same-tab page navigation must show immediate destination-shaped skeleton fe
 
 Owner approves relevant search with conservative typo tolerance across existing search surfaces. Product discovery searches name, brand and active size; full descriptions must not introduce unrelated results. All query terms must match. Numbers and SKU/UUID remain exact, so typo assistance must not mix sizes or guess integration identities. Default catalog search prioritizes relevance, with existing merchandising within ties; explicit sorting remains. No-search best-seller ordering remains. Manual import search helps find options but never selects, binds, applies or publishes automatically. This approval does not change product data, pricing, availability or authorize production deployment.
 
-## Recurring Shopee recovery — P8-10 (Owner, 2026-10-07; implementation in review)
+## Recurring Shopee recovery — P8-10 (Owner, 2026-10-07; released through PR15)
 
 Owner approves an explicit per-row confirmation when Shopee's size text is wrong and the selected website size is correct. The confirmation records both sizes and the selected product/actor; it is never inferred from matching or reused for a different website size. Retain website size, price, identity and URL. Allow enrichment/photos only after that confirmation; do not copy the mismatched-size description, even when description replacement was requested. Show the mismatch and an editor link for manual description review. Multiple website offers and occupied/hidden identities remain blocked.
 
