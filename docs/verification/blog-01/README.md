@@ -2,6 +2,8 @@
 
 Date:2026-10-07. Branch `modernization/blog-01-foundation`, base main `c6e2dfd`. **IN_REVIEW, not deployed.** Owner asked to implement the Journal plan, with BLOG-01 first and one phase at a time. [Scope/remaining program](../../planning/QAMMARIS_JOURNAL.md), [ADR-032](../../architecture/decisions/ADR-032-blog-write-foundation.md), [runbook](../../runbooks/BLOG_FOUNDATION.md).
 
+Implementation commit `b6335b3` pushed; [draft PR26](https://github.com/husen211/Qammaris-Parfum-Website/pull/26) attached. Both branch-push and PR CI PHP/Node jobs passed for that application commit ([push](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37620011673), [PR](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37620092049)). No merge/main push or production release. Subsequent evidence-only edits do not imply later CI observations.
+
 ## Outcome and files
 
 Shared save operation sanitizes HTML, preserves slug/ID, verifies replacement before DB switch and retains old image. Fresh locked revision prevents stale edit/archive/restore. Archive removes public visibility without deletion; restore returns draft. Audit is committed with mutation; failure rolls back and compensates only new file. No-op/views preserve revision/editorial time; post-commit cache failure cannot delete a committed image.
@@ -40,7 +42,7 @@ Real Chrome, dedicated loopback8012 application, isolated disposable SQLite and 
 | Desktop before | [before-desktop](before-desktop.jpg) |
 | Desktop archive controls | [after-desktop](after-desktop.jpg) |
 | Archived article | [archived-desktop](archived-desktop.jpg) |
-| Restore draft result | [restored-desktop](restored-desktop.jpg) |
+| Restored draft, narrow capture | [restored-narrow](restored-narrow.jpg) |
 | Mobile before | [before-mobile](before-mobile.jpg) |
 | Mobile after | [after-mobile](after-mobile.jpg) |
 | Mobile keyboard actions | [mobile-actions](mobile-actions.jpg) |
