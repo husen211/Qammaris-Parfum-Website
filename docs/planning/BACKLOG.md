@@ -1,5 +1,13 @@
 # Qammaris Modernization Backlog
 
+### P7-11 Catalog filter dropdowns and search toolbar — IN_REVIEW
+
+Owner requests Brand and other catalog filters as compact dropdowns. Scope: `/products` search/filter controls, shared desktop/mobile markup and client draft-state synchronization. Keep multiple brand choices, arbitrary price bounds, existing taxonomy/availability choices, backend queries/order, GET context, pagination and detail return. Dependencies: P7-08 and ADR-020. Branch codex/catalog-filter-dropdowns from main7b86b00; no unreleased homepage/admin/card fixes mixed in.
+
+Outcome: bounded searchable multi-brand disclosure with explicit desktop apply; native category/Peruntukan/availability selects; price disclosure; aligned desktop search/count/sort toolbar; content-sized mobile filter dialog. Keyboard/outside-click/empty brand-search states and selected-count feedback; native GET navigation retained without new dependencies or pointer-start navigation. No DB/schema/product/media/price/stock/API/env/admin/deployment changes.
+
+Verification:10 focused Laravel tests/86 assertions,12 Node checks, scoped Pint, JS syntax, Vite build and whitespace pass. Chrome320/375/390/768/1440 shows no horizontal overflow; multi-brand apply/pagination/detail-return, combined mobile filters/search/sort, price/category retention/page reset, empty search/reset and Escape/focus checked using isolated historical350-public fixture. Own preview copy/server cleaned after checks; original data/media retained. Physical Safari/touch and production serving Not confirmed. Before/after evidence, limitations and rollback:docs/verification/p7-11/README.md. Recommended next action: Owner review/release of this item only; no next phase started.
+
 ## Status workflow
 
 - `BACKLOG`: belum siap dikerjakan.
