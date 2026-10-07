@@ -24,6 +24,12 @@ class BlogEditorialCmsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     public function test_incomplete_draft_has_author_and_never_becomes_public(): void
     {
         $this->actingAs($this->admin())->postJson(route('admin.blog-posts.store'), [])->assertRedirect();

@@ -23,6 +23,10 @@ Regression coverage includes incomplete/private drafts, publication and scheduli
 
 An extra regression rerun after removing the browser fixture environment failed with MissingAppKeyException (test bootstrap lacked its synthetic APP_KEY). Repeated using `.env.example` plus a synthetic key, as CI prepares its environment: all 40 blog tests / 254 assertions passed. That temporary environment was removed afterward; no application fix was needed.
 
+Initial GitHub run [37632543650](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37632543650) passed Node/build but failed four new CMS tests because the PHP job has no Vite manifest. The test class now uses `withoutVite()` like existing blog tests. Build correctness remains covered separately by the actual browser/build checks; application asset loading is unchanged.
+
+After that fix, temporarily moved the local manifest aside and repeated the full Laravel suite: 415 tests / 2,887 assertions passed (36.95 seconds). Restored the manifest and removed the synthetic environment afterward. Review: [draft PR28](https://github.com/husen211/Qammaris-Parfum-Website/pull/28), based on BLOG-01; latest CI is available on that PR.
+
 `npm audit` reports three pre-existing entries: concurrently 9.2.4 and shell-quote 1.9.0 (critical; same underlying shell-quote advisory), source-map-js 1.2.1 (high). Their installed versions are unchanged from the base lockfile. Recorded as SEC-DEP-01; no automatic dependency upgrades. Existing DaisyUI CSS optimizer and large 3D chunk warnings remain. New Tiptap dependencies are pinned to 3.31.4 and loaded only by the admin editor entry.
 
 ## Browser evidence
