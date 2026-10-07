@@ -12,7 +12,7 @@
         <div>
             <p class="text-sm font-semibold text-amber-700">Preview, review, lalu apply ke draft</p>
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Import Produk</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Jalur utama produk baru adalah Qammaris App. Halaman ini menerima CSV format Qammaris untuk pelengkap data; file XLSX Shopee mentah belum dapat diunggah langsung. Pratinjau wajib sebelum perubahan diterapkan.</p>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Jalur utama produk baru adalah Qammaris App. Halaman ini tetap menerima CSV format Qammaris untuk pelengkap data. Untuk ekspor XLSX Shopee, gunakan <a href="{{ route('admin.shopee-imports.index') }}" class="font-semibold underline">Impor Shopee</a>. Periksa hasil sebelum menerapkan perubahan.</p>
         </div>
         <div>
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
