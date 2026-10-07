@@ -49,7 +49,7 @@
             </div>
             <div>
                 <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Author</label>
-                <input type="text" name="author" value="{{ old('author', auth()->user()->name ?? 'Admin') }}"
+                <input type="text" name="author" value="{{ old('author', 'Qammaris Editorial') }}"
                     class="mt-2 w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40">
             </div>
         </div>

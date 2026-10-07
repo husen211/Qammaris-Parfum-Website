@@ -110,7 +110,15 @@ Keputusan: [ADR-020](../architecture/decisions/ADR-020-public-catalog-state-and-
 
 Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-checkout.md), menggantikan inquiry-only ADR-020. Filename checkout ADR-026 lama adalah alias, bukan keputusan kedua.
 
-## UI, akses, dan batas program
+## Journal — keputusan disetujui, implementasi bertahap
+
+Program [Qammaris Journal](../planning/QAMMARIS_JOURNAL.md) disetujui terpisah dari P9. Nama tampilan Journal, URL `/blog/...`/ID/slug/konten/author/media existing dipertahankan. Editor visual + HTML dengan sanitasi server; admin boleh langsung memperbarui artikel tayang. API agent draft-only milik actor, tanpa hak publish atau perubahan katalog; API/kredensial belum dibuat.
+
+BLOG-01 pada branch review: penggantian gambar simpan → verifikasi → ubah referensi → pertahankan gambar lama; arsip bukan hapus, pulihkan sebagai draft. Konflik revision tidak menimpa perubahan sesi lain, no-op/view count tidak mengubah revision/waktu editorial. Upload JPEG/PNG/WebP max5MB/max6000px per sisi lewat Laravel disk (default public/blog). Default author baru Qammaris Editorial, author lama tidak diubah massal. Audit admin artikel dalam transaksi mutasi, field allowlisted dan hash isi/key gambar, tanpa body/request/token/URL; tidak ada purge/backfill otomatis. Ini belum bukti rilis produksi. [ADR-032](../architecture/decisions/ADR-032-blog-write-foundation.md).
+
+Tahap berikutnya: draft boleh belum lengkap; publish/jadwal baru membutuhkan judul, kategori aktif, ringkasan, isi bermakna, author, gambar utama dan alt. Kelengkapan metadata baru artikel lama menjadi review, bukan auto-unpublish. Excerpt/ringkasan dan subtitle/pengantar berbeda tujuan; kategori empat existing/URL tetap, taxonomy baru dikelola Owner. Read time minimum1menit/200kata; harga/stok dalam body lama direview manusia, kartu produk nanti membaca katalog saat render. Aturan ini disetujui tetapi guard/field/editor/renderer baru menunggu BLOG-02–05; BLOG-01 mempertahankan validasi konten form existing.
+
+## UI, akses, dan batas program (current)
 
 - Mobile-first, premium cream/charcoal/gold dengan whitespace; jangan memperluas focused task menjadi redesign/SPA/framework atau dependency baru.
 - Hover hanya `(hover: hover) and (pointer: fine)`, tanpa scale/translate/resizing/reveal action; kartu/menu langsung tampil tanpa stagger. Touch memakai active, manipulation, transparent tap highlight; navigasi click/native link, bukan awal gesture scroll.

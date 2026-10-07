@@ -8,7 +8,22 @@ Updated 2026-10-07, approved audit release. This board is the entry point; detai
 
 BACKLOG = proposed/not approved for execution; READY = accepted bounded scope ready; IN_PROGRESS = active work; IN_REVIEW = complete within stated scope, review/limits still open; BLOCKED = named external prerequisite; DONE = accepted criteria and stated verification completed. One approved implementation item at a time. A released feature may have separate IN_REVIEW device/runtime acceptance; do not infer either code unreleased or all tests passed from the label alone.
 
-## Program board
+## Active separate program — Qammaris Journal
+
+Owner approved the [Journal implementation plan](QAMMARIS_JOURNAL.md), starting **BLOG-01 only**. This is separate from P9 and the already released AUD queue; no production rollout or later phase is started automatically.
+
+| ID | Status | Current scope / next prerequisite |
+|---|---|---|
+| BLOG-01 | IN_REVIEW | Foundation implemented on `modernization/blog-01-foundation`: shared writes, revision conflict, retained/verified media, archive/restore-as-draft, transactional admin history and editorial time. Local verification passed; staging MySQL/runtime and genuine touch remain unconfirmed. Not deployed. [Evidence](../verification/blog-01/README.md), [ADR-032](../architecture/decisions/ADR-032-blog-write-foundation.md) |
+| BLOG-02 | BACKLOG | CMS/editor/taxonomy/preview/scheduling; next recommended item after Owner direction |
+| BLOG-03 | BACKLOG | Public Journal/search/SEO; depends on CMS |
+| BLOG-04 | BACKLOG | Responsive media and complete content components/relations |
+| BLOG-05 | BACKLOG | Actor-owned draft-only API; credentials separate approval |
+| BLOG-06 | BACKLOG | Staging/Owner acceptance and separately approved production release |
+
+BLOG-01 acceptance implemented: failed file/DB/audit write keeps current article/image; committed image survives cache outage; stale editor/archive/restore fails; no-op/views preserve editorial time/revision; legacy ID/slug/author/content/image formats survive additive migration and replay; archive excluded from public listing/category/detail/sitemap and restored as draft. No historical body rewrite, purge, API, package install, public redesign or production mutation. 403 Laravel tests/2804 assertions and31 JS tests passed; browser widths320/375/390/768/1440 checked with screenshot/keyboard/two-tab conflict evidence. Full check/cleanup/limitations in evidence.
+
+## Original catalog program board
 
 | ID | Phase | Status retained | Current meaning / evidence |
 |---|---|---|---|

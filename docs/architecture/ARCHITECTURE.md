@@ -97,7 +97,22 @@ AUD-06: `Support/Rupiah` shares the whole-price input rule across editor/CSV/`Sy
 
 `product-cart.js` runs confirmed-success Web Animations flight with reduced-motion fallback; `cart-page.js` serializes quantity/removal mutation feedback. Header points directly to /cart, not drawer. Shared layout destination skeletons observe native same-tab links/valid submits; pageshow resets pending state and timeout recovery never replays POST. No HTML-fetch/swap router; Blade navigation recreates document/navbar DOM. Touch rules/device limits remain explicit, not inferred from mouse viewports.
 
-## Runtime, deployment, and verification boundaries
+## Blog foundation — BLOG-01 review branch, not deployed
+
+```text
+Admin session + auth/admin + CSRF -> BlogPostStore/Update/RevisionRequest
+  -> SaveBlogPost -> BlogHtmlSanitizer + verified BlogMediaStorage (file IO first)
+                 -> transaction + fresh row lock + revision check
+                 -> BlogPost + RecordBlogPostChange -> after-commit sitemap invalidation
+  -> ChangeBlogPostArchive -> revision + archive/restore-as-draft + same-transaction history
+Public /blog/category/detail/sitemap -> BlogPost published/isPubliclyVisible excludes archives
+```
+
+Entry: `AdminBlogPostController`, `app/Actions/Blog/`, `app/Services/BlogMediaStorage.php`, `BlogPost` and additive `2026_10_07_000002_add_blog_write_safety.php`. Requests/HTTP feedback remain in controller/request; explicit admin actor, allowlisted writes, stable slug and existing sanitizer retained. New image disk/path explicit, old legacy resolver unchanged when disk null. Old image is not deleted; failure cleans only this write's new upload. Cache error after commit cannot remove attached image. Views/no-op do not change editorial timestamp/revision. Historical editorial time is null until a real editorial change.
+
+Archive leaves publish flag/date intact but public queries exclude it; restore becomes draft. `blog_post_changes` records action/admin/article/revision/time and changed safe metadata/hashes, no cascade/backfill/full request/body/file URLs. Admin-only attribution now, future machine identity/ownership not implemented. UI adds archive filter, restore, revision conflict/reload and a contained keyboard-scrollable table; no public redesign. [ADR-032](decisions/ADR-032-blog-write-foundation.md), [runbook](../runbooks/BLOG_FOUNDATION.md), [verification](../verification/blog-01/README.md), [approved later scope](../planning/QAMMARIS_JOURNAL.md).
+
+## Runtime, deployment, and verification boundaries (current)
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.
 

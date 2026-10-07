@@ -10,6 +10,13 @@
     <form method="POST" action="{{ route('admin.blog-posts.update', $blogPost) }}" enctype="multipart/form-data" class="space-y-6 bg-white border border-gray-200 rounded-lg p-6">
         @csrf
         @method('PUT')
+        <input type="hidden" name="revision" value="{{ old('revision', $blogPost->revision) }}">
+        @error('revision')
+            <div role="alert" class="border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <p>{{ $message }}</p>
+                <a href="{{ route('admin.blog-posts.edit', $blogPost) }}" class="mt-2 inline-flex min-h-11 items-center underline focus-visible:outline-2">Muat ulang data terbaru</a>
+            </div>
+        @enderror
 
         <div>
             <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Judul</label>
@@ -86,7 +93,7 @@
                 <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Publish Date</label>
                 <input type="datetime-local" name="published_at" value="{{ old('published_at', optional($blogPost->published_at)->format('Y-m-d\TH:i')) }}"
                     class="mt-2 w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40">
-                <p class="text-xs text-gray-400 mt-2">Kosongkan untuk publish sekarang.</p>
+                <p class="text-xs text-gray-400 mt-2">Tanggal lama dipertahankan bila dikosongkan. Untuk tayang sekarang, pilih waktu sekarang.</p>
             </div>
         </div>
 

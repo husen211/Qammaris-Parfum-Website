@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\BlogPost;
+use App\Services\BlogMediaStorage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,7 @@ class BlogPostStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->role === 'admin';
     }
 
     public function rules(): array
@@ -22,7 +23,7 @@ class BlogPostStoreRequest extends FormRequest
             'category' => ['required', Rule::in(BlogPost::CATEGORY_OPTIONS)],
             'author' => ['nullable', 'string', 'max:100'],
             'meta_description' => ['nullable', 'string', 'max:160'],
-            'featured_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'featured_image' => ['nullable', ...array_slice(BlogMediaStorage::UPLOAD_RULES, 1)],
             'is_published' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
         ];

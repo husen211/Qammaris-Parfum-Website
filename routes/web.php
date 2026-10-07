@@ -108,6 +108,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
 
     // CRUD Blog Posts
+    Route::patch('blog-posts/{blogPost}/restore', [AdminBlogPostController::class, 'restore'])->name('blog-posts.restore');
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 });
 

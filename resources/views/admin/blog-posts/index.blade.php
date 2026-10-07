@@ -34,6 +34,7 @@
                 <option value="published" @selected(request('status') === 'published')>Published</option>
                 <option value="scheduled" @selected(request('status') === 'scheduled')>Scheduled</option>
                 <option value="draft" @selected(request('status') === 'draft')>Draft</option>
+                <option value="archived" @selected(request('status') === 'archived')>Arsip</option>
             </select>
         </div>
         <div class="md:col-span-4 flex items-center justify-end gap-3">
@@ -44,8 +45,8 @@
         </div>
     </form>
 
-    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table class="w-full text-sm">
+    <div class="bg-white border border-gray-200 rounded-lg overflow-x-auto" role="region" aria-label="Daftar artikel" tabindex="0">
+        <table class="w-full min-w-[760px] text-sm">
             <thead class="bg-gray-50 text-xs uppercase tracking-widest text-gray-400">
                 <tr>
                     <th class="px-4 py-3 text-left">Post</th>
@@ -76,7 +77,9 @@
                         </td>
                         <td class="px-4 py-4 text-gray-600">{{ $post->category }}</td>
                         <td class="px-4 py-4">
-                            @if($isPublished)
+                            @if($post->archived_at)
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">Arsip</span>
+                            @elseif($isPublished)
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-green-50 text-green-700 rounded">Published</span>
                             @elseif($isScheduled)
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-amber-50 text-amber-700 rounded">Scheduled</span>
@@ -90,13 +93,25 @@
                         <td class="px-4 py-4 text-gray-600">{{ $post->view_count }}</td>
                         <td class="px-4 py-4">
                             <div class="flex justify-end items-center gap-2">
+                                @if($post->archived_at)
+                                <form method="POST" action="{{ route('admin.blog-posts.restore', $post) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="revision" value="{{ $post->revision }}">
+                                    <button type="submit" class="min-h-11 px-3 py-1 text-xs border border-gray-200 rounded active:bg-gray-100 focus-visible:outline-2">Pulihkan draft</button>
+                                </form>
+                                @else
+                                @if($isPublished)
                                 <a href="{{ route('blog.show', $post->slug) }}" target="_blank" class="px-3 py-1 text-xs border border-gray-200 rounded hover:border-brand-black hover:text-brand-black">View</a>
+                                @endif
                                 <a href="{{ route('admin.blog-posts.edit', $post) }}" class="px-3 py-1 text-xs border border-gray-200 rounded hover:border-brand-black hover:text-brand-black">Edit</a>
-                                <form method="POST" action="{{ route('admin.blog-posts.destroy', $post) }}" onsubmit="return confirm('Hapus blog ini?')">
+                                <form method="POST" action="{{ route('admin.blog-posts.destroy', $post) }}" onsubmit="return confirm('Arsipkan artikel ini? Isi dan gambar tetap disimpan; artikel tidak tampil publik.')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="px-3 py-1 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50">Delete</button>
+                                    <input type="hidden" name="revision" value="{{ $post->revision }}">
+                                    <button type="submit" class="min-h-11 px-3 py-1 text-xs border border-gray-200 rounded active:bg-gray-100 focus-visible:outline-2">Arsipkan</button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

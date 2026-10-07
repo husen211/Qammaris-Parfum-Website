@@ -53,6 +53,12 @@ The original program is **not 100% closed**. Outstanding evidence/acceptance:
 
 Use the README read path. Existing current documents have distinct owners; historical snapshots, ADR decision text and dated verification retain provenance. Future features update only affected rules/boundaries/operational steps plus item status/evidence. Audit proposals remain proposals until approved. Every report distinguishes source proof, runtime observations and Not confirmed.
 
-## Later programs, not started
+## Qammaris Journal — separate approved program
+
+Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md) and first implementation BLOG-01. Foundation now on a review branch, not released: shared safe writes/media, optimistic revision, archive, editorial time and narrow admin audit. Next CMS → public Journal/SEO → complete media/blocks → draft-only agent API → acceptance/release; advance one explicitly selected item at a time. [Board](../planning/BACKLOG.md), [BLOG-01 evidence](../verification/blog-01/README.md).
+
+Preserve `/blog/...`, HTML format, IDs/authors/content/media; no old content rewrite. Tiptap vanilla/admin-only and Sanctum scoped tokens are selected for their later phases, not installed now. Original P9 remains open; approving this program does not accept those gates or authorize production deployment.
+
+## Other later programs, not started
 
 Website machine-write API requires revocable/scoped actor identity, field allowlists, shared tested operations, idempotency/conflict handling and audit; automation never gets unrestricted MySQL access. Payment gateway requires Owner decisions on acceptance/shipping/quantity, persistent order/line/payment lifecycle, signed/idempotent provider notifications and sandbox testing. These are separately scoped programs, not prerequisites invented for the existing WhatsApp order flow. [ADR-028](decisions/ADR-028-whatsapp-order-checkout.md) records the bounded future payment considerations.

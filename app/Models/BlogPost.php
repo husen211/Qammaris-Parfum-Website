@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
-use Illuminate\Support\Str;
 
 class BlogPost extends Model
 {
@@ -32,6 +33,9 @@ class BlogPost extends Model
         'is_published' => 'boolean',
         'published_at' => 'datetime',
         'view_count' => 'integer',
+        'revision' => 'integer',
+        'archived_at' => 'datetime',
+        'content_updated_at' => 'datetime',
     ];
 
     public function getSlugOptions(): SlugOptions
@@ -49,7 +53,7 @@ class BlogPost extends Model
 
     public function isPubliclyVisible(): bool
     {
-        return $this->is_published
+        return $this->archived_at === null && $this->is_published
             && $this->published_at !== null
             && $this->published_at->lte(now());
     }
@@ -69,7 +73,8 @@ class BlogPost extends Model
     {
         $wordCount = str_word_count(strip_tags($this->content));
         $minutes = ceil($wordCount / 200); // Rata-rata 200 kata/menit
-        return $minutes . ' menit';
+
+        return $minutes.' menit';
     }
 
     /**
@@ -77,7 +82,10 @@ class BlogPost extends Model
      */
     public function getFeaturedImageUrlAttribute(): string
     {
-        if (!$this->featured_image) {
+        if ($this->featured_image && $this->featured_image_disk) {
+            return Storage::disk($this->featured_image_disk)->url($this->featured_image);
+        }
+        if (! $this->featured_image) {
             return asset('images/about-section.jpg');
         }
 
@@ -97,7 +105,7 @@ class BlogPost extends Model
             return asset($this->featured_image);
         }
 
-        return asset('images/' . $this->featured_image);
+        return asset('images/'.$this->featured_image);
     }
 
     /**
@@ -105,9 +113,9 @@ class BlogPost extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('is_published', true)
-                     ->whereNotNull('published_at')
-                     ->where('published_at', '<=', now());
+        return $query->whereNull('archived_at')->where('is_published', true)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 
     /**
