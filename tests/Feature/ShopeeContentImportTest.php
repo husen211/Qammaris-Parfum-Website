@@ -34,6 +34,11 @@ class ShopeeContentImportTest extends TestCase
 
     private array $files = [];
 
+    public function test_database_reservation_outlives_image_job_timeout(): void
+    {
+        $this->assertGreaterThan((new ImageJob(1))->timeout, config('queue.connections.database.retry_after'));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
