@@ -97,6 +97,19 @@ AUD-06: `Support/Rupiah` shares the whole-price input rule across editor/CSV/`Sy
 
 `product-cart.js` runs confirmed-success Web Animations flight with reduced-motion fallback; `cart-page.js` serializes quantity/removal mutation feedback. Header points directly to /cart, not drawer. Shared layout destination skeletons observe native same-tab links/valid submits; pageshow resets pending state and timeout recovery never replays POST. No HTML-fetch/swap router; Blade navigation recreates document/navbar DOM. Touch rules/device limits remain explicit, not inferred from mouse viewports.
 
+## Online orders — ORD-01 review branch, not deployed
+
+```text
+Admin session + auth/admin + CSRF -> AdminOnlineOrderController + OnlineOrder*Request
+  -> CreateOnlineOrder (published active offer -> item price snapshot, hashed + encrypted tokens)
+  -> OnlineOrderWorkflow (row lock, revision/from-stage guard, event in same transaction)
+GET/POST /pesanan/{token}        -> OnlineOrderController (customer details until paid, status)
+GET/POST /tugas-pesanan/{token}  -> OnlineOrderStaffController (shipping steps + fee advance only)
+Views: OnlineOrderTimeline (per-audience allowlist) + x-order-timeline, OnlineOrderMessages -> copy/wa.me
+```
+
+Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; the cart checkout path is unchanged and still stores nothing. No package, queue, scheduler, payment, or Majoo integration. [ADR-034](decisions/ADR-034-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
+
 ## Runtime, deployment, and verification boundaries
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.

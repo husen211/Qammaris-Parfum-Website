@@ -56,9 +56,9 @@
                     Blog Posts
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-400 cursor-not-allowed">
+                <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    Orders (Coming Soon)
+                    Pesanan Online
                 </a>
             </nav>
 
@@ -86,6 +86,7 @@
                         <a href="{{ route('admin.categories.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.categories*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Kategori</a>
                         <a href="{{ route('admin.shopee-imports.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.product-imports*', 'admin.shopee-imports*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Import Produk</a>
                         <a href="{{ route('admin.blog-posts.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.blog-posts*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Blog Posts</a>
+                        <a href="{{ route('admin.orders.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.orders*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pesanan Online</a>
                     </nav>
                 </details>
             </header>

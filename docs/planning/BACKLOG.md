@@ -26,6 +26,20 @@ BACKLOG = proposed/not approved for execution; READY = accepted bounded scope re
 
 Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked complete merely because the current code is live. [MASTER_PLAN](../architecture/MASTER_PLAN.md) defines closure and future-program boundaries.
 
+## Separate program — Pesanan Online (parallel to Journal)
+
+Owner requested and approved ORD-01 on 2026-10-07, developed in parallel with the Journal program on its own branch/worktree. Program and later items: [ONLINE_ORDERS](ONLINE_ORDERS.md).
+
+| ID | Status | Current scope / next prerequisite |
+|---|---|---|
+| ORD-01 | IN_REVIEW | Admin-created order + customer completion link, price snapshot, admin payment/shipping/funding, tracking timeline, staff group message + secret staff task link, shipping-fee advance/reimburse. Branch `modernization/ord-01-online-orders`; not deployed. [Evidence](../verification/ord-01/README.md), [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md) |
+| ORD-02 | BACKLOG | Cart checkout creates the same online order (changes ADR-028); needs Owner approval |
+| ORD-03 | BACKLOG | Keep/titip rule (duration, payment, stock); Owner rule undecided |
+| ORD-04 | BACKLOG | Authenticated staff accounts instead of bearer links; permission change |
+| ORD-05 | BACKLOG | Customer-data retention/anonymization policy; currently no automatic deletion |
+
+ORD-01 local verification: 12 new tests/121 assertions; full suite and browser flow at 320/375/390/1440 on an isolated synthetic SQLite DB; staging MySQL, genuine touch/Safari and real WhatsApp sending not confirmed.
+
 ## FIX-SUPREMACY — Correct Pink Shopee content assigned to Purple — DONE
 
 Owner approval 2026-10-07: explicitly correct the observed production Pink/Purple mismatch. Exact scope: Shopee42131600634 previously assigned to Purple879, belongs to Pink686. One transaction reassigns that Shopee identity only, completes Pink with the verified100ml/Wanita/EDP copy and three checksum-verified independent photo copies, publishes Pink, returns Purple to draft and soft-archives its incorrect Pink photos. Original application UUIDs, source prices/status, product IDs and slugs retained; no source-system/database/schema/credential/deployment changes.

@@ -92,6 +92,18 @@ final class InquiryWhatsApp
         return $this->normalizeNumber($number) !== null;
     }
 
+    /** Prefilled chat to a known number, e.g. the store or a customer. */
+    public function textUrl(?string $number, string $message): ?string
+    {
+        return $this->url($number, $message);
+    }
+
+    /** Prefilled message without a recipient; WhatsApp lets the sender choose a chat or group. */
+    public function shareUrl(string $message): string
+    {
+        return 'https://wa.me/?'.http_build_query(['text' => $message], '', '&', PHP_QUERY_RFC3986);
+    }
+
     private function url(?string $number, string $message): ?string
     {
         $normalized = $this->normalizeNumber($number);
@@ -121,7 +133,7 @@ final class InquiryWhatsApp
         return strlen($normalized) >= 8 && strlen($normalized) <= 15 ? $normalized : null;
     }
 
-    private function plainText(string $value): string
+    public function plainText(string $value): string
     {
         $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? '';
 

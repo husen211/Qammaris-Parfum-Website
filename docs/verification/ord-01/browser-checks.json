@@ -1,0 +1,52 @@
+{
+  "searchStatus": "3 produk ditemukan. Klik untuk menambahkan.",
+  "createQty": "2",
+  "afterCreateUrl": "/admin/orders/3",
+  "customerFormOverflow390": 0,
+  "customerFormOverflow320": 0,
+  "customerFormOverflow375": 0,
+  "focusTrail": [
+    "customer_phone",
+    "fulfillment:pickup",
+    "packaging:paperbag",
+    "customer_note",
+    ":Kirim data pesanan",
+    ":Chat Qammaris di Wha",
+    ":Qammaris.",
+    ":"
+  ],
+  "radioFocusOutline": "solid",
+  "validationSummaryFocused": true,
+  "validationErrors": [
+    "Isi nama penerima.",
+    "Isi nomor HP.",
+    "Pilih cara menerima pesanan.",
+    "Pilih pakai paperbag atau tidak."
+  ],
+  "intercityAddressRequired": true,
+  "pickupHidesAddress": true,
+  "reducedMotionAnimation": "none",
+  "normalMotionAnimation": "pulse",
+  "adminSaveFlash": "Detail pesanan disimpan.",
+  "adminPaidFlash": "Status diperbarui: Dibayar.",
+  "groupMessage": "*MOHON DIPESANKAN MAXIM — QAM-0003*\nNama: Customer Uji\nPesanan: Contoh Aroma Reflection 100 ml 2x\nKemasan: Tanpa paperbag\nHP penerima: 081200000000\nLokasi: https://maps.app.goo.gl/contohSintetis\nPatokan: Dekat masjid raya\n\nNote: sudah dibayar (qris), ongkir Rp 11.500 sudah termasuk transfer customer, mohon ditalangi dulu lalu catat di link untuk diganti\n\nSetelah dipesan, tandai di sini: http://127.0.0.1:8123/tugas-pesanan/<token-sintetis>",
+  "adminShowOverflow390": 0,
+  "copyButtonLabel": "Teks sudah dipilih, tekan Ctrl+C",
+  "staffOverflow390": 0,
+  "staffFlash1": "Status pesanan diperbarui. Terima kasih!",
+  "staffNameRemembered": "Andi Uji",
+  "staffFlash3": "Talangan ongkir dicatat. Admin akan menggantinya.",
+  "adminIndexOverflow390": 0,
+  "customerFinalTimeline": [
+    "Pesanan dibuat — Selesai 7 Okt, 21.11",
+    "Data diterima — Selesai 7 Okt, 21.11 Data penerima sudah kami terima.",
+    "Dibayar — Selesai 7 Okt, 21.11 Pembayaran sudah dikonfirmasi (QRIS).",
+    "Driver dipesan — Selesai 7 Okt, 21.11 Maxim sedang menuju toko.",
+    "Dikirim — Selesai 7 Okt, 21.11 Pesanan dalam perjalanan.",
+    "Diterima — Selesai 7 Okt, 21.11"
+  ],
+  "customerSeesStaffName": false,
+  "errors": [
+    "log: Failed to load resource: the server responded with a status of 404 (Not Found) http://127.0.0.1:8123/pesanan/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  ]
+}

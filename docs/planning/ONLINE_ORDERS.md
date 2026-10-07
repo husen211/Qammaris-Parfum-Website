@@ -1,0 +1,31 @@
+# Pesanan Online — program
+
+Owner meminta fitur ini pada 2026-10-07 dan menyetujui rencana ORD-01 di sesi yang sama. Fitur dikerjakan paralel dengan Qammaris Journal (Codex mengerjakan BLOG-02 di worktree terpisah). Program ini terpisah dari P9 dan Journal. Status current ada di [BACKLOG](BACKLOG.md), aturan di [BUSINESS_RULES](../product/BUSINESS_RULES.md), keputusan di [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md).
+
+## Masalah
+
+Order lewat WhatsApp (dari Instagram/katalog) membuat Owner mengumpulkan produk, nama, HP, sharelok/alamat, ongkir, pembayaran, dan paperbag dari chat. Setelah itu Owner membuat transaksi Majoo, menulis ulang ringkasan ke grup "Orderan Online Qammaris", dan menanyakan progres pengiriman lewat chat. Pekerjaan menjadi berulang dan tidak ada satu catatan pesanan.
+
+## Tahapan
+
+| ID | Scope | Status |
+|---|---|---|
+| ORD-01 | Link "lengkapi pesanan" untuk customer, catatan admin, status/timeline, pesan grup staf, link tugas staf, talangan ongkir | IN_REVIEW — branch `modernization/ord-01-online-orders`, belum deploy |
+| ORD-02 | Checkout keranjang website membuat Pesanan Online yang sama (ADR-028 diganti terarah) | BACKLOG — perlu persetujuan Owner |
+| ORD-03 | Keep/titip barang (aturan durasi, pembayaran, stok) | BACKLOG — aturan belum ditentukan Owner |
+| ORD-04 | Akun staf terautentikasi menggantikan link rahasia, bila diperlukan | BACKLOG — perubahan permission, perlu persetujuan |
+| ORD-05 | Kebijakan retensi/anonimisasi data customer | BACKLOG — saat ini tanpa hapus otomatis (keputusan Owner) |
+
+Tidak ada tahap yang dimulai otomatis. Payment gateway, integrasi Majoo, dan pengiriman WhatsApp otomatis bukan bagian program ini.
+
+## Alur ORD-01
+
+1. Customer fix order di WA → admin **Buat pesanan**: cari produk, isi jumlah (harga dikunci).
+2. Admin menyalin **pesan untuk customer** berisi link → customer mengisi nama, HP, cara terima (Ambil di toko / Kirim dalam Kota Palu / Kirim ke luar kota), alamat bila luar kota, paperbag, dan catatan.
+3. Pengiriman dalam kota: customer menekan **Kirim lokasi lewat WhatsApp**, lalu share location seperti biasa. Admin boleh menempel link Google Maps ke pesanan.
+4. Admin mengisi ongkir, siapa yang membayar ongkir, cara toko membayar driver, dan siapa yang memesan driver. Setelah dana masuk, admin menandai **Dibayar** (kunci data customer) dan mencentang "Sudah dicatat di Majoo".
+5. **Salin untuk grup** → tempel di grup staf. Pesan berisi link tugas staf.
+6. Staf membuka link → menandai **Driver dipesan / Pickup J&T diminta**, **Dikirim** (resi J&T wajib), **Diterima**, dan mencatat talangan ongkir bila ada.
+7. Admin mengganti talangan dan memantau timeline. Customer melihat status lewat link yang sama.
+
+Panduan harian: [runbook](../runbooks/ONLINE_ORDERS.md). Bukti: [verifikasi ORD-01](../verification/ord-01/README.md).
