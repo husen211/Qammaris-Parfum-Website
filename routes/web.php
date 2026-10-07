@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBlogPostController;
+use App\Http\Controllers\Admin\AdminBlogTaxonomyController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -108,6 +109,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
 
     // CRUD Blog Posts
+    Route::get('blog-taxonomy', [AdminBlogTaxonomyController::class, 'index'])->name('blog-taxonomy.index');
+    Route::post('blog-taxonomy', [AdminBlogTaxonomyController::class, 'store'])->name('blog-taxonomy.store');
+    Route::patch('blog-taxonomy/{kind}/{id}/status', [AdminBlogTaxonomyController::class, 'status'])->name('blog-taxonomy.status');
+    Route::match(['post', 'put'], 'blog-posts/preview', [AdminBlogPostController::class, 'preview'])->name('blog-posts.preview');
+    Route::match(['post', 'put'], 'blog-posts/{blogPost}/preview', [AdminBlogPostController::class, 'preview'])->name('blog-posts.preview-existing');
     Route::patch('blog-posts/{blogPost}/restore', [AdminBlogPostController::class, 'restore'])->name('blog-posts.restore');
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 });

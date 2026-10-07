@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
@@ -27,6 +29,10 @@ class BlogPost extends Model
         'published_at',
         'view_count',
         'meta_description',
+        'subtitle',
+        'featured_image_alt',
+        'is_featured',
+        'seo_title',
     ];
 
     protected $casts = [
@@ -36,6 +42,7 @@ class BlogPost extends Model
         'revision' => 'integer',
         'archived_at' => 'datetime',
         'content_updated_at' => 'datetime',
+        'is_featured' => 'boolean',
     ];
 
     public function getSlugOptions(): SlugOptions
@@ -72,7 +79,7 @@ class BlogPost extends Model
     public function getReadingTimeAttribute(): string
     {
         $wordCount = str_word_count(strip_tags($this->content));
-        $minutes = ceil($wordCount / 200); // Rata-rata 200 kata/menit
+        $minutes = max(1, (int) ceil($wordCount / 200));
 
         return $minutes.' menit';
     }
@@ -125,7 +132,25 @@ class BlogPost extends Model
     {
         $normalized = str_replace('-', ' ', Str::lower($category));
 
-        return $query->whereRaw('lower(category) = ?', [$normalized]);
+        return $query->where(function ($query) use ($category, $normalized) {
+            $query->whereHas('editorialCategory', fn ($taxonomy) => $taxonomy->where('slug', Str::slug($category)))
+                ->orWhere(fn ($legacy) => $legacy->whereNull('category_id')->whereRaw('lower(category) = ?', [$normalized]));
+        });
+    }
+
+    public function editorialCategory(): BelongsTo
+    {
+        return $this->belongsTo(BlogCategory::class, 'category_id');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(BlogTag::class, 'blog_post_tag');
+    }
+
+    public function getCategoryAttribute(?string $value): ?string
+    {
+        return $this->category_id ? $this->editorialCategory?->name : $value;
     }
 
     /**

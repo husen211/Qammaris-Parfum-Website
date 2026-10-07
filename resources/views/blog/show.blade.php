@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', $post->title . ' - Jurnal')
+@section('title', ($post->seo_title ?: $post->title) . ' - Jurnal')
+@section('robots', ($isPreview ?? false) ? 'noindex,nofollow' : 'index,follow')
 @section('meta_description', $post->meta_description ?? $post->excerpt)
 
 @section('content')
@@ -24,7 +25,7 @@
                 <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
                 <span>{{ $post->reading_time }}</span>
                 <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-                <span>{{ $post->view_count }} views</span>
+                @unless($isPreview ?? false)<span>{{ $post->view_count }} views</span>@endunless
             </div>
         </div>
     </header>
@@ -32,8 +33,8 @@
     <div class="container mx-auto px-0 md:px-4 max-w-5xl mb-12">
         <div class="aspect-video md:aspect-[21/9] overflow-hidden md:rounded-sm relative">
             <img
-                src="{{ $post->featured_image_url }}"
-                alt="{{ $post->title }}"
+                src="{{ $previewImage ?? $post->featured_image_url }}"
+                alt="{{ $post->featured_image_alt ?: $post->title }}"
                 class="w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
@@ -44,13 +45,14 @@
 
     <div class="container mx-auto px-4 max-w-3xl pb-16">
         <div class="text-lg md:text-xl font-mayluxa text-brand-black leading-relaxed mb-10 text-center border-b border-gray-100 pb-10">
-            "{{ $post->excerpt }}"
+            "{{ $post->subtitle ?: $post->excerpt }}"
         </div>
 
         <div class="prose prose-lg max-w-none prose-headings:font-mayluxa prose-headings:font-normal prose-p:font-light prose-p:leading-loose prose-p:text-gray-600 prose-a:text-brand-gold prose-a:no-underline hover:prose-a:underline prose-img:rounded-sm prose-blockquote:border-l-2 prose-blockquote:border-brand-black prose-blockquote:font-mayluxa prose-blockquote:not-italic prose-blockquote:text-2xl">
             {!! $post->content !!}
         </div>
 
+        @unless($isPreview ?? false)
         <div class="mt-16 pt-8 border-t border-gray-100 flex flex-col items-center">
             <span class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">Share this article</span>
             <div class="flex gap-4">
@@ -65,6 +67,7 @@
                 </a>
             </div>
         </div>
+        @endunless
     </div>
 
     @if($relatedPosts->count() > 0)

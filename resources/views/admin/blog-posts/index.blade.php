@@ -4,22 +4,24 @@
 <div class="flex flex-col gap-6">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900">Blog Posts</h1>
+            <h1 class="text-2xl font-semibold text-gray-900">Qammaris Journal</h1>
             <p class="text-sm text-gray-500">Kelola artikel jurnal dan konten blog.</p>
         </div>
         <a href="{{ route('admin.blog-posts.create') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-brand-black hover:bg-brand-emerald transition-colors rounded">
-            + Buat Blog Baru
+            + Buat artikel
         </a>
     </div>
 
+    <a href="{{ route('admin.blog-taxonomy.index') }}" class="inline-flex min-h-11 items-center text-sm underline focus-visible:outline-2">Kelola kategori dan tag</a>
+
     <form method="GET" class="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="md:col-span-2">
-            <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Search</label>
+            <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Cari artikel</label>
             <input type="text" name="search" value="{{ $search }}" placeholder="Cari judul atau ringkasan..."
                 class="mt-2 w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40">
         </div>
         <div>
-            <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Category</label>
+            <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Kategori</label>
             <select name="category" class="mt-2 w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40">
                 <option value="">Semua</option>
                 @foreach($categories as $cat)
@@ -31,8 +33,8 @@
             <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Status</label>
             <select name="status" class="mt-2 w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40">
                 <option value="">Semua</option>
-                <option value="published" @selected(request('status') === 'published')>Published</option>
-                <option value="scheduled" @selected(request('status') === 'scheduled')>Scheduled</option>
+                <option value="published" @selected(request('status') === 'published')>Tayang</option>
+                <option value="scheduled" @selected(request('status') === 'scheduled')>Dijadwalkan</option>
                 <option value="draft" @selected(request('status') === 'draft')>Draft</option>
                 <option value="archived" @selected(request('status') === 'archived')>Arsip</option>
             </select>
@@ -49,12 +51,12 @@
         <table class="w-full min-w-[760px] text-sm">
             <thead class="bg-gray-50 text-xs uppercase tracking-widest text-gray-400">
                 <tr>
-                    <th class="px-4 py-3 text-left">Post</th>
-                    <th class="px-4 py-3 text-left">Category</th>
+                    <th class="px-4 py-3 text-left">Artikel</th>
+                    <th class="px-4 py-3 text-left">Kategori</th>
                     <th class="px-4 py-3 text-left">Status</th>
-                    <th class="px-4 py-3 text-left">Published</th>
-                    <th class="px-4 py-3 text-left">Views</th>
-                    <th class="px-4 py-3 text-right">Actions</th>
+                    <th class="px-4 py-3 text-left">Tayang pada</th>
+                    <th class="px-4 py-3 text-left">Dilihat</th>
+                    <th class="px-4 py-3 text-right">Tindakan</th>
                 </tr>
             </thead>
             <tbody>
@@ -67,7 +69,7 @@
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="h-12 w-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                                    <img src="{{ $post->featured_image_url }}" alt="{{ $post->title }}" class="h-full w-full object-cover" loading="lazy" decoding="async">
+                                    <img src="{{ $post->featured_image ? $post->featured_image_url : asset('images/product-placeholder.svg') }}" alt="{{ $post->featured_image_alt ?: $post->title }}" class="h-full w-full object-cover" loading="lazy" decoding="async">
                                 </div>
                                 <div>
                                     <p class="font-semibold text-gray-900">{{ $post->title }}</p>
@@ -80,9 +82,9 @@
                             @if($post->archived_at)
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">Arsip</span>
                             @elseif($isPublished)
-                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-green-50 text-green-700 rounded">Published</span>
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-green-50 text-green-700 rounded">Tayang</span>
                             @elseif($isScheduled)
-                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-amber-50 text-amber-700 rounded">Scheduled</span>
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-amber-50 text-amber-700 rounded">Dijadwalkan</span>
                             @else
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded">Draft</span>
                             @endif

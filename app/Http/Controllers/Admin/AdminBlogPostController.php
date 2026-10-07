@@ -6,10 +6,15 @@ use App\Actions\Blog\ChangeBlogPostArchive;
 use App\Actions\Blog\SaveBlogPost;
 use App\Exceptions\BlogPostConflict;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BlogPostPreviewRequest;
 use App\Http\Requests\Admin\BlogPostRevisionRequest;
 use App\Http\Requests\Admin\BlogPostStoreRequest;
 use App\Http\Requests\Admin\BlogPostUpdateRequest;
+use App\Models\BlogCategory;
 use App\Models\BlogPost;
+use App\Models\BlogTag;
+use App\Models\Product;
+use App\Support\RenderBlogContent;
 use App\Support\SearchMatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +25,7 @@ class AdminBlogPostController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BlogPost::query();
+        $query = BlogPost::with('editorialCategory');
         if ($request->query('status') === 'archived') {
             $query->whereNotNull('archived_at');
         } else {
@@ -30,7 +35,7 @@ class AdminBlogPostController extends Controller
         $search = SearchMatcher::term($request->query('search'));
 
         if ($request->filled('category')) {
-            $query->where('category', $request->category);
+            $query->byCategory($request->category);
         }
 
         if ($request->filled('status')) {
@@ -53,16 +58,14 @@ class AdminBlogPostController extends Controller
                 fn ($row) => [$row->title, $row->excerpt]);
         }
         $posts = $query->latest()->paginate(10)->withQueryString();
-        $categories = BlogPost::CATEGORY_OPTIONS;
+        $categories = BlogCategory::orderBy('name')->pluck('name');
 
         return view('admin.blog-posts.index', compact('posts', 'categories', 'search'));
     }
 
     public function create()
     {
-        $categories = BlogPost::CATEGORY_OPTIONS;
-
-        return view('admin.blog-posts.create', compact('categories'));
+        return view('admin.blog-posts.create', $this->editorData());
     }
 
     public function store(BlogPostStoreRequest $request, SaveBlogPost $save)
@@ -84,9 +87,37 @@ class AdminBlogPostController extends Controller
             return redirect()->route('admin.blog-posts.index', ['status' => 'archived'])
                 ->with('error', 'Pulihkan artikel sebagai draft sebelum mengedit.');
         }
-        $categories = BlogPost::CATEGORY_OPTIONS;
 
-        return view('admin.blog-posts.edit', compact('blogPost', 'categories'));
+        return view('admin.blog-posts.edit', ['blogPost' => $blogPost] + $this->editorData($blogPost));
+    }
+
+    private function editorData(?BlogPost $post = null): array
+    {
+        return [
+            'categories' => BlogCategory::where('is_active', true)->orWhere('name', $post?->category ?? '')->orderBy('name')->get(),
+            'tags' => BlogTag::where('is_active', true)->orWhereIn('id', $post?->tags()->pluck('blog_tags.id') ?? [])->orderBy('name')->get(),
+            'products' => Product::published()->orderBy('name')->get(['id', 'name', 'slug']),
+        ];
+    }
+
+    public function preview(BlogPostPreviewRequest $request, RenderBlogContent $renderer, ?BlogPost $blogPost = null)
+    {
+        $data = $request->validated();
+        $post = $blogPost ? clone $blogPost : new BlogPost;
+        $post->fill(collect($data)->except(['featured_image', 'tag_ids', 'is_published'])->all());
+        $post->title = $post->title ?: 'Draft tanpa judul';
+        // A preview is transient: no file, article, view count or history is written.
+        $post->setRelation('editorialCategory', null);
+        $post->category_id = null;
+        $post->content = $renderer->handle($post->content);
+        $image = $request->file('featured_image');
+        $previewImage = $image ? 'data:'.$image->getMimeType().';base64,'.base64_encode($image->getContent()) : ($post->featured_image ? $post->featured_image_url : asset('images/product-placeholder.svg'));
+        $html = view('blog.show', ['post' => $post, 'relatedPosts' => collect(), 'isPreview' => true, 'previewImage' => $previewImage])->render();
+
+        return response()->view('admin.blog-posts.preview', compact('html'))
+            ->header('X-Robots-Tag', 'noindex, nofollow')
+            ->header('Cache-Control', 'no-store, private')
+            ->header('Referrer-Policy', 'no-referrer');
     }
 
     public function update(

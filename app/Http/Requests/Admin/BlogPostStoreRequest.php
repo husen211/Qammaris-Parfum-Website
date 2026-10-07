@@ -2,13 +2,19 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\BlogPost;
 use App\Services\BlogMediaStorage;
+use App\Support\BlogEditorialRules;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class BlogPostStoreRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->boolean('tags_present')) {
+            $this->merge(['tag_ids' => $this->input('tag_ids', [])]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->role === 'admin';
@@ -16,16 +22,8 @@ class BlogPostStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'title' => ['required', 'string', 'max:255'],
-            'excerpt' => ['required', 'string', 'max:1000'],
-            'content' => ['required', 'string'],
-            'category' => ['required', Rule::in(BlogPost::CATEGORY_OPTIONS)],
-            'author' => ['nullable', 'string', 'max:100'],
-            'meta_description' => ['nullable', 'string', 'max:160'],
+        return BlogEditorialRules::fields() + [
             'featured_image' => ['nullable', ...array_slice(BlogMediaStorage::UPLOAD_RULES, 1)],
-            'is_published' => ['nullable', 'boolean'],
-            'published_at' => ['nullable', 'date'],
         ];
     }
 }

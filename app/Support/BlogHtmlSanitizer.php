@@ -75,6 +75,18 @@ final class BlogHtmlSanitizer
             }
 
             $tag = strtolower($node->tagName);
+            if ($tag === 'div' && preg_match('/^[1-9][0-9]{0,17}$/', $node->getAttribute('data-qammaris-product'))) {
+                $id = $node->getAttribute('data-qammaris-product');
+                foreach (iterator_to_array($node->attributes) as $attribute) {
+                    $node->removeAttributeNode($attribute);
+                }
+                while ($node->firstChild) {
+                    $node->removeChild($node->firstChild);
+                }
+                $node->setAttribute('data-qammaris-product', $id);
+
+                continue;
+            }
 
             if (in_array($tag, self::BLOCKED_TAGS, true)) {
                 $parent->removeChild($node);
@@ -102,12 +114,21 @@ final class BlogHtmlSanitizer
         $allowedAttributes = match ($tag) {
             'a' => ['href', 'title', 'target'],
             'img' => ['alt', 'height', 'loading', 'src', 'title', 'width'],
+            'td', 'th' => ['colspan', 'rowspan'],
             default => [],
         };
 
         foreach (iterator_to_array($element->attributes) as $attribute) {
             if (! in_array(strtolower($attribute->name), $allowedAttributes, true)) {
                 $element->removeAttributeNode($attribute);
+            }
+        }
+        if (in_array($tag, ['td', 'th'], true)) {
+            foreach (['colspan', 'rowspan'] as $span) {
+                $value = $element->getAttribute($span);
+                if (! ctype_digit($value) || (int) $value < 1 || (int) $value > 50) {
+                    $element->removeAttribute($span);
+                }
             }
         }
 

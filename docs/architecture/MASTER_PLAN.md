@@ -55,9 +55,9 @@ Use the README read path. Existing current documents have distinct owners; histo
 
 ## Qammaris Journal — separate approved program
 
-Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md) and first implementation BLOG-01. Foundation now on a review branch, not released: shared safe writes/media, optimistic revision, archive, editorial time and narrow admin audit. Next CMS → public Journal/SEO → complete media/blocks → draft-only agent API → acceptance/release; advance one explicitly selected item at a time. [Board](../planning/BACKLOG.md), [BLOG-01 evidence](../verification/blog-01/README.md).
+Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md), BLOG-01 foundation and now BLOG-02 CMS/editor. Both remain review branches, not released. BLOG-02 adds fields/taxonomy/visual+HTML editor/transient preview/readiness using foundation writes/media/revisions/history. Order work is assigned separately to Claude Code. Next recommended public Journal/SEO → complete media/blocks → draft-only agent API → acceptance/release; advance one selected item at a time. [Board](../planning/BACKLOG.md), [BLOG-01 evidence](../verification/blog-01/README.md), [BLOG-02 evidence](../verification/blog-02/README.md).
 
-Preserve `/blog/...`, HTML format, IDs/authors/content/media; no old content rewrite. Tiptap vanilla/admin-only and Sanctum scoped tokens are selected for their later phases, not installed now. Original P9 remains open; approving this program does not accept those gates or authorize production deployment.
+Preserve `/blog/...`, HTML format, IDs/authors/content/media; no old content rewrite. Tiptap vanilla is installed only for the admin editor in BLOG-02; Sanctum/API is still unimplemented. Original P9 remains open; approving this program does not accept those gates or authorize production deployment.
 
 ## Other later programs, not started
 

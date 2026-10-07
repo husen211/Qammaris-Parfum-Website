@@ -10,12 +10,12 @@ BACKLOG = proposed/not approved for execution; READY = accepted bounded scope re
 
 ## Active separate program — Qammaris Journal
 
-Owner approved the [Journal implementation plan](QAMMARIS_JOURNAL.md), starting **BLOG-01 only**. This is separate from P9 and the already released AUD queue; no production rollout or later phase is started automatically.
+Owner approved the [Journal implementation plan](QAMMARIS_JOURNAL.md), then selected **BLOG-02** and assigned order work to Claude Code in parallel. Blog work is isolated in its own worktree. This is separate from P9 and the released AUD queue; no production rollout or later phase starts automatically.
 
 | ID | Status | Current scope / next prerequisite |
 |---|---|---|
 | BLOG-01 | IN_REVIEW | Foundation implemented on `modernization/blog-01-foundation`: shared writes, revision conflict, retained/verified media, archive/restore-as-draft, transactional admin history and editorial time. Local verification passed; staging MySQL/runtime and genuine touch remain unconfirmed. Not deployed. [Evidence](../verification/blog-01/README.md), [ADR-032](../architecture/decisions/ADR-032-blog-write-foundation.md) |
-| BLOG-02 | BACKLOG | CMS/editor/taxonomy/preview/scheduling; next recommended item after Owner direction |
+| BLOG-02 | IN_REVIEW | CMS fields, Tiptap visual/HTML editor, managed categories/tags, authenticated transient desktop/mobile preview, new-publication readiness and existing scheduling. Branch modernization/blog-02-editor depends on BLOG-01. Local tests/browser passed within limits; native upload, genuine touch and staging MySQL remain unconfirmed. Not deployed. [Evidence](../verification/blog-02/README.md), [ADR-033](../architecture/decisions/ADR-033-blog-editorial-cms.md) |
 | BLOG-03 | BACKLOG | Public Journal/search/SEO; depends on CMS |
 | BLOG-04 | BACKLOG | Responsive media and complete content components/relations |
 | BLOG-05 | BACKLOG | Actor-owned draft-only API; credentials separate approval |
@@ -24,6 +24,8 @@ Owner approved the [Journal implementation plan](QAMMARIS_JOURNAL.md), starting 
 BLOG-01 acceptance implemented: failed file/DB/audit write keeps current article/image; committed image survives cache outage; stale editor/archive/restore fails; no-op/views preserve editorial time/revision; legacy ID/slug/author/content/image formats survive additive migration and replay; archive excluded from public listing/category/detail/sitemap and restored as draft. No historical body rewrite, purge, API, package install, public redesign or production mutation. 403 Laravel tests/2804 assertions and31 JS tests passed; browser widths320/375/390/768/1440 checked with screenshot/keyboard/two-tab conflict evidence. Full check/cleanup/limitations in evidence.
 
 ## Original catalog program board
+
+Unrelated finding SEC-DEP-01 (BACKLOG, not authorized for automatic package upgrades): npm audit reports concurrently9.2.4/shell-quote1.9.0 (critical) and source-map-js1.2.1 (high). Versions are identical in cb0a1c3 and BLOG-02; not introduced by Tiptap. Assess/update in a separately scoped dependency task, then repeat audit before release.
 
 | ID | Phase | Status retained | Current meaning / evidence |
 |---|---|---|---|

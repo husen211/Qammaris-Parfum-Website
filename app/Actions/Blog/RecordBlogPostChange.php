@@ -12,7 +12,11 @@ class RecordBlogPostChange
 {
     public function snapshot(BlogPost $post): array
     {
-        return $post->only(['title', 'slug', 'author', 'category', 'is_published', 'featured_image_disk']) + [
+        return $post->only(['title', 'slug', 'author', 'category', 'category_id', 'is_featured', 'is_published', 'featured_image_disk']) + [
+            'tag_ids' => $post->exists ? $post->tags()->orderBy('blog_tags.id')->pluck('blog_tags.id')->all() : [],
+            'subtitle_hash' => $this->hash($post->subtitle),
+            'featured_image_alt_hash' => $this->hash($post->featured_image_alt),
+            'seo_title_hash' => $this->hash($post->seo_title),
             'published_at' => $post->published_at?->toAtomString(),
             'archived_at' => $post->archived_at?->toAtomString(),
             'excerpt_hash' => $this->hash($post->excerpt),
