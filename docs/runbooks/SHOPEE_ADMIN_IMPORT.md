@@ -1,6 +1,6 @@
 # Impor Shopee lewat admin — P8-09
 
-Implementasi belum dirilis ke production. Rujukan keputusan: ADR-026; bukti: `docs/verification/p8-09/admin-import/README.md`.
+Dirilis ke production 2026-10-07 pada `d7a5115` melalui PR13. Rujukan keputusan: ADR-026; bukti lokal: `docs/verification/p8-09/admin-import/README.md`; bukti release dan batas verifikasi: `docs/verification/releases/2026-10-07/README.md`.
 
 ## Cara Owner memakai
 
@@ -21,16 +21,16 @@ Foto/deskripsi Shopee yang baru ditambahkan tidak otomatis terambil live. Ekspor
 - Tabel batch/baris, identities dan jobs existing tersedia; tidak ada migrasi baru.
 - Worker **database** membaca `product-import-images`. Worker stock-only `qammaris-app` tidak cukup. Nilai retry_after harus melampaui timeout job90detik; verifikasi konfigurasi aktual sebelum memulai. Jangan jalankan dua watchdog untuk worker yang sama.
 - Disk `media.product_disk` adalah storage persisten website dan URL/symlink existing sudah benar. Jangan mengganti provider/permission/env lain.
-- Verifikasi koneksi hosting ke exact host CDN yang sudah disetujui menggunakan satu gambar Owner, bukan keseluruhan katalog. Timeout hosting -> CDN sebelumnya diketahui; belum diperbaiki atau diuji live oleh fase ini. Manual upload memakai disk yang sama dapat menjadi fallback.
+- Verifikasi koneksi hosting ke exact host CDN yang sudah disetujui menggunakan satu gambar Owner, bukan keseluruhan katalog. Pada release2026-10-07 satu gambar640×640JPEG berhasil diunduh/validasi lalu file sementara dihapus; ini tidak membuktikan seluruh URL Shopee. Manual upload memakai disk yang sama dapat menjadi fallback.
 - Verifikasi uploader di browser dengan izin akses file lokal ekstensi, serta iPhone/touch sesuai gate UI. HTTP multipart feature test bukan bukti pemilih file Chrome.
 
-Contoh worker setelah deployment/operasi disetujui:
+Worker production yang sudah berjalan pada watchdog existing (jangan buat worker/cron kedua):
 
 ```text
-php artisan queue:work database --queue=product-import-images --tries=2 --timeout=90 --sleep=2
+php artisan queue:work database --queue=qammaris-app,product-import-images --sleep=1 --timeout=90 --tries=5
 ```
 
-Koordinasikan worker ini dengan worker availability yang sudah ada. Perubahan process manager/cron production membutuhkan scope release tersendiri; fase ini tidak mengubahnya.
+Database retry_after120detik terverifikasi; job foto tetap punya batas percobaan sendiri. Lock watchdog production yang sama menjaga satu worker, availability diproses lebih dahulu. Scheduler/watchdog minute cron existing dipertahankan. Native file chooser/upload production dan iPhone tetap belum terkonfirmasi; feature tests dan satu probe CDN bukan penggantinya.
 
 ## Error dan recovery
 
