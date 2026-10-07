@@ -1,3 +1,5 @@
+import { startCatalogLinkFeedback } from './catalog-link-feedback';
+
 const navCard = document.getElementById('navbar-card');
 
 document.addEventListener('click', (event) => {
@@ -10,6 +12,7 @@ document.addEventListener('click', (event) => {
         || (destination.pathname === window.location.pathname && destination.search === window.location.search)) return;
 
     link.setAttribute('data-navigation-pending', '');
+    startCatalogLinkFeedback(link);
 });
 
 window.addEventListener('pageshow', () => {

@@ -7,8 +7,11 @@ use App\Models\ProductImage;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
 use App\Models\User;
+use App\Services\ShopeeContentImageTarget;
+use App\Services\ShopeeContentPreviewer;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class QueueProductImportImages
 {
@@ -22,6 +25,13 @@ class QueueProductImportImages
 
         DB::transaction(function () use ($batch, $actor, &$rowIds, &$candidateImages): void {
             $lockedBatch = ProductImportBatch::query()->lockForUpdate()->findOrFail($batch->getKey());
+
+            if ($lockedBatch->contract_version === ShopeeContentPreviewer::VERSION) {
+                if (! $actor) {
+                    throw new DomainException('Impor Shopee membutuhkan admin yang mengunggah file.');
+                }
+                app(ApplyShopeeContent::class)->assertBatch($lockedBatch, $actor);
+            }
 
             if ($actor === null && (! in_array($lockedBatch->contract_version, [PrepareQammarisAppDrafts::VERSION, PairQammarisShopeeDrafts::VERSION], true) || $lockedBatch->actor_id !== null)) {
                 throw new DomainException('Machine attribution is restricted to Owner-authorized Qammaris draft batches.');
@@ -44,6 +54,10 @@ class QueueProductImportImages
             foreach ($rows as $row) {
                 if (in_array($row->image_acquisition_status, [ProductImportRow::IMAGE_QUEUED, ProductImportRow::IMAGE_PROCESSING], true)) {
                     continue;
+                }
+
+                if ($lockedBatch->contract_version === ShopeeContentPreviewer::VERSION) {
+                    app(ShopeeContentImageTarget::class)->assert($row, $row->appliedProduct);
                 }
 
                 $outcomes = $this->prepareOutcomes($row);
@@ -82,12 +96,23 @@ class QueueProductImportImages
             }
         });
 
-        foreach ($rowIds as $rowId) {
-            $dispatch = AcquireProductImportRowImages::dispatch($rowId);
-            if ($actor === null) {
-                $dispatch->onConnection('database');
+        foreach ($rowIds as $index => $rowId) {
+            try {
+                $dispatch = AcquireProductImportRowImages::dispatch($rowId);
+                if ($actor === null || $batch->contract_version === ShopeeContentPreviewer::VERSION) {
+                    $dispatch->onConnection('database');
+                }
+                $dispatch->afterCommit();
+                unset($dispatch);
+            } catch (Throwable $error) {
+                if ($batch->contract_version !== ShopeeContentPreviewer::VERSION) {
+                    throw $error;
+                }
+                foreach (array_slice($rowIds, $index) as $pendingRowId) {
+                    app(\App\Actions\Products\AcquireProductImportRowImages::class)->markUnexpectedFailure($pendingRowId);
+                }
+                throw new DomainException('Konten tersimpan, tetapi antrean foto belum tersedia. Tekan Coba unduh foto lagi.');
             }
-            $dispatch->afterCommit();
         }
 
         return [

@@ -24,14 +24,15 @@ class PublicInquiryFlowTest extends TestCase
     {
         [$product, $offer] = $this->createCatalogItem([
             'availability_status' => Product::AVAILABILITY_UNKNOWN,
+            'availability_source' => 'manual',
         ]);
 
         $response = $this->get(route('products.show', $product));
         $message = $this->firstWhatsappMessage($response->getContent());
 
         $response->assertOk()
-            ->assertSee('Tambah ke daftar inquiry')
-            ->assertSee('Tanya stok via WhatsApp');
+            ->assertDontSee('Tambah ke keranjang')
+            ->assertSee('Tanyakan ketersediaan via WhatsApp');
         $this->assertStringContainsString($product->brand->name.' - '.$product->name, $message);
         $this->assertStringContainsString('Ukuran: '.$offer->volume.' ml', $message);
         $this->assertStringContainsString('Harga saat ini: Rp 250.000', $message);
@@ -49,7 +50,7 @@ class PublicInquiryFlowTest extends TestCase
 
         $soldOutResponse->assertOk()
             ->assertSee('Tanya restock via WhatsApp')
-            ->assertDontSee('Tambah ke daftar inquiry')
+            ->assertDontSee('Tambah ke keranjang')
             ->assertDontSee('data-variant-id=', false);
         $this->assertStringContainsString('Status website: Sold out', $soldOutMessage);
         $this->assertStringContainsString('Intent: informasi restock', $soldOutMessage);
@@ -64,7 +65,7 @@ class PublicInquiryFlowTest extends TestCase
             'quantity' => 2,
         ])->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'Produk ditambahkan ke daftar inquiry.');
+            ->assertJsonPath('message', 'Produk ditambahkan ke keranjang.');
 
         $this->assertSame(2, session("cart.{$offer->id}.quantity"));
     }
@@ -85,7 +86,7 @@ class PublicInquiryFlowTest extends TestCase
         $this->assertEmpty(session('cart', []));
     }
 
-    public function test_inquiry_page_and_drawer_data_use_current_values_and_local_placeholder(): void
+    public function test_cart_page_and_compatibility_data_use_current_values_and_local_placeholder(): void
     {
         [$product, $offer] = $this->createCatalogItem();
         $sessionItem = $this->sessionItem($product, $offer);
@@ -97,7 +98,9 @@ class PublicInquiryFlowTest extends TestCase
             ->get(route('cart.index'));
 
         $page->assertOk()
-            ->assertSee('Daftar Inquiry')
+            ->assertDontSee('cartDrawer', false)
+            ->assertSee('data-cart-href="'.route('cart.index').'"', false)
+            ->assertSee('Keranjang')
             ->assertSee('Brand Current')
             ->assertSee('Product Current')
             ->assertSee('75 ml')
@@ -117,7 +120,7 @@ class PublicInquiryFlowTest extends TestCase
             ->assertJsonPath('items.0.product_name', 'Product Current')
             ->assertJsonPath('items.0.volume', 75)
             ->assertJsonPath('items.0.formatted_price', 'Rp 175.000')
-            ->assertJsonPath('items.0.availability_label', 'Konfirmasi stok')
+            ->assertJsonPath('items.0.availability_label', 'Tersedia')
             ->assertJsonPath('items.0.image', asset('images/product-placeholder.svg'));
     }
 
@@ -156,7 +159,8 @@ class PublicInquiryFlowTest extends TestCase
             'is_active' => true,
             'publication_status' => Product::PUBLICATION_PUBLISHED,
             'published_at' => now(),
-            'availability_status' => Product::AVAILABILITY_UNKNOWN,
+            'availability_status' => Product::AVAILABILITY_AVAILABLE,
+            'availability_source' => 'qammaris_app',
         ], $productOverrides));
         $offer = ProductVariant::create(array_merge([
             'product_id' => $product->id,

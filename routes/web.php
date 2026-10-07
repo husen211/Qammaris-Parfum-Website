@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
 use App\Http\Controllers\Admin\AdminProductMaintenanceController;
 use App\Http\Controllers\Admin\AdminQammarisAppProductController;
+use App\Http\Controllers\Admin\AdminShopeeContentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -33,6 +34,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::put('/update/{id}', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
+    Route::get('/checkout', [CartController::class, 'showCheckout'])->name('checkout.show');
     Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
@@ -76,6 +78,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('products/{product}/images/{productImage}', [AdminProductImageController::class, 'destroy'])->name('products.images.destroy');
 
     Route::get('product-imports', [AdminProductImportController::class, 'create'])->name('product-imports.create');
+    Route::get('shopee-imports', [AdminShopeeContentController::class, 'index'])->name('shopee-imports.index');
+    Route::post('shopee-imports/preview', [AdminShopeeContentController::class, 'preview'])->middleware('throttle:6,1')->name('shopee-imports.preview');
+    Route::post('shopee-imports/{productImportBatch}/rows/{productImportRow}/choose', [AdminShopeeContentController::class, 'choose'])->name('shopee-imports.choose');
+    Route::post('shopee-imports/{productImportBatch}/apply', [AdminShopeeContentController::class, 'apply'])->middleware('throttle:6,1')->name('shopee-imports.apply');
+    Route::post('shopee-imports/{productImportBatch}/images', [AdminShopeeContentController::class, 'images'])->middleware('throttle:6,1')->name('shopee-imports.images');
+    Route::post('shopee-imports/{productImportBatch}/publish', [AdminShopeeContentController::class, 'publish'])->middleware('throttle:6,1')->name('shopee-imports.publish');
     Route::get('product-imports/template', [AdminProductImportController::class, 'template'])->name('product-imports.template');
     Route::get('product-imports/catalog-snapshot.csv', [AdminProductImportController::class, 'catalogSnapshot'])->name('product-imports.catalog-snapshot');
     Route::get('product-imports/{productImportBatch}/report.csv', [AdminProductImportController::class, 'report'])->name('product-imports.report');

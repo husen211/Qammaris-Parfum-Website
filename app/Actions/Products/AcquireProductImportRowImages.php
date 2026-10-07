@@ -8,6 +8,8 @@ use App\Models\ProductImage;
 use App\Models\ProductImportRow;
 use App\Services\ImportedProductImageDownloader;
 use App\Services\ProductMediaStorage;
+use App\Services\ShopeeContentImageTarget;
+use App\Services\ShopeeContentPreviewer;
 use DomainException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +54,9 @@ class AcquireProductImportRowImages
                 continue;
             }
 
-            if (in_array($row->batch->contract_version, [PrepareQammarisAppDrafts::VERSION, PairQammarisShopeeDrafts::VERSION], true)
+            $shopeeContent = $row->batch->contract_version === ShopeeContentPreviewer::VERSION;
+            if ((in_array($row->batch->contract_version, [PrepareQammarisAppDrafts::VERSION, PairQammarisShopeeDrafts::VERSION], true)
+                    || ($shopeeContent && $row->normalized_data['baseline_images'] === []))
                 && ($outcome['slot'] ?? '') !== 'foto_utama_url'
                 && ! collect($row->fresh()->image_acquisition_outcomes)->contains(fn ($candidate) => ($candidate['slot'] ?? '') === 'foto_utama_url' && ($candidate['status'] ?? '') === 'stored')) {
                 $this->recordOutcome($rowId, $index, 'blocked', 'Foto sampul harus berhasil sebelum foto tambahan.');
@@ -62,10 +66,20 @@ class AcquireProductImportRowImages
 
             $product = Product::query()->find($row->applied_product_id);
 
-            if (! $product || $product->publication_status !== Product::PUBLICATION_DRAFT) {
+            if (! $product || (! $shopeeContent && $product->publication_status !== Product::PUBLICATION_DRAFT)) {
                 $this->recordOutcome($rowId, $index, 'blocked', 'Produk tidak lagi berupa draft; gambar tidak diubah.');
 
                 continue;
+            }
+
+            if ($shopeeContent) {
+                try {
+                    app(ShopeeContentImageTarget::class)->assert($row->fresh(), $product);
+                } catch (DomainException $exception) {
+                    $this->recordOutcome($rowId, $index, 'blocked', $exception->getMessage());
+
+                    continue;
+                }
             }
 
             if ($row->batch->contract_version === PairQammarisShopeeDrafts::VERSION) {
@@ -104,8 +118,16 @@ class AcquireProductImportRowImages
                     $lockedRow = ProductImportRow::query()->lockForUpdate()->findOrFail($rowId);
                     $product = Product::query()->lockForUpdate()->findOrFail($lockedRow->applied_product_id);
 
-                    if ($product->publication_status !== Product::PUBLICATION_DRAFT) {
+                    $shopeeContent = $lockedRow->batch->contract_version === ShopeeContentPreviewer::VERSION;
+                    if (! $shopeeContent && $product->publication_status !== Product::PUBLICATION_DRAFT) {
                         throw new DomainException('Produk tidak lagi berupa draft; gambar tidak diubah.');
+                    }
+
+                    if ($shopeeContent) {
+                        app(ShopeeContentImageTarget::class)->assert($lockedRow, $product);
+                        if (($lockedRow->image_acquisition_outcomes[$index]['status'] ?? '') === 'stored') {
+                            throw new DomainException('Foto ini sudah tersimpan; pengiriman ganda diabaikan.');
+                        }
                     }
 
                     if ($lockedRow->batch->contract_version === PairQammarisShopeeDrafts::VERSION) {
@@ -179,6 +201,10 @@ class AcquireProductImportRowImages
         DB::transaction(function () use ($rowId, $index, $status, $message): void {
             $row = ProductImportRow::query()->lockForUpdate()->findOrFail($rowId);
             $outcomes = $row->image_acquisition_outcomes ?? [];
+            if ($row->batch->contract_version === ShopeeContentPreviewer::VERSION
+                && ($outcomes[$index]['status'] ?? '') === 'stored') {
+                return;
+            }
             $outcomes[$index] = array_merge($outcomes[$index] ?? [], [
                 'status' => $status,
                 'message' => $message,

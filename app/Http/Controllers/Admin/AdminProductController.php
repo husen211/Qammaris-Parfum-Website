@@ -407,6 +407,7 @@ class AdminProductController extends Controller
     {
         $indexPath = route('admin.products.index', [], false);
         $appIndexPath = route('admin.app-products.index', [], false);
+        $shopeeIndexPath = route('admin.shopee-imports.index', [], false);
 
         if (! is_string($returnTo) || $returnTo === '' || strlen($returnTo) > 2048) {
             return $indexPath;
@@ -420,12 +421,19 @@ class AdminProductController extends Controller
             || isset($parts['pass'])
             || isset($parts['port'])
             || isset($parts['fragment'])
-            || ! in_array($parts['path'] ?? '', [$indexPath, $appIndexPath], true)) {
+            || ! in_array($parts['path'] ?? '', [$indexPath, $appIndexPath, $shopeeIndexPath], true)) {
             return $indexPath;
         }
 
         $query = [];
         parse_str($parts['query'] ?? '', $query);
+
+        if ($parts['path'] === $shopeeIndexPath) {
+            return route('admin.shopee-imports.index', array_filter([
+                'batch' => $this->positiveInteger($query['batch'] ?? null),
+                'page' => $this->positiveInteger($query['page'] ?? null),
+            ]), false);
+        }
 
         if ($parts['path'] === $appIndexPath) {
             return route('admin.app-products.index', array_filter([

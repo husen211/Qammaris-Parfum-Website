@@ -35,7 +35,7 @@
 
     <div class="w-full relative">
         <label for="catalog-publication" class="sr-only">Filter publikasi</label>
-        <select id="catalog-publication" name="publication" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+        <select id="catalog-publication" name="publication" onchange="this.form.requestSubmit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
             <option value="">Semua status</option>
             <option value="draft" {{ ($catalogContext['publication'] ?? null) === 'draft' ? 'selected' : '' }}>Draft</option>
             <option value="published" {{ ($catalogContext['publication'] ?? null) === 'published' ? 'selected' : '' }}>Tayang</option>
@@ -48,7 +48,7 @@
 
     <div class="w-full relative">
         <label for="catalog-availability" class="sr-only">Filter ketersediaan</label>
-        <select id="catalog-availability" name="availability" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+        <select id="catalog-availability" name="availability" onchange="this.form.requestSubmit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
             <option value="">Semua ketersediaan</option>
             <option value="unknown" {{ ($catalogContext['availability'] ?? null) === 'unknown' ? 'selected' : '' }}>Belum dikonfirmasi</option>
             <option value="available" {{ ($catalogContext['availability'] ?? null) === 'available' ? 'selected' : '' }}>Tersedia</option>
@@ -61,7 +61,7 @@
 
     <div class="w-full relative">
         <label for="catalog-brand" class="sr-only">Filter brand</label>
-        <select id="catalog-brand" name="brand_id" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+        <select id="catalog-brand" name="brand_id" onchange="this.form.requestSubmit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
             <option value="">All Brands</option>
             @foreach($brands as $brand)
                 <option value="{{ $brand->id }}" {{ ($catalogContext['brand_id'] ?? null) === $brand->id ? 'selected' : '' }}>
@@ -76,7 +76,7 @@
 
     <div class="w-full relative">
         <label for="catalog-sort" class="sr-only">Urutkan produk</label>
-        <select id="catalog-sort" name="sort" onchange="this.form.submit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
+        <select id="catalog-sort" name="sort" onchange="this.form.requestSubmit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
             <option value="latest" {{ ! isset($catalogContext['sort']) ? 'selected' : '' }}>Terbaru</option>
             <option value="name_asc" {{ ($catalogContext['sort'] ?? null) === 'name_asc' ? 'selected' : '' }}>Nama A–Z</option>
             <option value="name_desc" {{ ($catalogContext['sort'] ?? null) === 'name_desc' ? 'selected' : '' }}>Nama Z–A</option>

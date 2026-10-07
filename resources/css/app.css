@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "./catalog.css";
+@import "./footer.css";
+@import "./cart-interactions.css";
+@import "./navigation-skeleton.css";
 
 @custom-variant hover {
     @media (hover: hover) and (pointer: fine) {
@@ -257,4 +260,38 @@ html { scroll-behavior: smooth; }
 a[data-navigation-pending] {
     background-color: rgb(197 160 89 / .15);
     box-shadow: inset 0 0 0 1px var(--color-brand-gold);
+}
+
+/* Editorial links use text feedback rather than painting the whole card. */
+a[data-catalog-product]:is(:active, [data-navigation-pending]),
+a[data-catalog-return]:is(:active, [data-navigation-pending]) {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+a[data-catalog-product]:is(:active, [data-navigation-pending]) .catalog-card__name,
+a[data-catalog-return]:is(:active, [data-navigation-pending]) {
+    color: var(--color-brand-gold);
+}
+
+/* Click colour is brief; waiting and pointer-return states are neutral, even under the cursor. */
+a[data-catalog-product]:is([data-catalog-activated], [data-navigation-pending]) .catalog-card__name,
+a[data-catalog-return]:is([data-catalog-activated], [data-navigation-pending]) {
+    color: var(--color-brand-black);
+    text-decoration: none;
+    transition: none;
+}
+
+a[data-catalog-product][data-catalog-pressed] .catalog-card__name,
+a[data-catalog-return][data-catalog-pressed] {
+    color: var(--color-brand-gold);
+}
+
+.catalog-navigation-status:not([hidden]) {
+    position: fixed;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--color-brand-gold);
+    pointer-events: none;
+    z-index: 130;
 }

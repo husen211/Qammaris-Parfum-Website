@@ -269,7 +269,27 @@ Cached snapshots predating this workflow can be prepared via an actor-bound immu
 
 After receiving the explicit unresolved touch/Safari limitation, Owner authorizes releasing the catalog-navigation and admin-app-inbox patches and selects **Lewati uji sentuh, rilis sekarang**. This waives the touch-test release gate for this concrete PR4/PR5 release only. Mouse verification remains the actual evidence; do not describe Safari or touch tests as passed. Retain the general touch-safe implementation rules and future release verification requirement. No automatic publication, historical catalog/price replay, credential change or raw Shopee import is authorized by this code release.
 
+## Pemesanan WhatsApp — keputusan Owner 2026-10-06 (P7-12)
+
+Bagian inquiry publik sebelumnya adalah historis dan digantikan untuk alur pemesanan oleh keputusan ini. Produk Tersedia masuk keranjang; checkout wajib nama penerima, nomor HP, dan alamat lengkap. Kode pos/catatan opsional. Harga, status, publikasi dan offer dibaca ulang dari katalog server; perubahan isi/harga setelah review meminta customer meninjau ringkasan terbaru. Habis/OTW tetap Habis dan tidak dipesan; unknown tetap netral dengan kontak ketersediaan. Tidak ada kedaluwarsa baru untuk data qammaris_app.
+
+Rincian pesanan + penerima disiapkan dalam composer WhatsApp; customer menekan Kirim di WhatsApp. Ongkir/pembayaran dilanjutkan di WhatsApp, tidak diasumsikan gratis/sudah dibayar. Tidak ada konfirmasi pengiriman/nomor order palsu. Keranjang tetap tersedia untuk retry. Data penerima tidak masuk database/log aplikasi; input gagal dapat berada sementara di session untuk koreksi. Status available adalah status sumber; jumlah stok numerik/reservasi tetap tidak tersedia. Payment gateway adalah rencana berikutnya, belum diimplementasikan.
+
+Keputusan Owner 2026-10-07: ikon keranjang langsung membuka halaman `/cart`, tanpa drawer. Tambah produk tetap di detail dengan status menambahkan/berhasil dan animasi foto menuju keranjang setelah server mengonfirmasi. Reduced motion tetap mendapat teks berhasil tanpa animasi terbang. Kontrol jumlah tetap 1–99; jumlah bukan reservasi stok. Tidak ada izin deployment baru dari keputusan UI ini.
+
 
 ## Homepage best-seller presentation — Owner decision 2026-10-07
 
 Do not display prices in the homepage Produk Terlaris section for now. Catalog and product detail retain prices. This is presentation only; source prices, availability, publication and daily selection remain unchanged.
+## Exact 21-row production Shopee supplement — Owner decision 2026-10-06
+
+Owner explicitly authorizes filling and publishing all 21 source rows missed by earlier imports, using the supplied Shopee copy/photos and current app UUID/prices. This supersedes previous holds for these exact rows, including real AOERA MAJESTIC creation; it does not include the staging fixture. Clear source audience is retained, with Unisex fallback for this wave only. Explicit hair/body mist sources receive Hair & Body Mist taxonomy. La Rive Cube is corrected to Cute while keeping its URL; conflicting Cote copy is corrected from the manufacturer with before/after audit. Bamboe is 100 ml based on the source description, bottle photo and official listing. No existing 350 published products are overwritten or unpublished. Outcome: 371 published, 77 drafts without photos/descriptions; no further blanket publication or new import defaults. Evidence: `docs/verification/p8-09/OWNER_21_PRODUCTION.md`.
+
+## Recurring Shopee admin enrichment — P8-09 Owner decision 2026-10-06
+
+Owner approves implementation of XLSX Basic + Media upload in admin after the proposed recurring import phase. Catalog products continue to originate from Qammaris App UUIDs; Shopee enriches copy/photos only and does not control price/availability/publication. Existing exact Shopee identities take precedence; new conservative unambiguous name/size matches or explicit admin choices are reviewed before apply. Occupied identities cannot be rebound. Keep existing copy unless the admin explicitly previews replacement; append new photos up to3without deleting/replacing cover. Blank audience/category/offer can only be filled with clear evidence/existing taxonomy and shared source-price operation. Unclear audience stays for review; historical launch-wave Unisex approvals are not a future default. Apply is unpublished unless already published; explicit selected publication requires existing readiness. Raw-file submission alone does not authorize applying/publishing production data. No production deployment is included in this implementation approval. ADR-026 documents the recurring contract and recovery.
+
+
+## Destination loading feedback (Owner, 2026-10-07 — P7-13)
+
+Real same-tab page navigation must show immediate destination-shaped skeleton feedback instead of leaving the source content looking idle. Keep native Laravel document links/form requests and existing query/scroll context. Valid native submissions may show loading; invalid or prevented submissions, downloads, modified/new-tab clicks and external links retain their existing behavior. Ajax actions staying on the same page use their own feedback. Skeletons contain no fake product values, respect reduced motion and clear on history restoration. Slow-navigation recovery must not automatically resubmit mutations. This UI decision does not authorize a SPA, data changes or production release.

@@ -7,9 +7,9 @@
     <title>Login - Qammaris Perfumes</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-white text-brand-black antialiased flex items-center justify-center min-h-screen">
+<body data-navigation-shell="auth" class="bg-white text-brand-black antialiased flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-md p-8">
+    <div data-navigation-content class="w-full max-w-md p-8">
         
         <div class="text-center mb-12">
             <h1 class="font-bold tracking-[0.3em] text-2xl uppercase mb-2">Qammaris</h1>
@@ -52,5 +52,6 @@
 
     </div>
 
+    @include('components.navigation-skeleton')
 </body>
 </html>

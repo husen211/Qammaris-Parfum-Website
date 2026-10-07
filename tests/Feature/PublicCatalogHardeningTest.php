@@ -46,9 +46,12 @@ class PublicCatalogHardeningTest extends TestCase
             ->assertDontSee('href="#"', false)
             ->assertDontSee('href="#how-to-order"', false);
 
-        $this->assertSame(1, substr_count($html, 'fetchpriority="high"'));
-        $this->assertSame(4, substr_count($html, 'loading="lazy"'));
-        $this->assertSame(5, substr_count($html, 'width="480" height="480"'));
+        preg_match_all('/<img\b[^>]*class="catalog-media__image"[^>]*>/s', $html, $matches);
+        $catalogMedia = implode("\n", $matches[0]);
+
+        $this->assertSame(1, substr_count($catalogMedia, 'fetchpriority="high"'));
+        $this->assertSame(4, substr_count($catalogMedia, 'loading="lazy"'));
+        $this->assertSame(5, substr_count($catalogMedia, 'width="480" height="480"'));
     }
 
     public function test_catalog_query_count_does_not_grow_with_the_page_size(): void
@@ -72,11 +75,12 @@ class PublicCatalogHardeningTest extends TestCase
     public function test_customer_journey_preserves_discovery_context_and_uses_current_inquiry_data(): void
     {
         [$product, $offer] = $this->createProduct('Journey Signature', 375000);
+        $product->update(['availability_status' => 'available', 'availability_source' => 'qammaris_app']);
         $query = [
             'search' => 'Journey Signature',
             'brand' => [$this->brand->id],
             'category' => $this->category->id,
-            'availability' => Product::AVAILABILITY_UNKNOWN,
+            'availability' => Product::AVAILABILITY_AVAILABLE,
             'sort' => 'price_low',
         ];
         $detailUrl = route('products.show', array_merge(['product' => $product->slug], $query));
@@ -88,7 +92,7 @@ class PublicCatalogHardeningTest extends TestCase
         $this->get($detailUrl)
             ->assertOk()
             ->assertSee(route('products.index', $query))
-            ->assertSee('Tambah ke daftar inquiry');
+            ->assertSee('Tambah ke keranjang');
 
         $this->postJson(route('cart.add'), [
             'variant_id' => $offer->id,
@@ -105,7 +109,11 @@ class PublicCatalogHardeningTest extends TestCase
             ->assertSee('Rp 850.000')
             ->assertDontSee('Rp 750.000');
 
+        $this->get(route('cart.checkout.show'))->assertOk();
         $checkout = $this->post(route('cart.checkout'), [
+            'customer_name' => 'Test Recipient', 'customer_phone' => '081234567890',
+            'customer_address' => 'Alamat sintetis untuk pengujian checkout',
+            'checkout_quote' => session('checkout_quote'),
             'customer_note' => 'Konfirmasi untuk akhir pekan.',
         ]);
         $checkout->assertRedirect();
@@ -115,9 +123,9 @@ class PublicCatalogHardeningTest extends TestCase
 
         $this->assertStringContainsString('Maison Journey - Journey Signature Current', $message);
         $this->assertStringContainsString('Ukuran: 75 ml', $message);
-        $this->assertStringContainsString('Jumlah yang diminati: 2', $message);
-        $this->assertStringContainsString('Harga saat ini: Rp 425.000 / item', $message);
-        $this->assertStringContainsString('Estimasi nilai produk: Rp 850.000', $message);
+        $this->assertStringContainsString('Jumlah: 2', $message);
+        $this->assertStringContainsString('Harga: Rp 425.000 / item', $message);
+        $this->assertStringContainsString('Subtotal: Rp 850.000', $message);
         $this->assertStringContainsString('Catatan: Konfirmasi untuk akhir pekan.', $message);
     }
 

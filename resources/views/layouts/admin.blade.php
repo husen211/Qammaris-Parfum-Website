@@ -13,7 +13,7 @@
         .active-nav { background-color: #F3F4F6; color: #111827; border-right: 3px solid #111827; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased">
+<body data-navigation-shell="admin" class="bg-gray-50 text-gray-800 antialiased">
 
     <div class="flex h-screen overflow-hidden">
         
@@ -46,7 +46,7 @@
                     Kategori
                 </a>
 
-                <a href="{{ route('admin.product-imports.create') }}" class="{{ request()->routeIs('admin.product-imports*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                <a href="{{ route('admin.shopee-imports.index') }}" class="{{ request()->routeIs('admin.product-imports*', 'admin.shopee-imports*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.9A5 5 0 0115.9 6H16a5 5 0 011 9.9M12 12v9m0-9l-3 3m3-3l3 3"/></svg>
                     Import Produk
                 </a>
@@ -84,13 +84,13 @@
                         <a href="{{ route('admin.app-products.index') }}" class="flex min-h-11 items-center rounded px-3 py-2 text-sm {{ request()->routeIs('admin.app-products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Produk dari aplikasi</a>
                         <a href="{{ route('admin.brands.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.brands*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Brand</a>
                         <a href="{{ route('admin.categories.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.categories*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Kategori</a>
-                        <a href="{{ route('admin.product-imports.create') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.product-imports*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Import Produk</a>
+                        <a href="{{ route('admin.shopee-imports.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.product-imports*', 'admin.shopee-imports*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Import Produk</a>
                         <a href="{{ route('admin.blog-posts.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.blog-posts*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Blog Posts</a>
                     </nav>
                 </details>
             </header>
 
-            <div class="container mx-auto px-6 py-8">
+            <div data-navigation-content class="container mx-auto px-6 py-8">
                 @if(session('success'))
                 <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -109,5 +109,6 @@
 
     </div>
     @stack('scripts')
+    @include('components.navigation-skeleton')
 </body>
 </html>

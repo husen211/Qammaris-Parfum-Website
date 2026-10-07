@@ -1,0 +1,32 @@
+[
+  {
+    "gridColumns": "130.4px 130.4px",
+    "scrollWidth": 305,
+    "searchWidth": 272.8000183105469,
+    "width": 320
+  },
+  {
+    "gridColumns": "158px 158px",
+    "scrollWidth": 360,
+    "searchWidth": 328,
+    "width": 375
+  },
+  {
+    "gridColumns": "165.6px 165.6px",
+    "scrollWidth": 375,
+    "searchWidth": 343.20001220703125,
+    "width": 390
+  },
+  {
+    "gridColumns": "221.6px 221.6px 221.6px",
+    "scrollWidth": 753,
+    "searchWidth": 704.7999877929688,
+    "width": 768
+  },
+  {
+    "gridColumns": "306.663px 306.663px 306.675px",
+    "scrollWidth": 1425,
+    "searchWidth": 576,
+    "width": 1440
+  }
+]

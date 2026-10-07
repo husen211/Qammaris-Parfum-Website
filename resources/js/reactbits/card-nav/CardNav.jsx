@@ -18,11 +18,45 @@ const CardNav = ({
   buttonLabel = 'Katalog',
   buttonHref = '#',
   cartCount = 0,
+  cartHref = '/cart',
+  cartDataUrl,
   activeUrl,
   homeHref = '/'
 }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentCartCount, setCurrentCartCount] = useState(cartCount);
+  useEffect(() => {
+    let generation = 0;
+    const updateCount = event => {
+      const count = event.detail?.count;
+      if (Number.isSafeInteger(count) && count >= 0) {
+        generation++;
+        setCurrentCartCount(count);
+      }
+    };
+    const refreshOnHistory = async event => {
+      if (!event.persisted || !cartDataUrl) return;
+      const started = generation;
+      try {
+        const response = await fetch(cartDataUrl, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+        const data = await response.json();
+        if (response.ok && started === generation && Number.isSafeInteger(data.count) && data.count >= 0) setCurrentCartCount(data.count);
+      } catch { /* Keep the last confirmed count if the connection is unavailable. */ }
+    };
+    window.addEventListener('qammaris:cart-updated', updateCount);
+    window.addEventListener('pageshow', refreshOnHistory);
+    return () => {
+      generation++;
+      window.removeEventListener('qammaris:cart-updated', updateCount);
+      window.removeEventListener('pageshow', refreshOnHistory);
+    };
+  }, [cartDataUrl]);
+  useEffect(() => {
+    const closeForNavigation = () => { setIsExpanded(false); setIsHamburgerOpen(false); };
+    window.addEventListener('qammaris:navigation-start', closeForNavigation);
+    return () => window.removeEventListener('qammaris:navigation-start', closeForNavigation);
+  }, []);
   const menuButtonRef = useRef(null);
   useEffect(() => {
     if (!isExpanded) return undefined;
@@ -39,13 +73,6 @@ const CardNav = ({
   const toggleMenu = () => {
     setIsExpanded(open => !open);
     setIsHamburgerOpen(open => !open);
-  };
-
-  const handleCartClick = () => {
-    const dialog = document.getElementById('cartDrawer');
-    if (dialog?.showModal) {
-      dialog.showModal();
-    }
   };
 
   const isActiveLink = href => {
@@ -110,22 +137,27 @@ const CardNav = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </a>
-            <button
-              id="cart-drawer-trigger"
-              type="button"
-              aria-label="Buka daftar inquiry"
-              onClick={handleCartClick}
+            <a
+              id="cart-link"
+              data-cart-link
+              href={cartHref}
+              aria-label="Buka keranjang"
+              aria-current={isActiveLink(cartHref) ? 'page' : undefined}
               className="relative inline-flex items-center justify-center h-11 w-11 border border-black/10 hover:border-black/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                {/* Lucide via 21st.dev/community/icons; docs/licenses/lucide.txt. */}
+                <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+                  <path d="M16 10a4 4 0 0 1-8 0M3.103 6.034h17.794" />
+                  <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z" />
+                </g>
               </svg>
-              {cartCount > 0 ? (
+              {currentCartCount > 0 ? (
                 <span className="absolute -top-2 -right-2 bg-brand-emerald text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center">
-                  {cartCount}
+                  {currentCartCount}
                 </span>
               ) : null}
-            </button>
+            </a>
             <a
               href={buttonHref}
               className="hidden md:inline-flex border-0 px-4 items-center min-h-11 font-medium cursor-pointer transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
