@@ -1,6 +1,6 @@
 # ADR-026 — Impor konten Shopee berulang melalui admin
 
-Status: Accepted for P8-09 implementation; not released.
+Status: Accepted; released2026-10-07 through PR13 (`d7a5115`).
 Date: 2026-10-06.
 
 ## Masalah yang diselesaikan
