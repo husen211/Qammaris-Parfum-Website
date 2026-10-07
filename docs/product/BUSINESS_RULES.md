@@ -105,10 +105,23 @@ Keputusan: [ADR-020](../architecture/decisions/ADR-020-public-catalog-state-and-
 - Checkout wajib nama penerima, nomor HP dan alamat lengkap; kode pos/catatan opsional. Quantity defensif 1–99, bukan reservasi atau bukti jumlah stok aktual.
 - Server membaca ulang product/offer/harga/status/publication; session bukan authority harga. Review fingerprint mengikat isi/jumlah/harga/status; perubahan sebelum submit meminta review ringkasan terbaru.
 - Composer WhatsApp berisi item/jumlah/harga/subtotal/penerima. Customer menekan Kirim sendiri; membuka composer bukan bukti pesan terkirim/order diterima/pembayaran. Ongkir/pembayaran diselesaikan di WA, tidak diasumsikan gratis/lunas. Keranjang tetap untuk retry.
-- Tidak ada order/customer table, payment gateway atau quantity reservation. Data penerima tidak masuk DB/log aplikasi; validasi gagal dapat memakai old input session sementara. Checkout/redirect no-store/no-referrer; proxy/APM/browser/WhatsApp retention tidak diasumsikan terverifikasi.
+- Checkout keranjang tidak membuat order/customer record (Pesanan Online di bawah adalah jalur terpisah); tidak ada payment gateway atau quantity reservation. Data penerima checkout keranjang tidak masuk DB/log aplikasi; validasi gagal dapat memakai old input session sementara. Checkout/redirect no-store/no-referrer; proxy/APM/browser/WhatsApp retention tidak diasumsikan terverifikasi.
 - Add-to-cart memberi pending lalu sukses hanya setelah server menerima; animasi menuju ikon opsional menurut reduced motion. Failed action dapat retry tanpa sukses palsu.
 
 Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-checkout.md), menggantikan inquiry-only ADR-020. Filename checkout ADR-026 lama adalah alias, bukan keputusan kedua.
+
+## Pesanan Online dari WhatsApp (ORD-01, branch review)
+
+Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
+
+- Admin membuat pesanan dari produk published dengan offer aktif berharga positif. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok, diskon, atau edit item setelah dibuat (batalkan lalu buat ulang).
+- **Data customer (nama, HP, alamat, catatan) disimpan di DB tanpa hapus otomatis**, hanya terlihat oleh admin dan link tugas staf pesanan itu. Ini pengecualian terarah dari aturan checkout keranjang.
+- Link customer: tanpa login. Wajib nama, HP, cara menerima (ambil di toko / kirim dalam Kota Palu / luar kota), dan paperbag. Alamat lengkap wajib hanya untuk luar kota; kode pos opsional. Lokasi dalam kota dikirim lewat share location WhatsApp, bukan GPS browser.
+- Customer boleh mengubah data sampai admin menandai **Dibayar**; sesudahnya hanya status read-only. Link yang belum diisi kedaluwarsa 7 hari; link baru mematikan link lama.
+- Langkah dibuat singkat karena tracking manual: Pesanan dibuat → Data diterima → Dibayar → **Dikirim** (driver/J&T sudah dipesan dan barang jalan; wajib kurir, J&T wajib resi) → **Diterima**. Ambil di toko: Dibayar → **Sudah diambil**. Customer boleh menandai Diterima dari link-nya hanya saat status Dikirim; bila tidak, staf/admin yang menandai. Dibatalkan bersifat terminal tapi bisa dipulihkan admin. Dibayar hanya oleh admin setelah dana benar-benar diterima; bukti transfer bukan otomatis lunas.
+- Link tugas staf: tanpa login; pemegang link dapat menandai langkah pengiriman dan mencatat talangan ongkir, tetapi tidak dapat mengubah pembayaran, harga, atau data customer. Nama staf diketik dan tidak terautentikasi.
+- Ongkir memisahkan sisi customer (ditambahkan ke transfer / bayar ke driver / gratis) dari dana toko ke driver (cash kasir / GoPay staf dari admin / talangan staf → diganti admin).
+- Majoo tetap untuk QRIS, member, struk, dan poin; website hanya menandai "Sudah dicatat di Majoo". Pesan grup disalin manual, tidak dikirim otomatis. Customer tidak melihat nama staf, talangan, atau catatan internal.
 
 ## UI, akses, dan batas program
 

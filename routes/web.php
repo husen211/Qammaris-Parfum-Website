@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminOnlineOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\FragranceQuizController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OnlineOrderController;
+use App\Http\Controllers\OnlineOrderStaffController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoreController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +41,18 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
+});
+
+// Online orders: private bearer links; the token is the only lookup key and is never listed.
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/pesanan/{token}', [OnlineOrderController::class, 'show'])->name('orders.customer.show');
+    Route::get('/tugas-pesanan/{token}', [OnlineOrderStaffController::class, 'show'])->name('orders.staff.show');
+});
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
+    Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
+    Route::post('/tugas-pesanan/{token}/langkah', [OnlineOrderStaffController::class, 'advance'])->name('orders.staff.advance');
+    Route::post('/tugas-pesanan/{token}/talangan', [OnlineOrderStaffController::class, 'recordAdvance'])->name('orders.staff.advance-cost');
 });
 
 // Blog
@@ -106,6 +121,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('brands', AdminBrandController::class)->except(['show', 'destroy']);
     Route::patch('categories/{category}/status', [AdminCategoryController::class, 'updateStatus'])->name('categories.status');
     Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
+
+    // Online orders
+    Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
+    Route::patch('orders/{order}/advance', [AdminOnlineOrderController::class, 'advance'])->name('orders.advance');
+    Route::patch('orders/{order}/revert', [AdminOnlineOrderController::class, 'revert'])->name('orders.revert');
+    Route::patch('orders/{order}/cancel', [AdminOnlineOrderController::class, 'cancel'])->name('orders.cancel');
+    Route::patch('orders/{order}/reimburse', [AdminOnlineOrderController::class, 'reimburse'])->name('orders.reimburse');
+    Route::post('orders/{order}/links', [AdminOnlineOrderController::class, 'regenerateLink'])->name('orders.regenerate-link');
+    Route::resource('orders', AdminOnlineOrderController::class)->only(['index', 'create', 'store', 'show', 'update']);
 
     // CRUD Blog Posts
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
