@@ -2,6 +2,8 @@
 
 Date: 2026-10-07. Status: IN_REVIEW, not deployed. Branch modernization/blog-03-journal depends on BLOG-02 (68fae08), which depends on BLOG-01. Owner selected this item with “gas lanjut”. Order work remains separately assigned to Claude Code; no order implementation changed.
 
+Delivery: [draft PR29](https://github.com/husen211/Qammaris-Parfum-Website/pull/29), base modernization/blog-02-editor. Implementation commit810c133 passed [push CI](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37641397301) and [PR CI](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37641541598). Follow-up evidence commit only corrects the desktop screenshot framing and records these links; latest CI is visible on the PR.
+
 ## Outcome and scope
 
 Calm Journal landing with search/category/optional selected featured article, newest grid and query-preserving native pagination. Article hierarchy shows title/dek/author/date/read time above contained hero, about720px desktop body and optional TOC/product-link sidebar. Mobile uses one column and TOC accordion. Tables scroll internally. Max3 related articles, next article, store CTA and WA/copy/Facebook/X/native share. Public views/English sharing labels/decorative hero overlay removed.
@@ -29,6 +31,8 @@ Chrome extension, mouse/viewport tests only. Public landing and long article che
 Typed pnduan via mobile form: metadata typo matched expected title/summary articles; category Review reduced results to4, nonsense term showed empty state/clear action. Clicked next/previous pagination; page2 canonical retained page number. Opened article from image/text action and short next article with keyboard; short article had no TOC. Copy button showed “Tautan berhasil disalin.” Keyboard Tab reached category/SEO flag with visible focus. Existing destination skeleton appeared during native form/navigation and disappeared at destination. Genuine touch is not verified.
 
 Synthetic missing hero changed to local nonexistent file: fallback loaded product-placeholder.svg (naturalWidth600), zero remaining failed images; fixed frame retained. No public page console errors before intentional404. Expected missing-image404 during this test is not a production-media check. Actual metadata DOM has four valid schema blocks and article image/clean canonical; Tiptap absent from public scripts.
+
+Final screenshot file inspection caught one desktop landing capture with mobile framing. Recreated an isolated14-article fixture, verified innerWidth1440/clientWidth1425, recaptured the desktop image (1425×891 browser output), then stopped the server and removed that fixture too. This corrected evidence, not application behavior.
 
 Admin SEO fields inspected at1440/390px on a disposable local test account, labels/help text/readable checkbox focus; no mobile overflow. No admin article write was needed for layout check. Invalid input/shared-save behavior covered by server tests. Native share dialog/external provider send and clipboard-denied fallback not exercised in browser. No outbound WhatsApp/social messages sent.
 
