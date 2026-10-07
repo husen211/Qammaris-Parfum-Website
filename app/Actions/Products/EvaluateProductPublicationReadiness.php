@@ -4,6 +4,8 @@ namespace App\Actions\Products;
 
 use App\Models\Product;
 use App\Services\ProductMediaStorage;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 
 class EvaluateProductPublicationReadiness
 {
@@ -14,6 +16,28 @@ class EvaluateProductPublicationReadiness
      */
     public function handle(Product $product): array
     {
+        $slugInUse = trim((string) $product->slug) !== ''
+            && Product::query()->where('slug', $product->slug)->whereKeyNot($product->getKey())->exists();
+
+        return $this->blockers($product, $slugInUse);
+    }
+
+    /** Read-only review snapshot; mutations must call handle() again. */
+    public function forReview(Collection $products): Collection
+    {
+        $products = new EloquentCollection($products->unique('id')->values()->all());
+        $products->loadMissing(['brand', 'category', 'variants', 'images']);
+        $slugs = $products->pluck('slug')->filter(fn ($slug) => trim((string) $slug) !== '')->unique();
+        $duplicates = $slugs->isEmpty() ? collect() : Product::query()->whereIn('slug', $slugs)
+            ->select('slug')->groupBy('slug')->havingRaw('COUNT(*) > 1')->pluck('slug');
+
+        return $products->mapWithKeys(fn (Product $product) => [
+            $product->id => $this->blockers($product, $duplicates->contains($product->slug)),
+        ]);
+    }
+
+    private function blockers(Product $product, bool $slugInUse): array
+    {
         $product->loadMissing(['brand', 'category', 'variants', 'images']);
         $blockers = [];
 
@@ -22,7 +46,7 @@ class EvaluateProductPublicationReadiness
         }
 
         if (trim((string) $product->slug) === ''
-            || Product::query()->where('slug', $product->slug)->whereKeyNot($product->getKey())->exists()) {
+            || $slugInUse) {
             $blockers['slug'] = 'Slug produk belum valid atau sudah digunakan.';
         }
 

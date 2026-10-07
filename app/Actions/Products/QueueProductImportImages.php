@@ -65,6 +65,7 @@ class QueueProductImportImages
                         foreach ($outcomes as &$outcome) {
                             if ($outcome['status'] === 'pending') {
                                 $outcome['status'] = 'blocked';
+                                $outcome['reason'] = 'target_conflict';
                                 $outcome['message'] = $error->getMessage().' Upload ulang kedua file untuk pemeriksaan baru.';
                             }
                         }

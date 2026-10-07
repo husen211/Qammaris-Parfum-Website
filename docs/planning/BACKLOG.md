@@ -1,6 +1,6 @@
 # Qammaris — backlog current
 
-Updated 2026-10-07, AUD-02. This board is the entry point; detailed prior scope/acceptance/results remain in the [historical backlog](../history/2026-10-07-context/BACKLOG.md), [audit](../audits/2026-10-07-maintainability.md), ADRs and linked verification. Historical “next/unstarted/pending” paragraphs are relative to their date. Do not implement them again or treat them as new authorization. Current rules: [BUSINESS_RULES](../product/BUSINESS_RULES.md); executable flow: [ARCHITECTURE](../architecture/ARCHITECTURE.md).
+Updated 2026-10-07, AUD-03. This board is the entry point; detailed prior scope/acceptance/results remain in the [historical backlog](../history/2026-10-07-context/BACKLOG.md), [audit](../audits/2026-10-07-maintainability.md), ADRs and linked verification. Historical “next/unstarted/pending” paragraphs are relative to their date. Do not implement them again or treat them as new authorization. Current rules: [BUSINESS_RULES](../product/BUSINESS_RULES.md); executable flow: [ARCHITECTURE](../architecture/ARCHITECTURE.md).
 
 ## Status and working limit
 
@@ -20,7 +20,7 @@ BACKLOG = proposed/not approved for execution; READY = accepted bounded scope re
 | P7 | Public UX | DONE | Catalog/search/cart/recipient WhatsApp flow released; device gates tracked under P9 |
 | P8 | App/integration/import | IN_PROGRESS | Feed/automatic drafts/prices/Shopee released; older acceptance consolidated for review with P9, no website write API claimed |
 | P9 | Acceptance/observation | IN_PROGRESS | P9-01 IN_REVIEW; exact remaining limits below |
-| AUD | Maintainability/context | IN_PROGRESS | AUD-01 report IN_REVIEW; AUD-02 docs implemented, IN_REVIEW; code follow-ups not started |
+| AUD | Maintainability/context | IN_PROGRESS | AUD-01 report and AUD-02 docs IN_REVIEW; AUD-03 implemented locally, IN_REVIEW; later items not started |
 
 Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked complete merely because the current code is live. [MASTER_PLAN](../architecture/MASTER_PLAN.md) defines closure and future-program boundaries.
 
@@ -29,6 +29,18 @@ Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked compl
 Owner approval 2026-10-07: explicitly correct the observed production Pink/Purple mismatch. Exact scope: Shopee42131600634 previously assigned to Purple879, belongs to Pink686. One transaction reassigns that Shopee identity only, completes Pink with the verified100ml/Wanita/EDP copy and three checksum-verified independent photo copies, publishes Pink, returns Purple to draft and soft-archives its incorrect Pink photos. Original application UUIDs, source prices/status, product IDs and slugs retained; no source-system/database/schema/credential/deployment changes.
 
 Production audit batch8 stores two before/after rows; private preview/receipt retain recovery evidence and original media files. Shared importer rebind guards remain unchanged. Local53tests/264assertions passed; production preview/rehearsal rollback and verify passed; public Pink200/Purple404 and all three Pink gallery images loaded. Original applied batch6 remains historical evidence, not rewritten. Details, limits and scoped recovery: [correction verification](../verification/supremacy-pink/README.md). This correction does not start AUD-03 or close P9.
+
+## AUD-03 — Shopee review summaries and media recovery — IN_REVIEW
+
+Owner execution approval: “Berikutnya AUD-03”. Scope: one shared read-only row summary for counts, filters and rendering; batch readiness evaluation; clear download retry versus protected media review. No import framework, dependency, migration, automatic publication, production mutation or deployment.
+
+Acceptance implemented:
+- `ShopeeContentReview` replaces duplicated controller/Blade calculations. `EvaluateProductPublicationReadiness::forReview` batches slug checks and evaluates each distinct target once; apply/publish still use fresh `handle` validation.
+- Failed downloads offer retry/manual upload; protected target/media/capacity outcomes require editor review or a new export pair. New Shopee blocked outcomes carry additive reason codes; legacy outcomes remain readable without rewriting historical rows. Recheck of pending content does not reset applied-media baselines.
+- Same375-row local fixture:408 →25 review queries,375 →1 slug checks;6 work/369 complete unchanged. This is a SQLite read/render measurement, not a production latency claim.
+- Laravel345tests/2384assertions and31Node tests passed; targeted Pint, Vite build and diff checks passed. Real Chrome review at390×844 and1440×900 covered375 rows, recovery, pagination, size-choice search, ready/queued/empty/disabled states. Existing build warnings and genuine touch/live upload limits remain explicit.
+
+Evidence/screenshots/cleanup/rollback: [AUD-03 verification](../verification/aud-03/README.md). Code ready for branch review; production behavior remains unchanged until a separately approved release. Recommended next: AUD-04, only after Owner direction.
 
 ## AUD-02 — Consolidate current repository context — IN_REVIEW
 
@@ -58,7 +70,7 @@ Remaining acceptance limits:
 - Native file chooser/upload path blocked by existing extension permission; permission was not changed. Persisted Owner import/CDN outcomes are confirmed, native upload path is not.
 - New source-event timing/replay/outage in current production not exercised; existing source tests/staging event evidence do not replace it.
 - Populated production recipient checkout/WA handoff not submitted; empty cart/navigation passed. No fabricated customer/order.
-- Two protected media-baseline holds preserve published photos; retry alone cannot reconcile stale baseline. Current recovery copy is an AUD-03 candidate, not permission to overwrite.
+- Two protected media-baseline holds preserve published photos; retry alone cannot reconcile stale baseline. AUD-03 improves local recovery guidance; production resolution is still unconfirmed and is not permission to overwrite.
 
 Scope remains verification only unless separately approved. Owner advanced to the audit without closing these gates. P1-04 and older P8 staging/launch IN_REVIEW records remain in history; review remaining scope against these latest observations rather than re-running old launch scripts or resetting checkpoints.
 
@@ -85,12 +97,9 @@ Previous detailed items/acceptance remain in [history](../history/2026-10-07-con
 
 | Item | Problem / bounded direction | Dependency | Priority / scope |
 |---|---|---|---|
-| AUD-03 | Centralize Shopee row work/complete summaries outside Blade; distinguish stale-media review from download retry; preserve actor/content-v2/size/no-op/partial/replay behavior | AUD-02 review + Owner execution direction; AUD-F03/F12 | Medium / M |
 | AUD-04 | Reuse current catalog card for related products; preserve labels/links/contained assets/keyboard/touch limits | AUD-02; AUD-F07 | Medium / S |
 | AUD-05 | Reduce editor/request duplication with explicit dependencies; preserve source price, child ownership, transactions/media cleanup and publication | AUD-02; AUD-F04–06 | Medium / M |
 | AUD-06 | Decide money unit/rounding; trace fractional legacy JSON/session totals before any validation/data change | Owner business decision + read-only data evidence; AUD-F08/09 | Medium / M |
 | AUD-07 | Narrow human actor audit/diagnostics only if needed; no generic audit/event framework | AUD-05 + retention/scopes decision; AUD-F11 | Medium / M |
-
-AUD-03 proposed acceptance: bounded summary evaluation/query measurement, clear stale-media recovery, unchanged work/complete counts and guarded import behavior; tests for actor/size/partial/no-op/retry plus real375-row mobile/desktop review. No migration/new package, implicit production writes or deployment. Work cannot begin just because this row is next.
 
 Payment gateway, machine-write website API, cloud migration and arbitrary normalization are not active backlog items or launch prerequisites. New requests require a concrete approved scope. Measured query/compatibility-route/name cleanup remains later work only after benchmark/consumer evidence (AUD-F10/F13/F14), not a new approved phase. Unrelated audit findings stay in the [register](../audits/2026-10-07-maintainability.md).
