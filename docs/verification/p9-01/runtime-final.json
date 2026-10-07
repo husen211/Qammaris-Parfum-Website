@@ -1,0 +1,13 @@
+{
+  "captured_at_utc": "2026-10-07T03:54:04+00:00",
+  "checkpoint": 467,
+  "last_synced_at": "2026-10-07 03:30:16",
+  "error_present": false,
+  "jobs": 0,
+  "failed_jobs": 0,
+  "php_queue_workers": 1,
+  "temporary_schedule_work": 0,
+  "scheduler-last-run": "2026-10-07T03:54:01Z",
+  "worker-watchdog-last-run": "2026-10-07T03:54:01Z",
+  "health_http": 200
+}

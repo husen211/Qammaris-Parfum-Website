@@ -1,0 +1,24 @@
+{
+    "batch": 6,
+    "total": 375,
+    "status": "applied",
+    "applied_rows": 33,
+    "blocked_rows": 0,
+    "applied_at": "2026-10-07T03:29:27+00:00",
+    "human_actor_attributed": true,
+    "apply_status": {
+        "skipped_no_changes": 342,
+        "updated": 33
+    },
+    "image_status": {
+        "none": 342,
+        "completed": 31,
+        "completed_with_errors": 2
+    },
+    "resolution_count": 375,
+    "matched": 375,
+    "image_outcomes": {
+        "stored": 39,
+        "blocked": 2
+    }
+}

@@ -1,0 +1,26 @@
+[
+    {
+        "product_id": 658,
+        "name": "Hawas Elixir Edp 100 Ml",
+        "publication": "published",
+        "current_photo_count": 2,
+        "outcomes": [
+            {
+                "slot": "foto_utama_url",
+                "reason": "target_changed"
+            }
+        ]
+    },
+    {
+        "product_id": 472,
+        "name": "Qammaris Signature Cache Extrait De Parfum 50ml",
+        "publication": "published",
+        "current_photo_count": 2,
+        "outcomes": [
+            {
+                "slot": "foto_utama_url",
+                "reason": "target_changed"
+            }
+        ]
+    }
+]
