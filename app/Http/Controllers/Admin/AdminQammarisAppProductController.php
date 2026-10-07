@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductExternalIdentity;
 use App\Models\ProductImportBatch;
 use App\Services\QammarisAppClient;
+use App\Support\SearchMatcher;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -23,7 +24,7 @@ class AdminQammarisAppProductController extends Controller
     {
         $filter = in_array($request->query('status'), ['draft', 'unlinked', 'hidden', 'price_review'], true)
             ? $request->query('status') : 'all';
-        $search = is_string($request->query('search')) ? mb_substr(trim($request->query('search')), 0, 100) : '';
+        $search = SearchMatcher::term($request->query('search'));
         $identities = ProductExternalIdentity::where('provider', 'qammaris_app')->get()->keyBy('external_product_id');
         $products = Product::with(['brand', 'category', 'variants', 'images'])->whereIn('id', $identities->pluck('product_id'))->get()->keyBy('id');
         $sources = DB::table('qammaris_app_products')->orderByDesc('updated_at')->orderBy('id')->get()->map(function ($row) use ($identities, $products) {
@@ -43,7 +44,7 @@ class AdminQammarisAppProductController extends Controller
             'hidden' => $sources->filter(fn ($r) => $r['source']['hidden'])->count(),
             'price_review' => $sources->where('price_review', true)->count(),
         ];
-        $filtered = $sources->filter(function ($r) use ($filter, $search) {
+        $filtered = $sources->filter(function ($r) use ($filter) {
             $matches = match ($filter) {
                 'draft' => ! $r['source']['hidden'] && $r['product']?->publication_status === 'draft',
                 'unlinked' => ! $r['source']['hidden'] && ! $r['product'],
@@ -52,10 +53,13 @@ class AdminQammarisAppProductController extends Controller
                 default => true,
             };
 
-            return $matches && ($search === '' || str_contains(mb_strtolower(implode(' ', [
-                $r['source']['name'], $r['source']['brand'], $r['source']['sku'], $r['source']['id'], $r['product']?->name,
-            ])), mb_strtolower($search)));
+            return $matches;
         })->values();
+        if ($search !== '') {
+            $filtered = SearchMatcher::filter($filtered, $search,
+                fn ($r) => [$r['source']['name'], $r['source']['brand'], $r['product']?->name],
+                fn ($r) => [$r['source']['sku'], $r['source']['id']]);
+        }
         $pageInput = $request->query('page', 1);
         $page = max(1, min(is_scalar($pageInput) ? (int) $pageInput : 1, max(1, (int) ceil($filtered->count() / 25))));
         $rows = new LengthAwarePaginator($filtered->forPage($page, 25)->map(function ($r) use ($readiness) {

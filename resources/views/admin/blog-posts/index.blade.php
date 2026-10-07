@@ -15,7 +15,7 @@
     <form method="GET" class="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="md:col-span-2">
             <label class="text-xs font-semibold uppercase tracking-widest text-gray-400">Search</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul atau ringkasan..."
+            <input type="text" name="search" value="{{ $search }}" placeholder="Cari judul atau ringkasan..."
                 class="mt-2 w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40">
         </div>
         <div>

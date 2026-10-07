@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SearchMatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -242,15 +243,18 @@ class Product extends Model
     /**
      * Scope: Search products
      */
-    public function scopeSearch($query, $term)
+    public function scopeSearch($query, $term, bool $rank = true)
     {
-        return $query->where(function ($q) use ($term) {
-            $q->where('name', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
-                ->orWhereHas('brand', function ($brandQuery) use ($term) {
-                    $brandQuery->where('name', 'like', "%{$term}%");
-                });
-        });
+        $term = SearchMatcher::term($term);
+        if ($term === '') {
+            return $query;
+        }
+        $candidates = (clone $query)->reorder()->withoutEagerLoads()->select(['products.id', 'products.name', 'products.brand_id'])
+            ->with(['brand:id,name', 'variants:id,product_id,sku,volume,is_active'])->get();
+
+        return SearchMatcher::constrain($query, $term, $candidates,
+            fn ($product) => [$product->name, $product->brand?->name, ...$product->variants->where('is_active', true)->map(fn ($variant) => $variant->volume.' ml')->all()],
+            fn ($product) => $product->variants->pluck('sku')->all(), $rank);
     }
 
     /**

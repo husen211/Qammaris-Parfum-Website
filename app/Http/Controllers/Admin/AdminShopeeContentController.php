@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
 use App\Services\ShopeeContentPreviewer;
+use App\Support\SearchMatcher;
 use DomainException;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,7 @@ class AdminShopeeContentController extends Controller
         $query = $batch?->rows()->with(['matchedProduct.brand', 'matchedProduct.variants', 'matchedProduct.images', 'appliedProduct.brand',
             'appliedProduct.category', 'appliedProduct.variants', 'appliedProduct.images']);
         $filter = in_array($request->query('filter'), ['review', 'ready', 'images_failed'], true) ? $request->query('filter') : 'all';
-        $search = is_string($request->query('search')) ? mb_substr(trim($request->query('search')), 0, 100) : '';
+        $search = SearchMatcher::term($request->query('search'));
         $ready = [];
         $pending = 0;
         if ($batch) {
@@ -51,7 +52,8 @@ class AdminShopeeContentController extends Controller
                 $query->where('image_acquisition_status', 'completed_with_errors');
             }
             if ($search !== '') {
-                $query->where('normalized_data->source->name', 'like', '%'.$search.'%');
+                SearchMatcher::constrain($query->getQuery(), $search, (clone $query)->reorder()->withoutEagerLoads()->get(['id', 'normalized_data']),
+                    fn ($row) => [$row->normalized_data['source']['name'] ?? '']);
             }
         }
         $rows = $query?->paginate(25)->withQueryString();

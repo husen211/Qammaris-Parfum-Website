@@ -421,6 +421,20 @@ class ShopeeContentImportTest extends TestCase
         $this->assertDatabaseCount('product_images', 0);
     }
 
+    public function test_source_row_search_tolerates_typos_without_changing_batch_or_target(): void
+    {
+        $product = $this->product();
+        $batch = $this->preview();
+        $row = $batch->rows()->sole();
+        $this->actingAs($this->admin);
+        $response = $this->get(route('admin.shopee-imports.index', ['batch' => $batch->id, 'search' => 'demmo 100ml']))->assertOk();
+        $this->assertSame([$row->id], $response->viewData('rows')->pluck('id')->all());
+        $this->assertSame(0, $this->get(route('admin.shopee-imports.index', ['batch' => $batch->id, 'search' => 'demo 50ml']))->viewData('rows')->total());
+        $this->assertSame($product->id, $row->fresh()->matched_product_id);
+        $this->assertSame('pending', $row->fresh()->apply_status);
+        $this->assertDatabaseCount('product_images', 0);
+    }
+
     private function preview(string $mediaId = '501', string $url = 'https://images.example.test/a.png'): ProductImportBatch
     {
         return app(ShopeeContentPreviewer::class)->preview($this->admin,

@@ -6,18 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BrandStoreRequest;
 use App\Http\Requests\Admin\BrandUpdateRequest;
 use App\Models\Brand;
+use App\Support\SearchMatcher;
 use Illuminate\Http\Request;
 
 class AdminBrandController extends Controller
 {
     public function index(Request $request)
     {
-        $search = trim((string) $request->query('search', ''));
+        $search = SearchMatcher::term($request->query('search'));
 
-        $brands = Brand::query()
-            ->withCount('products')
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
-            ->orderBy('name')
+        $query = Brand::query()->withCount('products');
+        if ($search !== '') {
+            SearchMatcher::constrain($query, $search, (clone $query)->select(['id', 'name'])->get(), fn ($row) => [$row->name]);
+        }
+        $brands = $query->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 

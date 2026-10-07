@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryStoreRequest;
 use App\Http\Requests\Admin\CategoryUpdateRequest;
 use App\Models\Category;
+use App\Support\SearchMatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -13,12 +14,13 @@ class AdminCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $search = trim((string) $request->query('search', ''));
+        $search = SearchMatcher::term($request->query('search'));
 
-        $categories = Category::query()
-            ->withCount('products')
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
-            ->orderBy('name')
+        $query = Category::query()->withCount('products');
+        if ($search !== '') {
+            SearchMatcher::constrain($query, $search, (clone $query)->select(['id', 'name'])->get(), fn ($row) => [$row->name]);
+        }
+        $categories = $query->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
