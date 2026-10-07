@@ -18,7 +18,7 @@ Foundation/test/product/media operations (existing)
     -> bounded production acceptance P9 (IN_REVIEW, limits explicit)
     -> AUD-01 evidence-first audit (report complete, IN_REVIEW)
     -> AUD-02 current-context consolidation (implemented, IN_REVIEW)
-    -> one Owner-approved bounded refactor at a time (not started)
+    -> one Owner-approved bounded refactor at a time (scope/status in BACKLOG)
 ```
 
 Advancing to the audit does not mark P9 limits passed. AUD-02 is not a release or authorization to execute the next refactor. Proposed AUD-03–07 dependencies/scopes live in BACKLOG; they are a maintainability follow-up queue, not newly mandatory launch blockers.
