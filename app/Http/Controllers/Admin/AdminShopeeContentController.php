@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\ApplyShopeeContent;
-use App\Actions\Products\EvaluateProductPublicationReadiness;
 use App\Actions\Products\QueueProductImportImages;
 use App\Exceptions\InvalidProductImportFile;
 use App\Http\Controllers\Controller;
@@ -13,13 +12,14 @@ use App\Models\Category;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
 use App\Services\ShopeeContentPreviewer;
+use App\Services\ShopeeContentReview;
 use App\Support\SearchMatcher;
 use DomainException;
 use Illuminate\Http\Request;
 
 class AdminShopeeContentController extends Controller
 {
-    public function index(Request $request, ShopeeContentPreviewer $preview)
+    public function index(Request $request, ShopeeContentPreviewer $preview, ShopeeContentReview $review)
     {
         $batch = null;
         if ($request->filled('batch')) {
@@ -27,41 +27,17 @@ class AdminShopeeContentController extends Controller
             $batch = ProductImportBatch::where('contract_version', ShopeeContentPreviewer::VERSION)
                 ->where('actor_id', $request->user()->id)->findOrFail($request->query('batch'));
         }
-        $query = $batch?->rows()->with(['matchedProduct.brand', 'matchedProduct.variants', 'matchedProduct.images', 'appliedProduct.brand',
-            'appliedProduct.category', 'appliedProduct.variants', 'appliedProduct.images']);
+        $query = $batch?->rows();
         $filter = in_array($request->query('filter'), ['work', 'all', 'complete', 'review', 'ready', 'images_failed'], true) ? $request->query('filter') : 'work';
         $search = SearchMatcher::term($request->query('search'));
-        $ready = [];
-        $pending = 0;
-        $work = [];
-        $complete = [];
-        $needsRefresh = 0;
+        $products = $batch ? $preview->products() : collect();
+        $allRows = $batch ? $batch->rows()->with(['matchedProduct.brand', 'matchedProduct.category', 'matchedProduct.variants', 'matchedProduct.images', 'matchedProduct.externalIdentities',
+            'appliedProduct.brand', 'appliedProduct.category', 'appliedProduct.variants', 'appliedProduct.images', 'appliedProduct.externalIdentities'])->get() : collect();
+        $summaries = $review->summarize($allRows, $products);
+        $complete = $summaries->where('complete', true)->keys()->all();
+        $work = $summaries->where('complete', false)->keys()->all();
+        $ready = $allRows->filter(fn ($row) => $summaries->get($row->id)['ready'])->values()->all();
         if ($batch) {
-            foreach ($batch->rows()->with(['matchedProduct.brand', 'matchedProduct.category', 'matchedProduct.variants', 'matchedProduct.images', 'matchedProduct.externalIdentities',
-                'appliedProduct.brand', 'appliedProduct.category', 'appliedProduct.variants', 'appliedProduct.images', 'appliedProduct.externalIdentities'])->get() as $r) {
-                $product = $r->appliedProduct ?? $r->matchedProduct;
-                $changes = $product && $r->apply_status === 'pending' && $r->matched_product_id
-                    && $preview->hasChanges($r->normalized_data, $product);
-                $legacy = $r->apply_status === 'pending' && ($r->normalized_data['fingerprint_version'] ?? null) !== ShopeeContentPreviewer::FINGERPRINT_VERSION;
-                if ($legacy || $r->apply_status === 'blocked_protected') {
-                    $needsRefresh++;
-                }
-                $pending += $changes && ! $legacy ? 1 : 0;
-                $isComplete = $product && $r->matched_product_id && $product->publication_status === 'published'
-                    && ! $changes && $r->apply_status !== 'blocked_protected'
-                    && ! in_array($r->image_acquisition_status, ['queued', 'processing', 'completed_with_errors'], true)
-                    && app(EvaluateProductPublicationReadiness::class)->handle($product) === [];
-                if ($isComplete) {
-                    $complete[] = $r->id;
-                } else {
-                    $work[] = $r->id;
-                }
-                if ($r->appliedProduct?->publication_status === 'draft' && $r->apply_status === 'updated'
-                    && ! in_array($r->image_acquisition_status, ['queued', 'processing'], true)
-                    && app(EvaluateProductPublicationReadiness::class)->handle($r->appliedProduct) === []) {
-                    $ready[] = $r;
-                }
-            }
             if ($filter === 'work') {
                 $query->whereIn('id', $work);
             } elseif ($filter === 'complete') {
@@ -74,15 +50,16 @@ class AdminShopeeContentController extends Controller
                 $query->where('image_acquisition_status', 'completed_with_errors');
             }
             if ($search !== '') {
-                SearchMatcher::constrain($query->getQuery(), $search, (clone $query)->reorder()->withoutEagerLoads()->get(['id', 'normalized_data']),
+                SearchMatcher::constrain($query->getQuery(), $search, $allRows,
                     fn ($row) => [$row->normalized_data['source']['name'] ?? '']);
             }
         }
         $rows = $query?->paginate(25)->withQueryString();
 
-        return view('admin.shopee-imports.index', ['batch' => $batch, 'rows' => $rows, 'products' => $batch ? $preview->products() : collect(),
-            'pendingCount' => $pending, 'ready' => $ready, 'filter' => $filter, 'search' => $search,
-            'workCount' => count($work), 'completeCount' => count($complete), 'needsRefresh' => $needsRefresh,
+        return view('admin.shopee-imports.index', ['batch' => $batch, 'rows' => $rows, 'products' => $products, 'summaries' => $summaries,
+            'pendingCount' => $summaries->where('pending', true)->count(), 'ready' => $ready, 'filter' => $filter, 'search' => $search,
+            'workCount' => count($work), 'completeCount' => count($complete), 'needsRefresh' => $summaries->where('needs_refresh', true)->count(),
+            'retryImageCount' => $summaries->where('retry_images', true)->count(), 'mediaReviewCount' => $summaries->where('media_review', true)->count(),
             'categories' => Category::active()->get()->keyBy('id'),
             'recent' => ProductImportBatch::where('contract_version', ShopeeContentPreviewer::VERSION)->where('actor_id', $request->user()->id)->latest('id')->limit(8)->get()]);
     }
@@ -120,11 +97,11 @@ class AdminShopeeContentController extends Controller
         });
     }
 
-    public function apply(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch, ApplyShopeeContent $action)
+    public function apply(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch, ApplyShopeeContent $action, QueueProductImportImages $imageQueue)
     {
-        return $this->perform($productImportBatch, function () use ($request, $productImportBatch, $action) {
+        return $this->perform($productImportBatch, function () use ($request, $productImportBatch, $action, $imageQueue) {
             $count = $action->handle($productImportBatch, $request->user());
-            $images = app(QueueProductImportImages::class)->handle($productImportBatch, $request->user());
+            $images = $imageQueue->handle($productImportBatch, $request->user());
 
             $blocked = $productImportBatch->rows()->where('apply_status', 'blocked_protected')->count();
 
@@ -133,10 +110,10 @@ class AdminShopeeContentController extends Controller
         });
     }
 
-    public function images(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch)
+    public function images(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch, QueueProductImportImages $imageQueue)
     {
-        return $this->perform($productImportBatch, function () use ($request, $productImportBatch) {
-            $result = app(QueueProductImportImages::class)->handle($productImportBatch, $request->user());
+        return $this->perform($productImportBatch, function () use ($request, $productImportBatch, $imageQueue) {
+            $result = $imageQueue->handle($productImportBatch, $request->user());
 
             return $result['queued_rows'].' produk masuk antrean foto. Muat ulang hasil untuk melihat perkembangannya.';
         });

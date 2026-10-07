@@ -33,7 +33,7 @@ Feature branch tidak mengaktifkan production. Sebelum release, pastikan ekstensi
 
 Rollback kode mempertahankan audit, identitas, copy dan foto yang sudah berhasil. Hentikan worker foto secara terkendali untuk rollback; lanjutkan dengan forward fix lalu retry hanya kandidat gagal. Tidak ada checkpoint reset, database restore, penghapusan media atau unpublish otomatis.
 
-## P8-10 — Pemulihan impor berulang (2026-10-07, in review)
+## P8-10 — Pemulihan impor berulang (released 2026-10-07 through PR15)
 
 Batch Owner375/368dikenali/7review gagal karena fingerprint katalog umum mencakup harga, stok dan updated_at, dan satu konflik membatalkan semua baris. Kontrak `shopee-content-v1` tetap dipakai untuk batch/job lama; proposal baru menambahkan marker `content-v2`. Fingerprint khusus konten melindungi nama/URL/taksonomi/copy, ukuran/identitas offer, identitas eksternal, publikasi/hidden dan baseline media. Harga/stok/bestseller/timestamps dikecualikan karena tidak ditulis impor ini. Fingerprint umum untuk operasi bulk lain tidak diubah.
 
@@ -42,3 +42,11 @@ POST actor-owned/CSRF/throttled `/{batch}/refresh` mengaudit pemeriksaan ulang b
 Apply memvalidasi integritas payload semua baris dahulu; korupsi tetap rollback. Konflik target yang dapat diperiksa ulang disimpan sebagai `blocked_protected` tanpa mutasi produk tersebut; baris lain melanjutkan di transaksi existing. No-op dicatat `skipped_no_changes`, tanpa pemetaan/simpan produk/antrean foto. Konflik baseline media pada enqueue Shopee menandai outcome baris tersebut blocked, menjaga foto lama dan membiarkan baris aman antre; aturan kontrak impor lain tidak dilonggarkan. Publikasi pilihan tetap terpisah dan atomik.
 
 Filter default `work` menyembunyikan produk published yang memenuhi readiness dan tanpa perubahan/outcome foto tertunda/gagal. Filter complete/all menjaga akses untuk penggantian deskripsi eksplisit. Daftar bukan otomatis hanya produk baru: tambahan foto/copy untuk produk lama tetap pekerjaan yang perlu terlihat. Tidak ada migrasi/package/pola arsitektur baru. Batch sampai1.000baris memakai pemeriksaan metadata/readiness bounded; file/disk/CDN live tetap membutuhkan verifikasi rilis tersendiri. Code rollback menjaga sumber/audit/media, tetapi proposal content-v2 perlu forward fix/recheck yang sesuai sebelum dapat diterapkan lewat kode lama; jangan menghapus hasil impor untuk rollback.
+
+## AUD-03 — Ringkasan review dan pemulihan media (branch, belum dirilis)
+
+Controller dan Blade sebelumnya menghitung status yang sama secara terpisah; review375baris lokal melakukan408query, termasuk375pemeriksaan slug. `ShopeeContentReview` kini menghasilkan satu ringkasan read-only per baris untuk counts/filter/tampilan. Readiness snapshot mengevaluasi setiap produk sekali dengan slug query berkelompok, menurunkan fixture yang sama ke25query tanpa perubahan6work/369complete. Ini mengurangi duplikasi tanpa repository/framework impor baru. Snapshot bukan otoritas mutasi: apply/publish tetap memeriksa keadaan terbaru.
+
+Outcome Shopee blocked baru menyertakan `reason`: cover dependency dapat dicoba setelah unduhan sampul gagal; target conflict, produk tidak tersedia dan kapasitas memerlukan review. Batch historis tidak ditulis ulang: hanya pesan cover dependency lama yang dikenal diperlakukan retryable; blocked tanpa reason lainnya dan terminal error tanpa outcome diarahkan ke review. Campuran failed+protected juga meminta review. Guard antrean/attach tetap berlaku dan retry batch boleh melanjutkan baris aman, tidak menghapus/mengganti foto tersimpan.
+
+Filter **Foto bermasalah** mencakup kedua jenis error. Per baris ditampilkan tindakan yang sesuai; tombol retry batch hanya muncul bila ada outcome retryable. **Periksa ulang perubahan** hanya memperbarui usulan konten pending/blocked, bukan baseline foto dari baris applied. Untuk media tersebut, gunakan editor atau upload kedua ekspor baru untuk usulan baru. Tidak ada migrasi, perubahan `content-v2`, perluasan otorisasi atau auto-publish. Bukti dan batas: [AUD-03](../../verification/aud-03/README.md).

@@ -4,17 +4,11 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\Product;
 use App\Models\ProductImage;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
-class ProductUpdateRequest extends FormRequest
+class ProductUpdateRequest extends ProductEditorRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         $product = $this->route('product');
@@ -26,9 +20,8 @@ class ProductUpdateRequest extends FormRequest
         $publishing = $this->input('publication_action') === Product::PUBLICATION_PUBLISHED;
         $requiresCompleteProduct = $publishing || $currentProduct?->isPublished();
 
-        return [
+        return $this->editorRules($requiresCompleteProduct) + [
             'publication_action' => ['sometimes', Rule::in(['save', Product::PUBLICATION_PUBLISHED])],
-            'name' => ['required', 'string', 'max:255'],
             'brand_id' => [
                 Rule::requiredIf($requiresCompleteProduct),
                 'nullable',
@@ -51,9 +44,6 @@ class ProductUpdateRequest extends FormRequest
                     }
                 }),
             ],
-            'description' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'string', 'max:20000'],
-            'compare_at_price' => ['nullable', 'numeric', 'gt:0', 'max:99999999.99'],
-            'gender' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', Rule::in(['Unisex', 'Pria', 'Wanita'])],
             'availability_status' => [
                 'sometimes',
                 'required',
@@ -70,10 +60,6 @@ class ProductUpdateRequest extends FormRequest
                 },
             ],
             'availability_confirmed' => ['sometimes', 'boolean'],
-            'top_notes' => ['nullable', 'string', 'max:1000'],
-            'middle_notes' => ['nullable', 'string', 'max:1000'],
-            'base_notes' => ['nullable', 'string', 'max:1000'],
-            'variants' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'array', 'max:1'],
             'variants.*.id' => [
                 'nullable',
                 'integer',
@@ -81,9 +67,6 @@ class ProductUpdateRequest extends FormRequest
                 Rule::exists('product_variants', 'id')
                     ->where(fn ($query) => $query->where('product_id', $productId)),
             ],
-            'variants.*.volume' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'required_with:variants.*.price', 'integer', 'min:1', 'max:10000'],
-            'variants.*.price' => [Rule::requiredIf($requiresCompleteProduct), 'nullable', 'required_with:variants.*.volume', 'numeric', 'gt:0', 'max:99999999.99'],
-            'variants.*.stock' => ['nullable', 'integer', 'min:0', 'max:999999'],
             'variants.*.sku' => [
                 'nullable',
                 'string',
@@ -96,58 +79,14 @@ class ProductUpdateRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'brand_id.required' => 'Pilih brand sebelum mempublikasikan produk.',
-            'category_id.required' => 'Pilih kategori sebelum mempublikasikan produk.',
-            'description.required' => 'Isi deskripsi sebelum mempublikasikan produk.',
-            'gender.required' => 'Pilih gender/audience sebelum mempublikasikan produk.',
-            'variants.required' => 'Isi satu ukuran dan harga sebelum mempublikasikan produk.',
-            'variants.*.volume.required' => 'Isi ukuran produk sebelum mempublikasikan produk.',
-            'variants.*.price.required' => 'Isi harga jual sebelum mempublikasikan produk.',
-        ];
-    }
-
     public function after(): array
     {
-        return [
+        return [...parent::after(),
             function (Validator $validator): void {
-                $this->validateCompareAtPrice($validator);
                 $this->validateImageLimit($validator);
                 $this->validatePrimaryImageForPublish($validator);
             },
         ];
-    }
-
-    private function validateCompareAtPrice(Validator $validator): void
-    {
-        if (! $this->filled('compare_at_price')) {
-            return;
-        }
-
-        $prices = collect($this->input('variants', []))
-            ->pluck('price')
-            ->filter(fn ($price) => is_numeric($price) && (float) $price > 0);
-
-        if ($prices->isEmpty()) {
-            $validator->errors()->add(
-                'compare_at_price',
-                'Isi harga jual sebelum menambahkan harga coret.'
-            );
-
-            return;
-        }
-
-        if ((float) $this->input('compare_at_price') <= (float) $prices->min()) {
-            $validator->errors()->add(
-                'compare_at_price',
-                'Harga coret harus lebih besar dari harga jual terendah.'
-            );
-        }
     }
 
     private function validateImageLimit(Validator $validator): void

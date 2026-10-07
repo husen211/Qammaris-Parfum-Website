@@ -230,7 +230,7 @@ class AdminProductImportPreviewTest extends TestCase
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
             ->assertDontSee('<script>alert(1)</script>', false)
             ->assertSee('Provider hanya boleh shopee atau majoo.')
-            ->assertSee('Harga harus angka positif tanpa pemisah ribuan.')
+            ->assertSee('Harga harus rupiah bulat positif, tanpa pecahan atau pemisah ribuan.')
             ->assertSee('URL gambar harus HTTPS valid');
 
         $this->assertSame('error', $response->viewData('preview')['rows'][0]['status']);
@@ -315,6 +315,16 @@ class AdminProductImportPreviewTest extends TestCase
     /**
      * @return array<string, string>
      */
+    public function test_fractional_csv_price_is_blocked_without_creating_products(): void
+    {
+        $row = $this->completeRow();
+        $row['harga'] = '100.90';
+        $this->actingAs($this->admin)->post(route('admin.product-imports.preview'), [
+            'product_file' => $this->csvUpload([$row]),
+        ])->assertOk()->assertSee('Harga harus rupiah bulat positif, tanpa pecahan atau pemisah ribuan.');
+        $this->assertDatabaseCount('products', 0);
+    }
+
     private function completeRow(): array
     {
         return [

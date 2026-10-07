@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Rupiah;
 use App\Support\SearchMatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -141,7 +142,7 @@ class Product extends Model
     {
         $price = $this->cheapest_price;
 
-        return $price === null ? null : 'Rp '.number_format($price, 0, ',', '.');
+        return $price === null ? null : Rupiah::format($price);
     }
 
     /**
@@ -191,10 +192,10 @@ class Product extends Model
         }
 
         if ($cheapest == $mostExpensive) {
-            return 'Rp '.number_format($cheapest, 0, ',', '.');
+            return Rupiah::format($cheapest);
         }
 
-        return 'Rp '.number_format($cheapest, 0, ',', '.').' - Rp '.number_format($mostExpensive, 0, ',', '.');
+        return Rupiah::format($cheapest).' - '.Rupiah::format($mostExpensive);
     }
 
     /**

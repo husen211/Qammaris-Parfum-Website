@@ -1,0 +1,42 @@
+[
+  {
+    "cards": 24,
+    "client": 305,
+    "height": 844,
+    "mouseHover": true,
+    "scroll": 305,
+    "width": 320
+  },
+  {
+    "cards": 24,
+    "client": 360,
+    "height": 844,
+    "mouseHover": true,
+    "scroll": 360,
+    "width": 375
+  },
+  {
+    "cards": 24,
+    "client": 375,
+    "height": 844,
+    "mouseHover": true,
+    "scroll": 375,
+    "width": 390
+  },
+  {
+    "cards": 24,
+    "client": 753,
+    "height": 844,
+    "mouseHover": true,
+    "scroll": 753,
+    "width": 768
+  },
+  {
+    "cards": 24,
+    "client": 1425,
+    "height": 900,
+    "mouseHover": true,
+    "scroll": 1425,
+    "width": 1440
+  }
+]

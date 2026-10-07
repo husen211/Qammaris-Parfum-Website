@@ -59,7 +59,7 @@ class AcquireProductImportRowImages
                     || ($shopeeContent && $row->normalized_data['baseline_images'] === []))
                 && ($outcome['slot'] ?? '') !== 'foto_utama_url'
                 && ! collect($row->fresh()->image_acquisition_outcomes)->contains(fn ($candidate) => ($candidate['slot'] ?? '') === 'foto_utama_url' && ($candidate['status'] ?? '') === 'stored')) {
-                $this->recordOutcome($rowId, $index, 'blocked', 'Foto sampul harus berhasil sebelum foto tambahan.');
+                $this->recordOutcome($rowId, $index, 'blocked', 'Foto sampul harus berhasil sebelum foto tambahan.', 'cover_pending');
 
                 continue;
             }
@@ -67,7 +67,7 @@ class AcquireProductImportRowImages
             $product = Product::query()->find($row->applied_product_id);
 
             if (! $product || (! $shopeeContent && $product->publication_status !== Product::PUBLICATION_DRAFT)) {
-                $this->recordOutcome($rowId, $index, 'blocked', 'Produk tidak lagi berupa draft; gambar tidak diubah.');
+                $this->recordOutcome($rowId, $index, 'blocked', 'Produk tidak lagi berupa draft; gambar tidak diubah.', 'product_unavailable');
 
                 continue;
             }
@@ -76,7 +76,7 @@ class AcquireProductImportRowImages
                 try {
                     app(ShopeeContentImageTarget::class)->assert($row->fresh(), $product);
                 } catch (DomainException $exception) {
-                    $this->recordOutcome($rowId, $index, 'blocked', $exception->getMessage());
+                    $this->recordOutcome($rowId, $index, 'blocked', $exception->getMessage(), 'target_conflict');
 
                     continue;
                 }
@@ -94,7 +94,7 @@ class AcquireProductImportRowImages
             }
 
             if ($product->images()->count() >= ProductImage::MAX_PER_PRODUCT) {
-                $this->recordOutcome($rowId, $index, 'blocked', 'Slot gambar produk sudah penuh (maksimum tiga).');
+                $this->recordOutcome($rowId, $index, 'blocked', 'Slot gambar produk sudah penuh (maksimum tiga).', 'capacity');
 
                 continue;
             }
@@ -155,7 +155,7 @@ class AcquireProductImportRowImages
                 $this->recordOutcome($rowId, $index, 'failed', $exception->getMessage());
             } catch (DomainException $exception) {
                 $this->cleanupStoredPath($storedPath);
-                $this->recordOutcome($rowId, $index, 'blocked', $exception->getMessage());
+                $this->recordOutcome($rowId, $index, 'blocked', $exception->getMessage(), 'target_conflict');
             } catch (Throwable $exception) {
                 $this->cleanupStoredPath($storedPath);
                 report($exception);
@@ -196,9 +196,9 @@ class AcquireProductImportRowImages
         });
     }
 
-    private function recordOutcome(int $rowId, int $index, string $status, ?string $message): void
+    private function recordOutcome(int $rowId, int $index, string $status, ?string $message, ?string $reason = null): void
     {
-        DB::transaction(function () use ($rowId, $index, $status, $message): void {
+        DB::transaction(function () use ($rowId, $index, $status, $message, $reason): void {
             $row = ProductImportRow::query()->lockForUpdate()->findOrFail($rowId);
             $outcomes = $row->image_acquisition_outcomes ?? [];
             if ($row->batch->contract_version === ShopeeContentPreviewer::VERSION
@@ -208,7 +208,7 @@ class AcquireProductImportRowImages
             $outcomes[$index] = array_merge($outcomes[$index] ?? [], [
                 'status' => $status,
                 'message' => $message,
-            ]);
+            ], $reason !== null && $row->batch->contract_version === ShopeeContentPreviewer::VERSION ? ['reason' => $reason] : []);
             $row->forceFill(['image_acquisition_outcomes' => $outcomes])->save();
         });
     }

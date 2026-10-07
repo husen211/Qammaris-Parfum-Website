@@ -7,6 +7,7 @@ use App\Imports\Products\ProductMaintenanceCsv;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\Rupiah;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Throwable;
@@ -317,12 +318,12 @@ class ProductMaintenancePreviewer
      */
     private function normalizeAndValidateNumbers(array &$data, array &$issues): void
     {
-        if ($data['harga'] !== '' && (! preg_match('/^\d+(?:\.\d{1,2})?$/', $data['harga'])
+        if ($data['harga'] !== '' && (! preg_match(Rupiah::WHOLE_PRICE_PATTERN, $data['harga'])
             || (float) $data['harga'] <= 0
             || (float) $data['harga'] > 99999999.99)) {
-            $issues[] = $this->issue('error', 'harga', 'Harga harus angka positif tanpa pemisah ribuan.');
+            $issues[] = $this->issue('error', 'harga', 'Harga harus rupiah bulat positif, tanpa pecahan atau pemisah ribuan.');
         } elseif ($data['harga'] !== '') {
-            $data['harga'] = number_format((float) $data['harga'], 2, '.', '');
+            $data['harga'] = Rupiah::decimal(Rupiah::minorUnits($data['harga']));
         }
 
         if ($data['stok_snapshot'] !== '' && (! ctype_digit($data['stok_snapshot'])
@@ -444,7 +445,7 @@ class ProductMaintenancePreviewer
 
         if ($data['harga'] !== '' && $data['ukuran_ml'] !== '') {
             $offer = $product->variants->where('is_active', true)->sortBy('id')->first();
-            $currentPrice = $offer?->price === null ? null : number_format((float) $offer->price, 2, '.', '');
+            $currentPrice = $offer?->price === null ? null : Rupiah::decimal(Rupiah::minorUnits($offer->price));
 
             if ($currentPrice !== $data['harga'] || $offer?->volume !== $data['ukuran_ml']) {
                 $changes[] = $this->change(

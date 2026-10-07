@@ -320,7 +320,7 @@ class AdminProductImportController extends Controller
                     ['key' => 'is_best_seller', 'label' => 'Terlaris', 'current' => $product?->is_best_seller ? 'Ya' : 'Tidak', 'import' => ($data['terlaris'] ?? false) ? 'Ya' : 'Tidak', 'available' => true],
                     ['key' => 'stock_quantity', 'label' => 'Stok snapshot', 'current' => $product?->stock_quantity, 'import' => $data['stok'] ?? null, 'available' => ($data['stok'] ?? '') !== ''],
                     ['key' => 'fragrance_notes', 'label' => 'Fragrance notes', 'current' => $this->formatNotes($product?->fragrance_notes), 'import' => $this->formatImportNotes($data), 'available' => collect(['top_notes', 'middle_notes', 'base_notes'])->contains(fn (string $key): bool => ($data[$key] ?? []) !== [])],
-                    ['key' => 'offer', 'label' => 'Harga + ukuran', 'current' => $offer ? sprintf('Rp %s · %s ml', number_format((float) $offer->price, 0, ',', '.'), $offer->volume) : 'Belum ada', 'import' => ($data['harga'] ?? '') !== '' && ($data['ukuran_ml'] ?? '') !== '' ? sprintf('Rp %s · %s ml', number_format((float) $data['harga'], 0, ',', '.'), $data['ukuran_ml']) : null, 'available' => ($data['harga'] ?? '') !== '' && ($data['ukuran_ml'] ?? '') !== ''],
+                    ['key' => 'offer', 'label' => 'Harga + ukuran', 'current' => $offer ? sprintf('%s · %s ml', format_rupiah($offer->price), $offer->volume) : 'Belum ada', 'import' => ($data['harga'] ?? '') !== '' && ($data['ukuran_ml'] ?? '') !== '' ? sprintf('%s · %s ml', format_rupiah($data['harga']), $data['ukuran_ml']) : null, 'available' => ($data['harga'] ?? '') !== '' && ($data['ukuran_ml'] ?? '') !== ''],
                 ];
 
                 return [

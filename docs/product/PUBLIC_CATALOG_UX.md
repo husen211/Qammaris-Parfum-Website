@@ -1,6 +1,8 @@
 # Kontrak UX Katalog Publik Qammaris
 
-Status: baseline dan kontrak implementasi Phase 7 — 2026-09-17
+Status: historical baseline/Phase 7 contract — 2026-09-17; partially superseded.
+
+Current authority: [BUSINESS_RULES](BUSINESS_RULES.md) and [ARCHITECTURE](../architecture/ARCHITECTURE.md). This dated baseline preserves original findings/acceptance; its old layout counts, inquiry-only copy and generic freshness are not current UI instructions. Connected availability/drafts/prices follow ADR-025; search follows ADR-027; recipient checkout/direct cart follows [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-checkout.md). URL/query safety and applicable accessibility principles remain. Use the current rules and active backlog item before changing any UI; this status correction does not change the page.
 
 ## Tujuan
 

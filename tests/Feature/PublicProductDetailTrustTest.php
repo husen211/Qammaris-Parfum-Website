@@ -240,6 +240,105 @@ class PublicProductDetailTrustTest extends TestCase
             ]))
             ->assertDontSee('Rp 888.888')
             ->assertDontSee('placehold.co', false);
+
+        $section = $this->relatedSection($response->getContent());
+        $this->assertSame(1, substr_count($section, '<article'));
+        $this->assertSame(1, substr_count($section, 'aria-label="Lihat detail'));
+        $this->assertStringContainsString('<h3', $section);
+        $this->assertStringContainsString('data-catalog-product="'.$related->id.'"', $section);
+        $this->assertStringContainsString('loading="lazy"', $section);
+        $this->assertStringContainsString('width="480" height="480"', $section);
+        $this->assertStringContainsString('Foto sedang dilengkapi', $section);
+        $this->assertStringNotContainsString('<button', $section);
+        $this->assertStringNotContainsString('fetchpriority="high"', $section);
+    }
+
+    public function test_related_card_keeps_primary_media_offer_and_escaped_long_name_with_image_recovery(): void
+    {
+        $product = $this->createProduct('Main Media Detail');
+        $this->createOffer($product);
+        $related = $this->createProduct('Related long bottle and packaging name <script>attack()</script>', [
+            'is_best_seller' => true,
+            'base_price' => 999999,
+        ]);
+        $this->createOffer($related, volume: 30, price: 175000);
+        Storage::disk('public')->put('products/related-primary.jpg', 'primary');
+        ProductImage::create([
+            'product_id' => $related->id,
+            'image_path' => 'products/related-primary.jpg',
+            'is_primary' => true,
+            'sort_order' => 1,
+        ]);
+
+        $response = $this->get(route('products.show', $product))->assertOk();
+        $section = $this->relatedSection($response->getContent());
+
+        $this->assertStringContainsString($related->primaryImage->image_url, $section);
+        $this->assertStringContainsString('data-catalog-image', $section);
+        $this->assertStringContainsString('data-fallback-src="'.asset('images/product-placeholder.svg').'"', $section);
+        $this->assertMatchesRegularExpression('/data-image-fallback\s+hidden/', $section);
+        $this->assertStringContainsString(e($related->name), $section);
+        $this->assertStringNotContainsString('<script>attack()</script>', $section);
+        $this->assertStringContainsString('Terlaris', $section);
+        $this->assertStringContainsString('30 ml', $section);
+        $this->assertStringContainsString('Rp 175.000', $section);
+        $this->assertStringNotContainsString('Rp 999.999', $section);
+    }
+
+    public function test_related_cards_keep_source_aware_stock_labels_and_exclude_hidden_or_draft_products(): void
+    {
+        $product = $this->createProduct('Main Source Detail');
+        $this->createOffer($product);
+        foreach ([Product::AVAILABILITY_AVAILABLE, Product::AVAILABILITY_SOLD_OUT, Product::AVAILABILITY_UNKNOWN] as $status) {
+            $related = $this->createProduct('App Related '.$status, [
+                'availability_source' => 'qammaris_app',
+                'availability_status' => $status,
+                'availability_checked_at' => now()->subDays(14),
+            ]);
+            if ($status === Product::AVAILABILITY_SOLD_OUT) {
+                $related->forceFill(['availability_restock_eta' => now()->addWeek()->toDateString()])->save();
+            }
+            $this->createOffer($related);
+        }
+        $this->createProduct('Legacy Related', [
+            'availability_status' => Product::AVAILABILITY_AVAILABLE,
+            'availability_checked_at' => now()->subHours(37),
+        ]);
+        $this->createProduct('Draft Related', ['publication_status' => Product::PUBLICATION_DRAFT]);
+        $hidden = $this->createProduct('Hidden App Related');
+        $hidden->forceFill(['qammaris_app_hidden' => true])->save();
+
+        $response = $this->get(route('products.show', $product))->assertOk();
+        $section = $this->relatedSection($response->getContent());
+
+        $this->assertSame(4, substr_count($section, '<article'));
+        $this->assertStringContainsString('>Tersedia<', $section);
+        $this->assertStringContainsString('Habis · Restok segera', $section);
+        $this->assertStringContainsString('Tanyakan ketersediaan', $section);
+        $this->assertStringContainsString('Konfirmasi stok', $section);
+        $this->assertStringContainsString('Data sedang dilengkapi', $section);
+        $this->assertStringNotContainsString('Draft Related', $section);
+        $this->assertStringNotContainsString('Hidden App Related', $section);
+        $this->assertStringNotContainsString('Pemeriksaan terakhir', $section);
+    }
+
+    public function test_related_section_is_absent_when_no_other_visible_same_brand_product_exists(): void
+    {
+        $product = $this->createProduct('Only Visible Detail');
+        $this->createOffer($product);
+        $this->createProduct('Draft Same Brand', ['publication_status' => Product::PUBLICATION_DRAFT]);
+        $otherBrand = Brand::create(['name' => 'Other Brand', 'is_active' => true]);
+        $this->createProduct('Visible Other Brand', ['brand_id' => $otherBrand->id]);
+
+        $this->get(route('products.show', $product))->assertOk()
+            ->assertDontSee('aria-labelledby="related-title"', false);
+    }
+
+    private function relatedSection(string $html): string
+    {
+        $this->assertSame(1, preg_match('/<section[^>]*aria-labelledby="related-title"[^>]*>(.*?)<\/section>/s', $html, $matches));
+
+        return $matches[1];
     }
 
     private function createProduct(string $name, array $overrides = []): Product

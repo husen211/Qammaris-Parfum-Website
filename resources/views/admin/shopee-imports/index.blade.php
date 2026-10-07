@@ -48,7 +48,7 @@
             <form method="GET" action="{{ route('admin.shopee-imports.index') }}" class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
                 <input type="hidden" name="batch" value="{{ $batch->id }}">
                 <div><label for="source-search" class="sr-only">Cari produk di file</label><input id="source-search" type="search" name="search" value="{{ $search }}" placeholder="Cari produk di file" class="min-h-11 w-full min-w-0 rounded border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-black"></div>
-                <div><label for="source-filter" class="sr-only">Tampilkan hasil</label><select id="source-filter" name="filter" class="min-h-11 w-full rounded border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-black"><option value="work" @selected($filter === 'work')>Perlu ditangani ({{ $workCount }})</option><option value="review" @selected($filter === 'review')>Perlu dipilih / diperiksa ulang</option><option value="ready" @selected($filter === 'ready')>Siap terbit</option><option value="images_failed" @selected($filter === 'images_failed')>Foto gagal diunduh</option><option value="complete" @selected($filter === 'complete')>Sudah lengkap ({{ $completeCount }})</option><option value="all" @selected($filter === 'all')>Semua hasil</option></select></div>
+                <div><label for="source-filter" class="sr-only">Tampilkan hasil</label><select id="source-filter" name="filter" class="min-h-11 w-full rounded border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-black"><option value="work" @selected($filter === 'work')>Perlu ditangani ({{ $workCount }})</option><option value="review" @selected($filter === 'review')>Perlu dipilih / diperiksa ulang</option><option value="ready" @selected($filter === 'ready')>Siap terbit</option><option value="images_failed" @selected($filter === 'images_failed')>Foto bermasalah</option><option value="complete" @selected($filter === 'complete')>Sudah lengkap ({{ $completeCount }})</option><option value="all" @selected($filter === 'all')>Semua hasil</option></select></div>
                 <button type="submit" class="min-h-11 rounded border border-gray-900 px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-black">Tampilkan</button>
             </form>
             @if($rows->isEmpty())<p role="status" class="border border-gray-200 bg-white p-5 text-sm text-gray-600">Tidak ada produk untuk pencarian/filter ini. Pilih Semua hasil atau kosongkan pencarian.</p>@endif
@@ -56,26 +56,24 @@
             @foreach($rows as $row)
                 @php
                     $data = $row->normalized_data;
-                    $product = $row->appliedProduct ?? $row->matchedProduct ?? $products->firstWhere('id', $data['selected_product_id'] ?? null);
-                    $applied = $row->apply_status === 'updated';
-                    $held = $row->apply_status === 'blocked_protected';
-                    $sourceMl = app(\App\Services\ImportedProductName::class)->size($data['source']['name']);
-                    $websiteMl = $product?->variants->count() === 1 ? (int) $product->variants->first()->volume : null;
-                    $mismatch = $sourceMl !== null && $websiteMl !== null && $sourceMl !== $websiteMl;
-                    $fields = array_keys($data['fields']);
-                    $photoCount = collect(['foto_utama_url','foto_2_url','foto_3_url'])->filter(fn($key) => $data[$key] !== '')->count();
-                    $blockers = $applied && $product ? app(\App\Actions\Products\EvaluateProductPublicationReadiness::class)->handle($product) : [];
-                    $labels = ['description' => 'Deskripsi', 'gender' => 'Peruntukan', 'category_id' => 'Kategori'];
+                    $summary = $summaries->get($row->id);
+                    $product = $summary['product'];
+                    $applied = $summary['applied'];
+                    $held = $summary['held'];
+                    $sourceMl = $summary['source_ml'];
+                    $websiteMl = $summary['website_ml'];
+                    $mismatch = $summary['size_mismatch'];
+                    $blockers = $summary['blockers'];
                 @endphp
                 <article class="min-w-0 border border-gray-200 bg-white p-4 sm:p-5" aria-labelledby="row-{{ $row->id }}-title">
                     <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
                         <div class="min-w-0"><h3 id="row-{{ $row->id }}-title" class="break-words font-semibold text-gray-900">{{ $data['source']['name'] }}</h3><p class="mt-1 text-xs text-gray-500">Kode Shopee {{ $row->external_product_id }}</p></div>
-                        <p class="text-sm font-medium {{ $applied ? 'text-emerald-700' : ($row->matched_product_id ? 'text-gray-700' : 'text-amber-800') }}">{{ $applied ? ($product?->publication_status === 'published' ? 'Sudah terbit' : ($blockers === [] && !in_array($row->image_acquisition_status,['queued','processing']) ? 'Siap terbit' : 'Masih draft')) : ($held ? 'Periksa ulang' : ($row->matched_product_id ? 'Produk dikenali' : ($mismatch ? 'Konfirmasi ukuran' : 'Pilih produk'))) }}</p>
+                        <p class="text-sm font-medium {{ $summary['status_class'] }}">{{ $summary['status'] }}</p>
                     </div>
                     @if($held)<p role="alert" class="mt-3 border-l-2 border-amber-600 bg-amber-50 p-3 text-sm text-amber-900">{{ $row->apply_message }}</p>@endif
                     @if($row->apply_status === 'skipped_no_changes')<p class="mt-2 text-sm text-gray-600">Sudah lengkap untuk impor ini; tidak ada perubahan konten atau unduhan ulang.</p>@endif
                     @if($product)
-                        <p class="mt-3 break-words text-sm">Website: <strong>{{ $product->name }}</strong> · {{ $product->brand?->name }} @if($product->variants->first()) · {{ $product->variants->first()->volume }} ml @endif · Rp {{ number_format((float) $product->base_price, 0, ',', '.') }}</p>
+                        <p class="mt-3 break-words text-sm">Website: <strong>{{ $product->name }}</strong> · {{ $product->brand?->name }} @if($product->variants->first()) · {{ $product->variants->first()->volume }} ml @endif · {{ format_rupiah($product->base_price) }}</p>
                         @if($product->images->isNotEmpty())
                             <div class="mt-3 flex flex-wrap gap-3" aria-label="Foto yang tersimpan di website">
                                 @foreach($product->images as $image)<figure><img src="{{ $image->image_url }}" alt="{{ $product->name }} — {{ $image->is_primary ? 'sampul' : 'foto tambahan' }}" width="80" height="80" loading="lazy" class="h-20 w-20 border border-gray-200 bg-white object-contain p-1"><figcaption class="mt-1 text-xs text-gray-500">{{ $image->is_primary ? 'Sampul' : 'Foto tambahan' }}</figcaption></figure>@endforeach
@@ -83,16 +81,24 @@
                         @endif
                     @endif
                     @if(!$applied && $row->matched_product_id && $product)
-                        <p class="mt-2 text-sm text-gray-600">Yang dilengkapi: {{ collect($fields)->map(fn($key) => $labels[$key] ?? $key)->join(', ') ?: 'tidak ada perubahan teks' }}{{ $data['offer_ml'] ? ' · ukuran '.$data['offer_ml'].' ml' : '' }} · {{ $photoCount }} foto baru.</p>
+                        <p class="mt-2 text-sm text-gray-600">Yang dilengkapi: {{ $summary['field_labels'] }}{{ $data['offer_ml'] ? ' · ukuran '.$data['offer_ml'].' ml' : '' }} · {{ $summary['photo_count'] }} foto baru.</p>
                         @if(isset($data['fields']['gender']))<p class="mt-1 text-sm text-gray-600">Peruntukan: {{ $data['fields']['gender'] }}</p>@endif
                         @if(isset($data['fields']['category_id']))<p class="mt-1 text-sm text-gray-600">Kategori: {{ $categories->get($data['fields']['category_id'])?->name }}</p>@endif
                     @endif
                     @if($data['issues'])<ul class="mt-3 space-y-1 text-sm text-gray-600">@foreach($data['issues'] as $issue)<li>{{ $issue }}</li>@endforeach</ul>@endif
                     @if($applied)
-                        @if(in_array($row->image_acquisition_status,['queued','processing']))<p class="mt-3 text-sm text-gray-600" role="status">Foto sedang diunduh. Muat ulang hasil sebentar lagi.</p>@endif
-                        @foreach($row->image_acquisition_outcomes ?? [] as $outcome)
-                            @if(in_array($outcome['status'],['failed','blocked']))<p class="mt-2 text-sm text-red-700">{{ $outcome['message'] }} Gunakan Coba unduh foto lagi atau upload manual.</p>@endif
+                        @if($summary['waiting'])<p class="mt-3 text-sm text-gray-600" role="status">Foto sedang diunduh. Muat ulang hasil sebentar lagi.</p>@endif
+                        @foreach($summary['photo_problems'] as $outcome)
+                            <p class="mt-2 text-sm text-red-700">{{ $outcome['message'] }}</p>
                         @endforeach
+                        @if($summary['media_review'])
+                            <div role="status" class="mt-3 border-l-2 border-amber-600 bg-amber-50 p-3 text-sm text-amber-900">
+                                <p class="font-medium">Periksa foto sebelum melanjutkan</p>
+                                <p class="mt-1">Mengulang unduhan tidak menyelesaikan perubahan produk atau foto. Periksa foto di editor; untuk usulan baru, upload kembali kedua ekspor Shopee. Foto yang tersimpan tetap dipertahankan.</p>
+                            </div>
+                        @elseif($summary['retry_images'])
+                            <p class="mt-2 text-sm text-gray-600">Coba unduh foto lagi melalui tombol di bawah, atau upload manual di editor. Foto sampul diproses sebelum foto tambahan.</p>
+                        @endif
                         @if($blockers)<p class="mt-3 text-sm text-amber-800">Belum lengkap: {{ implode(', ', array_values($blockers)) }}</p>@endif
                         @if($product)<a class="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" href="{{ route('admin.products.edit', [$product->id, 'return_to' => route('admin.shopee-imports.index', ['batch' => $batch->id, 'page' => $rows->currentPage()], false)]) }}">Lengkapi / upload foto manual</a>@endif
                     @else
@@ -118,7 +124,7 @@
                         </details>
                         @if($product)<a class="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" href="{{ route('admin.products.edit', [$product->id, 'return_to' => route('admin.shopee-imports.index', ['batch' => $batch->id, 'filter' => $filter, 'search' => $search, 'page' => $rows->currentPage()], false)]) }}">Buka editor produk</a>@endif
                     @endif
-                    <details class="mt-2"><summary class="flex min-h-11 cursor-pointer items-center text-sm text-gray-600">Lihat deskripsi {{ isset($data['fields']['description']) ? 'yang akan dipakai' : 'dari Shopee' }}</summary><p class="mt-2 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">{{ $data['fields']['description'] ?? app(\App\Services\ShopeeProductCopy::class)->clean($data['source']['description']) ?: 'Belum ada deskripsi.' }}</p></details>
+                    <details class="mt-2"><summary class="flex min-h-11 cursor-pointer items-center text-sm text-gray-600">Lihat deskripsi {{ isset($data['fields']['description']) ? 'yang akan dipakai' : 'dari Shopee' }}</summary><p class="mt-2 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">{{ $summary['description'] }}</p></details>
                 </article>
             @endforeach
             {{ $rows->links() }}
@@ -131,8 +137,11 @@
                     <label class="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="confirm" value="1" required @disabled($pendingCount === 0)><span>Saya sudah memeriksa {{ $pendingCount }} produk dan perubahan di atas.</span></label>
                     <button type="submit" @disabled($pendingCount === 0) class="min-h-11 rounded bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40">Terapkan {{ $pendingCount }} produk</button>
                 </form>
-                @if($batch->status === 'applied')
-                    <form method="POST" action="{{ route('admin.shopee-imports.images', $batch->id) }}" class="mt-4" data-shopee-form>@csrf<input type="hidden" name="confirm" value="1"><button type="submit" class="min-h-11 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-black">Coba unduh foto lagi</button><p class="mt-1 text-xs text-gray-500">Foto yang sudah berhasil tidak diunduh ulang atau digandakan.</p></form>
+                @if($batch->status === 'applied' && $retryImageCount > 0)
+                    <form method="POST" action="{{ route('admin.shopee-imports.images', $batch->id) }}" class="mt-4" data-shopee-form>@csrf<input type="hidden" name="confirm" value="1"><button type="submit" class="min-h-11 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-black">Coba unduh foto lagi</button><p class="mt-1 text-xs text-gray-500">{{ $retryImageCount }} produk dengan unduhan gagal dapat dicoba lagi. Foto yang sudah berhasil tidak diunduh ulang atau digandakan; foto yang perlu diperiksa tetap ditahan.</p></form>
+                @endif
+                @if($mediaReviewCount > 0)
+                    <p class="mt-4 text-sm text-amber-800">{{ $mediaReviewCount }} produk perlu diperiksa fotonya di editor atau melalui upload kedua ekspor yang baru. Tombol Periksa ulang perubahan hanya memperbarui usulan konten yang belum selesai; tidak memulihkan foto yang tertahan pada hasil impor lama.</p>
                 @endif
             </section>
             @if(count($ready))

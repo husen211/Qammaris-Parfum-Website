@@ -1,0 +1,58 @@
+{
+    "captured_at_utc": "2026-10-07T03:36:27+00:00",
+    "revision": "0dc6924479ae108177c467a380b3978b1f89c70b",
+    "products": 448,
+    "published": 375,
+    "draft": 73,
+    "public": 375,
+    "images": 1119,
+    "missing_media": 0,
+    "remote_media": 0,
+    "published_blockers": [],
+    "draft_blockers": {
+        "category": 49,
+        "description": 73,
+        "gender": 73,
+        "primary_image": 73,
+        "offer": 39,
+        "brand": 2
+    },
+    "parity": {
+        "mapped": 448,
+        "missing_snapshot": 0,
+        "availability": 0,
+        "visibility": 0,
+        "restock_eta": 0,
+        "price": 0,
+        "base_price": 0,
+        "invalid_price_retained": 6,
+        "missing_offer": 33
+    },
+    "exceptions": [],
+    "runtime": {
+        "checkpoint": 467,
+        "last_synced_at": "2026-10-07 03:30:16",
+        "sync_error_present": false,
+        "snapshots": 454,
+        "jobs": 0,
+        "failed_jobs": 0,
+        "retry_after": 120,
+        "debug": false,
+        "secure_cookie": true,
+        "http_only": true,
+        "same_site": "lax",
+        "product_disk": "public",
+        "scheduler-last-run": "2026-10-07T03:36:02Z",
+        "worker-watchdog-last-run": "2026-10-07T03:36:02Z"
+    },
+    "machine_config": {
+        "api_key": "terisi",
+        "webhook_secret": "terisi"
+    },
+    "feed": {
+        "http": 200,
+        "rows": 0,
+        "next_seq": 467,
+        "has_more": false
+    }
+}

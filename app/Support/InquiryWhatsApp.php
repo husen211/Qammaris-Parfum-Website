@@ -27,7 +27,7 @@ final class InquiryWhatsApp
             '',
             '*'.$this->plainText($product->brand?->name ?? 'Brand belum diisi').' - '.$this->plainText($product->name).'*',
             'Ukuran: '.$offer->volume.' ml',
-            'Harga saat ini: '.$this->rupiah($offer->price),
+            'Harga saat ini: '.Rupiah::format($offer->price),
             'Status website: '.CatalogAvailability::label($product),
             'Link produk: '.route('products.show', $product),
             'Intent: '.$intentLabel,
@@ -49,18 +49,18 @@ final class InquiryWhatsApp
         $lines = ['Halo Qammaris, saya ingin memesan:', '', '*PESANAN QAMMARIS*'];
         $subtotal = 0;
         foreach ($items as $index => $item) {
-            $lineTotal = (int) $item['price'] * (int) $item['quantity'];
+            $lineTotal = Rupiah::minorUnits($item['price']) * (int) $item['quantity'];
             $subtotal += $lineTotal;
             $lines[] = '';
             $lines[] = ($index + 1).'. '.$this->plainText($item['brand_name']).' - '.$this->plainText($item['product_name']);
             $lines[] = 'Ukuran: '.$item['volume'].' ml';
             $lines[] = 'Jumlah: '.$item['quantity'];
-            $lines[] = 'Harga: '.$this->rupiah($item['price']).' / item';
-            $lines[] = 'Total produk: '.$this->rupiah($lineTotal);
+            $lines[] = 'Harga: '.Rupiah::format($item['price']).' / item';
+            $lines[] = 'Total produk: '.Rupiah::format(Rupiah::decimal($lineTotal));
             $lines[] = 'Link: '.$item['product_url'];
         }
         $lines[] = '';
-        $lines[] = 'Subtotal: '.$this->rupiah($subtotal);
+        $lines[] = 'Subtotal: '.Rupiah::format(Rupiah::decimal($subtotal));
         $lines[] = '';
         $lines[] = '*DATA PENERIMA*';
         $lines[] = 'Nama: '.$this->plainText($customer['customer_name']);
@@ -126,10 +126,5 @@ final class InquiryWhatsApp
         $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? '';
 
         return trim(preg_replace('/\s+/u', ' ', $value) ?? '');
-    }
-
-    private function rupiah(int|float|string $amount): string
-    {
-        return 'Rp '.number_format((float) $amount, 0, ',', '.');
     }
 }

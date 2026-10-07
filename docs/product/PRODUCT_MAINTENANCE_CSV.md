@@ -32,7 +32,7 @@ product_id,expected_updated_at,expected_row_fingerprint,nama_produk,deskripsi_pr
 | `expected_row_fingerprint` | Wajib; 64 karakter hex dari snapshot terbaru. |
 | `nama_produk` | Opsional; maksimum 255 karakter. |
 | `deskripsi_produk` | Opsional; maksimum 20.000 karakter. |
-| `harga` | Opsional; angka positif maksimum dua desimal, wajib bersama `ukuran_ml`. |
+| `harga` | Opsional; rupiah bulat positif tanpa simbol/pemisah ribuan, wajib bersama `ukuran_ml`. Zeroes database seperti `650000.00` diterima; pecahan bukan nol ditolak (AUD-06). |
 | `brand` | Opsional; nama exact case-insensitive dari taxonomy aktif. |
 | `gender` | Opsional; `Unisex`, `Pria`, atau `Wanita`. |
 | `stok_snapshot` | Opsional; integer 0–999999 dan bukan klaim live inventory. |

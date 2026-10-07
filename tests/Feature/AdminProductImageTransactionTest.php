@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Products\PublishProduct;
+use App\Exceptions\ProductNotReadyForPublication;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -92,6 +94,40 @@ class AdminProductImageTransactionTest extends TestCase
             ['products/existing.png'],
             Storage::disk('product-media-test')->allFiles('products')
         );
+    }
+
+    public function test_publication_failure_after_upload_rolls_back_create_and_cleans_files(): void
+    {
+        $this->mock(PublishProduct::class)->shouldReceive('handle')->once()
+            ->andThrow(new ProductNotReadyForPublication(['category' => 'Kategori berubah sebelum publikasi.']));
+
+        $this->actingAs($this->admin)->post(route('admin.products.store'), $this->validStorePayload())
+            ->assertSessionHasErrors(['publication' => 'Kategori berubah sebelum publikasi.']);
+
+        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('product_variants', 0);
+        $this->assertDatabaseCount('product_images', 0);
+        $this->assertSame([], Storage::disk('product-media-test')->allFiles('products'));
+    }
+
+    public function test_publication_failure_after_upload_restores_update_and_keeps_existing_file(): void
+    {
+        $product = $this->createExistingProduct();
+        Storage::disk('product-media-test')->put('products/existing.png', 'existing-image');
+        $product->images()->create(['image_path' => 'products/existing.png', 'is_primary' => true, 'sort_order' => 0]);
+        $this->mock(PublishProduct::class)->shouldReceive('handle')->once()
+            ->andThrow(new ProductNotReadyForPublication(['category' => 'Kategori berubah sebelum publikasi.']));
+        $payload = $this->validUpdatePayload($product);
+        $payload['name'] = 'Must roll back';
+        $payload['publication_action'] = 'published';
+        $payload['new_images'] = [$this->fakeImage('new.png')];
+
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)
+            ->assertSessionHasErrors(['publication' => 'Kategori berubah sebelum publikasi.']);
+
+        $this->assertSame('Existing Product', $product->fresh()->name);
+        $this->assertDatabaseCount('product_images', 1);
+        $this->assertSame(['products/existing.png'], Storage::disk('product-media-test')->allFiles('products'));
     }
 
     private function failOnSecondProductImageCreate(): void

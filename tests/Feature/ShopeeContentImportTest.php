@@ -6,6 +6,7 @@ use App\Actions\Products\AcquireProductImportRowImages;
 use App\Actions\Products\ApplyShopeeContent;
 use App\Actions\Products\QueueProductImportImages;
 use App\Exceptions\InvalidProductImportFile;
+use App\Exceptions\ProductNotReadyForPublication;
 use App\Imports\Products\ShopeeContentXlsx;
 use App\Jobs\AcquireProductImportRowImages as ImageJob;
 use App\Models\Brand;
@@ -492,7 +493,13 @@ class ShopeeContentImportTest extends TestCase
         }
         $batch = app(ShopeeContentPreviewer::class)->preview($this->admin, $this->file('basic', $basic), $this->file('media', $media));
         $this->assertSame(375, $batch->total_rows);
+        DB::enableQueryLog();
         $response = $this->actingAs($this->admin)->get(route('admin.shopee-imports.index', ['batch' => $batch->id]))->assertOk();
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+        $this->assertLessThanOrEqual(40, count($queries), 'Review SQL must stay bounded for375 rows, not query readiness per product.');
+        $this->assertCount(1, array_filter($queries, fn ($query) => str_contains($query['query'], 'group by "slug"')));
         $this->assertSame(7, $response->viewData('rows')->total());
         $this->assertSame(368, $response->viewData('completeCount'));
         $this->assertSame(0, $response->viewData('pendingCount'));
@@ -503,6 +510,63 @@ class ShopeeContentImportTest extends TestCase
         $this->assertSame(0, app(QueueProductImportImages::class)->handle($batch, $this->admin)['queued_rows']);
         Queue::assertNothingPushed();
         Http::assertNothingSent();
+    }
+
+    public function test_review_separates_download_retry_from_media_conflicts_for_old_and_new_outcomes(): void
+    {
+        $p = $this->product();
+        $batch = $this->preview();
+        app(ApplyShopeeContent::class)->handle($batch, $this->admin);
+        $row = $batch->rows()->first();
+        $before = $p->fresh()->getAttributes();
+        $failed = ['slot' => 'foto_utama_url', 'status' => 'failed', 'message' => 'Download timeout.'];
+        $cover = ['slot' => 'foto_2_url', 'status' => 'blocked', 'message' => 'Foto sampul harus berhasil sebelum foto tambahan.'];
+        $conflict = ['slot' => 'foto_utama_url', 'status' => 'blocked', 'message' => 'Foto website berubah setelah diperiksa. Foto lama dipertahankan.'];
+        foreach ([
+            [[$failed, $cover], true],
+            [[$conflict], false],
+            [[$failed, $conflict], false],
+            [[array_replace($cover, ['reason' => 'cover_pending', 'message' => 'Cover not ready.'])], true],
+            [[array_replace($cover, ['reason' => 'target_conflict'])], false],
+            [[], false],
+        ] as [$outcomes, $retry]) {
+            $row->forceFill(['image_acquisition_status' => 'completed_with_errors', 'image_acquisition_outcomes' => $outcomes])->save();
+            $response = $this->actingAs($this->admin)->get(route('admin.shopee-imports.index', ['batch' => $batch->id, 'filter' => 'images_failed']))->assertOk();
+            $summary = $response->viewData('summaries')->get($row->id);
+            $this->assertSame($retry, $summary['retry_images']);
+            $this->assertSame(! $retry, $summary['media_review']);
+            $this->assertSame(1, $response->viewData('rows')->total());
+            if ($retry) {
+                $response->assertSee(route('admin.shopee-imports.images', $batch->id), false);
+                $response->assertDontSee('Periksa foto sebelum melanjutkan');
+            } else {
+                $response->assertDontSee(route('admin.shopee-imports.images', $batch->id), false);
+                $response->assertSee('Periksa foto sebelum melanjutkan');
+                $response->assertSee('upload kembali kedua ekspor Shopee');
+            }
+        }
+        $this->assertSame($before, $p->fresh()->getAttributes());
+        Queue::assertNothingPushed();
+        Http::assertNothingSent();
+    }
+
+    public function test_review_readiness_is_not_reused_when_publication_state_changes(): void
+    {
+        $p = $this->product(['description' => 'Owner copy', 'gender' => 'Unisex']);
+        Storage::disk('public')->put('products/ready.png', $this->png());
+        $p->images()->create(['image_path' => 'products/ready.png', 'is_primary' => true, 'sort_order' => 0]);
+        $batch = $this->preview();
+        app(ApplyShopeeContent::class)->handle($batch, $this->admin);
+        $row = $batch->rows()->first();
+        $response = $this->actingAs($this->admin)->get(route('admin.shopee-imports.index', ['batch' => $batch->id]))->assertOk();
+        $this->assertTrue($response->viewData('summaries')->get($row->id)['ready']);
+        $p->category->update(['is_active' => false]);
+        try {
+            app(ApplyShopeeContent::class)->publish($batch, $this->admin, [$row->id]);
+            $this->fail('Old read-only readiness authorized publication.');
+        } catch (ProductNotReadyForPublication $error) {
+            $this->assertSame('draft', $p->fresh()->publication_status);
+        }
     }
 
     public function test_manual_choice_cannot_rebind_occupied_shopee_identity_or_other_size(): void

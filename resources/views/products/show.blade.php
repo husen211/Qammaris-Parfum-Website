@@ -296,10 +296,12 @@
 
                 <div class="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 md:grid-cols-4 md:gap-6">
                     @foreach ($relatedProducts as $related)
-                        @include('products._card', [
+                        @include('products._catalog-card', [
                             'product' => $related,
                             'detailUrl' => route('products.show', array_merge(['product' => $related->slug], $detailContext)),
                             'prioritizeImage' => false,
+                            'headingLevel' => 3,
+                            'showPrice' => true,
                         ])
                     @endforeach
                 </div>
