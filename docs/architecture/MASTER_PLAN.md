@@ -232,3 +232,9 @@ Owner's continuation approves the concrete reviewed cutover. New qammarisparfum.
 ### Approved scope override: P7-12 WhatsApp ordering
 
 Owner authorizes cart + required recipient checkout + WhatsApp order composer, superseding the earlier inquiry/no-checkout restriction for this bounded item. No payment implementation or speculative order schema. ADR-026 describes next gateway prerequisites; release needs separate approval.
+
+## Current delivery order — Owner approved2026-10-07
+
+Ready P7-15 search release -> bounded remaining P9 production/device/admin verification -> separate read-only repository/clean-code and documentation audit -> review specific incremental refactors -> consolidated current context and overall planning closure. Do not start refactors during investigation or introduce patterns without an evidenced problem. Existing AGENTS/business rules/architecture/backlog/ADRs/runbooks are the starting point, not duplicated context files. Each future feature updates affected current documents; commit/PR history retains implementation detail. Audit remains unstarted in the P7-15 release task.
+
+P7-15 released through PR14/main669de113 with green CI37562107686 and production37562153305; actual search/MySQL and390/1440 public/admin checks passed. Overall program is not yet closed. Physical Safari/touch and native production Shopee upload/apply remain unverified, alongside broader observation; historical IN_REVIEW notes are not proof that already released code must be implemented again. Evidence: docs/verification/p7-15/README.md.
