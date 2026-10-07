@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImportBatch;
 use App\Models\User;
+use App\Services\ProductImportPayloadHasher;
 use App\Services\ShopeeContentPreviewer;
 use App\Services\ShopeeProductCopy;
 use DomainException;
@@ -295,28 +296,213 @@ class ShopeeContentImportTest extends TestCase
     public function test_product_editor_keeps_only_safe_import_return_context(): void
     {
         $p = $this->product();
-        $path = route('admin.shopee-imports.index', ['batch' => 1, 'page' => 2], false);
+        $path = route('admin.shopee-imports.index', ['batch' => 1, 'page' => 2, 'filter' => 'review', 'search' => 'silk'], false);
         $this->actingAs($this->admin)->get(route('admin.products.edit', [$p->id, 'return_to' => $path]))
             ->assertOk()->assertSee(e($path), false);
         $this->get(route('admin.products.edit', [$p->id, 'return_to' => 'https://example.test/admin/shopee-imports?batch=1']))
             ->assertOk()->assertDontSee('https://example.test', false);
     }
 
-    public function test_changed_target_blocks_atomic_apply_and_fresh_choice_allows_retry(): void
+    public function test_changed_target_is_held_and_fresh_choice_allows_retry_without_overwriting_human_copy(): void
     {
         $p = $this->product();
         $batch = $this->preview();
         $p->forceFill(['description' => 'Human edit'])->save();
-        try {
-            app(ApplyShopeeContent::class)->handle($batch, $this->admin);
-            $this->fail('Stale apply accepted');
-        } catch (DomainException $error) {
-            $this->assertStringContainsString('berubah', $error->getMessage());
-        }
+        $this->assertSame(0, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertSame('blocked_protected', $batch->rows()->first()->apply_status);
         $this->assertDatabaseCount('product_external_identities', 1);
         app(ApplyShopeeContent::class)->choose($batch, $batch->rows()->first(), $this->admin, $p->id, false);
         app(ApplyShopeeContent::class)->handle($batch, $this->admin);
         $this->assertSame('Human edit', $p->fresh()->description);
+    }
+
+    public function test_price_stock_and_view_updates_do_not_invalidate_content_preview(): void
+    {
+        $p = $this->product();
+        $batch = $this->preview();
+        $p->forceFill(['base_price' => 299000, 'availability_status' => 'available', 'stock_quantity' => 4, 'is_best_seller' => true, 'updated_at' => now()->addMinute()])->save();
+        $p->variants()->first()->forceFill(['price' => 299000, 'stock' => 4, 'updated_at' => now()->addMinute()])->save();
+        $this->assertSame(1, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertSame('299000.00', $p->fresh()->base_price);
+        $this->assertSame('299000.00', $p->variants()->first()->price);
+        $this->assertSame('available', $p->fresh()->availability_status);
+        $this->assertSame('Parfum unisex.', $p->fresh()->description);
+    }
+
+    public function test_stale_row_does_not_block_another_product_and_bulk_recheck_is_read_only(): void
+    {
+        $p = $this->product();
+        $other = $this->product(['name' => 'Other EDP 100ML', 'slug' => 'other']);
+        $batch = app(ShopeeContentPreviewer::class)->preview($this->admin,
+            $this->file('basic', [['501', '', $p->name, 'Parfum unisex.'], ['502', '', $other->name, 'Parfum unisex.']]),
+            $this->file('media', [['501', '', $p->name, '', 'https://images.example.test/a.png', '', ''], ['502', '', $other->name, '', 'https://images.example.test/b.png', '', '']]));
+        $originalSource = $batch->rows()->first()->normalized_data['source'];
+        $p->forceFill(['description' => 'Human copy'])->save();
+        $this->assertSame(1, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertSame('Human copy', $p->fresh()->description);
+        $this->assertSame('Parfum unisex.', $other->fresh()->description);
+        $this->assertSame(1, $batch->fresh()->blocked_rows);
+        $before = $p->fresh()->toArray();
+        $this->assertSame(1, app(ApplyShopeeContent::class)->refresh($batch, $this->admin));
+        $this->assertSame($before, $p->fresh()->toArray());
+        $row = $batch->rows()->where('external_product_id', '501')->first();
+        $this->assertSame($originalSource, $row->normalized_data['source']);
+        $this->assertArrayNotHasKey('description', $row->normalized_data['fields']);
+        $this->assertSame($this->admin->id, $row->resolved_by);
+        $this->assertSame(1, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertSame('Human copy', $p->fresh()->description);
+        Http::assertNothingSent();
+    }
+
+    public function test_legacy_batch_requires_explicit_recheck_and_can_resume_without_upload(): void
+    {
+        $p = $this->product();
+        $batch = $this->preview();
+        $row = $batch->rows()->first();
+        $data = $row->normalized_data;
+        unset($data['fingerprint_version'], $data['selected_product_id'], $data['size_mismatch'], $data['confirmed_website_ml']);
+        $data['target_fingerprint'] = str_repeat('a', 64);
+        $row->forceFill(['normalized_data' => $data, 'payload_hash' => app(ProductImportPayloadHasher::class)->hash($data, [], 'shopee_content')])->save();
+        $this->assertSame(0, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertNull($p->fresh()->description);
+        $this->actingAs($this->admin)->post(route('admin.shopee-imports.refresh', $batch), ['confirm' => '1'])->assertSessionHas('success');
+        $this->assertNull($p->fresh()->description);
+        $this->assertSame($data['source'], $row->fresh()->normalized_data['source']);
+        $this->assertSame(1, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+    }
+
+    public function test_size_mismatch_requires_per_row_confirmation_and_never_changes_size_price_or_copy(): void
+    {
+        $p = $this->product(['name' => 'Silk Noir Extrait 75ml', 'description' => 'Owner correct 75 ml.']);
+        $p->variants()->first()->forceFill(['volume' => 75])->save();
+        $batch = $this->preview();
+        $row = $batch->rows()->first();
+        $source = $row->normalized_data['source'];
+        $action = app(ApplyShopeeContent::class);
+        $this->assertFalse($action->choose($batch, $row, $this->admin, $p->id, true));
+        $this->assertNull($row->fresh()->matched_product_id);
+        $this->assertSame($p->id, $row->fresh()->normalized_data['selected_product_id']);
+        $this->actingAs($this->admin)->get(route('admin.shopee-imports.index', ['batch' => $batch->id]))->assertSee('gunakan 75 ml di website');
+        $this->assertFalse($action->choose($batch, $row, $this->admin, $p->id, true, 100));
+        $this->assertTrue($action->choose($batch, $row, $this->admin, $p->id, true, 75));
+        $data = $row->fresh()->normalized_data;
+        $this->assertArrayNotHasKey('description', $data['fields']);
+        $this->assertSame(75, $data['confirmed_website_ml']);
+        $this->assertSame($source, $data['source']);
+        $this->assertSame(1, $action->handle($batch, $this->admin));
+        $this->assertSame('Owner correct 75 ml.', $p->fresh()->description);
+        $this->assertSame(75, $p->variants()->first()->volume);
+        $this->assertSame('275000.00', $p->fresh()->base_price);
+        Http::fake(['images.example.test/*' => Http::response($this->png(), 200, ['Content-Type' => 'image/png'])]);
+        app(QueueProductImportImages::class)->handle($batch, $this->admin);
+        app(AcquireProductImportRowImages::class)->handle($row->id);
+        $this->assertSame(1, $p->images()->count());
+        $this->assertSame(75, $row->fresh()->resolution_fields['confirmed_website_ml']);
+    }
+
+    public function test_size_confirmation_is_not_reused_when_website_volume_changes(): void
+    {
+        $p = $this->product();
+        $p->variants()->first()->forceFill(['volume' => 75])->save();
+        $batch = $this->preview();
+        $action = app(ApplyShopeeContent::class);
+        $action->choose($batch, $batch->rows()->first(), $this->admin, $p->id, false, 75);
+        $p->variants()->first()->forceFill(['volume' => 80])->save();
+        $this->assertSame(0, $action->handle($batch, $this->admin));
+        $action->refresh($batch, $this->admin);
+        $this->assertNull($batch->rows()->first()->matched_product_id);
+        $this->assertNull($batch->rows()->first()->normalized_data['confirmed_website_ml']);
+        $this->assertSame(80, $p->variants()->first()->volume);
+    }
+
+    public function test_complete_product_is_hidden_by_default_and_repeat_apply_does_not_enqueue_photos(): void
+    {
+        $p = $this->product(['description' => 'Owner copy', 'gender' => 'Unisex', 'publication_status' => 'published', 'is_active' => true]);
+        $p->externalIdentities()->create(['provider' => 'shopee', 'external_product_id' => '501']);
+        foreach (range(1, 3) as $index) {
+            Storage::disk('public')->put('products/manual'.$index.'.png', $this->png());
+            $p->images()->create(['image_path' => 'products/manual'.$index.'.png', 'is_primary' => $index === 1, 'sort_order' => $index]);
+        }
+        $batch = $this->preview();
+        $response = $this->actingAs($this->admin)->get(route('admin.shopee-imports.index', ['batch' => $batch->id]))->assertOk();
+        $this->assertSame(0, $response->viewData('rows')->total());
+        $this->assertSame(1, $response->viewData('completeCount'));
+        $this->assertSame(0, $response->viewData('pendingCount'));
+        $this->assertSame(1, $this->get(route('admin.shopee-imports.index', ['batch' => $batch->id, 'filter' => 'complete']))->viewData('rows')->total());
+        $before = $p->fresh()->toArray();
+        $this->assertSame(0, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertSame('skipped_no_changes', $batch->rows()->first()->apply_status);
+        $this->assertSame(0, app(QueueProductImportImages::class)->handle($batch, $this->admin)['queued_rows']);
+        $this->assertSame($before, $p->fresh()->toArray());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_recheck_and_size_confirmation_are_validated_actor_bound_and_tamper_protected(): void
+    {
+        $p = $this->product();
+        $batch = $this->preview();
+        $row = $batch->rows()->first();
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->post(route('admin.shopee-imports.refresh', $batch), ['confirm' => '1'])->assertForbidden();
+        $this->actingAs($this->admin)->post(route('admin.shopee-imports.refresh', $batch))->assertSessionHasErrors('confirm');
+        $this->post(route('admin.shopee-imports.choose', [$batch->id, $row->id]), ['product_id' => $p->id, 'confirm_size_mismatch' => '1'])
+            ->assertSessionHasErrors('confirmed_website_ml');
+        $data = $row->normalized_data;
+        $data['source']['id'] = '999';
+        $row->forceFill(['normalized_data' => $data])->save();
+        $this->post(route('admin.shopee-imports.refresh', $batch), ['confirm' => '1'])->assertSessionHas('error');
+        $this->assertNull($p->fresh()->description);
+        Http::assertNothingSent();
+    }
+
+    public function test_image_conflict_holds_only_its_row_and_other_photos_can_queue(): void
+    {
+        $p = $this->product();
+        $other = $this->product(['name' => 'Other EDP 100ML', 'slug' => 'other']);
+        $batch = app(ShopeeContentPreviewer::class)->preview($this->admin,
+            $this->file('basic', [['501', '', $p->name, 'Parfum unisex.'], ['502', '', $other->name, 'Parfum unisex.']]),
+            $this->file('media', [['501', '', $p->name, '', 'https://images.example.test/a.png', '', ''], ['502', '', $other->name, '', 'https://images.example.test/b.png', '', '']]));
+        app(ApplyShopeeContent::class)->handle($batch, $this->admin);
+        $p->images()->create(['image_path' => 'products/human.png', 'is_primary' => true, 'sort_order' => 0]);
+        $this->assertSame(1, app(QueueProductImportImages::class)->handle($batch, $this->admin)['queued_rows']);
+        $this->assertSame('completed_with_errors', $batch->rows()->where('external_product_id', '501')->first()->image_acquisition_status);
+        $this->assertSame('queued', $batch->rows()->where('external_product_id', '502')->first()->image_acquisition_status);
+        $this->assertSame('products/human.png', $p->images()->first()->image_path);
+        Http::assertNothingSent();
+    }
+
+    public function test_375_row_upload_focuses_on_new_and_unmatched_products_and_keeps_all_results_accessible(): void
+    {
+        Storage::disk('public')->put('products/complete.png', $this->png());
+        $basic = [];
+        $media = [];
+        foreach (range(1, 368) as $index) {
+            $p = $this->product(['name' => "Demo Item {$index} EDP 100ML", 'slug' => 'demo-'.$index,
+                'description' => 'Owner copy', 'gender' => 'Unisex', 'publication_status' => 'published', 'is_active' => true]);
+            $p->externalIdentities()->create(['provider' => 'shopee', 'external_product_id' => (string) $index]);
+            foreach (range(1, 3) as $photo) {
+                $p->images()->create(['image_path' => 'products/complete.png', 'is_primary' => $photo === 1, 'sort_order' => $photo]);
+            }
+            $basic[] = [(string) $index, '', $p->name, 'Parfum unisex.'];
+            $media[] = [(string) $index, '', $p->name, '', 'https://images.example.test/a.png', '', ''];
+        }
+        foreach (range(369, 375) as $index) {
+            $name = "New Item {$index} EDP 100ML";
+            $basic[] = [(string) $index, '', $name, 'Parfum unisex.'];
+            $media[] = [(string) $index, '', $name, '', 'https://images.example.test/new.png', '', ''];
+        }
+        $batch = app(ShopeeContentPreviewer::class)->preview($this->admin, $this->file('basic', $basic), $this->file('media', $media));
+        $this->assertSame(375, $batch->total_rows);
+        $response = $this->actingAs($this->admin)->get(route('admin.shopee-imports.index', ['batch' => $batch->id]))->assertOk();
+        $this->assertSame(7, $response->viewData('rows')->total());
+        $this->assertSame(368, $response->viewData('completeCount'));
+        $this->assertSame(0, $response->viewData('pendingCount'));
+        $this->assertSame(375, $this->get(route('admin.shopee-imports.index', ['batch' => $batch->id, 'filter' => 'all']))->viewData('rows')->total());
+        $this->assertSame(368, $this->get(route('admin.shopee-imports.index', ['batch' => $batch->id, 'filter' => 'complete']))->viewData('rows')->total());
+        $this->assertSame(0, app(ApplyShopeeContent::class)->handle($batch, $this->admin));
+        $this->assertSame(368, $batch->rows()->where('apply_status', 'skipped_no_changes')->count());
+        $this->assertSame(0, app(QueueProductImportImages::class)->handle($batch, $this->admin)['queued_rows']);
+        Queue::assertNothingPushed();
+        Http::assertNothingSent();
     }
 
     public function test_manual_choice_cannot_rebind_occupied_shopee_identity_or_other_size(): void

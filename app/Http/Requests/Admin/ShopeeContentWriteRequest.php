@@ -18,7 +18,9 @@ class ShopeeContentWriteRequest extends FormRequest
     public function rules(): array
     {
         if ($this->routeIs('admin.shopee-imports.choose')) {
-            return ['product_id' => ['required', 'integer', 'min:1'], 'replace_description' => ['sometimes', 'boolean']];
+            return ['product_id' => ['required', 'integer', 'min:1'], 'replace_description' => ['sometimes', 'boolean'],
+                'confirm_size_mismatch' => ['sometimes', 'boolean'],
+                'confirmed_website_ml' => ['required_if:confirm_size_mismatch,1', 'nullable', 'integer', 'min:1', 'max:10000']];
         }
         $rules = ['confirm' => ['accepted']];
         if ($this->routeIs('admin.shopee-imports.publish')) {
@@ -35,6 +37,6 @@ class ShopeeContentWriteRequest extends FormRequest
 
     protected function getRedirectUrl(): string
     {
-        return route('admin.shopee-imports.index', ['batch' => $this->route('productImportBatch')->id]);
+        return route('admin.shopee-imports.index', ['batch' => $this->route('productImportBatch')->id] + $this->only(['filter', 'search', 'page']));
     }
 }

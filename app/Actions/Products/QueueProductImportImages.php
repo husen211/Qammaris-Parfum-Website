@@ -57,7 +57,24 @@ class QueueProductImportImages
                 }
 
                 if ($lockedBatch->contract_version === ShopeeContentPreviewer::VERSION) {
-                    app(ShopeeContentImageTarget::class)->assert($row, $row->appliedProduct);
+                    app(ApplyShopeeContent::class)->assertPayload($row);
+                    try {
+                        app(ShopeeContentImageTarget::class)->assert($row, $row->appliedProduct);
+                    } catch (DomainException $error) {
+                        $outcomes = $this->prepareOutcomes($row);
+                        foreach ($outcomes as &$outcome) {
+                            if ($outcome['status'] === 'pending') {
+                                $outcome['status'] = 'blocked';
+                                $outcome['message'] = $error->getMessage().' Upload ulang kedua file untuk pemeriksaan baru.';
+                            }
+                        }
+                        unset($outcome);
+                        $row->forceFill(['image_acquisition_status' => ProductImportRow::IMAGE_COMPLETED_WITH_ERRORS,
+                            'image_acquisition_outcomes' => $outcomes, 'image_acquisition_completed_at' => now(),
+                            'image_acquisition_requested_by' => $actor->id, 'image_acquisition_requested_at' => now()])->save();
+
+                        continue;
+                    }
                 }
 
                 $outcomes = $this->prepareOutcomes($row);

@@ -24,14 +24,15 @@ class ApplyShopeeContent
         }
     }
 
-    public function choose(ProductImportBatch $batch, ProductImportRow $row, User $actor, int $productId, bool $replace): void
+    public function choose(ProductImportBatch $batch, ProductImportRow $row, User $actor, int $productId, bool $replace, ?int $confirmedWebsiteMl = null): bool
     {
         $this->assertBatch($batch, $actor);
-        DB::transaction(function () use ($batch, $row, $actor, $productId, $replace) {
+
+        return DB::transaction(function () use ($batch, $row, $actor, $productId, $replace, $confirmedWebsiteMl) {
             ProductImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
             $locked = $batch->rows()->whereKey($row->id)->lockForUpdate()->firstOrFail();
             $this->assertPayload($locked);
-            if ($locked->apply_status !== 'pending') {
+            if (! in_array($locked->apply_status, ['pending', 'blocked_protected', 'skipped_no_changes'], true)) {
                 throw new DomainException('Baris sudah diterapkan; upload ulang file untuk perubahan berikutnya.');
             }
             if ($batch->rows()->where('id', '!=', $row->id)->where('matched_product_id', $productId)->exists()) {
@@ -41,18 +42,60 @@ class ApplyShopeeContent
             if (! $product) {
                 throw new DomainException('Pilih produk aplikasi yang masih aktif di katalog admin.');
             }
-            $data = $this->preview->plan($locked->normalized_data['source'], $product, $replace);
-            if (! $data['product_id']) {
+            $data = $this->preview->plan($locked->normalized_data['source'], $product, $replace, $confirmedWebsiteMl);
+            if (! $data['product_id'] && $data['size_mismatch'] === null) {
                 throw new DomainException(implode(' ', $data['issues']));
             }
-            $locked->forceFill(['matched_product_id' => $productId, 'normalized_data' => $data, 'status' => 'valid',
-                'payload_hash' => $this->hasher->hash($data, [], 'shopee_content'), 'resolved_by' => $actor->id, 'resolved_at' => now(),
-                'resolution_status' => 'resolved', 'resolution_fields' => ['product_id' => $productId, 'replace_description' => $replace],
-                'resolution_before_snapshot' => $locked->normalized_data, 'resolution_after_snapshot' => $data,
-                'resolution_message' => 'Admin memilih produk dan melihat usulan yang diperbarui sebelum penerapan.'])->save();
+            $this->savePlan($locked, $data, $actor, 'Admin memilih produk dan melihat perubahan sebelum penerapan.');
             $batch->forceFill(['valid_rows' => $batch->rows()->whereNotNull('matched_product_id')->count(),
                 'review_rows' => $batch->rows()->whereNull('matched_product_id')->count()])->save();
+
+            return $data['product_id'] !== null;
         });
+    }
+
+    public function refresh(ProductImportBatch $batch, User $actor): int
+    {
+        $this->assertBatch($batch, $actor);
+
+        return DB::transaction(function () use ($batch, $actor) {
+            ProductImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
+            $products = $this->preview->products()->keyBy('id');
+            $rows = $batch->rows()->whereIn('apply_status', ['pending', 'blocked_protected'])->lockForUpdate()->get();
+            foreach ($rows as $row) {
+                $this->assertPayload($row);
+                $old = $row->normalized_data;
+                $id = $row->matched_product_id ?? $old['selected_product_id'] ?? null;
+                $product = $products->get($id);
+                // A size confirmation belongs to this precise source/target pair, not future sizes.
+                $confirmed = $old['confirmed_website_ml'] ?? null;
+                if ($confirmed !== null && ($old['size_mismatch']['website_ml'] ?? null) !== $confirmed) {
+                    $confirmed = null;
+                }
+                $data = $this->preview->plan($old['source'], $product, $old['replace_description'], $confirmed);
+                if ($data['product_id'] && $batch->rows()->where('id', '!=', $row->id)->where('matched_product_id', $data['product_id'])->exists()) {
+                    $data = $this->preview->plan($old['source'], null);
+                    $data['issues'][] = 'Produk website sudah dipilih pada baris lain.';
+                }
+                $this->savePlan($row, $data, $actor, 'Admin memeriksa ulang perubahan. Sumber Shopee asli dan produk website tidak diubah.');
+            }
+            $batch->forceFill(['valid_rows' => $batch->rows()->whereNotNull('matched_product_id')->count(),
+                'review_rows' => $batch->rows()->whereNull('matched_product_id')->count()])->save();
+
+            return $rows->count();
+        });
+    }
+
+    private function savePlan(ProductImportRow $row, array $data, User $actor, string $message): void
+    {
+        $row->forceFill(['matched_product_id' => $data['product_id'], 'normalized_data' => $data,
+            'status' => $data['product_id'] ? 'valid' : 'review', 'apply_status' => 'pending', 'apply_message' => null,
+            'payload_hash' => $this->hasher->hash($data, [], 'shopee_content'), 'resolved_by' => $actor->id, 'resolved_at' => now(),
+            'resolution_status' => $data['product_id'] ? 'resolved' : 'review',
+            'resolution_fields' => ['product_id' => $data['selected_product_id'], 'replace_description' => $data['replace_description'],
+                'confirmed_website_ml' => $data['confirmed_website_ml'], 'size_mismatch' => $data['size_mismatch']],
+            'resolution_before_snapshot' => $row->normalized_data, 'resolution_after_snapshot' => $data,
+            'resolution_message' => $message])->save();
     }
 
     public function handle(ProductImportBatch $batch, User $actor): int
@@ -70,13 +113,32 @@ class ApplyShopeeContent
             DB::table('qammaris_app_products')->whereIn('id', $uuids)->orderBy('id')->lockForUpdate()->get();
             Product::whereIn('id', $productIds)->orderBy('id')->lockForUpdate()->get();
             $count = 0;
+            // Payload corruption is not a recoverable product conflict: roll back the operation.
             foreach ($rows as $r) {
                 $this->assertPayload($r);
+            }
+            foreach ($rows as $r) {
                 $data = $r->normalized_data;
-                $p = Product::with('variants')->findOrFail($r->matched_product_id);
-                $this->preview->assertTarget($p, $r->external_product_id);
-                if (! hash_equals($data['target_fingerprint'], $this->preview->fingerprint($p))) {
-                    throw new DomainException('Data produk berubah setelah diperiksa. Pilih kembali produk pada baris tersebut untuk memperbarui usulan, lalu terapkan lagi.');
+                $p = Product::with(['variants', 'externalIdentities'])->find($r->matched_product_id);
+                try {
+                    if (! $p) {
+                        throw new DomainException('Produk website tidak ditemukan. Pilih produk lain.');
+                    }
+                    $this->preview->assertTarget($p, $r->external_product_id);
+                    if (($data['fingerprint_version'] ?? null) !== ShopeeContentPreviewer::FINGERPRINT_VERSION
+                        || ! hash_equals($data['target_fingerprint'], $this->preview->fingerprint($p))) {
+                        throw new DomainException('Perubahan baris ini perlu diperiksa ulang. Tekan Periksa ulang perubahan, lalu lihat hasil sebelum menerapkan lagi. Produk lain tetap diproses.');
+                    }
+                } catch (DomainException $error) {
+                    $r->forceFill(['apply_status' => 'blocked_protected', 'apply_message' => $error->getMessage()])->save();
+
+                    continue;
+                }
+                if (! $this->preview->hasChanges($data, $p)) {
+                    $r->forceFill(['apply_status' => 'skipped_no_changes', 'applied_product_id' => $p->id, 'applied_at' => now(),
+                        'apply_message' => 'Tidak ada perubahan konten; produk dan foto dipertahankan.'])->save();
+
+                    continue;
                 }
                 $before = $this->snapshots->capture($p);
                 app(MapExternalProductIdentity::class)->handle($p, 'shopee', $r->external_product_id);
@@ -93,7 +155,7 @@ class ApplyShopeeContent
             }
             $batch->forceFill(['status' => 'applied', 'applied_by' => $actor->id, 'applied_at' => now(),
                 'applied_rows' => $batch->rows()->where('apply_status', 'updated')->count(),
-                'blocked_rows' => $batch->rows()->whereNull('matched_product_id')->count()])->save();
+                'blocked_rows' => $batch->rows()->where(fn ($q) => $q->whereNull('matched_product_id')->orWhere('apply_status', 'blocked_protected'))->count()])->save();
 
             return $count;
         });
