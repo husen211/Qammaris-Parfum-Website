@@ -1,6 +1,8 @@
 # BLOG-04 — media/components verification
 
-Date:2026-10-07. Status: IN_REVIEW, not deployed. Branch modernization/blog-04-media depends on BLOG-03 commit5e92f50, then BLOG-02/01. Owner selected the next blog item; no order work changed. Delivery/CI links will be recorded after push.
+Date:2026-10-07 UTC /2026-10-08 local. Status: IN_REVIEW, not deployed. Branch modernization/blog-04-media depends on BLOG-03 commit5e92f50, then BLOG-02/01. Owner selected the next blog item; no order work changed.
+
+Delivery: [draft PR30](https://github.com/husen211/Qammaris-Parfum-Website/pull/30), base modernization/blog-03-journal, implementation commit84e5346. Both [push CI](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37656786108) and [PR CI](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37656877368) passed PHP and Node jobs; Linux log confirms439 tests/3134 assertions including JournalComponentsTest, with GD enabled. Follow-up delivery documentation does not change code; latest checks are on the PR.
 
 ## Outcome and impact
 
@@ -14,7 +16,7 @@ Migration000005 adds blog_media plus five nullable blog_posts columns only. Lega
 - Full Laravel:439 tests/3134 assertions passed,31.83s,106MB. Command: `C:/xampp/php/php.exe -d extension=gd vendor/bin/phpunit`. An earlier artisan invocation did not propagate GD to its child and skipped GD-specific coverage; the direct PHPUnit runs above supersede that result.
 - JavaScript: `node --test tests/js/*.test.mjs`,31 passed/0 failed. `npm test` has no configured script; rerun with the repository's CI command passed. New Tiptap/component interaction checked in the real browser, not claimed as additional automated JS coverage.
 - Vite:724 modules built. Editor449.81kB/142.46gzip; public Journal2.24kB/1.01gzip. Existing DaisyUI @property and unrelated large about-page3D chunk warnings remain.
-- Pint dirty formatted; final Pint test/git diff --check and Composer strict validation passed. Dependency lockfiles unchanged. npm audit still reports3 existing advisories (SEC-DEP-01); Composer locked audit reports2 league/commonmark advisories (SEC-DEP-02). Audit is not clean; no unsolicited package upgrade.
+- Pint dirty formatted; final Pint test/git diff --check, Composer strict validation and221 local documentation links passed. Dependency lockfiles unchanged. npm audit still reports3 existing advisories (SEC-DEP-01); Composer locked audit reports2 league/commonmark advisories (SEC-DEP-02). Audit is not clean; no unsolicited package upgrade.
 - Migration applied/replayed only in disposable SQLite. GD/WebP checked locally with per-process extension flag; no hosting configuration changed. Local fixture/runtime cleanup recorded below.
 - Local image-processing benchmark,3 passes each:1080×1080 JPEG→6 variants median494.54ms/max550.59ms, original226627bytes/aggregate variants317470bytes;800×500 PNG→5 variants median256.11ms/max259.96ms, original411738bytes/aggregate variants99634bytes. PHP-reported peak50MB (not all native GD memory). Temporary benchmark variants were discarded and originals retained. This measures two local sources, not hosting throughput/production-scale performance or a guaranteed bandwidth reduction for every photo.
 
