@@ -1,6 +1,6 @@
 # ADR-030 — Whole rupiah and current-catalog cart totals
 
-Date: 2026-10-07. Decision: Owner approved whole rupiah as the final AUD-06 rule, superseding the earlier two-decimal reply during the same task. Implementation on the AUD-06 review branch; no production release or data migration.
+Date: 2026-10-07. Decision: Owner approved whole rupiah as the final AUD-06 rule, superseding the earlier two-decimal reply during the same task. Released via PR24 after separate Owner approval; no price-data migration. [Release proof](../../verification/audit-release/README.md).
 
 ## Concrete problem
 

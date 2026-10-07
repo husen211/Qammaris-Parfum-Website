@@ -1,6 +1,6 @@
 # ADR-031 — Narrow admin product change history
 
-2026-10-07. Accepted for AUD-07: Owner approved one audit table and retention without automatic deletion. Review-branch implementation only; no live migration or release.
+2026-10-07. Accepted for AUD-07: Owner approved one audit table and retention without automatic deletion. Subsequently released via PR24 after separately approved staging/MySQL rehearsal and targeted production migration: [proof](../../verification/audit-release/README.md).
 
 ## Concrete need and tradeoff
 
@@ -20,4 +20,4 @@ Feed/import tables retain their separate source/batch/revision evidence; no dupl
 
 Owner selected retention without automatic deletion. No purge command/schedule/config or permission changes. Access is existing authorized operational tooling; no new public/admin route. Routine diagnostic output is IDs/actions/changed fields/timestamps only. Before/after names/metadata remain untrusted stored data if a later interface renders/exports them.
 
-Apply the additive migration on an explicitly approved target before activating new code. Existing deployment pending-migration refusal must remain. Code rollback leaves the audit table/rows intact; do not roll down/drop a populated history table or rewind feed/import state. MySQL migration/locking and production volume/latency are not confirmed by SQLite tests. [Runbook](../../runbooks/ADMIN_PRODUCT_AUDIT.md), [verification](../../verification/aud-07/README.md).
+Apply the additive migration on an explicitly approved target before activating new code. Existing deployment pending-migration refusal must remain. Code rollback leaves the audit table/rows intact; do not roll down/drop a populated history table or rewind feed/import state. Targeted MySQL migration/replay and a rolled-back staging editor/audit/no-op test passed. Concurrent MySQL load, long-term volume/latency and backup retention remain Not confirmed. [Runbook](../../runbooks/ADMIN_PRODUCT_AUDIT.md), [verification](../../verification/aud-07/README.md).

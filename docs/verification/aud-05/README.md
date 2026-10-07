@@ -1,5 +1,7 @@
 # AUD-05 — Shared editor save, validation and explicit Shopee dependencies
 
+**Subsequent release:** PR24 is merged and production `9325df4` activated; [MySQL/runtime/release proof](../audit-release/README.md). The dated implementation evidence and its remaining verification limits below are retained; pre-release status is superseded.
+
 Date: 2026-10-07. Owner direction: “lanjutt” after AUD-04 recommended AUD-05. Status: IN_REVIEW; local implementation/verification complete, branch/release acceptance pending. No production deployment or AUD-06 execution.
 
 ## Outcome and changed files

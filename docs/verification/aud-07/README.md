@@ -1,5 +1,7 @@
 # AUD-07 — Admin product change history verification
 
+**Subsequent release:** PR24 is merged and production `9325df4` activated; [MySQL/runtime/release proof](../audit-release/README.md). The dated implementation evidence and its remaining verification limits below are retained; pre-release status is superseded.
+
 2026-10-07. IN_REVIEW; implementation local/review branch only. Owner approved AUD-07 and then the additive table with retention without automatic deletion. Scope AUD-F11. No deployment/live migration or next phase. [ADR-031](../../architecture/decisions/ADR-031-admin-product-change-history.md).
 
 ## Outcome and files

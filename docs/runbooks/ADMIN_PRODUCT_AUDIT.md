@@ -1,6 +1,6 @@
 # Admin product history — AUD-07
 
-Review-branch implementation, 2026-10-07. Owner approved the table and indefinite retention without automatic deletion; deployment/live migration remain separate. [ADR-031](../architecture/decisions/ADR-031-admin-product-change-history.md).
+Released through PR24, 2026-10-07, after separately approved staging/MySQL rehearsal and targeted production migration. [Release proof](../verification/audit-release/README.md). Owner approved the table and indefinite retention without automatic deletion; future deployments/writes still require their own scope. [ADR-031](../architecture/decisions/ADR-031-admin-product-change-history.md).
 
 ## What is covered
 
@@ -26,7 +26,7 @@ For a specific authorized investigation, read that row's before/after in memory 
 
 An actor ID denotes the authenticated account. Missing/deleted actors keep the historical ID; do not guess a name or classify it as a separate automation. Imports/feed retain their own actor/batch/revision diagnostics. AUD-07 does not expose a write API, change credentials, rebind provider IDs or reset an import baseline.
 
-## Approved future migration/release sequence
+## Targeted migration/release sequence
 
 1. Review the stacked AUD PRs and schema change. Rehearse the selected migration on staging/MySQL with the normal target/recovery preflight; the local historical SQLite proof is not a production MySQL rehearsal.
 2. On an explicitly Owner-approved prepared release/target with protected shared environment loaded, run only:

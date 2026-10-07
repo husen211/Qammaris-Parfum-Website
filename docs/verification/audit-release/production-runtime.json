@@ -1,0 +1,35 @@
+{
+    "revision": "9325df4444e71f1bce996120af85b76af7ebba29",
+    "environment": "production",
+    "mysql_version": "11.8.9-MariaDB-log",
+    "product_count": 453,
+    "public_count": 378,
+    "image_records": 1131,
+    "audit_rows": 0,
+    "checkpoint": 491,
+    "last_synced_at": "2026-10-07 09:30:04",
+    "sync_error_present": false,
+    "snapshots": 459,
+    "queue_jobs": 0,
+    "failed_jobs": 0,
+    "api_key_filled": true,
+    "webhook_secret_filled": true,
+    "feed": {
+        "without_key_status": 401,
+        "with_key_status": 200,
+        "data_count": 0,
+        "next_seq": 491,
+        "has_more": false
+    },
+    "unsigned_webhook_status": 401,
+    "example": {
+        "product_id": 898,
+        "slug": "khadlaj-panache-angel-dust-extrait-de-parfum-100-ml",
+        "name": "Khadlaj Panache Angel Dust Extrait de Parfum 100 Ml",
+        "price": "424000.00",
+        "volume": 100,
+        "availability": "available",
+        "primary_image_exists": true
+    },
+    "pending_migrations": []
+}
