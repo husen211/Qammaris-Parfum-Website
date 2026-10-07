@@ -87,7 +87,7 @@ P9-01 is IN_REVIEW: the read-only runtime/catalog/browser subset passes; the sta
 
 ## Validation, documentation and recovery
 
-No application tests/build were rerun solely for these documentation changes. Deployed P8-10 main CI was green (339 Laravel tests/2,306 assertions and 31 Node tests in its recorded verification); P9's actual checks are the read-only server/feed/HTTP/browser checks above. Local documentation validation checks JSON parsing and whitespace.
+No application tests/build were rerun locally solely for these documentation changes. Deployed P8-10 main CI was green (339 Laravel tests/2,306 assertions and 31 Node tests in its recorded verification); P9's actual checks are the read-only server/feed/HTTP/browser checks above. Local JSON parsing, report artifact links and whitespace validation pass. [PR16](https://github.com/husen211/Qammaris-Parfum-Website/pull/16) runs the existing PHP/Laravel and Node/Vite CI automatically; both jobs passed in [run37569131861](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37569131861) for the initial documentation commit. No merge/deploy was performed.
 
 Affected documentation: `docs/planning/BACKLOG.md`, `docs/architecture/MASTER_PLAN.md` and this evidence directory. The branch also carries the earlier P8-10 docs-only release record, leaving application code unchanged. Do not merge documentation just to cause another production deployment during this acceptance pass.
 
