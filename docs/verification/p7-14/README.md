@@ -44,3 +44,8 @@ Actual iPhone Safari/touch, screen-reader and reduced-motion device run:Not conf
 Used an isolated local copy of the catalog (445 products,350 published) and read-only existing preview media. Owned PHP preview process and disposable `p7-14-preview` router/database/session files removed after verification; original preview data/media retained. Browser viewport restored and owned tabs closed. No production resources touched.
 
 Rollback:revert the footer commit and rebuild assets through the normal deployment path. No migration/data restore required. Next backlog action is review/device verification and separately approved release, not a new implementation phase.
+
+
+## Production release follow-up —2026-10-07
+
+Owner expanded approval from footer-only to all prepared pending work. Footer is now deployed through PR13 at d7a5115 with filters/import/cart/skeletons; preceding unreleased/production-untouched statements describe the implementation phase. Actual public footer routes and text verified after deployment. New production screenshot capture failed, so images above remain accurately labelled local review captures. Combined release/test/runtime proof and limitations: [release record](../releases/2026-10-07/README.md). No product/media/migration changes; previous code/watchdog retained.

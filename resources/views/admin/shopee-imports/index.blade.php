@@ -165,16 +165,6 @@ window.addEventListener('pageshow', () => {
     });
     document.querySelectorAll('[data-shopee-form]').forEach(form => form.removeAttribute('aria-busy'));
 });
-document.querySelectorAll('[data-target-search]').forEach(input => {
-    const select = document.getElementById(input.dataset.targetSearch);
-    const options = Array.from(select.options).map(option => ({value: option.value, text: option.text}));
-    input.addEventListener('input', () => {
-        const current = select.value;
-        const query = input.value.trim().toLocaleLowerCase();
-        const matches = options.filter(option => !option.value || option.value === current || option.text.toLocaleLowerCase().includes(query));
-        select.replaceChildren(...matches.map(option => new Option(option.text, option.value, false, option.value === current)));
-    });
-});
 document.querySelectorAll('[data-select-ready]').forEach(button => {
     button.addEventListener('click', () => {
         button.form.querySelectorAll('input[name="rows[]"]').forEach(input => { input.checked = button.dataset.selectReady === 'all'; });

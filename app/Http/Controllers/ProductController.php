@@ -25,10 +25,6 @@ class ProductController extends Controller
             ], 'price')
             ->published();
 
-        if ($catalogState->search !== null) {
-            $query->search($catalogState->search);
-        }
-
         if ($catalogState->brandIds !== []) {
             $query->whereIn('brand_id', $catalogState->brandIds);
         }
@@ -57,6 +53,10 @@ class ProductController extends Controller
 
         if ($catalogState->availability !== null) {
             $this->applyAvailabilityFilter($query, $catalogState->availability);
+        }
+
+        if ($catalogState->search !== null) {
+            $query->search($catalogState->search, $catalogState->sort === ProductCatalogState::DEFAULT_SORT);
         }
 
         $this->applySort($query, $catalogState->sort);

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\BlogPostStoreRequest;
 use App\Http\Requests\Admin\BlogPostUpdateRequest;
 use App\Models\BlogPost;
 use App\Support\BlogHtmlSanitizer;
+use App\Support\SearchMatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -18,13 +19,7 @@ class AdminBlogPostController extends Controller
     {
         $query = BlogPost::query();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('excerpt', 'like', "%{$search}%");
-            });
-        }
+        $search = SearchMatcher::term($request->query('search'));
 
         if ($request->filled('category')) {
             $query->where('category', $request->category);
@@ -45,10 +40,14 @@ class AdminBlogPostController extends Controller
             }
         }
 
+        if ($search !== '') {
+            SearchMatcher::constrain($query, $search, (clone $query)->select(['id', 'title', 'excerpt'])->get(),
+                fn ($row) => [$row->title, $row->excerpt]);
+        }
         $posts = $query->latest()->paginate(10)->withQueryString();
         $categories = BlogPost::CATEGORY_OPTIONS;
 
-        return view('admin.blog-posts.index', compact('posts', 'categories'));
+        return view('admin.blog-posts.index', compact('posts', 'categories', 'search'));
     }
 
     public function create()
@@ -65,7 +64,7 @@ class AdminBlogPostController extends Controller
 
         if ($request->hasFile('featured_image')) {
             $path = $request->file('featured_image')->store('blog', 'public');
-            $payload['featured_image'] = 'storage/' . $path;
+            $payload['featured_image'] = 'storage/'.$path;
         }
 
         $payload['author'] = $payload['author'] ?: optional($request->user())->name ?: 'Admin';
@@ -93,15 +92,14 @@ class AdminBlogPostController extends Controller
         BlogPostUpdateRequest $request,
         BlogPost $blogPost,
         BlogHtmlSanitizer $sanitizer
-    )
-    {
+    ) {
         $payload = $request->validated();
         $payload['content'] = $sanitizer->sanitize($payload['content']);
 
         if ($request->hasFile('featured_image')) {
             $this->deleteFeaturedImage($blogPost);
             $path = $request->file('featured_image')->store('blog', 'public');
-            $payload['featured_image'] = 'storage/' . $path;
+            $payload['featured_image'] = 'storage/'.$path;
         }
 
         $payload['author'] = $payload['author'] ?: optional($request->user())->name ?: 'Admin';
@@ -128,7 +126,7 @@ class AdminBlogPostController extends Controller
 
     private function resolvePublishedAt(bool $isPublished, ?string $publishedAt): ?Carbon
     {
-        if (!$isPublished) {
+        if (! $isPublished) {
             return null;
         }
 
@@ -141,7 +139,7 @@ class AdminBlogPostController extends Controller
 
     private function deleteFeaturedImage(BlogPost $blogPost): void
     {
-        if (!$blogPost->featured_image) {
+        if (! $blogPost->featured_image) {
             return;
         }
 

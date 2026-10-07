@@ -1,3 +1,5 @@
+import {searchScore} from './search-matcher';
+
 const catalog = document.querySelector('[data-catalog-discovery]');
 
 if (catalog) {
@@ -70,10 +72,9 @@ if (catalog) {
     document.querySelectorAll('[data-catalog-brand-search]').forEach((search) => {
         search.addEventListener('input', () => {
             const dropdown = search.closest('[data-catalog-dropdown]');
-            const query = search.value.trim().toLocaleLowerCase('id');
             const options = [...dropdown.querySelectorAll('[data-catalog-brand-option]')];
             options.forEach((option) => {
-                option.hidden = !option.textContent.toLocaleLowerCase('id').includes(query);
+                option.hidden = searchScore(search.value, [option.textContent]) === null;
             });
             dropdown.querySelector('[data-catalog-brand-empty]').hidden = options.some((option) => !option.hidden);
         });

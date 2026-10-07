@@ -32,11 +32,6 @@ class AdminProductController extends Controller
         $catalogContext = $this->normalizeCatalogContext($request->query());
         $query = Product::with(['brand', 'category', 'primaryImage', 'variants']);
 
-        // Logic Search
-        if (isset($catalogContext['search'])) {
-            $query->search($catalogContext['search']);
-        }
-
         // Logic Filter Brand (BARU)
         if (isset($catalogContext['brand_id'])) {
             $query->where('brand_id', $catalogContext['brand_id']);
@@ -48,6 +43,11 @@ class AdminProductController extends Controller
 
         if (isset($catalogContext['publication'])) {
             $query->where('publication_status', $catalogContext['publication']);
+        }
+
+        // Logic Search
+        if (isset($catalogContext['search'])) {
+            $query->search($catalogContext['search'], ($catalogContext['sort'] ?? 'latest') === 'latest');
         }
 
         match ($catalogContext['sort'] ?? 'latest') {

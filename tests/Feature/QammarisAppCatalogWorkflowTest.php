@@ -255,6 +255,22 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         return $user;
     }
 
+    public function test_inbox_search_tolerates_name_typos_but_identifiers_and_status_stay_scoped(): void
+    {
+        $target = $this->source(['name' => 'Reverie Aqua 100ML', 'brand' => 'Zimaya']);
+        $this->cache($target);
+        $hidden = $this->source(['name' => 'Reverie Hidden', 'hidden' => true]);
+        $this->cache($hidden);
+        $this->actingAs($this->admin());
+        $result = $this->get('/admin/app-products?search=rverie+aqua')->assertOk();
+        $this->assertSame([$target['id']], $result->viewData('rows')->getCollection()->map(fn ($row) => $row['source']['id'])->all());
+        $this->assertSame(0, $this->get('/admin/app-products?search=rverie+aqua&status=hidden')->viewData('rows')->total());
+        $this->assertSame(1, $this->get('/admin/app-products?search='.$target['id'])->viewData('rows')->total());
+        $this->assertSame(0, $this->get('/admin/app-products?search=SOURCE-SKY')->viewData('rows')->total());
+        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('qammaris_app_products', 2);
+    }
+
     private function source(array $overrides = []): array
     {
         return array_replace([
