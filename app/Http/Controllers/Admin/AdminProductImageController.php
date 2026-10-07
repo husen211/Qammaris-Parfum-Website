@@ -21,7 +21,7 @@ class AdminProductImageController extends Controller
         ProductImage $productImage,
         SetPrimaryProductImage $setPrimaryProductImage
     ): RedirectResponse {
-        $setPrimaryProductImage->handle($product, $productImage->getKey());
+        $setPrimaryProductImage->handle($product, $productImage->getKey(), $request->user());
 
         return $this->backToEditor($request, $product, 'Foto utama berhasil diperbarui.');
     }
@@ -36,7 +36,7 @@ class AdminProductImageController extends Controller
             'direction' => ['required', Rule::in(['up', 'down'])],
         ]);
 
-        $moveProductImage->handle($product, $productImage->getKey(), $validated['direction']);
+        $moveProductImage->handle($product, $productImage->getKey(), $validated['direction'], $request->user());
 
         return $this->backToEditor($request, $product, 'Urutan foto berhasil diperbarui.');
     }
@@ -48,7 +48,7 @@ class AdminProductImageController extends Controller
         ArchiveProductImage $archiveProductImage
     ): RedirectResponse {
         try {
-            $archiveProductImage->handle($product, $productImage->getKey());
+            $archiveProductImage->handle($product, $productImage->getKey(), $request->user());
         } catch (DomainException $exception) {
             return $this->backToEditor($request, $product, null, $exception->getMessage());
         }

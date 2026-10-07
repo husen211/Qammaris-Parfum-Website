@@ -21,7 +21,7 @@ Foundation/test/product/media operations (existing)
     -> one Owner-approved bounded refactor at a time (scope/status in BACKLOG)
 ```
 
-Advancing to the audit does not mark P9 limits passed. AUD-02 is not a release or authorization to execute the next refactor. Proposed AUD-03–07 dependencies/scopes live in BACKLOG; they are a maintainability follow-up queue, not newly mandatory launch blockers.
+Advancing to the audit does not mark P9 limits passed. AUD-02 is not a release or authorization to execute the next refactor. AUD-03–07 are implemented on stacked review branches; dependencies/evidence live in BACKLOG. Review, separately approved migration/release and original acceptance gates remain; these audit tasks are not newly invented launch blockers. No AUD-08 or later program is started.
 
 Already implemented: one-product/one-offer foundation; archive-over-delete/media lifecycle; CSV/bulk snapshot-preview-apply audit; app feed/worker/reconciliation; recurring Shopee XLSX/content recovery; catalog GET state/typo search; daily homepage best sellers without prices; recipient checkout/native loading feedback. Evidence is linked per item, not copied as counts here.
 

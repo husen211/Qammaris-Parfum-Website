@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Products\ArchiveProduct;
 use App\Actions\Products\EvaluateProductPublicationReadiness;
 use App\Actions\Products\PublishProduct;
 use App\Actions\Products\SaveProductEditor;
@@ -92,6 +93,7 @@ class AdminProductController extends Controller
                 $request->editorData(),
                 $request->file('images') ?? [],
                 $publicationAction === Product::PUBLICATION_PUBLISHED,
+                $request->user(),
             );
 
             if ($publicationAction === Product::PUBLICATION_DRAFT) {
@@ -149,6 +151,7 @@ class AdminProductController extends Controller
                 $request->editorData(),
                 $request->file('new_images') ?? [],
                 $request->input('publication_action') === Product::PUBLICATION_PUBLISHED,
+                $request->user(),
                 $product,
             );
 
@@ -163,7 +166,7 @@ class AdminProductController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id, ArchiveProduct $archiveProduct)
     {
         $product = Product::findOrFail($id);
 
@@ -171,7 +174,7 @@ class AdminProductController extends Controller
             return back()->with('success', 'Produk ini sudah diarsipkan.');
         }
 
-        $product->markArchived();
+        $archiveProduct->handle($product, $request->user());
 
         return back()->with('success', 'Produk berhasil diarsipkan. Data dan gambar tetap tersimpan.');
     }
@@ -186,7 +189,7 @@ class AdminProductController extends Controller
         }
 
         try {
-            $publishProduct->handle($product);
+            $publishProduct->handle($product, $request->user());
         } catch (ProductNotReadyForPublication $e) {
             return redirect()->route('admin.products.edit', [
                 'product' => $product->id,

@@ -4,16 +4,20 @@ namespace App\Actions\Products;
 
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\User;
 use DomainException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 class ArchiveProductImage
 {
-    public function handle(Product $product, int $imageId): ProductImage
+    public function __construct(private RecordProductAdminChange $audit) {}
+
+    public function handle(Product $product, int $imageId, ?User $actor = null): ProductImage
     {
-        return DB::transaction(function () use ($product, $imageId): ProductImage {
+        return DB::transaction(function () use ($product, $imageId, $actor): ProductImage {
             $lockedProduct = Product::query()->whereKey($product->getKey())->lockForUpdate()->firstOrFail();
+            $before = $actor ? $this->audit->snapshot($lockedProduct) : [];
             $images = $lockedProduct->images()->lockForUpdate()->get()->values();
             $target = $images->firstWhere('id', $imageId);
 
@@ -42,6 +46,9 @@ class ArchiveProductImage
                     $image->forceFill(['sort_order' => $index])->save();
                 }
             });
+            if ($actor) {
+                $this->audit->handle($lockedProduct, $actor, 'image_archived', $before, $imageId);
+            }
 
             return $target;
         });

@@ -1,6 +1,6 @@
 # Qammaris — backlog current
 
-Updated 2026-10-07, AUD-06. This board is the entry point; detailed prior scope/acceptance/results remain in the [historical backlog](../history/2026-10-07-context/BACKLOG.md), [audit](../audits/2026-10-07-maintainability.md), ADRs and linked verification. Historical “next/unstarted/pending” paragraphs are relative to their date. Do not implement them again or treat them as new authorization. Current rules: [BUSINESS_RULES](../product/BUSINESS_RULES.md); executable flow: [ARCHITECTURE](../architecture/ARCHITECTURE.md).
+Updated 2026-10-07, AUD-07. This board is the entry point; detailed prior scope/acceptance/results remain in the [historical backlog](../history/2026-10-07-context/BACKLOG.md), [audit](../audits/2026-10-07-maintainability.md), ADRs and linked verification. Historical “next/unstarted/pending” paragraphs are relative to their date. Do not implement them again or treat them as new authorization. Current rules: [BUSINESS_RULES](../product/BUSINESS_RULES.md); executable flow: [ARCHITECTURE](../architecture/ARCHITECTURE.md).
 
 ## Status and working limit
 
@@ -20,7 +20,7 @@ BACKLOG = proposed/not approved for execution; READY = accepted bounded scope re
 | P7 | Public UX | DONE | Catalog/search/cart/recipient WhatsApp flow released; device gates tracked under P9 |
 | P8 | App/integration/import | IN_PROGRESS | Feed/automatic drafts/prices/Shopee released; older acceptance consolidated for review with P9, no website write API claimed |
 | P9 | Acceptance/observation | IN_PROGRESS | P9-01 IN_REVIEW; exact remaining limits below |
-| AUD | Maintainability/context | IN_PROGRESS | AUD-01–06 IN_REVIEW; AUD-03–06 implemented on review branches; AUD-07 not started |
+| AUD | Maintainability/context | IN_PROGRESS | AUD-01–07 IN_REVIEW; AUD-03–07 implemented on review branches; review/migration/release and P9 acceptance remain |
 
 Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked complete merely because the current code is live. [MASTER_PLAN](../architecture/MASTER_PLAN.md) defines closure and future-program boundaries.
 
@@ -29,6 +29,19 @@ Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked compl
 Owner approval 2026-10-07: explicitly correct the observed production Pink/Purple mismatch. Exact scope: Shopee42131600634 previously assigned to Purple879, belongs to Pink686. One transaction reassigns that Shopee identity only, completes Pink with the verified100ml/Wanita/EDP copy and three checksum-verified independent photo copies, publishes Pink, returns Purple to draft and soft-archives its incorrect Pink photos. Original application UUIDs, source prices/status, product IDs and slugs retained; no source-system/database/schema/credential/deployment changes.
 
 Production audit batch8 stores two before/after rows; private preview/receipt retain recovery evidence and original media files. Shared importer rebind guards remain unchanged. Local53tests/264assertions passed; production preview/rehearsal rollback and verify passed; public Pink200/Purple404 and all three Pink gallery images loaded. Original applied batch6 remains historical evidence, not rewritten. Details, limits and scoped recovery: [correction verification](../verification/supremacy-pink/README.md). This correction does not start AUD-03 or close P9.
+
+## AUD-07 — Narrow admin product change history — IN_REVIEW
+
+Owner execution approval: “gas aud 07”. Separate scope/retention answer: “Setuju tabel audit, simpan tanpa hapus otomatis”. Scope AUD-F11: one additive table, explicit admin actor on product create/edit/archive/restore and gallery primary/move/archive, safe before/after metadata/hashes in the business transaction. No UI, credentials/permissions, API/framework, backfill, purge, live migration or deployment.
+
+Acceptance implemented:
+- Changed allowlisted groups only; no-op/validation/authorization/foreign child/readiness failure does not commit history. Audit failure rolls back mutation; editor compensation retains old media and removes only newly stored files.
+- Authenticated account ID comes from the session, never request actor fields. Description/notes/SKU/image keys hash-only; request bodies, URLs/files, customer/user credential data excluded. Existing feed/import evidence remains separate; shared accounts cannot distinguish physical human from automation.
+- Historical IDs retained without FK cascade/nulling; no automatic deletion or invented old actors. No universal history/restore/tamper-proof claim or new history page.
+- Baseline43tests/217assertions; new14tests/110assertions; intermediate110targeted tests/695assertions; final382Laravel tests/2666assertions and31Node tests passed. Strict Composer metadata and changed-PHP Pint passed; no UI/browser test claimed.
+- Selected migration/replay on an isolated historical SQLite copy445products: all21original non-migration table fingerprints unchanged, audit table empty, migration recorded once. Live MySQL/schema/locking/runtime remains Not confirmed. Production deployment pending-migration guard stays intact; separately approved migration must precede code activation.
+
+Files, safe diagnostic steps, schema/data/media impact and retained-table rollback: [AUD-07 verification](../verification/aud-07/README.md), [ADR-031](../architecture/decisions/ADR-031-admin-product-change-history.md), [runbook](../runbooks/ADMIN_PRODUCT_AUDIT.md). Review/release pending; no main merge. AUD-07 is the last item of this bounded audit queue. Recommended next is review/consolidation and separately scoped P9 acceptance, not a new refactor or automatic next phase.
 
 ## AUD-06 — Whole rupiah and current-catalog cart totals — IN_REVIEW
 
@@ -40,7 +53,7 @@ Acceptance implemented:
 - Read-only local historical snapshots:180 and445 products, zero fractional base/comparison/offer prices. Current production and local default MySQL were not measured (connection unavailable).
 - Final Laravel368tests/2556assertions,31Node tests, changed-PHP Pint, strict Composer metadata, Vite build and diff checks passed. Browser390×844/1440×900 money flows and320px longer amounts checked; a detected320px cart overflow is fixed. Genuine Safari/touch and live WA handoff not claimed; complete matched desktop-before screenshots were not captured.
 
-Changed modules, consumer trace, screenshots, temporary-fixture cleanup, limits and code-only recovery: [AUD-06 verification](../verification/aud-06/README.md), [ADR-030](../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md). No main merge; review/release pending. Recommended next: **AUD-07**, only after Owner direction; not started.
+Changed modules, consumer trace, screenshots, temporary-fixture cleanup, limits and code-only recovery: [AUD-06 verification](../verification/aud-06/README.md), [ADR-030](../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md). No main merge; review/release pending. Owner subsequently approved AUD-07; its implementation/limits are recorded above. AUD-06 release remains pending.
 
 ## AUD-05 — Editor save/validation and explicit dependencies — IN_REVIEW
 
@@ -128,10 +141,11 @@ Scope remains verification only unless separately approved. Owner advanced to th
 
 Previous detailed items/acceptance remain in [history](../history/2026-10-07-context/BACKLOG.md); older counts, pending release remarks and one-off exceptions have not been discarded. Release proof confirms code availability; remaining device/live workflows are not silently accepted.
 
-## Proposed next items — not started
+## Work remaining after AUD-07
 
-| Item | Problem / bounded direction | Dependency | Priority / scope |
-|---|---|---|---|
-| AUD-07 | Narrow human actor audit/diagnostics only if needed; no generic audit/event framework | AUD-05 + retention/scopes decision; AUD-F11 | Medium / M |
+The bounded AUD-01–07 implementation queue is complete within documented scopes on review branches. There is no approved AUD-08.
+
+1. Review/consolidate stacked PRs, then separately approved staging/MySQL migration and GitHub production release. Main merge can deploy; do not silently merge or bypass the pending-migration guard.
+2. Close or explicitly scope-waive outstanding P9/device/upload/new-source-event/populated-checkout/protected-media and Owner acceptance limits documented above. Local audit tests do not satisfy them.
 
 Payment gateway, machine-write website API, cloud migration and arbitrary normalization are not active backlog items or launch prerequisites. New requests require a concrete approved scope. Measured query/compatibility-route/name cleanup remains later work only after benchmark/consumer evidence (AUD-F10/F13/F14), not a new approved phase. Unrelated audit findings stay in the [register](../audits/2026-10-07-maintainability.md).

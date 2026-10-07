@@ -4,6 +4,8 @@ Status: investigation complete, **AUD-01 IN_REVIEW**. This report proposes follo
 
 Follow-up: AUD-06 now implements the final whole-rupiah rule and current-catalog cart totals on its review branch; see [verification](../verification/aud-06/README.md) and [ADR-030](../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md). Findings below describe the original audited baseline, not a production release claim.
 
+AUD-07 follow-up: narrowly scoped admin product/media history is implemented on its review branch with Owner-approved no-auto-delete retention; [verification](../verification/aud-07/README.md) documents AUD-F11 coverage and exclusions. Original audit findings remain dated baseline evidence.
+
 ## 1. Executive assessment
 
 Keep the current Laravel monolith. The repository already has useful boundaries: Form Requests, Eloquent scopes/relationships, focused product operations, guarded import batches, two database queues, and a Laravel filesystem adapter. A rewrite, generic repository layer, new search engine or new framework would add complexity without solving a demonstrated current requirement.

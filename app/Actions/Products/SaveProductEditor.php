@@ -3,6 +3,7 @@
 namespace App\Actions\Products;
 
 use App\Models\Product;
+use App\Models\User;
 use App\Services\ProductMediaStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class SaveProductEditor
         private AttachProductImage $images,
         private PublishProduct $publication,
         private ProductMediaStorage $storage,
+        private RecordProductAdminChange $audit,
     ) {}
 
     /**
@@ -24,13 +26,17 @@ class SaveProductEditor
      * @param  array<string, mixed>  $data
      * @param  array<int, UploadedFile>  $uploads
      */
-    public function handle(array $data, array $uploads, bool $publish, ?Product $product = null): Product
+    public function handle(array $data, array $uploads, bool $publish, User $actor, ?Product $product = null): Product
     {
         $storedPaths = [];
 
         try {
-            return DB::transaction(function () use ($data, $uploads, $publish, $product, &$storedPaths): Product {
+            return DB::transaction(function () use ($data, $uploads, $publish, $actor, $product, &$storedPaths): Product {
                 $creating = $product === null;
+                if (! $creating) {
+                    $product = Product::query()->whereKey($product->getKey())->lockForUpdate()->firstOrFail();
+                }
+                $before = $creating ? [] : $this->audit->snapshot($product);
                 $attributes = $this->attributes($data);
 
                 if ($creating) {
@@ -60,6 +66,8 @@ class SaveProductEditor
                 if ($publish) {
                     $this->publication->handle($product);
                 }
+
+                $this->audit->handle($product, $actor, $creating ? 'product_created' : 'product_updated', $before);
 
                 return $product;
             });
