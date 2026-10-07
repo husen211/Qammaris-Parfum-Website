@@ -222,6 +222,80 @@ class AdminProductValidationTest extends TestCase
         $this->assertCount(3, Storage::disk('public')->allFiles('products'));
     }
 
+    public function test_editor_normalizes_notes_and_ignores_non_editor_fields_on_create_and_update(): void
+    {
+        $payload = $this->validStorePayload();
+        $payload['publication_action'] = Product::PUBLICATION_DRAFT;
+        $payload['top_notes'] = ' Bergamot, , Lemon ,';
+        $payload['middle_notes'] = '';
+        $payload['base_notes'] = ' Musk , Cedar ';
+        $payload['is_best_seller'] = 'on';
+        $payload += ['slug' => 'injected-slug', 'base_price' => 1,
+            'publication_status' => 'published', 'is_active' => true,
+            'availability_status' => 'available', 'availability_source' => 'qammaris_app'];
+
+        $this->actingAs($this->admin)->post(route('admin.products.store'), $payload)
+            ->assertSessionHasNoErrors();
+        $product = Product::sole();
+        $this->assertNotSame('injected-slug', $product->slug);
+        $this->assertSame('draft', $product->publication_status);
+        $this->assertFalse($product->is_active);
+        $this->assertSame('unknown', $product->availability_status);
+        $this->assertSame('100000.00', $product->base_price);
+        $this->assertTrue($product->is_best_seller);
+        $this->assertSame(['top' => ['Bergamot', 'Lemon'], 'middle' => [], 'base' => ['Musk', 'Cedar']], $product->fragrance_notes);
+
+        $offer = $product->activeOffer;
+        $offer->update(['sku' => 'KEEP-EDITOR-SKU']);
+        $slug = $product->slug;
+        $payload = $this->validUpdatePayload($product);
+        $payload['name'] = 'Updated Editor Name';
+        $payload['compare_at_price'] = '';
+        $payload['top_notes'] = ' Orange , ,';
+        $payload += ['slug' => 'another-slug', 'base_price' => 1, 'publication_status' => 'published', 'is_active' => true];
+        $this->put(route('admin.products.update', $product->id), $payload)->assertSessionHasNoErrors();
+
+        $product->refresh();
+        $this->assertSame($slug, $product->slug);
+        $this->assertSame('draft', $product->publication_status);
+        $this->assertSame('100000.00', $product->base_price);
+        $this->assertNull($product->compare_at_price);
+        $this->assertFalse($product->is_best_seller);
+        $this->assertSame(['top' => ['Orange'], 'middle' => [], 'base' => []], $product->fragrance_notes);
+        $this->assertSame($offer->id, $product->activeOffer->id);
+        $this->assertSame('KEEP-EDITOR-SKU', $product->activeOffer->sku);
+    }
+
+    public function test_editor_rejects_another_products_offer_without_saving_fields(): void
+    {
+        $product = $this->createExistingProduct();
+        $other = Product::create(['name' => 'Other draft', 'publication_status' => 'draft', 'is_active' => false]);
+        $offer = $other->variants()->create(['volume' => 50, 'price' => 200000, 'sku' => 'OTHER-OFFER', 'is_active' => true]);
+        $payload = $this->validUpdatePayload($product);
+        $payload['name'] = 'Must not save';
+        $payload['variants'][0]['id'] = $offer->id;
+        $payload['variants'][0]['sku'] = $offer->sku;
+
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)
+            ->assertSessionHasErrors('variants.0.id');
+        $this->assertSame('Existing Product', $product->fresh()->name);
+        $this->assertSame('200000.00', $offer->fresh()->price);
+        $this->assertSame('100000.00', $product->fresh()->activeOffer->price);
+    }
+
+    public function test_update_rejects_comparison_price_not_above_offer_before_mutation(): void
+    {
+        $product = $this->createExistingProduct();
+        $payload = $this->validUpdatePayload($product);
+        $payload['name'] = 'Must not save';
+        $payload['compare_at_price'] = 100000;
+
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)
+            ->assertSessionHasErrors('compare_at_price');
+        $this->assertSame('Existing Product', $product->fresh()->name);
+        $this->assertSame('150000.00', $product->fresh()->compare_at_price);
+    }
+
     private function validStorePayload(): array
     {
         return [

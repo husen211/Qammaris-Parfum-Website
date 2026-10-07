@@ -119,6 +119,39 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         }
     }
 
+    public function test_editor_cannot_overwrite_connected_price_identity_or_publication(): void
+    {
+        $this->feed($this->source());
+        $product = Product::sole();
+        $offer = $product->activeOffer;
+        $slug = $product->slug;
+        $availability = $product->availability_status;
+
+        $this->actingAs($this->admin())->put(route('admin.products.update', $product->id), [
+            'name' => $product->name,
+            'brand_id' => $product->brand_id,
+            'category_id' => $product->category_id,
+            'description' => 'Local editor copy.',
+            'gender' => 'Unisex',
+            'variants' => [['id' => $offer->id, 'volume' => $offer->volume, 'price' => 1]],
+            'base_price' => 1,
+            'slug' => 'forged-slug',
+            'availability_source' => 'manual',
+            'publication_status' => 'published',
+            'is_active' => true,
+        ])->assertSessionHasNoErrors();
+
+        $product->refresh();
+        $this->assertSame('180000.00', $product->base_price);
+        $this->assertSame('180000.00', $product->activeOffer->price);
+        $this->assertSame($offer->id, $product->activeOffer->id);
+        $this->assertSame($slug, $product->slug);
+        $this->assertSame('draft', $product->publication_status);
+        $this->assertFalse($product->is_active);
+        $this->assertSame('qammaris_app', $product->availability_source);
+        $this->assertSame($availability, $product->availability_status);
+    }
+
     public function test_all_shared_offer_callers_cannot_override_a_valid_source_price(): void
     {
         $this->feed($this->source());

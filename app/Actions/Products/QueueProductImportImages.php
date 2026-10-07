@@ -7,6 +7,7 @@ use App\Models\ProductImage;
 use App\Models\ProductImportBatch;
 use App\Models\ProductImportRow;
 use App\Models\User;
+use App\Services\ShopeeContentGuard;
 use App\Services\ShopeeContentImageTarget;
 use App\Services\ShopeeContentPreviewer;
 use DomainException;
@@ -15,6 +16,8 @@ use Throwable;
 
 class QueueProductImportImages
 {
+    public function __construct(private ShopeeContentGuard $shopeeGuard, private ShopeeContentImageTarget $shopeeTarget) {}
+
     /**
      * @return array{queued_rows: int, candidate_images: int}
      */
@@ -30,7 +33,7 @@ class QueueProductImportImages
                 if (! $actor) {
                     throw new DomainException('Impor Shopee membutuhkan admin yang mengunggah file.');
                 }
-                app(ApplyShopeeContent::class)->assertBatch($lockedBatch, $actor);
+                $this->shopeeGuard->assertBatch($lockedBatch, $actor);
             }
 
             if ($actor === null && (! in_array($lockedBatch->contract_version, [PrepareQammarisAppDrafts::VERSION, PairQammarisShopeeDrafts::VERSION], true) || $lockedBatch->actor_id !== null)) {
@@ -57,9 +60,9 @@ class QueueProductImportImages
                 }
 
                 if ($lockedBatch->contract_version === ShopeeContentPreviewer::VERSION) {
-                    app(ApplyShopeeContent::class)->assertPayload($row);
+                    $this->shopeeGuard->assertPayload($row);
                     try {
-                        app(ShopeeContentImageTarget::class)->assert($row, $row->appliedProduct);
+                        $this->shopeeTarget->assert($row, $row->appliedProduct);
                     } catch (DomainException $error) {
                         $outcomes = $this->prepareOutcomes($row);
                         foreach ($outcomes as &$outcome) {

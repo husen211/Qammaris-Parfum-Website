@@ -8,6 +8,7 @@ use App\Models\ProductImportRow;
 use App\Models\User;
 use App\Services\ProductImportPayloadHasher;
 use App\Services\ProductImportProductSnapshot;
+use App\Services\ShopeeContentGuard;
 use App\Services\ShopeeContentPreviewer;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -15,23 +16,18 @@ use Illuminate\Support\Facades\DB;
 class ApplyShopeeContent
 {
     public function __construct(private ShopeeContentPreviewer $preview, private ProductImportPayloadHasher $hasher,
-        private ProductImportProductSnapshot $snapshots) {}
-
-    public function assertBatch(ProductImportBatch $batch, User $actor): void
-    {
-        if ($batch->contract_version !== ShopeeContentPreviewer::VERSION || $batch->actor_id !== $actor->id) {
-            throw new DomainException('Impor ini bukan milik akun Anda.');
-        }
-    }
+        private ProductImportProductSnapshot $snapshots, private ShopeeContentGuard $guard,
+        private MapExternalProductIdentity $identities, private SyncSingleOffer $offers,
+        private PublishProduct $publication) {}
 
     public function choose(ProductImportBatch $batch, ProductImportRow $row, User $actor, int $productId, bool $replace, ?int $confirmedWebsiteMl = null): bool
     {
-        $this->assertBatch($batch, $actor);
+        $this->guard->assertBatch($batch, $actor);
 
         return DB::transaction(function () use ($batch, $row, $actor, $productId, $replace, $confirmedWebsiteMl) {
             ProductImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
             $locked = $batch->rows()->whereKey($row->id)->lockForUpdate()->firstOrFail();
-            $this->assertPayload($locked);
+            $this->guard->assertPayload($locked);
             if (! in_array($locked->apply_status, ['pending', 'blocked_protected', 'skipped_no_changes'], true)) {
                 throw new DomainException('Baris sudah diterapkan; upload ulang file untuk perubahan berikutnya.');
             }
@@ -56,14 +52,14 @@ class ApplyShopeeContent
 
     public function refresh(ProductImportBatch $batch, User $actor): int
     {
-        $this->assertBatch($batch, $actor);
+        $this->guard->assertBatch($batch, $actor);
 
         return DB::transaction(function () use ($batch, $actor) {
             ProductImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
             $products = $this->preview->products()->keyBy('id');
             $rows = $batch->rows()->whereIn('apply_status', ['pending', 'blocked_protected'])->lockForUpdate()->get();
             foreach ($rows as $row) {
-                $this->assertPayload($row);
+                $this->guard->assertPayload($row);
                 $old = $row->normalized_data;
                 $id = $row->matched_product_id ?? $old['selected_product_id'] ?? null;
                 $product = $products->get($id);
@@ -100,13 +96,13 @@ class ApplyShopeeContent
 
     public function handle(ProductImportBatch $batch, User $actor): int
     {
-        $this->assertBatch($batch, $actor);
+        $this->guard->assertBatch($batch, $actor);
 
         return DB::transaction(function () use ($batch, $actor) {
             // Use the feed's checkpoint -> source -> product ordering when an offer is completed.
             DB::table('qammaris_app_sync_states')->where('id', 'products')->lockForUpdate()->first();
             $batch = ProductImportBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
-            $this->assertBatch($batch, $actor);
+            $this->guard->assertBatch($batch, $actor);
             $rows = $batch->rows()->where('apply_status', 'pending')->whereNotNull('matched_product_id')->lockForUpdate()->get();
             $productIds = $rows->pluck('matched_product_id');
             $uuids = DB::table('product_external_identities')->whereIn('product_id', $productIds)->where('provider', 'qammaris_app')->pluck('external_product_id');
@@ -115,7 +111,7 @@ class ApplyShopeeContent
             $count = 0;
             // Payload corruption is not a recoverable product conflict: roll back the operation.
             foreach ($rows as $r) {
-                $this->assertPayload($r);
+                $this->guard->assertPayload($r);
             }
             foreach ($rows as $r) {
                 $data = $r->normalized_data;
@@ -141,12 +137,12 @@ class ApplyShopeeContent
                     continue;
                 }
                 $before = $this->snapshots->capture($p);
-                app(MapExternalProductIdentity::class)->handle($p, 'shopee', $r->external_product_id);
+                $this->identities->handle($p, 'shopee', $r->external_product_id);
                 if ($data['fields']) {
                     $p->forceFill($data['fields'])->save();
                 }
                 if ($data['offer_ml']) {
-                    app(SyncSingleOffer::class)->handle($p, ['volume' => $data['offer_ml'], 'price' => $p->base_price, 'stock' => 0]);
+                    $this->offers->handle($p, ['volume' => $data['offer_ml'], 'price' => $p->base_price, 'stock' => 0]);
                 }
                 $r->forceFill(['apply_status' => 'updated', 'applied_product_id' => $p->id, 'before_snapshot' => $before,
                     'after_snapshot' => $this->snapshots->capture($p), 'applied_at' => now(),
@@ -163,7 +159,7 @@ class ApplyShopeeContent
 
     public function publish(ProductImportBatch $batch, User $actor, array $rowIds): int
     {
-        $this->assertBatch($batch, $actor);
+        $this->guard->assertBatch($batch, $actor);
 
         return DB::transaction(function () use ($batch, $actor, $rowIds) {
             DB::table('qammaris_app_sync_states')->where('id', 'products')->lockForUpdate()->first();
@@ -178,7 +174,7 @@ class ApplyShopeeContent
             Product::whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get();
             $count = 0;
             foreach ($rows as $r) {
-                $this->assertPayload($r);
+                $this->guard->assertPayload($r);
                 if ($r->apply_status !== 'updated' || ! $r->applied_product_id) {
                     throw new DomainException('Terapkan konten produk terlebih dahulu.');
                 }
@@ -191,7 +187,7 @@ class ApplyShopeeContent
                     throw new DomainException('Tunggu pengunduhan foto selesai sebelum menerbitkan.');
                 }
                 $before = $this->snapshots->capture($p);
-                app(PublishProduct::class)->handle($p);
+                $this->publication->handle($p);
                 $r->forceFill(['resolution_status' => 'published', 'resolved_by' => $actor->id, 'resolved_at' => now(),
                     'resolution_before_snapshot' => $before, 'resolution_after_snapshot' => $this->snapshots->capture($p),
                     'resolution_message' => 'Admin menerbitkan pilihan yang lolos syarat publikasi.'])->save();
@@ -200,15 +196,5 @@ class ApplyShopeeContent
 
             return $count;
         });
-    }
-
-    public function assertPayload(ProductImportRow $r): void
-    {
-        if ($r->candidate_action !== 'shopee_content' || $r->provider !== 'shopee' || $r->issues !== []
-            || $r->external_product_id !== ($r->normalized_data['source']['id'] ?? null)
-            || $r->matched_product_id !== ($r->normalized_data['product_id'] ?? null)
-            || ! hash_equals($r->payload_hash, $this->hasher->hash($r->normalized_data, [], 'shopee_content'))) {
-            throw new DomainException('Usulan impor berubah atau tidak valid. Upload ulang file sumber.');
-        }
     }
 }

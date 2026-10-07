@@ -20,7 +20,7 @@ BACKLOG = proposed/not approved for execution; READY = accepted bounded scope re
 | P7 | Public UX | DONE | Catalog/search/cart/recipient WhatsApp flow released; device gates tracked under P9 |
 | P8 | App/integration/import | IN_PROGRESS | Feed/automatic drafts/prices/Shopee released; older acceptance consolidated for review with P9, no website write API claimed |
 | P9 | Acceptance/observation | IN_PROGRESS | P9-01 IN_REVIEW; exact remaining limits below |
-| AUD | Maintainability/context | IN_PROGRESS | AUD-01–04 IN_REVIEW; AUD-03/04 implemented on review branches; AUD-05–07 not started |
+| AUD | Maintainability/context | IN_PROGRESS | AUD-01–05 IN_REVIEW; AUD-03/04/05 implemented on review branches; AUD-06/07 not started |
 
 Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked complete merely because the current code is live. [MASTER_PLAN](../architecture/MASTER_PLAN.md) defines closure and future-program boundaries.
 
@@ -29,6 +29,18 @@ Statuses are not a fabricated progress percentage. P1/P8/P9 are not marked compl
 Owner approval 2026-10-07: explicitly correct the observed production Pink/Purple mismatch. Exact scope: Shopee42131600634 previously assigned to Purple879, belongs to Pink686. One transaction reassigns that Shopee identity only, completes Pink with the verified100ml/Wanita/EDP copy and three checksum-verified independent photo copies, publishes Pink, returns Purple to draft and soft-archives its incorrect Pink photos. Original application UUIDs, source prices/status, product IDs and slugs retained; no source-system/database/schema/credential/deployment changes.
 
 Production audit batch8 stores two before/after rows; private preview/receipt retain recovery evidence and original media files. Shared importer rebind guards remain unchanged. Local53tests/264assertions passed; production preview/rehearsal rollback and verify passed; public Pink200/Purple404 and all three Pink gallery images loaded. Original applied batch6 remains historical evidence, not rewritten. Details, limits and scoped recovery: [correction verification](../verification/supremacy-pink/README.md). This correction does not start AUD-03 or close P9.
+
+## AUD-05 — Editor save/validation and explicit dependencies — IN_REVIEW
+
+Owner execution approval: “lanjutt” after AUD-04 recommended AUD-05. Scope: AUD-F04/F05/F06 backend cleanup only. Shared `SaveProductEditor` for create/update transaction/media/publication; shared stable request rules/messages/comparison check with explicit create/update exceptions; Shopee guard/collaborator injection. No Blade redesign, schema/package/business-rule change, production mutation or deployment.
+
+Acceptance implemented:
+- HTTP redirects/input/errors/context stay in controllers; source-price protection, parent-owned offer, stable IDs/SKU/slugs, manual availability lock and publication/readiness guards remain.
+- Failed attachment/publication restores DB state and compensates only newly stored files. Shopee actor/payload/media guards, checkpoint/source/product locks and dispatch timing remain intact; contracts stay separate.
+- Baseline68tests/425assertions; expanded94tests/616assertions; full Laravel354tests/2467assertions,31Node tests, targeted Pint, strict Composer metadata, Vite build and diff checks passed.
+- No UI changes or browser check claimed. SQLite does not verify live MySQL contention/webhook timing; existing UI/device acceptance limits remain. Existing build warnings and Blade duplication are documented, not fixed by this item.
+
+Evidence/changed files/limits/code-only rollback: [AUD-05 verification](../verification/aud-05/README.md), [ADR-029](../architecture/decisions/ADR-029-shared-product-editor-save.md). Review/release pending, no main merge. Recommended next: **AUD-06**, only after Owner direction; not started.
 
 ## AUD-04 — Shared related-product cards — IN_REVIEW
 
@@ -39,7 +51,7 @@ Acceptance implemented:
 - Laravel30 targeted tests/304 assertions and31Node tests passed; targeted Pint, Vite build and diff checks passed. Red regression on the old card confirmed missing h3 and image-recovery hooks.
 - Real Chrome local350-product catalog: before/after390×844 and1440×900; additional320/375/768 widths without horizontal overflow. Mouse image click, keyboard Tab/Enter, native history back and related-link query context verified. Final Kembali click/control cleanup were interrupted by browser detachment; genuine touch/Safari and failed-image runtime were not confirmed.
 
-Evidence, screenshots, limits and code-only rollback: [AUD-04 verification](../verification/aud-04/README.md). Branch review/release acceptance pending; no main merge or production deployment. Recommended next: AUD-05 only after Owner direction, not started.
+Evidence, screenshots, limits and code-only rollback: [AUD-04 verification](../verification/aud-04/README.md). Branch review/release acceptance pending; no main merge or production deployment. Owner subsequently approved AUD-05; its current status/evidence is recorded above. AUD-04 release/device limits remain open.
 
 ## AUD-03 — Shopee review summaries and media recovery — IN_REVIEW
 
@@ -108,7 +120,6 @@ Previous detailed items/acceptance remain in [history](../history/2026-10-07-con
 
 | Item | Problem / bounded direction | Dependency | Priority / scope |
 |---|---|---|---|
-| AUD-05 | Reduce editor/request duplication with explicit dependencies; preserve source price, child ownership, transactions/media cleanup and publication | AUD-02; AUD-F04–06 | Medium / M |
 | AUD-06 | Decide money unit/rounding; trace fractional legacy JSON/session totals before any validation/data change | Owner business decision + read-only data evidence; AUD-F08/09 | Medium / M |
 | AUD-07 | Narrow human actor audit/diagnostics only if needed; no generic audit/event framework | AUD-05 + retention/scopes decision; AUD-F11 | Medium / M |
 

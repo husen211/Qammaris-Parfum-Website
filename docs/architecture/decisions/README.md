@@ -34,5 +34,6 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-026 | [Impor konten Shopee berulang melalui admin](ADR-026-recurring-shopee-content-import.md) |
 | ADR-027 | [Relevant typo-tolerant search](ADR-027-relevant-typo-tolerant-search.md) |
 | ADR-028 | [Recipient checkout and WhatsApp ordering](ADR-028-whatsapp-order-checkout.md) |
+| ADR-029 | [Shared admin editor save and Shopee guards](ADR-029-shared-product-editor-save.md) |
 
 Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.

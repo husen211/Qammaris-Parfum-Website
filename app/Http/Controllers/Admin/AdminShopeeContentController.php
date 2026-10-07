@@ -97,11 +97,11 @@ class AdminShopeeContentController extends Controller
         });
     }
 
-    public function apply(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch, ApplyShopeeContent $action)
+    public function apply(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch, ApplyShopeeContent $action, QueueProductImportImages $imageQueue)
     {
-        return $this->perform($productImportBatch, function () use ($request, $productImportBatch, $action) {
+        return $this->perform($productImportBatch, function () use ($request, $productImportBatch, $action, $imageQueue) {
             $count = $action->handle($productImportBatch, $request->user());
-            $images = app(QueueProductImportImages::class)->handle($productImportBatch, $request->user());
+            $images = $imageQueue->handle($productImportBatch, $request->user());
 
             $blocked = $productImportBatch->rows()->where('apply_status', 'blocked_protected')->count();
 
@@ -110,10 +110,10 @@ class AdminShopeeContentController extends Controller
         });
     }
 
-    public function images(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch)
+    public function images(ShopeeContentWriteRequest $request, ProductImportBatch $productImportBatch, QueueProductImportImages $imageQueue)
     {
-        return $this->perform($productImportBatch, function () use ($request, $productImportBatch) {
-            $result = app(QueueProductImportImages::class)->handle($productImportBatch, $request->user());
+        return $this->perform($productImportBatch, function () use ($request, $productImportBatch, $imageQueue) {
+            $result = $imageQueue->handle($productImportBatch, $request->user());
 
             return $result['queued_rows'].' produk masuk antrean foto. Muat ulang hasil untuk melihat perkembangannya.';
         });
