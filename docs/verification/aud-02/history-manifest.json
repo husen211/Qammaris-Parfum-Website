@@ -1,0 +1,51 @@
+[
+  {
+    "source": "docs/product/BUSINESS_RULES.md",
+    "source_commit": "6956667",
+    "source_sha256": "465dbcc97a87f58ca17cc1527d49391eec5e676fa1feca353466c3d41ff95b9a",
+    "source_lines": 305,
+    "archive": "docs/history/2026-10-07-context/BUSINESS_RULES.md",
+    "rebased_links": []
+  },
+  {
+    "source": "docs/architecture/ARCHITECTURE.md",
+    "source_commit": "6956667",
+    "source_sha256": "ac22328c3e7c66cb03d0ef1d265e44842bf4e6ca57a33b3742d1b78f1afed4a8",
+    "source_lines": 128,
+    "archive": "docs/history/2026-10-07-context/ARCHITECTURE.md",
+    "rebased_links": []
+  },
+  {
+    "source": "docs/architecture/MASTER_PLAN.md",
+    "source_commit": "6956667",
+    "source_sha256": "8dd0574a39d6255d214ba55674f3fd26bb3057b93e5f382ba08823564c5754de",
+    "source_lines": 244,
+    "archive": "docs/history/2026-10-07-context/MASTER_PLAN.md",
+    "rebased_links": [
+      {
+        "from": "../verification/p9-01/README.md",
+        "to": "../../verification/p9-01/README.md"
+      },
+      {
+        "from": "../audits/2026-10-07-maintainability.md",
+        "to": "../../audits/2026-10-07-maintainability.md"
+      }
+    ]
+  },
+  {
+    "source": "docs/planning/BACKLOG.md",
+    "source_commit": "6956667",
+    "source_sha256": "9946c64803cebfdf0cdf870c237cb434c85e0f297d5719510858dd2cd65523f0",
+    "source_lines": 2706,
+    "archive": "docs/history/2026-10-07-context/BACKLOG.md",
+    "rebased_links": []
+  },
+  {
+    "source": "docs/architecture/decisions/ADR-026-whatsapp-order-checkout.md",
+    "source_commit": "6956667",
+    "source_sha256": "1a6b8acbdc717a7522bff589c35fbca62a517b5a4e024004cd8bbade5eeb4020",
+    "source_lines": 25,
+    "archive": "docs/history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md",
+    "rebased_links": []
+  }
+]

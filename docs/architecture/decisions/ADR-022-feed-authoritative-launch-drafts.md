@@ -2,6 +2,9 @@
 
 Status: Accepted — explicit Owner direction 2026-10-06. Staging only; production cutover remains separate.
 
+
+> Scope note (AUD-02): the staging-only launch CLI and its identity/data guards remain restricted. [ADR-025](ADR-025-recurring-app-catalog-admin-workflow.md) supersedes stock-only worker/proposed-price behavior for the distinct recurring flow. Historical launch permission is not a new bulk replay or production write authorization.
+
 ## Context
 
 452 app snapshots are synchronized; 446 are visible. The old 180-product local backup is a reference for preserving old IDs/slugs/media, not a current launch catalog. Source names omit size/concentration for many rows. Owner authorizes draft creation and owns the 371-product Shopee media export.

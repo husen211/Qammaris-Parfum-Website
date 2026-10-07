@@ -2,6 +2,9 @@
 
 Status: Accepted — 2026-09-16
 
+
+> Current scope note (AUD-02): one-offer authority remains. [ADR-025](ADR-025-recurring-app-catalog-admin-workflow.md) adds connected source-price enforcement and the incomplete-draft preparation exception; do not interpret local/manual price rules as overriding the app.
+
 ## Context
 
 Kontrak produk Qammaris menetapkan satu halaman katalog untuk satu ukuran dan satu harga. Schema legacy masih mewajibkan seluruh field produk, mengizinkan banyak variant, dan membuat SKU acak dari controller. Harga juga ditulis ke `products.base_price` dan `product_variants.price` secara terpisah.

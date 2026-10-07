@@ -1,6 +1,10 @@
-# Runbook Rencana Deployment Hostinger melalui GitHub
+# Hostinger melalui GitHub — deployment dan riwayat
 
-**Status:** P1-03 selesai — staging dan release workflow terverifikasi
+**Status current (AUD-02, 2026-10-07):** workflow production GitHub sudah aktif/diamati; bukan rencana belum terpasang. [Cutover proof](../verification/p1-04/PRODUCTION_CUTOVER.md) dan [P9 observation](../verification/p9-01/README.md) mencatat revision serta batas verifikasi pada tanggalnya.
+
+Routine code/asset delivery uses CI plus `.github/workflows/production-release.yml` and `tools/hostinger/` SSH scripts, with per-commit releases and protected shared env/storage. File Manager is not required for normal releases; Git is not storage for secrets, DB, or uploaded photos. Successful main-push CI, enable flag, production environment and server activation/revision/pending-migration guards apply. Even docs-only main merges can deploy; explicit Owner release approval is still required. This documentation task does not change pipeline/settings or authorize deployment.
+
+The staging setup, initial pending steps, R2 rehearsal and launch checkpoints below are retained **dated history**. Later activation evidence supersedes their pending/off statements. The Owner's legacy-backup waiver applies to the exact 2026-10-06 launch, not future destructive data changes. Current runtime steps/health/worker recovery: [QAMMARIS_APP_INTEGRATION](QAMMARIS_APP_INTEGRATION.md), [SHOPEE_ADMIN_IMPORT](SHOPEE_ADMIN_IMPORT.md) and the code scripts. General recovery/data protections in AGENTS remain; do not repeat old hPanel setup or cutover instructions to redeploy a current release.
 
 Current production preparation (2026-10-06): [P1-04 preflight](PRODUCTION_CUTOVER_PREFLIGHT.md) records the 350-product launching manifest, media checksums, source/build differences and fresh-target/cutover gates. Owner now waives legacy data migration and backup; historical backup/preservation rules below are superseded for this release. Historical staging counts below are not the current launching baseline. This runbook does not authorize production activation.
 

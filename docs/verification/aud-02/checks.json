@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-07",
+  "scope": "AUD-02 documentation only",
+  "history_source": "6956667",
+  "archived_bodies_matching": 5,
+  "markdown_files_checked": 25,
+  "local_markdown_links_checked": 179,
+  "broken_links": 0,
+  "unique_canonical_adrs": 28,
+  "approval_safety_sections_unchanged": true,
+  "documentation_only": true,
+  "trailing_whitespace_errors": 0,
+  "application_tests_run_locally": false,
+  "browser_checks_run": false,
+  "production_actions": false,
+  "unrelated_pycache_staged": false
+}

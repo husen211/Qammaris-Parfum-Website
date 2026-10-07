@@ -11,7 +11,7 @@ Produce focused, maintainable UI improvements that fit the existing Qammaris pro
 
 Before editing, state which surface is active:
 
-- **Public catalog:** optimize product discovery, confidence, inquiry conversion, accessibility, and mobile performance while preserving the premium editorial identity.
+- **Public catalog:** optimize product discovery, confidence, WhatsApp ordering, accessibility, and mobile performance while preserving the premium editorial identity.
 - **Admin panel:** optimize task completion, error prevention, status clarity, bulk-work safety, and information density. Do not apply landing-page composition or decorative motion to operational screens.
 
 If a task touches both, keep the implementations and acceptance criteria separate.
@@ -75,8 +75,8 @@ Avoid universal aesthetic bans. Existing brand decisions override generic taste 
 
 ## Public catalog rules
 
-- Keep discovery and WhatsApp inquiry as the central journey.
-- Do not imply live stock. Render `available`, `sold_out`, and `unknown` according to business rules.
+- Keep discovery, direct cart, recipient checkout and WhatsApp ordering as the central journey, according to `docs/product/BUSINESS_RULES.md`.
+- Connected availability follows the app without expiry/downgrade; do not imply numeric inventory, reservation or payment. Render `available`, `sold_out`, and `unknown` according to current business rules.
 - A sold-out product remains discoverable and offers a restock inquiry action.
 - Search, filter, sort, and pagination preserve intentional state.
 - Product media must not push all purchasing information far below the initial useful viewport.

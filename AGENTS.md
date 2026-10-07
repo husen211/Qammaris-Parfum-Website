@@ -11,9 +11,11 @@ The user's explicit instructions take precedence over this file. If another skil
 Before making changes, read:
 
 1. `docs/product/BUSINESS_RULES.md`
-2. `docs/architecture/MASTER_PLAN.md`
+2. `docs/architecture/ARCHITECTURE.md`
 3. `docs/planning/BACKLOG.md`
 4. the active backlog item and relevant ADRs
+
+Use `docs/architecture/MASTER_PLAN.md` for program goals and closure gates. `README.md` covers local commands and document ownership. Dated history, audits, and verification reports are evidence, not current business-rule authority; their old pending statuses and counts must not override the current documents.
 
 For Qammaris UI/UX review, redesign, or implementation, also read and apply `skills/qammaris-ui-review/SKILL.md`. Apply it only to the active UI surface; it must not expand a backend or data task into a redesign.
 
@@ -54,9 +56,11 @@ Do not assume production facts that are marked unknown.
 - Different sizes are normally separate catalog products.
 - SKU is optional for human entry; internal IDs remain stable.
 - Publication and availability are separate concerns.
-- The website does not promise live inventory.
+- Connected availability follows Qammaris App without expiry or outage downgrade; it does not provide numeric inventory or reserve quantities.
+- Qammaris App UUIDs identify connected products. New visible UUIDs become drafts; accepted valid source prices update connected offers automatically. Human publication remains separate.
+- Shopee enriches descriptions/photos through reviewed imports; manual uploads use the configured persistent Laravel product disk.
 - Sold-out products remain discoverable unless separately archived.
-- Cart/WhatsApp is an inquiry flow and does not reserve stock.
+- Cart/WhatsApp is an order flow with required recipient name, phone, and address. Opening the WhatsApp composer is not proof of sending, acceptance, payment, or stock reservation.
 
 ## UI/UX rules
 
@@ -99,6 +103,8 @@ Update only the documents affected by the task:
 - `docs/runbooks/` for deployment, backup, restore, migration, or operational procedures.
 
 Git commits and pull requests are the detailed code history. Do not duplicate every code change in `AGENTS.md`.
+
+For each feature, update the active item and only the rules, boundaries, or operational steps it changes. Link dated verification instead of copying release diaries into current context. Record significant decisions under a unique ADR ID; retain aliases when renumbering an existing reference. Do not create competing agent/business-rule summaries. Proposed requirements must be distinguished from implemented behavior and observed production facts.
 
 ## Final report contract
 

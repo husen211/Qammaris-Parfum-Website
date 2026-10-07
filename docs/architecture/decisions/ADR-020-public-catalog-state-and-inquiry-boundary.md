@@ -2,6 +2,9 @@
 
 Status: Accepted — 2026-09-17
 
+
+> Partially superseded: GET/query/return safety and later best-seller ordering remain. [ADR-021](ADR-021-qammaris-app-availability-integration.md) replaces connected freshness/copy; [ADR-027](ADR-027-relevant-typo-tolerant-search.md) defines search relevance; [ADR-028](ADR-028-whatsapp-order-checkout.md) replaces inquiry-only/no-recipient checkout. Original context/rejected alternatives below are historical, not current ordering requirements.
+
 ## Context
 
 Katalog existing mempunyai form GET untuk search, kategori, brand, serta sort, tetapi pagination dan detail tidak mempertahankan state. Mobile dan desktop juga dapat menampilkan sort berbeda. Detail memakai stock variant sebagai `In Stock`, sementara domain Qammaris menetapkan availability terpisah, tidak real-time, dan mempunyai freshness window 36 jam. Outcome customer adalah inquiry melalui WhatsApp, bukan checkout atau reservasi stok.

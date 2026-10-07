@@ -1,6 +1,6 @@
 # ADR-025 — Recurring app drafts and automatic source prices
 
-Status: Accepted for P8-08 implementation; deployment pending.
+Status: Accepted; released 2026-10-06 through PR4/PR5. Current snapshot parity/runtime evidence and limits: [P9-01](../../verification/p9-01/README.md). Original rollout prerequisites below record the decision at implementation time, not current release status.
 Date: 2026-10-06.
 
 ## Problem and evidence

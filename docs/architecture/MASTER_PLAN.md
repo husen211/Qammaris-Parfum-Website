@@ -1,244 +1,57 @@
-# Qammaris Catalog & Admin Modernization — Master Plan
+# Qammaris — master plan current
 
-## 1. Tujuan
+Konsolidasi 2026-10-07 (AUD-02). [BACKLOG](../planning/BACKLOG.md) adalah board/status item; [BUSINESS_RULES](../product/BUSINESS_RULES.md) adalah aturan; [ARCHITECTURE](ARCHITECTURE.md) adalah flow executable. [Plan sebelum konsolidasi](../history/2026-10-07-context/MASTER_PLAN.md) mempertahankan tahap awal, keputusan cutover dan evidence. Pending/angka di sana tidak boleh dianggap status current.
 
-Meningkatkan aplikasi Laravel Qammaris menjadi katalog parfum yang mudah digunakan di mobile dan admin workspace yang aman, cepat, serta siap menerima bulk import dan API terbatas pada masa depan.
+## Tujuan dan prinsip tetap
 
-Program ini tidak membangun ulang Majoo, checkout pembayaran, live inventory, atau AI recommendation pada fase sekarang.
+Website Laravel untuk discovery dan pemesanan WhatsApp, admin sederhana, bulk enrichment aman dan integrasi aplikasi internal yang terbatas. Pertahankan Blade/Eloquent/MySQL, identity/slug/media, visual Qammaris dan shared product operations. Satu item approved pada satu waktu; jangan refactor karena ukuran file atau pola dianggap best practice. Production bukan tempat eksperimen.
 
-## 2. Prinsip
+Majoo tetap sistem operasional. Qammaris App mengirim UUID/status/harga, website mengelola publication/konten/media; tidak menggantikan POS atau mendapat stok numerik. Tidak ada SPA rewrite, generic repository, microservice, event bus, autonomous AI atau payment gateway pada program current.
 
-1. Pertahankan Laravel, Blade, Eloquent, MySQL, URL produk, dan identitas visual Qammaris.
-2. Lakukan perubahan secara bertahap; satu backlog item aktif pada satu waktu.
-3. Tidak ada penghapusan massal data atau media sebagai bagian dari refactor.
-4. Production bukan tempat eksperimen. Semua migrasi diuji pada staging dengan salinan data yang telah disanitasi atau backup yang sesuai.
-5. Admin manusia, bulk import, dan API masa depan menggunakan operasi domain yang sama.
-6. Kode deterministik menangani validasi dan perubahan data; AI tidak menjadi sumber kebenaran.
-7. Hindari abstraksi baru sampai ada minimal dua caller nyata atau masalah terukur yang diselesaikan.
-
-## 3. Nasib data yang ada
-
-Seluruh product ID, slug, brand, kategori, gambar, variant ID, harga, dan data lain dianggap aset yang harus dipertahankan sampai terbukti tidak valid.
-
-Strategi migrasi:
-
-1. Ambil backup database, semua upload, dan konfigurasi deployment.
-2. Buat inventory data dan file: jumlah record, relasi, path gambar, file hilang, duplikasi, dan orphan files.
-3. Buat staging dari backup.
-4. Jalankan additive migrations; jangan mengganti database dengan hasil seeding atau SQL lokal.
-5. Jalankan reconciliation report sebelum mengubah harga atau struktur produk.
-6. Pertahankan ID dan slug. Redirect wajib jika URL sengaja diubah.
-7. Verifikasi jumlah record dan sample halaman sebelum dan setelah migrasi.
-8. Cutover hanya setelah backup restore dan rollback procedure diuji.
-
-Harga lama tidak otomatis dibetulkan pada migrasi arsitektur. Pembaruan harga menjadi batch terpisah dengan preview dan persetujuan.
-
-## 4. Arsitektur target
+## Hasil current dan dependency
 
 ```text
-Customer browser
-    -> Laravel public catalog
-    -> catalog queries
-    -> MySQL
-
-Human admin
-    -> Laravel session auth + admin authorization
-    -> validated admin request
-    -> shared product operation
-    -> MySQL + media storage + audit log
-
-Future machine client
-    -> restricted API credential
-    -> scoped API request
-    -> same shared product operation
-    -> MySQL + media storage + audit log
+Foundation/test/product/media operations (existing)
+    -> feed HMAC/cursor + automatic UUID drafts/source prices (released)
+    -> human Shopee/manual enrichment + readiness publication (released)
+    -> catalog/search/direct cart/recipient WhatsApp checkout (released)
+    -> bounded production acceptance P9 (IN_REVIEW, limits explicit)
+    -> AUD-01 evidence-first audit (report complete, IN_REVIEW)
+    -> AUD-02 current-context consolidation (implemented, IN_REVIEW)
+    -> one Owner-approved bounded refactor at a time (not started)
 ```
 
-Laravel tetap monolith. Tidak diperlukan microservice, repository wrapper generik, event bus, atau SPA rewrite.
+Advancing to the audit does not mark P9 limits passed. AUD-02 is not a release or authorization to execute the next refactor. Proposed AUD-03–07 dependencies/scopes live in BACKLOG; they are a maintainability follow-up queue, not newly mandatory launch blockers.
 
-## 5. Model katalog
+Already implemented: one-product/one-offer foundation; archive-over-delete/media lifecycle; CSV/bulk snapshot-preview-apply audit; app feed/worker/reconciliation; recurring Shopee XLSX/content recovery; catalog GET state/typo search; daily homepage best sellers without prices; recipient checkout/native loading feedback. Evidence is linked per item, not copied as counts here.
 
-Keputusan bisnis saat ini adalah satu halaman katalog mewakili satu parfum dalam satu ukuran dan satu harga. Ukuran lain biasanya menjadi halaman katalog terpisah.
+## Architecture and data boundary
 
-Untuk meminimalkan risiko, model `ProductVariant` dipertahankan pada fase awal sebagai detail teknis satu-offer-per-product. Admin tidak perlu melihat UI multi-variant secara default. Keputusan menggabungkan variant ke product hanya boleh dilakukan setelah audit data production dan consumer cart selesai.
+- Keep stable website IDs/variant IDs/slugs and external UUID identities; different sizes normally separate products. Publication is human/readiness-checked, independent of source availability.
+- Connected availability has no expiry/outage downgrade. Valid newer app prices update automatically through shared offer operations; no proposed-price approval loop for connected recurring products.
+- Persistent public product storage remains current; Laravel disk abstraction/R2 rehearsal stays, but no cloud migration is required.
+- Human admin forms/imports and any future API reuse the same validated operations. Feed client is a consumer; a website write API has not been built.
+- Bulk changes need preview/idempotency/conflict/audit. Destructive work and data/media migrations require exact approved scope plus verified recovery. Additive migrations, copy-verify-switch-retain for files; no broad checkpoint rewind/reseed.
+- Owner's no-legacy-backup/no-legacy-migration waiver was scoped to the 2026-10-06 fresh launch. It is historical evidence, not blanket permission to discard current production data.
 
-ID internal database tetap menjadi identitas utama. SKU/kode katalog bersifat opsional. Identitas Shopee, Majoo, atau provider lain kelak disimpan sebagai mapping eksternal tanpa mengganti ID internal.
+## Deployment and closure gates
 
-## 6. Availability
+GitHub code/asset delivery is active according to dated [cutover proof](../verification/p1-04/PRODUCTION_CUTOVER.md) and [latest P9 observation](../verification/p9-01/README.md). Per-commit releases preserve private shared env/storage/DB. Main CI + enable/activation/revision/migration guards gate release. Main merge can deploy docs-only; separate Owner release approval is required. Do not change secrets/permissions/sites just to complete documentation.
 
-Website bukan live inventory. Pisahkan publication dari availability:
+The original program is **not 100% closed**. Outstanding evidence/acceptance:
 
-- Publication: `draft`, `published`, `archived`.
-- Availability: `unknown`, `available`, `sold_out`.
+1. Genuine iPhone Safari/touch single-tap/scroll behavior; resized mouse viewports are not a substitute.
+2. Native browser file upload path under existing extension permissions; real persisted Owner batch/photos are confirmed, the chooser/upload path itself is not.
+3. A controlled new production source event: timing/replay/outage behavior beyond already recorded integration tests/staging proof and cached-source parity.
+4. Populated production recipient checkout/WhatsApp handoff; current read-only P9 checked empty-cart/navigation, not a submitted live customer order.
+5. Owner acceptance of P1/P8/P9 scope and remaining limits; restore/recovery claims must be tied to their concrete local/staging evidence, not inferred for current production.
 
-Simpan `stock_quantity` bila tersedia, `availability_source`, dan `availability_checked_at`, tetapi angka stok tidak harus ditampilkan kepada customer. Data availability yang melewati freshness window berubah menjadi `unknown` pada tampilan publik.
+[P9-01](../verification/p9-01/README.md) contains the exact evidence and exclusions. Only a separately approved verification task or explicit scoped waiver can close these gates; documentary cleanup does not satisfy them. No additional production testing/writes are authorized here.
 
-Keputusan Owner 2026-10-05 / ADR-021 menggantikan freshness untuk produk terhubung aplikasi Qammaris: status ditampilkan apa adanya tanpa expiry atau downgrade saat outage. UUID provider `qammaris_app`, webhook HMAC sebagai jalur utama, feed checkpoint transactional dan rekonsiliasi 30 menit. Freshness legacy/manual tetap berlaku. Integrasi ini konsumen data aplikasi, bukan API mutasi website untuk automation.
+## Documentation as ongoing context
 
-## 7. Storage media
+Use the README read path. Existing current documents have distinct owners; historical snapshots, ADR decision text and dated verification retain provenance. Future features update only affected rules/boundaries/operational steps plus item status/evidence. Audit proposals remain proposals until approved. Every report distinguishes source proof, runtime observations and Not confirmed.
 
-### Target
+## Later programs, not started
 
-Gunakan Laravel Filesystem dan siapkan disk S3-compatible. Target yang direkomendasikan adalah Cloudflare R2 untuk media produk karena terpisah dari deployment aplikasi dan dapat digunakan melalui interface S3.
-
-```text
-GitHub: source code
-MySQL: metadata produk dan path/object key
-R2: file gambar
-Environment variables: credentials dan endpoint
-```
-
-### Transisi
-
-1. Pertahankan local/public storage selama inventory dan backup awal.
-2. Hilangkan path hardcoded; semua akses melalui Laravel Storage disk.
-3. Buat compatibility reader agar gambar lama tetap tampil.
-4. Salin gambar ke R2; jangan memindahkan atau menghapus sumber dahulu.
-5. Verifikasi object count, checksum/size, MIME type, dan sample URL.
-6. Alihkan read ke R2 setelah verifikasi.
-7. Alihkan upload baru ke R2.
-8. Simpan sumber lama selama rollback window yang disetujui.
-9. Penghapusan sumber lama menjadi pekerjaan terpisah dengan approval eksplisit.
-
-Firebase Storage tidak menjadi pilihan awal karena aplikasi sudah menggunakan Laravel dan Laravel mendukung disk S3-compatible secara langsung.
-
-## 8. Deployment
-
-- Repository private di GitHub menjadi sumber kode.
-- Pisahkan environment staging dan production.
-- Deployment tidak boleh menimpa `.env`, database, atau media.
-- Merge ke branch production hanya setelah checks yang relevan lulus.
-- Database migration harus additive, direview, dan memiliki rollback/forward-fix plan.
-- Jangan menjalankan seeder sebagai mekanisme update production.
-- Simpan deployment record: commit, waktu, operator, hasil build, migration, dan health check.
-
-## 9. Admin Panel V2
-
-Modul minimum:
-
-1. Dashboard tindakan: draft, incomplete products, missing images, price review, dan recent activity.
-2. Catalog manager: search nama/ID/SKU, filter brand/status, bulk select, dan quick actions.
-3. Product editor sederhana: informasi dasar, ukuran/harga, klasifikasi, konten, media, publication, dan history.
-4. Brand/category management.
-5. Media management dengan primary image dan ordering.
-6. Import/export center dengan preview, conflict resolution, apply, dan batch report.
-7. Audit log untuk perubahan sensitif.
-
-## 10. Public catalog UX
-
-- Mobile-first pada katalog, product detail, cart/inquiry, search, dan filter.
-- Pertahankan visual premium Qammaris; jangan mengganti dengan UI dashboard/SaaS generik.
-- Satu primary action per konteks.
-- Produk sold out tetap dapat ditemukan dan diarahkan ke pertanyaan restock.
-- Cart diperlakukan sebagai daftar produk yang ingin ditanyakan melalui WhatsApp, bukan bukti reservasi stok.
-- Search/filter/sort harus mempertahankan state selama pagination.
-- Performance visual harus diukur sebelum menambah animasi atau dependency.
-
-## 11. API readiness
-
-API baru dibuat setelah operasi produk, audit, permission, dan import stabil.
-
-Karakteristik API:
-
-- versi eksplisit;
-- token revocable milik automation actor, bukan password admin;
-- scopes read/write terpisah;
-- field allowlist;
-- idempotency untuk bulk/import;
-- rate limit;
-- preview sebelum bulk write;
-- conflict detection;
-- semua write tercatat di audit log;
-- delete dan publish massal tidak diberikan pada scope awal.
-
-## 12. Sepuluh fase program
-
-### Phase 0 — Discovery dan keputusan
-
-Konfirmasi repository/deployed commit, hosting, schema production, data counts, contoh export, product rules, dan asset inventory.
-
-### Phase 1 — Safety, backup, staging, dan Git
-
-Membuat backup terverifikasi, staging, repository workflow, environment contract, serta deployment/rollback runbook.
-
-### Phase 2 — Test baseline dan catalog safety
-
-Memperbaiki validation, variant ownership, unsafe rendering, publication rules, login throttling, cart integrity, dan file failure handling.
-
-### Phase 3 — Product domain dan migration foundation
-
-Menetapkan one-product-one-size UX, price authority, optional SKU, availability semantics, external mapping boundary, serta additive migrations.
-
-### Phase 4 — Media storage
-
-Menormalkan media path, memperbaiki primary image behavior, memasang Laravel disk abstraction, dan memigrasikan media ke R2 secara copy-verify-switch.
-
-### Phase 5 — Admin Panel V2
-
-Membangun catalog manager, product editor, draft/publish, brand/category CRUD, media UX, dan mobile admin navigation.
-
-### Phase 6 — Bulk import/export dan audit
-
-Menambahkan file contract, mapping, preview, conflict resolution, idempotent draft apply, akuisisi gambar aman melalui antrean, batch history, audit log, snapshot katalog read-only, serta preview dan transactional apply maintenance berbasis internal ID dan row fingerprint.
-
-### Phase 7 — Public catalog UX
-
-Meningkatkan katalog, search/filter, product detail, cart/inquiry flow, availability display, accessibility, dan mobile performance.
-
-Seluruh pekerjaan UI pada fase ini menggunakan `qammaris-ui-review` sebagai quality gate. Skill tersebut berlaku sebagai panduan audit dan verifikasi, sementara business rules, active backlog item, dan keputusan owner tetap mempunyai prioritas lebih tinggi.
-
-Urutan delivery incremental:
-
-1. Audit baseline dan kontrak discovery-to-inquiry.
-2. Query/state discovery dan parity filter mobile/desktop.
-3. Product card trust layer untuk ukuran, harga, availability, serta missing-data state.
-4. Detail mobile-first dan kembali ke hasil katalog.
-5. Inquiry list/WhatsApp dengan semantics non-reservasi.
-6. Accessibility, performance, dan end-to-end hardening.
-
-Kontrak rinci berada di `docs/product/PUBLIC_CATALOG_UX.md` dan keputusan arsitektur state/inquiry berada di `ADR-020-public-catalog-state-and-inquiry-boundary.md`.
-
-### Phase 8 — Restricted API readiness
-
-Mengekspos operasi yang benar-benar dibutuhkan dengan scoped credentials dan auditability. Belum menghubungkan AI.
-
-### Phase 9 — Hardening, migration, dan production cutover
-
-Regression, browser/device verification, performance, security checks, data/media reconciliation, backup restore rehearsal, cutover, dan post-launch observation.
-
-## 13. Completion criteria program
-
-- Seluruh item launch-blocking selesai.
-- Restore database dan media telah diuji.
-- Production dapat dideploy dari Git dengan deployment record.
-- Admin dapat mengelola produk, brand, kategori, status, harga, ukuran, dan media tanpa phpMyAdmin.
-- Bulk import dapat di-preview, diulang tanpa duplikasi, dan diaudit.
-- Public catalog berfungsi pada mobile dan desktop dengan state/filter yang benar.
-- Data existing tetap terlacak; tidak ada kehilangan ID, slug, atau gambar yang tidak disetujui.
-- API boundary siap tetapi privilege tetap minimal.
-
-
-### Launch scope override — 2026-10-06
-
-Owner waives legacy production data migration and backup for the new 350-public/95-draft catalog. Earlier legacy preservation and backup/restore completion gates are superseded for this release. P1-04 now prepares a separate fresh target, coherent source/assets/catalog transfer, Owner admin access, production runtime/integration and reversible activation while leaving the old deployment/database untouched. No public cutover, credentials/account setup or production writes have happened; concrete execution authorization remains separate. See the current production preflight runbook.
-
-P1-04 production preparation2026-10-06 now has a GitHub-built fresh target,350public+95draft/1016photos,a new Owner admin,live452-snapshot/checkpoint457feed and one worker/two minute cron entries. Public activation remains pending; no next phase automatically started. Final gate is concrete Owner approval for main promotion/auto-deploy enable, target static-file access/public routing and production backend webhook URL, followed by real HTTPS/browser/media/delivery verification. See current production-target evidence.
-
-
-## Production activation completed — 2026-10-06
-
-Owner's continuation approves the concrete reviewed cutover. New qammarisparfum.id target now serves350public+95draft/1016photos. PR2 merged main87959623d03c33b99c400e242cb35856b7f1e7a9; mainCI37431709979 and automatic productionrelease37431774330 build/deploy succeeded; server revision matches. Production marker/enable flag active, main-only environment unchanged. Only new target static traversal/read enabled; env/config0600 and private runtime remain private. Old public folder retained as public_html_legacy_20261006, old app/database/staging unchanged, no backup/deletion. Only Node backend WEBSITE_WEBHOOK_URL switched to production; hPanel one-env-change restart completed on same921569b4 source. Actual HTTPS200catalog/detail/search/login/home; draft/private/fixture404 and env403; real Owner admin login/product list445 passed. Feed401/200,452snapshots/checkpoint457/has_morefalse; actual signed production receiver202, duplicate/valid older wakeups drained with oneworker/queue0/failed0/errornull. Chrome1440x900/390x844 photos loaded/nooverflow, native search2BSPKutaresults. No new app/schema/package/UI implementation. Source production stock-event latency and separately timed post-cutover30-minute tick remain Notconfirmed; staging10/13second proof is historical. P1-04 IN_REVIEW for Owner acceptance; no next item started. Evidence/limitations/recovery: docs/verification/p1-04/PRODUCTION_CUTOVER.md. Earlier pending activation statements are historical and superseded.
-
-### Approved scope override: P7-12 WhatsApp ordering
-
-Owner authorizes cart + required recipient checkout + WhatsApp order composer, superseding the earlier inquiry/no-checkout restriction for this bounded item. No payment implementation or speculative order schema. ADR-026 describes next gateway prerequisites; release needs separate approval.
-
-## Current delivery order — Owner approved2026-10-07
-
-Ready P7-15 search release -> bounded remaining P9 production/device/admin verification -> separate read-only repository/clean-code and documentation audit -> review specific incremental refactors -> consolidated current context and overall planning closure. Do not start refactors during investigation or introduce patterns without an evidenced problem. Existing AGENTS/business rules/architecture/backlog/ADRs/runbooks are the starting point, not duplicated context files. Each future feature updates affected current documents; commit/PR history retains implementation detail. Audit remains unstarted in the P7-15 release task.
-
-P7-15 released through PR14/main669de113 with green CI37562107686 and production37562153305; actual search/MySQL and390/1440 public/admin checks passed. Overall program is not yet closed. Physical Safari/touch and native production Shopee upload/apply remain unverified, alongside broader observation; historical IN_REVIEW notes are not proof that already released code must be implemented again. Evidence: docs/verification/p7-15/README.md.
-
-P8-10 subsequently released through PR15/main0dc6924. P9-01 bounded acceptance is IN_REVIEW: actual production375public/73draft/1119active local photos, published readiness and cached-source price/status parity pass; scheduled30-minute reconciliation, one worker and minute heartbeats observed. Owner's real batch6apply/39storedphotos confirmed independently of agent reads;2guarded cover conflicts preserve existing media. Public320–1440px and authenticated admin1536px checks pass. PhysicalSafari/touch, native local-file upload (existing extension permission), new source-event timing and populated production checkout remain explicit limits. No additional deployment/data/config/refactor was performed. [Current evidence](../verification/p9-01/README.md) supersedes earlier live-apply unknowns, not the remaining device/event limits. The separately approved repository/clean-code/documentation audit remains unstarted; review P9 scope/limits before moving on.
-
-Owner explicitly advances to the audit on 2026-10-07 (“gas berikutnya”), leaving P9's stated limits open. AUD-01 investigation is complete/IN_REVIEW: [source-referenced audit](../audits/2026-10-07-maintainability.md) identifies current-document contradictions first, then bounded review/editor/card duplication and operational follow-ups. Existing Laravel/Blade/Eloquent/filesystem/import/feed boundaries remain justified; no broad rewrite or pattern rollout recommended. 339 Laravel tests/2306 assertions and31Node tests pass; related-card source/browser baseline390/1440 confirms a separate cover implementation. Only report/status/baseline screenshots change; no application/refactor/data/schema/config/deployment action. AUD-02 current-context consolidation is the recommended next item and remains unstarted. Overall planning is not closed by this audit.
+Website machine-write API requires revocable/scoped actor identity, field allowlists, shared tested operations, idempotency/conflict handling and audit; automation never gets unrestricted MySQL access. Payment gateway requires Owner decisions on acceptance/shipping/quantity, persistent order/line/payment lifecycle, signed/idempotent provider notifications and sandbox testing. These are separately scoped programs, not prerequisites invented for the existing WhatsApp order flow. [ADR-028](decisions/ADR-028-whatsapp-order-checkout.md) records the bounded future payment considerations.

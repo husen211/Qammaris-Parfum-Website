@@ -2,6 +2,9 @@
 
 Status: Accepted — 2026-10-05, explicit Owner instruction to implement the Laravel receiver, feed worker and 30-minute reconciliation.
 
+
+> Partially superseded: HMAC/feed/checkpoint/status/hidden rules remain. [ADR-025](ADR-025-recurring-app-catalog-admin-workflow.md) replaces stock-only worker and price-proposal-only scope with recurring automatic drafts/valid source prices. Original implementation-pending notes below are historical; current runtime evidence is [P9-01](../../verification/p9-01/README.md).
+
 ## Context
 
 The internal app owns employee sold-out/inbound/OTW reports and Majoo stock imports. Its final contract is `docs/integrations/website-handoff.md` section 6 in the internal-app repository. Laravel consumes it; this is not an API exposing website mutations to AI or other callers.

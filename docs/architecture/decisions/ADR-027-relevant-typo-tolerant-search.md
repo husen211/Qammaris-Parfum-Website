@@ -1,6 +1,6 @@
 # ADR-027 — Relevant typo-tolerant search
 
-Date: 2026-10-07. Status: accepted for implementation; release pending review.
+Date: 2026-10-07. Status: accepted; released through PR14 (`669de113`). [Release and verification](../../verification/p7-15/README.md); genuine touch/device limitations remain explicit.
 
 ## Problem
 
