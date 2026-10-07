@@ -23,35 +23,28 @@
         </div>
     </header>
 
-    <div class="catalog-toolbar lg:hidden sticky z-30 bg-white border-y border-gray-200">
-        <div class="grid grid-cols-2 divide-x divide-gray-100">
+    <div class="catalog-toolbar lg:hidden sticky z-30 border-b border-gray-200">
+        <div class="catalog-container catalog-toolbar__controls">
             <button type="button" data-catalog-filter-trigger aria-controls="mobileFilter" aria-haspopup="dialog" aria-expanded="false"
-                class="min-h-11 px-3 flex items-center justify-center gap-2 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-black transition-colors">
+                class="catalog-toolbar__control">
                 <svg class="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                <span class="text-[11px] font-bold uppercase tracking-widest text-brand-black">
+                <span>
                     Filter{{ $activeFilterCount > 0 ? ' ('.$activeFilterCount.')' : '' }}
                 </span>
             </button>
 
-            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="relative min-h-11">
+            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="min-w-0">
                 @include('products._catalog-state-inputs', ['catalogState' => $catalogState, 'exclude' => ['sort']])
                 <label for="mobile-catalog-sort" class="sr-only">Urutkan katalog</label>
                 <select id="mobile-catalog-sort" name="sort" data-catalog-sort
-                    class="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer">
+                    class="catalog-toolbar__control catalog-toolbar__sort">
                     @foreach ($sortLabels as $value => $label)
                         <option value="{{ $value }}" {{ $catalogState->sort === $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
-                <div class="min-h-11 px-3 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors pointer-events-none">
-                    <svg class="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                    </svg>
-                    <span class="text-[11px] font-bold uppercase tracking-widest text-brand-black">{{ $sortLabels[$catalogState->sort] }}</span>
-                </div>
                 <button type="submit" class="sr-only">Terapkan urutan</button>
             </form>
         </div>
@@ -260,7 +253,7 @@
     </section>
 
     <dialog id="mobileFilter" class="modal modal-bottom sm:modal-middle" aria-labelledby="mobile-filter-title">
-        <div class="modal-box bg-white rounded-t-2xl sm:rounded-lg p-0 h-[88vh] flex flex-col">
+        <div class="catalog-filter__panel modal-box bg-white rounded-t-2xl sm:rounded-lg p-0 flex flex-col">
             <div class="flex justify-between items-center p-5 border-b border-gray-100 flex-shrink-0">
                 <div>
                     <h2 id="mobile-filter-title" class="font-mayluxa text-xl">Filter katalog</h2>
@@ -273,77 +266,76 @@
                 </button>
             </div>
 
-            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="flex-1 overflow-y-auto p-5 space-y-7">
-                @if ($catalogState->sort !== \App\Support\ProductCatalogState::DEFAULT_SORT)
-                    <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
-                @endif
+            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="catalog-filter__form">
+                <div class="catalog-filter__fields space-y-7">
+                    @if ($catalogState->sort !== \App\Support\ProductCatalogState::DEFAULT_SORT)
+                        <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
+                    @endif
 
-                <div>
-                    <label for="mobile-catalog-search" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Cari</label>
-                    <input id="mobile-catalog-search" type="search" name="search" value="{{ $catalogState->search }}" maxlength="100" placeholder="Nama produk atau brand" class="input input-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
-                </div>
-
-                <details class="group">
-                    <summary class="min-h-11 flex cursor-pointer list-none items-center justify-between text-xs font-bold uppercase tracking-widest text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
-                        <span>Brand{{ count($selectedBrands) > 0 ? ' ('.count($selectedBrands).')' : '' }}</span>
-                        <span aria-hidden="true" class="text-base group-open:rotate-180">⌄</span>
-                    </summary>
-                    <div class="grid grid-cols-2 gap-3">
-                        @foreach ($brands as $brand)
-                            <label class="min-h-11 flex items-center gap-3 px-3 py-2 border border-gray-200 cursor-pointer hover:border-brand-black focus-within:outline focus-within:outline-2 focus-within:outline-brand-black {{ in_array($brand->id, $selectedBrands, true) ? 'bg-brand-black text-white border-brand-black' : 'bg-white' }}">
-                                <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} class="checkbox checkbox-sm shrink-0 rounded-none {{ in_array($brand->id, $selectedBrands, true) ? 'border-white' : 'border-gray-300' }}">
-                                <span class="min-w-0 break-words text-xs uppercase font-medium leading-tight">{{ $brand->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </details>
-
-                <div>
-                    <label for="mobile-catalog-category" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Kategori</label>
-                    <select id="mobile-catalog-category" name="category" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
-                        <option value="">Semua kategori</option>
-                        @foreach ($categories as $category)
-                            <option value="{{ $category->id }}" {{ $catalogState->categoryId === $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="mobile-catalog-gender" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Peruntukan</label>
-                        <select id="mobile-catalog-gender" name="gender" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
-                            <option value="">Semua peruntukan</option>
-                            @foreach (['Unisex', 'Pria', 'Wanita'] as $gender)
-                                <option value="{{ $gender }}" {{ $catalogState->gender === $gender ? 'selected' : '' }}>{{ $gender }}</option>
+                        <label for="mobile-catalog-search" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Cari</label>
+                        <input id="mobile-catalog-search" type="search" name="search" value="{{ $catalogState->search }}" maxlength="100" placeholder="Nama produk atau brand" class="input input-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
+                    </div>
+
+                    <details class="group">
+                        <summary class="min-h-11 flex cursor-pointer list-none items-center justify-between text-xs font-bold uppercase tracking-widest text-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">
+                            <span>Brand{{ count($selectedBrands) > 0 ? ' ('.count($selectedBrands).')' : '' }}</span>
+                            <span aria-hidden="true" class="text-base group-open:rotate-180">⌄</span>
+                        </summary>
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach ($brands as $brand)
+                                <label class="catalog-filter__brand min-h-11 flex items-center gap-3 px-3 py-2 border border-gray-200 cursor-pointer hover:border-brand-black">
+                                    <input type="checkbox" name="brand[]" value="{{ $brand->id }}" {{ in_array($brand->id, $selectedBrands, true) ? 'checked' : '' }} class="checkbox checkbox-sm shrink-0 rounded-none border-gray-300">
+                                    <span class="min-w-0 break-words text-xs uppercase font-medium leading-tight">{{ $brand->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </details>
+
+                    <div>
+                        <label for="mobile-catalog-category" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Kategori</label>
+                        <select id="mobile-catalog-category" name="category" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
+                            <option value="">Semua kategori</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}" {{ $catalogState->categoryId === $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label for="mobile-catalog-availability" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Ketersediaan</label>
-                        <select id="mobile-catalog-availability" name="availability" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
-                            <option value="">Semua status</option>
-                            <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia</option>
-                            @if ($catalogState->availability === 'unknown')
-                                <option value="unknown" selected hidden>Belum ada info stok</option>
-                            @endif
-                            <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Habis</option>
-                        </select>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="mobile-catalog-gender" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Peruntukan</label>
+                            <select id="mobile-catalog-gender" name="gender" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
+                                <option value="">Semua peruntukan</option>
+                                @foreach (['Unisex', 'Pria', 'Wanita'] as $gender)
+                                    <option value="{{ $gender }}" {{ $catalogState->gender === $gender ? 'selected' : '' }}>{{ $gender }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="mobile-catalog-availability" class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Ketersediaan</label>
+                            <select id="mobile-catalog-availability" name="availability" class="select select-bordered min-h-11 w-full rounded-none focus:outline-none focus:border-brand-black bg-gray-50 border-gray-200">
+                                <option value="">Semua status</option>
+                                <option value="available" {{ $catalogState->availability === 'available' ? 'selected' : '' }}>Tersedia</option>
+                                @if ($catalogState->availability === 'unknown')
+                                    <option value="unknown" selected hidden>Belum ada info stok</option>
+                                @endif
+                                <option value="sold_out" {{ $catalogState->availability === 'sold_out' ? 'selected' : '' }}>Habis</option>
+                            </select>
+                        </div>
                     </div>
+
+                    <fieldset>
+                        <legend class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Rentang harga</legend>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="sr-only" for="mobile-price-min">Harga minimum</label>
+                            <input id="mobile-price-min" type="number" name="price_min" value="{{ $catalogState->priceMin }}" min="0" step="1000" placeholder="Minimum" class="input input-bordered min-h-11 w-full rounded-none bg-gray-50 border-gray-200 px-3 text-sm focus:outline-none focus:border-brand-black">
+                            <label class="sr-only" for="mobile-price-max">Harga maksimum</label>
+                            <input id="mobile-price-max" type="number" name="price_max" value="{{ $catalogState->priceMax }}" min="0" step="1000" placeholder="Maksimum" class="input input-bordered min-h-11 w-full rounded-none bg-gray-50 border-gray-200 px-3 text-sm focus:outline-none focus:border-brand-black">
+                        </div>
+                    </fieldset>
                 </div>
-
-                <fieldset>
-                    <legend class="block text-xs font-bold uppercase tracking-widest mb-3 text-brand-black">Rentang harga</legend>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="sr-only" for="mobile-price-min">Harga minimum</label>
-                        <input id="mobile-price-min" type="number" name="price_min" value="{{ $catalogState->priceMin }}" min="0" step="1000" placeholder="Minimum" class="input input-bordered min-h-11 w-full rounded-none bg-gray-50 border-gray-200 px-3 text-sm focus:outline-none focus:border-brand-black">
-                        <label class="sr-only" for="mobile-price-max">Harga maksimum</label>
-                        <input id="mobile-price-max" type="number" name="price_max" value="{{ $catalogState->priceMax }}" min="0" step="1000" placeholder="Maksimum" class="input input-bordered min-h-11 w-full rounded-none bg-gray-50 border-gray-200 px-3 text-sm focus:outline-none focus:border-brand-black">
-                    </div>
-                </fieldset>
-
-
-
-                <div class="sticky bottom-0 -mx-5 -mb-5 mt-8 grid grid-cols-2 gap-3 border-t border-gray-100 bg-white p-5">
+                <div class="catalog-filter__footer">
                     <a href="{{ route('products.index') }}" class="min-h-11 inline-flex items-center justify-center border border-gray-300 px-3 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">Hapus semua</a>
                     <button type="submit" class="min-h-11 bg-brand-black text-white px-3 text-xs font-semibold uppercase tracking-wider hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Tampilkan hasil</button>
                 </div>
