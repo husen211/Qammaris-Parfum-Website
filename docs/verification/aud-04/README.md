@@ -1,5 +1,7 @@
 # AUD-04 — Shared related-product cards
 
+**Subsequent release:** PR24 is merged and production `9325df4` activated; [MySQL/runtime/release proof](../audit-release/README.md). The dated implementation evidence and its remaining verification limits below are retained; pre-release status is superseded.
+
 Date: 2026-10-07. Owner approval: “lanjut aud 04”. Status: IN_REVIEW; local code and stated checks complete, device/release acceptance remains open. No production deployment or next-item execution.
 
 ## Outcome and scope

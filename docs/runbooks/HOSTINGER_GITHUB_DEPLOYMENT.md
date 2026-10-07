@@ -1,5 +1,7 @@
 # Hostinger melalui GitHub — deployment dan riwayat
 
+**Latest audit release:** PR24 / `9325df4` is active after explicitly approved targeted migration; [release proof](../verification/audit-release/README.md). Pending-migration guards and code-only recovery remain.
+
 **Status current (AUD-02, 2026-10-07):** workflow production GitHub sudah aktif/diamati; bukan rencana belum terpasang. [Cutover proof](../verification/p1-04/PRODUCTION_CUTOVER.md) dan [P9 observation](../verification/p9-01/README.md) mencatat revision serta batas verifikasi pada tanggalnya.
 
 Routine code/asset delivery uses CI plus `.github/workflows/production-release.yml` and `tools/hostinger/` SSH scripts, with per-commit releases and protected shared env/storage. File Manager is not required for normal releases; Git is not storage for secrets, DB, or uploaded photos. Successful main-push CI, enable flag, production environment and server activation/revision/pending-migration guards apply. Even docs-only main merges can deploy; explicit Owner release approval is still required. This documentation task does not change pipeline/settings or authorize deployment.

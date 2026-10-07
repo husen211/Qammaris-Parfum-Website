@@ -16,12 +16,13 @@ Foundation/test/product/media operations (existing)
     -> human Shopee/manual enrichment + readiness publication (released)
     -> catalog/search/direct cart/recipient WhatsApp checkout (released)
     -> bounded production acceptance P9 (IN_REVIEW, limits explicit)
-    -> AUD-01 evidence-first audit (report complete, IN_REVIEW)
-    -> AUD-02 current-context consolidation (implemented, IN_REVIEW)
-    -> one Owner-approved bounded refactor at a time (scope/status in BACKLOG)
+    -> AUD-01 evidence-first audit (DONE)
+    -> AUD-02 current-context consolidation (DONE)
+    -> AUD-03–07 bounded cleanup (DONE; approved release PR24)
+    -> remaining P9 acceptance (not started by audit release)
 ```
 
-Advancing to the audit does not mark P9 limits passed. AUD-02 is not a release or authorization to execute the next refactor. AUD-03–07 are implemented on stacked review branches; dependencies/evidence live in BACKLOG. Review, separately approved migration/release and original acceptance gates remain; these audit tasks are not newly invented launch blockers. No AUD-08 or later program is started.
+Advancing to the audit does not mark P9 limits passed. AUD-02 is not a release or authorization to execute the next refactor. AUD-01–07 were reviewed/consolidated into PR24 and released after Owner-approved staging/MySQL rehearsal and targeted production migration: [release proof](../verification/audit-release/README.md). Original P9 acceptance gates remain; these audit tasks are not newly invented launch blockers. No AUD-08 or later program is started.
 
 Already implemented: one-product/one-offer foundation; archive-over-delete/media lifecycle; CSV/bulk snapshot-preview-apply audit; app feed/worker/reconciliation; recurring Shopee XLSX/content recovery; catalog GET state/typo search; daily homepage best sellers without prices; recipient checkout/native loading feedback. Evidence is linked per item, not copied as counts here.
 

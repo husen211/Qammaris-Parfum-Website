@@ -1,5 +1,7 @@
 # AUD-06 — Whole rupiah and authoritative cart totals
 
+**Subsequent release:** PR24 is merged and production `9325df4` activated; [MySQL/runtime/release proof](../audit-release/README.md). The dated implementation evidence and its remaining verification limits below are retained; pre-release status is superseded.
+
 2026-10-07. Status: IN_REVIEW; local implementation and checks complete, release not performed. Scope: AUD-F08/F09. Final Owner decision is whole rupiah; the earlier decimal choice is superseded. [ADR-030](../../architecture/decisions/ADR-030-whole-rupiah-and-current-cart-totals.md) records the rule and legacy preservation.
 
 ## Outcome and changed modules

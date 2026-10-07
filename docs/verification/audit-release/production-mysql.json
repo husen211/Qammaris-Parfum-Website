@@ -1,0 +1,89 @@
+{
+    "target": "production",
+    "migration_already_present": false,
+    "migration_ran": true,
+    "duration_ms": 75,
+    "migration_replay_no_op": true,
+    "existing_tables_unchanged": true,
+    "user_ids_unchanged": true,
+    "before": {
+        "products": {
+            "count": 453,
+            "fingerprint": "8cce03eacda92cb1a60782c477968b31f6455609e48d6b31b902b39660dfb1ab"
+        },
+        "product_variants": {
+            "count": 411,
+            "fingerprint": "a0d5a83903a91990c4ff7b68bd217ad352183af8053954e9050d1cfd0081b4a5"
+        },
+        "product_images": {
+            "count": 1131,
+            "fingerprint": "8d3c523ad87a894ad4232a183e1610984f848cb4ffc63bc0c78fcc9170493c4b"
+        },
+        "brands": {
+            "count": 36,
+            "fingerprint": "d8a2c7bbcb642eabf9bb286594e89c380f0bc837f2f5086e8152c4920dd02a51"
+        },
+        "categories": {
+            "count": 6,
+            "fingerprint": "97e98bf2217d168865cf7bd44ebe19651058d74fb89b82efb43b9808dd4bc288"
+        },
+        "product_external_identities": {
+            "count": 828,
+            "fingerprint": "ab6d7c234f03a024bc7afb96cf0d8460fcb6ec6e0707a9b8a8194cbdf2f517c4"
+        },
+        "qammaris_app_products": {
+            "count": 459,
+            "fingerprint": "88cca7ce9cea6a8580c2d8d4d4fc6db0d5378cf96f94bf7954844dfb4e9bb0e9"
+        },
+        "qammaris_app_changes": {
+            "count": 479,
+            "fingerprint": "322d02b89a902fd8a3524979094cb657a92c34df2069f22997d0fb0f9927d7c0"
+        },
+        "qammaris_app_sync_states": {
+            "count": 1,
+            "fingerprint": "4ba5422155508b7067fbecc8b534f69c302861d0805c6b3d02faa65bb24d1481"
+        }
+    },
+    "after": {
+        "products": {
+            "count": 453,
+            "fingerprint": "8cce03eacda92cb1a60782c477968b31f6455609e48d6b31b902b39660dfb1ab"
+        },
+        "product_variants": {
+            "count": 411,
+            "fingerprint": "a0d5a83903a91990c4ff7b68bd217ad352183af8053954e9050d1cfd0081b4a5"
+        },
+        "product_images": {
+            "count": 1131,
+            "fingerprint": "8d3c523ad87a894ad4232a183e1610984f848cb4ffc63bc0c78fcc9170493c4b"
+        },
+        "brands": {
+            "count": 36,
+            "fingerprint": "d8a2c7bbcb642eabf9bb286594e89c380f0bc837f2f5086e8152c4920dd02a51"
+        },
+        "categories": {
+            "count": 6,
+            "fingerprint": "97e98bf2217d168865cf7bd44ebe19651058d74fb89b82efb43b9808dd4bc288"
+        },
+        "product_external_identities": {
+            "count": 828,
+            "fingerprint": "ab6d7c234f03a024bc7afb96cf0d8460fcb6ec6e0707a9b8a8194cbdf2f517c4"
+        },
+        "qammaris_app_products": {
+            "count": 459,
+            "fingerprint": "88cca7ce9cea6a8580c2d8d4d4fc6db0d5378cf96f94bf7954844dfb4e9bb0e9"
+        },
+        "qammaris_app_changes": {
+            "count": 479,
+            "fingerprint": "322d02b89a902fd8a3524979094cb657a92c34df2069f22997d0fb0f9927d7c0"
+        },
+        "qammaris_app_sync_states": {
+            "count": 1,
+            "fingerprint": "4ba5422155508b7067fbecc8b534f69c302861d0805c6b3d02faa65bb24d1481"
+        }
+    },
+    "audit_rows": 0,
+    "runtime_test": {
+        "performed": false
+    }
+}

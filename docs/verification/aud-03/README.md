@@ -1,5 +1,7 @@
 # AUD-03 — Shopee review summaries and media recovery
 
+**Subsequent release:** PR24 is merged and production `9325df4` activated; [MySQL/runtime/release proof](../audit-release/README.md). The dated implementation evidence and its remaining verification limits below are retained; pre-release status is superseded.
+
 Date: 2026-10-07. Owner approval: “Berikutnya AUD-03”. Status: local implementation verified, branch review pending; no production deployment or data operation. This evidence does not close P9 device/live acceptance.
 
 ## Outcome and scope
