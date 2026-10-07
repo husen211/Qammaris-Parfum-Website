@@ -7,6 +7,7 @@ import './ui/product-gallery';
 import './ui/catalog-images';
 import './ui/home-best-sellers';
 import './ui/navbar';
+import './ui/navigation-skeleton';
 import './ui/reveal';
 import './ui/toast';
 

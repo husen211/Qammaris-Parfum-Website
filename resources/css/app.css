@@ -2,6 +2,7 @@
 @import "./catalog.css";
 @import "./footer.css";
 @import "./cart-interactions.css";
+@import "./navigation-skeleton.css";
 
 @custom-variant hover {
     @media (hover: hover) and (pointer: fine) {

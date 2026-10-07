@@ -13,7 +13,7 @@
         .active-nav { background-color: #F3F4F6; color: #111827; border-right: 3px solid #111827; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased">
+<body data-navigation-shell="admin" class="bg-gray-50 text-gray-800 antialiased">
 
     <div class="flex h-screen overflow-hidden">
         
@@ -90,7 +90,7 @@
                 </details>
             </header>
 
-            <div class="container mx-auto px-6 py-8">
+            <div data-navigation-content class="container mx-auto px-6 py-8">
                 @if(session('success'))
                 <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -109,5 +109,6 @@
 
     </div>
     @stack('scripts')
+    @include('components.navigation-skeleton')
 </body>
 </html>
