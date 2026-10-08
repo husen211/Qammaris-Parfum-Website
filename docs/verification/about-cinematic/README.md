@@ -1,6 +1,6 @@
 # ABOUT-02 — Cinematic About and unique photography
 
-2026-10-08. Owner explicitly requested another About redesign, the actual jahed source and at least six additional21st components. Implementation and bounded local verification complete; **production release has not been authorised for this new item**. PR41 approval applied only to the already released FAQ/copy correction.
+2026-10-08. Owner explicitly requested another About redesign, the actual jahed source and at least six additional21st components. Implementation and bounded local verification complete; Owner subsequently explicitly approved publication of PR43. Production release and live checks complete: [release proof](RELEASE.md). PR41 approval applied only to the earlier FAQ/copy correction.
 
 Outcome: ten new source-backed adaptations; full [source/behavior/photo mapping](sources.md), [retrieval hashes](component-sources.json). Hero/source depth transitions bounded to480px pin on sufficiently tall/wide desktop; mobile/tablet/small-height/reduced-motion use the fully readable static layout. Native actions remain available. GSAP is requested only when desktop motion qualifies, not on mobile/reduced motion. About JS6.08kB/2.32kBgzip; desktop-motion114.46kB/45.40kBgzip; About CSS16.96kB/4.06kBgzip. These are build sizes, not a measured network/LCP guarantee.
 
@@ -27,4 +27,4 @@ Before screenshots read-only production26576a1; after screenshots isolated local
 
 The targeted browser run initially asserted all animations were absent in no-JS mode; native CSS color feedback legitimately remains. Corrected the assertion to absence of scripted panel animation and completed only remaining fallback/responsive checks, preserving the passed four-width results. No unnecessary full local suite repetition.
 
-Next: review the concrete About PR, obtain its separate production release approval, then run the normal green-CI GitHub release and live checks. No next implementation phase, order work or global acceptance closure.
+Owner subsequently approved PR43, normal GitHub release and live checks passed; [proof](RELEASE.md). Next: Owner visual review of the released About. No next implementation phase, order work or global acceptance closure.

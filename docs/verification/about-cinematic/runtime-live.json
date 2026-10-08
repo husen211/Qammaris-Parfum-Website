@@ -1,0 +1,12 @@
+{
+    "checked_at": "2026-10-08T15:07:40+00:00",
+    "revision": "7612d096a6e895dce28bf8f41847f085c76f3a16",
+    "latest_deployment_at": "2026-10-08T15:05:16Z",
+    "latest_deployment_revision": "7612d096a6e895dce28bf8f41847f085c76f3a16",
+    "worker_count": 1,
+    "workers_current": true,
+    "watchdog_heartbeat": "2026-10-08T15:07:01Z",
+    "scheduler_heartbeat": "2026-10-08T15:07:01Z",
+    "pending_migrations": 0,
+    "laravel_errors_since_latest_deployment": 0
+}

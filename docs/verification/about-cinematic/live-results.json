@@ -1,0 +1,39 @@
+[
+  {
+    "width": 390,
+    "touch": true,
+    "status": 200,
+    "uniqueGalleryPhotos": 4,
+    "postersRemoved": true,
+    "interiorReelPreview": true,
+    "filterAndPhotoDialog": true,
+    "heroPin": false,
+    "faq400ms": true,
+    "catalogSingleTap": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "touch": false,
+    "status": 200,
+    "uniqueGalleryPhotos": 4,
+    "postersRemoved": true,
+    "interiorReelPreview": true,
+    "filterAndPhotoDialog": true,
+    "heroPin": true,
+    "faq400ms": true,
+    "catalogSingleTap": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "touch": true,
+    "overflow": false,
+    "noPin": true
+  },
+  {
+    "health": 200
+  }
+]
