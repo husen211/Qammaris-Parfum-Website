@@ -1,8 +1,8 @@
 # Qammaris Order API v1 — kontrak Website ↔ Qammaris App
 
-Status: **PROPOSED (draf untuk diselaraskan)**. Belum diimplementasikan. Setiap bagian bertanda **[KOORDINASI]** harus disetujui agen/pemilik Qammaris App sebelum kode dibuat.
+Status: **PROPOSED — menunggu contract review agen Qammaris App. Belum final dan belum diimplementasikan.** Owner telah mereview Tahap 0 (2026-10-08) dan menetapkan bahwa kontrak tidak boleh difinalkan sebelum review App. Setiap bagian bertanda **[KOORDINASI]** harus disetujui agen/pemilik Qammaris App sebelum kode dibuat.
 
-Versi dokumen: 2026-10-08 r1. Pemilik kontrak di sisi Website: ORD-02 ([rencana](../planning/ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md)). Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml).
+Versi dokumen: 2026-10-08 r2 (revisi Owner: webhook sebagai jalur utama, otorisasi wajib di backend App, pemisahan handover/delivered/kewajiban finansial). Pemilik kontrak di sisi Website: ORD-02 ([rencana](../planning/ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md)). Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml).
 
 ## 1. Prinsip
 
@@ -10,6 +10,7 @@ Versi dokumen: 2026-10-08 r1. Pemilik kontrak di sisi Website: ORD-02 ([rencana]
 2. **App adalah sumber kebenaran karyawan dan reimbursement.** Identitas karyawan, autentikasi karyawan, expense, dan status reimbursement dikelola App. Website hanya menyimpan referensi dan status yang dilaporkan App.
 3. **Komunikasi backend-to-backend.** Tidak ada credential di frontend App, di browser, maupun di link. Karyawan login ke App; backend App yang memanggil Website.
 4. **Setiap mutasi**: autentikasi layanan, otorisasi aksi, `Idempotency-Key`, `expected_revision`, dan audit dengan identitas aktor.
+4a. **Backend App wajib memvalidasi** bahwa karyawan sudah login, aktif, punya role yang sesuai, dan berhak atas aksi tersebut **sebelum** menandatangani request ke Website. Website menjadi lapisan kedua: membatasi aksi per klien dan memvalidasi transisi, tetapi tidak menggantikan otorisasi karyawan di App.
 5. **Tidak ada klaim sinkron sebelum ada konfirmasi.** Website menganggap App sudah tahu hanya setelah App membalas 2xx. App menganggap perubahan berhasil hanya setelah Website membalas 2xx dengan revision baru.
 6. **Konsisten dengan integrasi produk yang sudah berjalan** (HMAC `X-Qammaris-*`), tetapi dengan **credential terpisah** dan scope order.
 
@@ -17,12 +18,13 @@ Versi dokumen: 2026-10-08 r1. Pemilik kontrak di sisi Website: ORD-02 ([rencana]
 
 ```text
 Qammaris App backend ──(HTTPS, ditandatangani)──▶ Website /integrations/qammaris-app/orders/v1/*   (baca + mutasi)
-Website outbox ──(HTTPS, ditandatangani)──▶ App webhook  order.changed {order_id, revision}            (notifikasi saja)
-App reconciler ──(tiap N menit)──▶ GET /orders?updated_since=…                                           (jaring pengaman)
+Website outbox ──(HTTPS, ditandatangani)──▶ App webhook  order.changed {order_id, revision}            (JALUR UTAMA, segera setelah commit)
+App reconciler ──(tiap 5 menit)──▶ GET /orders?updated_since=…                                          (fallback bila webhook gagal)
 ```
 
 - Notifikasi Website→App hanya berisi ID dan revision, **bukan data order**. App mengambil detail lewat `GET /orders/{id}`, sehingga data pribadi tidak tersebar di log webhook.
-- Rekonsiliasi berkala memakai `updated_since` + cursor. Notifikasi yang hilang tidak membuat data tertinggal.
+- **Webhook/outbox adalah jalur notifikasi cepat dan utama**: Website mengirim notifikasi segera setelah transaksi commit (worker queue, bukan menunggu jadwal).
+- Rekonsiliasi 5 menit dengan `updated_since` + cursor **hanya fallback** bila webhook gagal/terlewat. Notifikasi yang hilang tidak membuat data tertinggal.
 
 **[KOORDINASI-1]** URL webhook App, nama event, dan interval rekonsiliasi (usulan: 5 menit).
 
@@ -40,7 +42,7 @@ Setiap request App → Website membawa header:
 
 - Secret order (`QAMMARIS_ORDER_API_SECRET`) **berbeda** dari API key feed produk dan webhook secret produk. Rotasi dilakukan dengan dua secret aktif sementara (`current`, `previous`).
 - Notifikasi Website → App memakai skema tanda tangan yang sama dengan secret terpisah (`QAMMARIS_ORDER_WEBHOOK_SECRET`).
-- Otorisasi layanan: klien App hanya boleh memanggil endpoint di dokumen ini. Klien App **tidak bisa** menandai Lunas, mengubah harga, item, penerima, refund, atau koreksi pembayaran; semua itu dilakukan di Website oleh Staff Order/Super Admin.
+- Otorisasi berlapis: (1) backend App memvalidasi user, role, dan izin aksi sebelum menandatangani (§1 butir 4a); (2) Website memvalidasi tanda tangan, scope klien, dan transisi. Klien App hanya boleh memanggil endpoint di dokumen ini. Klien App **tidak bisa** menandai Lunas, mengubah harga, item, penerima, refund, atau koreksi pembayaran; semua itu dilakukan di Website oleh Staff Order/Super Admin.
 - Body ≤ 64 KiB (kecuali unggahan QR, ≤ 2 MiB). Rate limit awal 120 request/menit per klien.
 
 **[KOORDINASI-2]** Setuju HMAC per request (dipilih karena Website tidak memakai Sanctum dan pola ini sudah ada di kedua repo) atau bearer token berotasi. Juga perlu disepakati penyimpanan secret di App dan prosedur rotasi.
@@ -115,8 +117,12 @@ Setiap mutasi menyertakan objek `actor` dari karyawan yang sudah diautentikasi A
       "requested_at": "2026-10-08T02:40:00Z"
     },
     "jnt": null,
-    "handover": { "status": "pending", "handed_to": null, "handed_over_at": null }
+    "handover": { "status": "pending", "handed_to": null, "handed_over_at": null },
+    "delivery": { "status": "unconfirmed", "delivered_at": null, "confirmed_by": null }
   },
+  "obligations": [
+    { "type": "reimbursement", "status": "open", "amount": 15000, "ref": "EXP-2026-0042" }
+  ],
   "costs": [
     {
       "expense_ref": "EXP-2026-0042",
@@ -148,12 +154,14 @@ Setiap dimensi berdiri sendiri; pembayaran tidak mengunci persiapan.
 
 | Dimensi | Nilai | Siapa mengubah |
 |---|---|---|
-| `lifecycle` | `draft` → `awaiting_customer` → `active` → `completed` / `cancelled` | Website. `completed` otomatis bila handover selesai **dan** `payment.status=paid` **dan** tidak ada issue terbuka |
+| `lifecycle` | `draft` → `awaiting_customer` → `active` → `completed` / `cancelled` | Website. `completed` otomatis bila handover selesai **dan** `payment.status=paid` **dan** tidak ada issue/kewajiban finansial terbuka. **Tidak** menunggu `delivered` |
 | `payment.status` | `unpaid`, `paid`, `refund_pending`, `refunded` | Website saja (Staff Order: `paid`; koreksi/refund: Super Admin) |
 | `preparation.status` | `not_started` → `preparing` → `packed` | App (claim + progres) atau Website |
 | `courier.status` (lokal) | `not_needed` (pickup), `unassigned` → `assigned` → `requested` → `arrived` | App/Website. `booking_responsibility`: `store` atau `customer` |
-| `jnt.status` (luar kota) | `not_requested` → `pickup_requested` → `qr_available` → `picked_up` | App/Website; resi opsional |
-| `handover.status` | `pending` → `handed_over` (`handed_to`: `courier`, `customer`, `customer_courier`, `jnt`) → `delivered` (opsional) | App/Website; `delivered` juga dari tombol customer |
+| `jnt.status` (luar kota) | `not_requested` → `pickup_requested` → `qr_available` → `picked_up` | App/Website; resi opsional. `pickup_requested`/`qr_available` **bukan** bukti paket diambil; hanya `picked_up` yang menandai handover. Request di luar 09.00–16.00 WITA tetap diterima (peringatan di UI) |
+| `handover.status` | `pending` → `handed_over` (`handed_to`: `courier`, `customer`, `customer_courier`, `jnt`) | App/Website. Tugas staf selesai di sini |
+| `delivery.status` | `unconfirmed` → `delivered` | Terpisah dari handover dan opsional; dari tombol customer, Website, atau App |
+| `obligations[]` | `{type: refund\|reimbursement, status: open\|settled, amount, ref}` | Refund: Website (Super Admin). Reimbursement: dilaporkan App. Kewajiban terbuka mencegah `completed` |
 | `issues[].status` | `open` → `resolved` | App membuka, Website/App menyelesaikan |
 
 Transisi tidak valid menghasilkan `409 invalid_transition`. Transisi yang sudah tercapai dengan payload identik adalah no-op dan mengembalikan 200 dengan revision saat ini.
@@ -174,6 +182,7 @@ Base: `https://<website>/integrations/qammaris-app/orders/v1`. Semua respons `ap
 | PUT | `/orders/{id}/jnt/qr` | Unggah gambar QR (image/png\|jpeg, ≤2 MiB) |
 | GET | `/orders/{id}/jnt/qr` | Ambil QR (ditandatangani; tidak publik) |
 | POST | `/orders/{id}/handover` | Catat penyerahan ke kurir/customer/J&T |
+| POST | `/orders/{id}/delivery` | Konfirmasi diterima (opsional, terpisah dari handover) |
 | POST | `/orders/{id}/issues` | Catat kendala |
 | POST | `/orders/{id}/issues/{issue_id}/resolve` | Selesaikan kendala |
 | PUT | `/orders/{id}/costs/{expense_ref}` | Upsert ringkasan biaya + status reimbursement dari App |
@@ -297,4 +306,5 @@ https://<app-frontend>/orders/<order_id>      (karyawan login di App bila belum)
 | KOORDINASI-6 | Deep link tugas staf di App | `/orders/<id>` |
 | KOORDINASI-7 | Override claim (karyawan tidak hadir) | Hanya `app_role=owner`, atau Super Admin di Website |
 | KOORDINASI-8 | Penyimpanan QR J&T | Website menyimpan file di disk privat, App mengunggah lewat API |
-| KOORDINASI-9 | Siapa menandai `delivered` | Customer (link), Website, dan App |
+| KOORDINASI-9 | Siapa menandai `delivered` | Customer (link), Website, dan App; terpisah dari handover |
+| KOORDINASI-10 | Contract review & sign-off | Agen App mereview seluruh dokumen + OpenAPI; perubahan dicatat sebagai r3 sebelum implementasi ORD-02e |

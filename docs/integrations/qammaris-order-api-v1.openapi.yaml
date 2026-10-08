@@ -1,9 +1,10 @@
 openapi: 3.1.0
 info:
   title: Qammaris Order API (Website ↔ Qammaris App)
-  version: 1.0.0-draft.1
+  version: 1.0.0-draft.2
   description: |
-    PROPOSED draft matching docs/integrations/QAMMARIS_ORDER_API_V1.md. Not implemented yet.
+    PROPOSED draft matching docs/integrations/QAMMARIS_ORDER_API_V1.md (r2). Awaiting Qammaris App contract review; not final.
+    The App backend must authorize the employee (login, role, action permission) before signing any request.
     The Website is the source of truth for orders; Qammaris App for employees and reimbursements.
     All requests are signed (X-Qammaris-Client / X-Qammaris-Timestamp / X-Qammaris-Signature).
 servers:
@@ -170,8 +171,26 @@ paths:
                 - type: object
                   required: [status]
                   properties:
-                    status: { type: string, enum: [handed_over, delivered] }
+                    status: { type: string, enum: [handed_over] }
                     handed_to: { type: string, enum: [courier, customer, customer_courier, jnt] }
+                    occurred_at: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/delivery:
+    post:
+      operationId: confirmDelivery
+      summary: Optional delivery confirmation, separate from handover
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  properties:
                     occurred_at: { type: string, format: date-time }
       responses:
         '200': { $ref: '#/components/responses/Mutation' }
@@ -373,9 +392,25 @@ components:
             handover:
               type: object
               properties:
-                status: { type: string, enum: [pending, handed_over, delivered] }
+                status: { type: string, enum: [pending, handed_over] }
                 handed_to: { type: [string, 'null'], enum: [courier, customer, customer_courier, jnt, null] }
                 handed_over_at: { type: [string, 'null'], format: date-time }
+            delivery:
+              type: object
+              properties:
+                status: { type: string, enum: [unconfirmed, delivered] }
+                delivered_at: { type: [string, 'null'], format: date-time }
+                confirmed_by: { type: [string, 'null'], enum: [customer, website, app, null] }
+        obligations:
+          type: array
+          items:
+            type: object
+            required: [type, status]
+            properties:
+              type: { type: string, enum: [refund, reimbursement] }
+              status: { type: string, enum: [open, settled] }
+              amount: { $ref: '#/components/schemas/Money' }
+              ref: { type: [string, 'null'] }
         costs:
           type: array
           items:

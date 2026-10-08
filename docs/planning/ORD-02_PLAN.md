@@ -1,6 +1,6 @@
 # ORD-02 — rencana: redesign Pesanan Online, Admin PWA, API integrasi
 
-Status: **Tahap 0 selesai (usulan).** Implementasi menunggu jawaban [keputusan Owner](#8-keputusan-owner) dan kontrak [API v1](../integrations/QAMMARIS_ORDER_API_V1.md) yang disepakati dengan agen Qammaris App. Bukti audit: [audit 2026-10-08](../audits/2026-10-08-ord-02-online-orders.md).
+Status: **Tahap 0 direview Owner 2026-10-08; rencana diterima dengan revisi** (keputusan D1–D13 di [§8](#8-keputusan-owner), koreksi teknis di [§9](#9-koreksi-teknis-owner-2026-10-08)). ORD-02a (RBAC + manajemen pengguna) disetujui untuk dikerjakan. Kontrak [API v1](../integrations/QAMMARIS_ORDER_API_V1.md) **belum final** sampai agen Qammaris App melakukan contract review. Bukti audit: [audit 2026-10-08](../audits/2026-10-08-ord-02-online-orders.md).
 
 Branch: `modernization/ord-02-online-order-redesign` (dari ORD-01 `57b3e93`). Tidak ada deploy tanpa persetujuan Owner.
 
@@ -25,7 +25,14 @@ Setiap sub-item adalah commit/PR review tersendiri. Item berikutnya tidak dimula
 - Setelah Super Admin pertama ada, akun `admin` lama dikonversi manual lewat menu Pengguna & Role (pilih Super Admin atau Staff Order). Item tindak lanjut opsional: menghapus akses legacy `admin` setelah semua dikonversi.
 - Kemampuan (Gate) dipakai di route, controller, FormRequest, dan action. Contoh: `orders.manage`, `orders.mark-paid`, `orders.approve-adjustment`, `orders.refund`, `orders.cancel`, `users.manage`, `catalog.manage`, `blog.manage`, `settings.manage`. Menu hanya cerminan Gate.
 - Penjaga Super Admin terakhir: menolak nonaktif/turun role bila tinggal satu Super Admin aktif. Diuji dengan race (lock baris).
-- Reset akses: Super Admin menetapkan password sementara (tampil sekali) + wajib ganti saat login berikutnya. Tidak ada email reset (SMTP belum terverifikasi). Nonaktif = semua session user itu dicabut (session driver database/file dihapus berdasarkan user id; bila file, dibuat versi `session_version` di user yang dicek middleware).
+- Login dengan **username atau email** (D3). Akun nonaktif tidak bisa login. Tidak ada remember-me (D7).
+- Reset akses: Super Admin menetapkan password sementara (tampil sekali) + wajib ganti saat login berikutnya. Tidak ada email reset (SMTP belum terverifikasi). Nonaktif, ganti role, dan reset password menaikkan `auth_version` user. Middleware admin mencocokkan versi itu dengan session, sehingga semua session lama user tersebut langsung tidak berlaku tanpa bergantung pada driver session.
+- Sesi idle admin 12 jam (D7) dipaksa middleware. Agar tidak terpotong lebih dulu, `SESSION_LIFETIME` env harus ≥ 720 (catatan deployment; berdampak pada sesi keranjang publik yang jadi lebih panjang).
+- Kemampuan pesanan (dipakai di ORD-02a untuk aksi ORD-01, lalu model status ORD-02c):
+  - Staff Order boleh membuat/mengubah/menandai Lunas;
+  - Staff Order boleh membatalkan order **belum Lunas dan belum diserahkan**, dengan alasan (D4); setelah itu hanya Super Admin;
+  - Staff Order boleh mengubah alamat selama belum diserahkan dan tidak mengubah biaya (D5);
+  - perubahan finansial (ongkir/total, refund, koreksi pembayaran, talangan/reimburse, revert langkah) hanya Super Admin.
 - Audit akun: tabel `user_admin_changes` (aktor, target, field allowlist, before/after tanpa hash password).
 
 ## 3. Admin PWA (ORD-02b)
@@ -36,7 +43,7 @@ Setiap sub-item adalah commit/PR review tersendiri. Item berikutnya tidak dimula
   - cache-first hanya untuk `/build/*` (aset ber-hash), ikon, dan halaman offline statis;
   - navigasi **network-only**, dengan fallback "Tidak ada koneksi" yang statis (tanpa data);
   - tidak menyimpan HTML admin, JSON, upload, atau respons POST;
-  - logout → `Clear-Site-Data: "cache", "storage"` untuk scope admin.
+  - **Tidak memakai `Clear-Site-Data`.** Header ini berlaku untuk seluruh origin, tidak bisa dibatasi ke `/admin`. Audit 2026-10-08 menemukan website publik memakai `sessionStorage` (`catalog-navigation.js`) dan cookie session yang sama dengan keranjang. `"storage"` akan menghapus state katalog dan registrasi service worker origin; `"cookies"` mengosongkan keranjang dan session publik. Sebagai gantinya, saat logout halaman admin meminta service worker menghapus **hanya** cache bernama `qammaris-admin-*`. Cache itu memang hanya berisi aset statis. Data admin tidak pernah disimpan di Web Storage/IndexedDB.
 - Mutasi wajib online. Form memakai pending state, tombol dinonaktifkan selama kirim, dan **token idempotency form** (UUID tersembunyi) agar double-tap/retry tidak membuat order ganda.
 - Session: lifetime admin dikonfigurasi terpisah (usulan 12 jam idle untuk HP toko), tanpa "remember me", logout jelas di header PWA. Super Admin dapat mencabut session pengguna.
 - Staff Order membuka PWA langsung ke `/admin/orders` dengan tombol besar **Buat Pesanan**. Target 320–430 px tanpa scroll horizontal; navigasi bawah (Pesanan, Buat, Akun) untuk Staff Order.
@@ -74,15 +81,20 @@ Pemetaan data ORD-01 (hanya data lokal/staging; production belum punya data ORD-
 
 Kolom `stage` dipertahankan read-only selama transisi untuk rollback, lalu dihapus di item terpisah setelah rilis stabil.
 
-## 5. Aturan bisnis yang diusulkan (difinalkan setelah keputusan)
+## 5. Aturan bisnis (keputusan Owner 2026-10-08)
 
-1. **Pembayaran**: Staff Order/Super Admin menandai Lunas dengan metode + sumber konfirmasi (`bukti di chat`, `bukti diunggah`, `Majoo`). "Sudah dicatat di Majoo" adalah centang terpisah. Tidak ada field poin. Koreksi, refund, dan penyesuaian total membutuhkan Super Admin + alasan.
-2. **Persiapan tidak menunggu pembayaran**; Lunas bukan syarat packing. `completed` = Lunas + diserahkan + tanpa kendala terbuka.
-3. **Kurir lokal**: `booking_responsibility` = toko atau customer. Bila toko, satu orang mengklaim tugas pemesanan agar tidak dobel. Bila customer, staf cukup mencatat penyerahan ke kurir customer.
-4. **J&T**: request pickup (jam layanan 09.00–16.00 WITA ditampilkan sebagai peringatan), QR tersedia, dipickup adalah status terpisah. Resi opsional dan bisa ditambahkan belakangan.
-5. **Keep**: produk/jumlah, batas waktu, status bayar, konfirmasi manual "stok sudah dipisahkan" oleh staf. Lewat batas → status `expired` + muncul di daftar perlu tindakan (tidak otomatis dibatalkan). Tidak ada klaim reservasi stok.
-6. **Form customer**: opsional. Admin bisa mengisi semuanya. Customer dapat meninjau data. Setelah packing dimulai, perubahan menjadi permintaan yang ditinjau admin.
-7. **Link tugas staf**: ke App setelah KOORDINASI-6. Link bearer ORD-01 **dinonaktifkan** sebagai metode utama (lihat keputusan D6 untuk masa transisi).
+Aturan final yang berlaku dicatat di BUSINESS_RULES saat masing-masing sub-item diimplementasikan. Di bawah ini aturan yang sudah diputuskan.
+
+1. **Pembayaran**: Staff Order/Super Admin menandai Lunas dengan metode + sumber konfirmasi (`bukti di chat`, `bukti diunggah`, `Majoo`). Upload bukti di website opsional (D12). "Sudah dicatat di Majoo" adalah centang terpisah. Tidak ada field poin. Koreksi pembayaran, refund, dan penyesuaian total membutuhkan Super Admin + alasan.
+2. **Dimensi status dipisah dan tidak saling mengunci**: pembayaran, progres packing, handover (penyerahan ke kurir/customer/J&T), delivered (konfirmasi diterima), serta kewajiban finansial terbuka (refund yang belum dibayar, reimburse/talangan yang belum diganti). Lunas bukan syarat packing.
+3. **Selesainya tugas staf ≠ diterima customer** (D10): tugas staf selesai saat handover tercatat; `delivered` adalah konfirmasi terpisah dan opsional. Order dianggap tuntas operasional bila Lunas + handover selesai + tanpa kendala/kewajiban finansial terbuka. Tidak menunggu `delivered`.
+4. **Kurir lokal**: `booking_responsibility` = toko atau customer. Bila toko, satu orang mengklaim tugas pemesanan agar tidak dobel. Bila customer, staf cukup mencatat penyerahan ke kurir customer.
+5. **J&T**: request pickup, QR tersedia, dan dipickup adalah status terpisah. **Request pickup bukan konfirmasi berhasil.** Jam layanan 09.00–16.00 WITA hanya **peringatan**, bukan blokir (D8). Resi opsional dan bisa ditambahkan belakangan.
+6. **Keep** (D9): default 24 jam, boleh belum dibayar, konfirmasi manual "stok sudah dipisahkan" oleh staf. Lewat batas → ditandai perlu tindakan, **tidak** otomatis dibatalkan. Tidak ada klaim reservasi stok.
+7. **Form customer**: opsional. Admin bisa mengisi semuanya. Customer dapat meninjau data. Setelah packing dimulai, perubahan menjadi permintaan yang ditinjau admin. Staff Order boleh menangani perubahan alamat tanpa biaya sampai handover; perubahan biaya = Super Admin (D5).
+8. **Pembatalan** (D4): Staff Order hanya untuk order belum Lunas dan belum diserahkan, wajib alasan. Setelah Lunas → Super Admin, dan kewajiban refund tercatat terpisah.
+9. **Link tugas staf**: ke App setelah KOORDINASI-6. Sampai integrasi App selesai, progres dicatat lewat Admin PWA dengan akun terautentikasi (D6). Link bearer ORD-01 tidak lagi menjadi metode utama.
+10. **Data pelanggan** (D13): tidak dihapus otomatis untuk sekarang. Akses hanya akun aktif dengan kemampuan pesanan (Super Admin/Staff Order/legacy admin) dan backend App lewat API bertanda tangan dengan minimisasi field. Kebijakan retensi didokumentasikan di BUSINESS_RULES dan ditinjau ulang di ORD-05.
 
 ## 6. Rollback dan deployment
 
@@ -108,6 +120,26 @@ Verifikasi PWA install di perangkat nyata (Android Chrome, iPhone Safari) adalah
 
 ## 8. Keputusan Owner
 
+Jawaban Owner 2026-10-08:
+
+| ID | Keputusan |
+|---|---|
+| D1 | ORD-01 dan ORD-02 dirilis **bersama** setelah integrasi dan pengujian |
+| D2 | Owner menjadi Super Admin lewat **bootstrap eksplisit**. Tidak ada migrasi akun production tanpa identitas terverifikasi |
+| D3 | Login username **atau** email |
+| D4 | Staff Order boleh membatalkan order belum Lunas dan belum diserahkan, dengan alasan. Setelah Lunas = Super Admin |
+| D5 | Staff Order boleh mengubah alamat selama belum diserahkan dan tidak mengubah biaya. Perubahan finansial = Super Admin |
+| D6 | Admin PWA menangani progres sementara sebelum integrasi App selesai |
+| D7 | Sesi idle 12 jam, tanpa remember-me |
+| D8 | Jam pickup J&T = peringatan, bukan hard block. Request pickup ≠ konfirmasi berhasil |
+| D9 | Keep default 24 jam, boleh belum dibayar, tidak auto-batal |
+| D10 | Handover dan delivered dipisah. Tugas staf selesai tanpa menunggu konfirmasi penerimaan |
+| D11 | Ikon PWA dari logo Qammaris existing |
+| D12 | Upload bukti pembayaran opsional |
+| D13 | Data pelanggan tidak dihapus otomatis untuk sekarang. Kontrol akses dan kebijakan retensi didokumentasikan |
+
+Usulan awal Tahap 0 (arsip, sudah digantikan tabel di atas):
+
 | ID | Pertanyaan | Usulan |
 |---|---|---|
 | D1 | Rilis ORD-01 dulu, atau langsung rilis gabungan ORD-01+02? | **Gabungan**. ORD-01 belum dipakai dan alurnya berubah besar; PR #27 tetap terbuka sebagai basis |
@@ -124,4 +156,12 @@ Verifikasi PWA install di perangkat nyata (Android Chrome, iPhone Safari) adalah
 | D12 | Upload bukti bayar di website | Opsional, JPG/PNG/PDF ≤5 MB, disimpan privat tanpa hapus otomatis |
 | D13 | Retensi data customer & daftar pelanggan langganan | Tetap tanpa hapus otomatis (keputusan ORD-01) |
 
-Koordinasi dengan agen Qammaris App: KOORDINASI-1 sampai 9 di [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md#daftar-koordinasi).
+Koordinasi dengan agen Qammaris App: KOORDINASI-1 sampai 10 di [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md#daftar-koordinasi).
+
+## 9. Koreksi teknis Owner (2026-10-08)
+
+1. `Clear-Site-Data` tidak dipakai karena berdampak ke seluruh origin publik. Diganti pembersihan cache SW `qammaris-admin-*` ([§3](#3-admin-pwa-ord-02b)).
+2. Webhook/outbox adalah **jalur notifikasi utama**. Rekonsiliasi 5 menit hanya fallback (kontrak §11).
+3. Backend App **wajib** memvalidasi user, role, dan izin aksi sebelum mengirim request bertanda tangan. Website tetap membatasi aksi per klien sebagai lapisan kedua (kontrak §3–4).
+4. Kontrak API **tidak difinalkan** sebelum contract review oleh agen Qammaris App (kontrak §0).
+5. Pemisahan pembayaran, packing, handover, delivered, dan kewajiban refund/reimburse dipertahankan di model data dan API ([§5](#5-aturan-bisnis-keputusan-owner-2026-10-08), kontrak §7).
