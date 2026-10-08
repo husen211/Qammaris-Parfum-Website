@@ -1,7 +1,10 @@
 <?php
 
+use App\Exceptions\OnlineOrderRejected;
+use App\Exceptions\OrderApi\OrderApiException;
 use App\Http\Middleware\AdminMiddleware;
 use App\Support\AdminHome;
+use App\Support\OrderApi\OrderApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,5 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(fn (Request $request) => $request->is('admin', 'admin/*') ? AdminHome::url($request->user()) : route('home'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Expected order rejections are answered to the caller, not written to the error log.
+        $exceptions->dontReport([OnlineOrderRejected::class, OrderApiException::class]);
+        // Order API v1 always answers with the contract error envelope (ORD-02e).
+        $exceptions->render(function (Throwable $error, Request $request) {
+            if ($request->is(OrderApiResponse::PATH, OrderApiResponse::PATH.'/*')) {
+                return OrderApiResponse::fromThrowable($request, $error);
+            }
+        });
     })->create();

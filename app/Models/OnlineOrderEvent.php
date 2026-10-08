@@ -13,7 +13,7 @@ class OnlineOrderEvent extends Model
         'created', 'advance', 'revert', 'cancel', 'details_updated', 'link_regenerated', 'advance_recorded', 'reimbursed',
     ];
 
-    protected $fillable = ['kind', 'stage', 'actor_type', 'actor_user_id', 'actor_app_user_id', 'actor_display_name', 'staff_name', 'note'];
+    protected $fillable = ['kind', 'stage', 'actor_type', 'source', 'actor_user_id', 'actor_app_user_id', 'actor_display_name', 'staff_name', 'note', 'idempotency_key', 'request_id'];
 
     protected $casts = ['created_at' => 'datetime'];
 

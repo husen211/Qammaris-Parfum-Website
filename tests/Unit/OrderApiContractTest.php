@@ -41,6 +41,13 @@ class OrderApiContractTest extends TestCase
         $this->assertStringContainsString('**BASELINE API v1 — dibekukan (r4.1, OpenAPI `1.0.0-rc.4.1`', $this->markdown);
     }
 
+    public function test_runtime_schema_is_the_compiled_baseline(): void
+    {
+        // Production has no YAML parser; resources/order-api/openapi-v1.json must be exactly the baseline YAML.
+        $compiled = json_decode(file_get_contents(dirname(__DIR__, 2).'/resources/order-api/openapi-v1.json'), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame($this->spec, $compiled);
+    }
+
     public function test_versions_match_and_contract_is_the_r4_1_baseline(): void
     {
         $this->assertSame('1.0.0-rc.4.1', $this->spec['info']['version']);

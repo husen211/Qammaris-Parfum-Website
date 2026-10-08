@@ -129,6 +129,16 @@ class OnlineOrder extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function claims(): HasMany
+    {
+        return $this->hasMany(OnlineOrderClaim::class);
+    }
+
+    public function costs(): HasMany
+    {
+        return $this->hasMany(OnlineOrderCost::class)->orderBy('id');
+    }
+
     public function adjustments(): HasMany
     {
         return $this->hasMany(OnlineOrderAdjustment::class)->orderBy('id');
