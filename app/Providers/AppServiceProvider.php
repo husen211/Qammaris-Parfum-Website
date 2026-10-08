@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Category;
 use App\Models\StoreInfo;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,6 +18,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('blog-automation', fn ($request) => Limit::perMinute(60)->by('blog-actor:'.$request->user()->id));
+        RateLimiter::for('blog-automation-media', fn ($request) => Limit::perMinute(10)->by('blog-media-actor:'.$request->user()->id));
         if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
             return;
         }

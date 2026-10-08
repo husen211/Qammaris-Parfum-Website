@@ -1,0 +1,1 @@
+<div class="journal-row-actions"><button type="button" data-repeat-up aria-label="Naikkan urutan">↑</button><button type="button" data-repeat-down aria-label="Turunkan urutan">↓</button><button type="button" data-repeat-remove>Hapus dari daftar</button></div>

@@ -11,7 +11,11 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/blog-editor.css',
+                'resources/css/journal.css',
                 'resources/js/app.js',
+                'resources/js/journal.js',
+                'resources/js/blog-editor.js',
                 'resources/js/reactbits/about-lanyard-loader.js',
                 'resources/js/reactbits/card-nav.jsx'
             ],

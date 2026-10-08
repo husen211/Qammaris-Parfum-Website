@@ -12,6 +12,9 @@
         $robotsDirective = $decodeSection($__env->yieldContent('robots', 'index,follow'));
         $openGraphType = $decodeSection($__env->yieldContent('og_type', 'website'));
         $openGraphImage = $decodeSection($__env->yieldContent('og_image', asset('images/logo.png')));
+        $openGraphTitle = $decodeSection($__env->yieldContent('og_title', $pageTitle));
+        $openGraphDescription = $decodeSection($__env->yieldContent('og_description', $pageDescription));
+        $canonicalUrl = $decodeSection($__env->yieldContent('canonical_url', url()->current()));
         $jsonLdFlags = JSON_UNESCAPED_SLASHES
             | JSON_UNESCAPED_UNICODE
             | JSON_HEX_TAG
@@ -43,19 +46,19 @@
 
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav.jpg') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logofav.jpg') }}">
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
 
     <meta property="og:site_name" content="Qammaris Perfumes">
     <meta property="og:locale" content="id_ID">
     <meta property="og:type" content="{{ $openGraphType }}">
-    <meta property="og:title" content="{{ $pageTitle }}">
-    <meta property="og:description" content="{{ $pageDescription }}">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="{{ $openGraphTitle }}">
+    <meta property="og:description" content="{{ $openGraphDescription }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:image" content="{{ $openGraphImage }}">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $pageTitle }}">
-    <meta name="twitter:description" content="{{ $pageDescription }}">
+    <meta name="twitter:title" content="{{ $openGraphTitle }}">
+    <meta name="twitter:description" content="{{ $openGraphDescription }}">
     <meta name="twitter:image" content="{{ $openGraphImage }}">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">

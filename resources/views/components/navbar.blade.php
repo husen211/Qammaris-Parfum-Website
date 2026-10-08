@@ -23,7 +23,7 @@
             'bgColor' => '#282828',
             'textColor' => '#FFFFFF',
             'links' => [
-                ['label' => 'Jurnal', 'href' => route('blog.index'), 'ariaLabel' => 'Jurnal'],
+                ['label' => 'Journal', 'href' => route('blog.index'), 'ariaLabel' => 'Qammaris Journal'],
                 ['label' => 'Tentang', 'href' => route('store.about'), 'ariaLabel' => 'Tentang Qammaris'],
             ],
         ],

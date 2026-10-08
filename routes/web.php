@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBlogAutomationController;
+use App\Http\Controllers\Admin\AdminBlogMediaController;
 use App\Http\Controllers\Admin\AdminBlogPostController;
+use App\Http\Controllers\Admin\AdminBlogTaxonomyController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -108,6 +111,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
 
     // CRUD Blog Posts
+    Route::get('blog-posts/{blogPost}/automation', [AdminBlogAutomationController::class, 'edit'])->name('blog-automation.edit');
+    Route::put('blog-posts/{blogPost}/automation', [AdminBlogAutomationController::class, 'update'])->name('blog-automation.update');
+    Route::get('blog-posts/{blogPost}/media', [AdminBlogMediaController::class, 'index'])->name('blog-media.index');
+    Route::post('blog-posts/{blogPost}/media', [AdminBlogMediaController::class, 'store'])->middleware('throttle:10,1')->name('blog-media.store');
+    Route::patch('blog-posts/{blogPost}/media/{media}', [AdminBlogMediaController::class, 'update'])->middleware('throttle:10,1')->name('blog-media.update');
+    Route::patch('blog-posts/{blogPost}/media/{media}/archive', [AdminBlogMediaController::class, 'archive'])->name('blog-media.archive');
+    Route::get('blog-taxonomy', [AdminBlogTaxonomyController::class, 'index'])->name('blog-taxonomy.index');
+    Route::post('blog-taxonomy', [AdminBlogTaxonomyController::class, 'store'])->name('blog-taxonomy.store');
+    Route::patch('blog-taxonomy/{kind}/{id}/status', [AdminBlogTaxonomyController::class, 'status'])->name('blog-taxonomy.status');
+    Route::match(['post', 'put'], 'blog-posts/preview', [AdminBlogPostController::class, 'preview'])->name('blog-posts.preview');
+    Route::match(['post', 'put'], 'blog-posts/{blogPost}/preview', [AdminBlogPostController::class, 'preview'])->name('blog-posts.preview-existing');
+    Route::patch('blog-posts/{blogPost}/restore', [AdminBlogPostController::class, 'restore'])->name('blog-posts.restore');
     Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
 });
 

@@ -2,7 +2,7 @@
     <section class="py-24 bg-white">
         <div class="container mx-auto px-6">
             <div class="flex justify-between items-end mb-12" data-reveal>
-                <h2 class="font-mayluxa text-4xl text-brand-black">Jurnal</h2>
+                <h2 class="font-mayluxa text-4xl text-brand-black">Qammaris Journal</h2>
                 <a href="{{ route('blog.index') }}"
                     class="text-sm uppercase tracking-widest border-b border-black pb-1 hover:text-brand-gold hover:border-brand-gold transition-colors">Baca
                     Semua</a>

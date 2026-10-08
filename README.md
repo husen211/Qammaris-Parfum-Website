@@ -19,6 +19,8 @@ Baca [AGENTS](AGENTS.md) → [aturan bisnis current](docs/product/BUSINESS_RULES
 
 Setiap fitur memperbarui item aktif serta hanya aturan/boundary/runbook yang berubah, dan menautkan bukti verifikasi. Commit/PR menyimpan rincian perubahan kode; jangan membuat duplikat agent/business-rule file atau menyalin semua diary release ke context current. Persetujuan implementasi bukan persetujuan release.
 
+Journal draft API (BLOG-05 review, default OFF): [kontrak](docs/api/JOURNAL_AUTOMATION.md), [panduan agent](docs/runbooks/JOURNAL_AGENT_GUIDE.md), [aktivasi/recovery](docs/runbooks/JOURNAL_AUTOMATION.md). Identitas/token mesin terpisah dari admin dan feed; publikasi tetap melalui Owner. Belum diaktifkan pada produksi.
+
 ## Kebutuhan lokal
 
 - PHP 8.2+ yang kompatibel dengan lockfile, Composer 2.

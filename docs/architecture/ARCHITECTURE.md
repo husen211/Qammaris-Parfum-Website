@@ -97,10 +97,57 @@ AUD-06: `Support/Rupiah` shares the whole-price input rule across editor/CSV/`Sy
 
 `product-cart.js` runs confirmed-success Web Animations flight with reduced-motion fallback; `cart-page.js` serializes quantity/removal mutation feedback. Header points directly to /cart, not drawer. Shared layout destination skeletons observe native same-tab links/valid submits; pageshow resets pending state and timeout recovery never replays POST. No HTML-fetch/swap router; Blade navigation recreates document/navbar DOM. Touch rules/device limits remain explicit, not inferred from mouse viewports.
 
-## Runtime, deployment, and verification boundaries
+## Blog foundation — BLOG-01 review branch, not deployed
+
+```text
+Admin session + auth/admin + CSRF -> BlogPostStore/Update/RevisionRequest
+  -> SaveBlogPost -> BlogHtmlSanitizer + verified BlogMediaStorage (file IO first)
+                 -> transaction + fresh row lock + revision check
+                 -> BlogPost + RecordBlogPostChange -> after-commit sitemap invalidation
+  -> ChangeBlogPostArchive -> revision + archive/restore-as-draft + same-transaction history
+Public /blog/category/detail/sitemap -> BlogPost published/isPubliclyVisible excludes archives
+```
+
+Entry: `AdminBlogPostController`, `app/Actions/Blog/`, `app/Services/BlogMediaStorage.php`, `BlogPost` and additive `2026_10_07_000002_add_blog_write_safety.php`. Requests/HTTP feedback remain in controller/request; explicit admin actor, allowlisted writes, stable slug and existing sanitizer retained. New image disk/path explicit, old legacy resolver unchanged when disk null. Old image is not deleted; failure cleans only this write's new upload. Cache error after commit cannot remove attached image. Views/no-op do not change editorial timestamp/revision. Historical editorial time is null until a real editorial change.
+
+Archive leaves publish flag/date intact but public queries exclude it; restore becomes draft. `blog_post_changes` records action/admin/article/revision/time and changed safe metadata/hashes, no cascade/backfill/full request/body/file URLs. Admin-only attribution now, future machine identity/ownership not implemented. UI adds archive filter, restore, revision conflict/reload and a contained keyboard-scrollable table; no public redesign. [ADR-032](decisions/ADR-032-blog-write-foundation.md), [runbook](../runbooks/BLOG_FOUNDATION.md), [verification](../verification/blog-01/README.md), [approved later scope](../planning/QAMMARIS_JOURNAL.md).
+
+## BLOG-02 review branch — editorial CMS
+
+Separate worktree modernization/blog-02-editor depends on BLOG-01, not deployed. Additive migration000003 adds nullable category_id, subtitle/alt/featured/SEO title and managed blog taxonomy/tag pivot without rewriting article rows or the historical category enum. Eager-loaded category relation is authoritative when assigned; null falls back to legacy name. Public category/filter queries support both paths and preserve the four old URLs. Taxonomy management adds immutable names/slugs and reversible active status; no deletion/backfill.
+
+BlogPostStore/Update/PreviewRequest share BlogEditorialRules. SaveBlogPost locks current article/revision, category and selected tags, sanitizes content, validates new publication readiness, syncs tags and metadata with the same blog audit transaction; omitted tags preserve, explicit empty clears. Existing published metadata omissions remain review tasks. No-op/editor load/view does not advance editorial time. Dedicated blog-editor Vite entry imports Tiptap3.31.4 only for create/edit; one shared Blade form and field component provide persistent native sections, visual/HTML modes and HTML fallback.
+
+POST/PUT preview routes remain behind admin/session/CSRF. They render transient data through the same blog.show/RenderBlogContent as public reads, without saving uploads/articles or incrementing views/history. noindex/no-store/no-referrer plus sandboxed desktop/mobile frames. Product markers retain only validated ID; child HTML is discarded and public current name/URL resolved at read time. Rich price/status cards, ordered relations and responsive media remain BLOG-04; no catalog writes. [ADR-033](decisions/ADR-033-blog-editorial-cms.md), [editor guide](../runbooks/BLOG_EDITOR.md), [evidence](../verification/blog-02/README.md).
+
+## BLOG-03 review branch — public Journal and SEO
+
+modernization/blog-03-journal depends on BLOG-02; not deployed. BlogController shares public/category/search listing and current visibility guard. JournalSearch applies bounded metadata matching to titles/excerpts/active tags/eligible marker-product and brand names; sanitized body is literal normalized phrase only. Candidate scan is linear, product resolution batched; no search infrastructure or new dependency.
+
+RenderBlogContent returns safe HTML, unique H2/H3 anchors, optional TOC after three H2, table overflow wrappers and eligible current product links. Public/preview renderer stays shared; no persisted body rewrite. Dedicated journal.js/CSS load only on public Journal views. Native navigation/search/pagination keep shared destination skeleton; copy has selectable-URL retry and images have one-shot placeholder fallback.
+
+Additive migration000004 adds canonical/OG overrides and index/follow defaults. BlogEditorialRules validates HTTPS URLs without credentials/fragments, SaveBlogPost writes existing revision/audit transaction; sensitive SEO text/URLs are hashes in history. JournalMetadata renders safe BlogPosting/BreadcrumbList based on visible facts. Layout defaults remain for other pages. Sitemap caches XML plus absolute expiry, caps TTL/HTTP max-age at next publication boundary, uses editorial/publication lastmod, excludes nonindexable/external-canonical articles and keeps existing cache invalidation key.
+
+No resize/full product cards/API in this phase. Existing content/media/IDs/slugs/authors retained; current catalog remains read-only. [ADR-034](decisions/ADR-034-public-journal-search-seo.md), [operator guide](../runbooks/JOURNAL_PUBLIC.md), [verification](../verification/blog-03/README.md).
+
+## BLOG-04 review branch — owned media and components
+
+modernization/blog-04-media depends on BLOG-03, not deployed. Additive000005 creates article-owned BlogMedia metadata/variant rows and nullable featured pointer/ordered JSON lists. BlogImageProcessor verifies originals, enforces5MB/6000px/12MP/estimated memory limits, generates immutable bounded WebP original+chosen crop generations and compensates only new derivatives. GD/WebP unavailable uses original with warning; no automatic backfill or purge. SaveBlogMedia scopes parent IDs, revision/row locks and existing transactional audit; featured alt stays synchronized, feature archive is blocked until replacement. Media form saves separately from writing and requires editor reload after revision changes.
+
+BlogComponentRules validates owned active media/gallery and bounded existing catalog/article IDs, structured FAQ/references and no self-reference. Sanitizer retains canonical ID/plain-text markers; RenderBlogContent reconstructs trusted media/gallery/callout/CTA/fixed YouTube/related article HTML and current public catalog cards. Ordered hidden/draft/archive targets disappear on read. JSON IDs normalize to integers, explicit clear differs from omitted fields, and no catalog write occurs. Tiptap atomic nodes and native repeaters preserve visual/HTML content; public native gallery/FAQ remain usable without scripts. Existing preview sandbox limits persist. [ADR-035](decisions/ADR-035-journal-media-and-components.md), [runbook](../runbooks/JOURNAL_MEDIA.md), [evidence](../verification/blog-04/README.md).
+
+## BLOG-05 review branch — draft automation
+
+`codex/blog-05-api` depends on BLOG-04, not deployed. Additive `2026_10_08_000001` creates separate machine actors, Sanctum hashed token records and unique hashed idempotency reservations; nullable blog ownership does not rewrite existing articles. `routes/api.php` adds only versioned draft/media/taxonomy/public-product lookup routes. Feature gate false by default; Sanctum Bearer-only guard never consumes admin cookies. Ability/ownership/state and shared per-actor limits apply. Safe JSON errors/private responses remain scoped to this API prefix; Qammaris App integration routes are unchanged.
+
+SaveBlogPost/SaveBlogMedia share explicit human/machine authorization after row locks and bounded DB deadlock retries; PATCH preserves omitted data. IdempotentBlogWrite reserves a unique key before IO and completes resource pointer/revision inside the shared write transaction via internal callback. Audit/attachment/completion roll back together; newly prepared media compensates on failure. Replay checks current ownership/state. Pending crash needs operator investigation, not automated expiry. RecordBlogPostChange attributes actor_type=machine without a new generic audit layer. AssignBlogDraft provides admin-only draft assignment/revocation with revision/audit, preserving editorial time. BlogAutomation CLI issues only scoped expiring machine tokens after explicit activation; no real tokens were issued.
+
+[ADR-036](decisions/ADR-036-journal-draft-automation.md), [contract](../api/JOURNAL_AUTOMATION.md), [operator/agent guides](../runbooks/JOURNAL_AUTOMATION.md), [evidence](../verification/blog-05/README.md). Staging MySQL/GD/cache, Owner acceptance and production credentials/deployment remain BLOG-06.
+
+## Runtime, deployment, and verification boundaries (current)
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.
 
 Last verified production uses per-commit releases/current link with protected shared env and persistent storage. Existing minute scheduler/watchdog maintain a single database worker for app/feed and image queues. Deployment does not reseed/replace runtime data or implicitly migrate; code rollback retains shared DB/media/checkpoints/audits. File Manager is not required for routine code release. [Deployment runbook](../runbooks/HOSTINGER_GITHUB_DEPLOYMENT.md), `.github/workflows/production-release.yml`, `tools/hostinger/`.
 
-No controlled website write API, AI integration or payment gateway has been implemented. Device/native upload/new upstream event timing and populated production checkout remain Not confirmed in [P9-01](../verification/p9-01/README.md). Tests, historic release counts and unknowns are evidence at their recorded dates, not a claim of fresh production verification during this documentation task.
+The draft-only Journal machine API is implemented on the BLOG-05 review branch and disabled by default; it is not production activation or a catalog/payment/order write API. Device/native upload/new upstream event timing and populated production checkout remain Not confirmed in [P9-01](../verification/p9-01/README.md). Tests, historic release counts and unknowns are evidence at their recorded dates, not fresh production verification.

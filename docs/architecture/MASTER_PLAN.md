@@ -53,6 +53,12 @@ The original program is **not 100% closed**. Outstanding evidence/acceptance:
 
 Use the README read path. Existing current documents have distinct owners; historical snapshots, ADR decision text and dated verification retain provenance. Future features update only affected rules/boundaries/operational steps plus item status/evidence. Audit proposals remain proposals until approved. Every report distinguishes source proof, runtime observations and Not confirmed.
 
-## Later programs, not started
+## Qammaris Journal — separate approved program
+
+Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md) and selected BLOG-01–04 in separate turns. Foundation, CMS/editor, public Journal/search/SEO and responsive owned media/complete components are implemented on dependent review branches, not released. BLOG-04 preserves originals and resolves current catalog cards/ordered relations at render. Order work is assigned separately to Claude Code. Next recommended draft-only agent API → acceptance/release; advance one selected item at a time. [Board](../planning/BACKLOG.md), [BLOG-01 evidence](../verification/blog-01/README.md), [BLOG-02 evidence](../verification/blog-02/README.md), [BLOG-03 evidence](../verification/blog-03/README.md), [BLOG-04 evidence](../verification/blog-04/README.md).
+
+Preserve `/blog/...`, HTML format, IDs/authors/content/media; no old content rewrite. Tiptap vanilla is installed only for the admin editor in BLOG-02; Sanctum/API is still unimplemented. Original P9 remains open; approving this program does not accept those gates or authorize production deployment.
+
+## Other later programs, not started
 
 Website machine-write API requires revocable/scoped actor identity, field allowlists, shared tested operations, idempotency/conflict handling and audit; automation never gets unrestricted MySQL access. Payment gateway requires Owner decisions on acceptance/shipping/quantity, persistent order/line/payment lifecycle, signed/idempotent provider notifications and sandbox testing. These are separately scoped programs, not prerequisites invented for the existing WhatsApp order flow. [ADR-028](decisions/ADR-028-whatsapp-order-checkout.md) records the bounded future payment considerations.
