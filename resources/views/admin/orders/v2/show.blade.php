@@ -63,7 +63,7 @@
             <h2 id="klaim-title" class="text-base font-semibold text-gray-900">Dipegang di Qammaris App</h2>
             @include('admin.orders.v2._notice', ['section' => 'klaim'])
             <ul class="mt-2 space-y-2 text-sm">
-                @foreach ($order->claims as $claim)
+                @foreach ($order->claims->sortBy(fn ($claim) => array_search($claim->task, ['preparation', 'courier_booking', 'handover'], true)) as $claim)
                     <li class="flex flex-wrap items-center justify-between gap-2">
                         <span class="min-w-0"><span class="font-semibold">{{ ['preparation' => 'Packing', 'courier_booking' => 'Pesan kurir/J&T', 'handover' => 'Serah ke kurir'][$claim->task] }}</span>
                             · {{ $claim->holder_display_name }} <span class="text-gray-500">sejak {{ $time($claim->claimed_at) }}</span></span>

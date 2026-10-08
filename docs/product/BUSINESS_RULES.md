@@ -144,6 +144,16 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 - Keputusan refund, pembayaran refund, pembatalan entri, rekonsiliasi, dan persetujuan penyesuaian harga hanya untuk Super Admin.
 - Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
 
+### Integrasi pesanan dengan Qammaris App (ORD-02e, branch review)
+
+- Website tetap menjadi sumber data pesanan. App mengerjakan pesanan V2 lewat API v1 privat (kontrak r4.1); setiap perubahan dari App tercatat dengan nama staf App dan ID request.
+- Di App, staf harus **mengklaim** tugasnya lebih dulu (packing, pesan kurir/J&T, serah ke kurir). Satu tugas hanya dipegang satu orang.
+  - Admin PWA adalah jalur cadangan dan tidak dibatasi klaim.
+  - Super Admin bisa melepas klaim yang macet dengan alasan, dan alasan itu tercatat.
+- Link pesanan di grup WhatsApp membuka Admin PWA. Link baru membuka halaman pesanan di App setelah saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dinyalakan atas persetujuan Owner. Link ini tidak pernah berisi token akses.
+- Selama integrasi aktif, **kendala baru dicatat dari App**. Kendala yang sudah ada tetap bisa diselesaikan di Website. Aturan ini berlaku sampai kontrak r4.2 disetujui Owner.
+- Bila App bermasalah, pesanan tetap dikerjakan di Admin PWA. Pemberitahuan ke App menunggu dan dicoba ulang. Setelah 24 jam, event yang gagal tampil di **Integrasi App** untuk dikirim ulang oleh Super Admin.
+
 ### Status pesanan terpisah (ORD-02c, branch review)
 
 - Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.

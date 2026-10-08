@@ -165,7 +165,26 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
 - `OnlineOrderDetails` is the V2 counterpart of ORD-01 data edits, the customer form, and the customer link.
 - The ORD-01 workflow and bearer staff links refuse V2 orders.
 - `CreateOnlineOrder` options (source, repeat customer, saved address) apply in the order's transaction.
-- `OnlineOrderMessages::staffGroupV2` links to the Admin PWA order page.
+- `OnlineOrderMessages::staffGroupV2` uses the stable task link `admin.orders.task`. It opens the Admin PWA order page, or the App page when `QAMMARIS_ORDER_APP_TASK_LINKS=true`.
+
+### Order API v1 for Qammaris App (ORD-02e, branch review)
+
+```text
+App -> /integrations/qammaris-app/orders/v1/* (routes/integrations.php)
+       AuthenticateOrderApi (flag, size, client, timestamp, HMAC current|previous, rate limit)
+       -> OrderApiReadController | OrderApiWriteController
+          writes: OrderApiIdempotency (key reserved in the effect's transaction, READ COMMITTED, deadlock retry)
+                  -> OnlineOrderFulfillment (same operations as the Admin PWA; OrderActor::app with key + X-Request-Id)
+       -> OrderSerializer -> envelope validated in tests against resources/order-api/openapi-v1.json
+OnlineOrder created/updated (V2) -> integration_outbox -> DeliverOrderWebhook / qammaris:orders:deliver-webhooks (every minute)
+       -> App events URL, fresh timestamp/signature per attempt, give-up 24 h -> Integrasi App (Super Admin) resend
+```
+
+- Tables: `online_order_claims` (unique order+task), `integration_idempotency_keys` (7 days), `integration_outbox`, `online_order_costs` (unique `expense_ref`). The J&T QR is stored on the private `local` disk.
+- App actors must hold the task claim (contract §8.1). Website users are not claim-gated. A Super Admin can release a stuck claim with a reason (`admin.orders.v2.claims.release`).
+- While the API is enabled, Website users cannot open V2 issues until contract r4.2 is approved.
+- `qammaris:order-api:fixtures` builds synthetic staging scenarios and refuses production.
+- [ADR-041](decisions/ADR-041-order-api-v1-implementation.md), [runbook](../runbooks/ORDER_API_STAGING.md), [verification](../verification/ord-02e/README.md).
 
 ### Admin PWA (ORD-02b, branch review)
 
