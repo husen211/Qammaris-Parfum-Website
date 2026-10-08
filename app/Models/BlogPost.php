@@ -46,6 +46,7 @@ class BlogPost extends Model
     ];
 
     protected $casts = [
+        'automation_actor_id' => 'integer',
         'featured_media_id' => 'integer',
         'related_product_ids' => 'array', 'related_article_ids' => 'array', 'faqs' => 'array', 'references' => 'array',
         'is_published' => 'boolean',

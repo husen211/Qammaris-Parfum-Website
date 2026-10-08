@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBlogAutomationController;
 use App\Http\Controllers\Admin\AdminBlogMediaController;
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminBlogTaxonomyController;
@@ -110,6 +111,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
 
     // CRUD Blog Posts
+    Route::get('blog-posts/{blogPost}/automation', [AdminBlogAutomationController::class, 'edit'])->name('blog-automation.edit');
+    Route::put('blog-posts/{blogPost}/automation', [AdminBlogAutomationController::class, 'update'])->name('blog-automation.update');
     Route::get('blog-posts/{blogPost}/media', [AdminBlogMediaController::class, 'index'])->name('blog-media.index');
     Route::post('blog-posts/{blogPost}/media', [AdminBlogMediaController::class, 'store'])->middleware('throttle:10,1')->name('blog-media.store');
     Route::patch('blog-posts/{blogPost}/media/{media}', [AdminBlogMediaController::class, 'update'])->middleware('throttle:10,1')->name('blog-media.update');

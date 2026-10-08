@@ -3,12 +3,15 @@
 namespace App\Actions\Blog;
 
 use App\Exceptions\BlogPostConflict;
+use App\Models\BlogAutomationActor;
 use App\Models\BlogMedia;
 use App\Models\BlogPost;
 use App\Models\User;
 use App\Services\BlogImageProcessor;
 use App\Services\BlogMediaStorage;
+use App\Support\BlogWriteAccess;
 use App\Support\JournalMetadata;
+use Closure;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -38,9 +41,10 @@ class SaveBlogMedia
         ];
     }
 
-    public function handle(BlogPost $post, User $actor, array $data, ?UploadedFile $image = null, ?int $mediaId = null, bool $archive = false): BlogMedia
+    public function handle(BlogPost $post, User|BlogAutomationActor $actor, array $data, ?UploadedFile $image = null, ?int $mediaId = null, bool $archive = false, ?Closure $afterSave = null): BlogMedia
     {
-        abort_unless($actor->exists && $actor->role === 'admin', 403);
+        BlogWriteAccess::assert($actor, $post);
+        abort_if($actor instanceof BlogAutomationActor && ($mediaId !== null || $archive), 403);
         Validator::make($data, $archive ? ['revision' => ['required', 'integer', 'min:1']] : self::rules())->validate();
         $existing = $mediaId ? $post->media()->findOrFail($mediaId) : null;
         if (! $existing && ! $image) {
@@ -60,8 +64,9 @@ class SaveBlogMedia
                 $prepared = $this->processor->prepareBytes($bytes, $existing->disk, $existing->path, $data);
             }
 
-            return DB::transaction(function () use ($post, $actor, $data, $existing, $archive, $prepared) {
+            return DB::transaction(function () use ($post, $actor, $data, $existing, $archive, $prepared, $afterSave) {
                 $post = BlogPost::whereKey($post->id)->lockForUpdate()->firstOrFail();
+                BlogWriteAccess::assert($actor, $post, lock: true);
                 if ($post->revision !== (int) $data['revision']) {
                     throw new BlogPostConflict;
                 }
@@ -85,6 +90,8 @@ class SaveBlogMedia
                     }
                 }
                 if ($media->exists && ! $media->isDirty()) {
+                    $afterSave?->__invoke($media);
+
                     return $media;
                 }
                 $creating = ! $media->exists;
@@ -96,6 +103,7 @@ class SaveBlogMedia
                 $post->content_updated_at = now();
                 $post->save();
                 $this->audit->handle($post, $actor, $archive ? 'media_archived' : ($creating ? 'media_uploaded' : 'media_updated'), $before);
+                $afterSave?->__invoke($media);
                 DB::afterCommit(function () {
                     try {
                         cache()->forget('sitemap.xml');
@@ -105,7 +113,7 @@ class SaveBlogMedia
                 });
 
                 return $media;
-            });
+            }, attempts: 3);
         } catch (Throwable $error) {
             if ($prepared) {
                 $this->processor->discard($prepared);

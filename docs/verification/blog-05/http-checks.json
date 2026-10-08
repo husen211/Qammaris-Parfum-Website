@@ -1,0 +1,72 @@
+{
+  "engine": "Two PHP workers / shared local SQLite",
+  "results": [
+    {
+      "kind": "create",
+      "round": 0,
+      "statuses": [
+        200,
+        201
+      ],
+      "replay": 200,
+      "id": 7
+    },
+    {
+      "kind": "create",
+      "round": 1,
+      "statuses": [
+        201,
+        200
+      ],
+      "replay": 200,
+      "id": 8
+    },
+    {
+      "kind": "create",
+      "round": 2,
+      "statuses": [
+        409,
+        201
+      ],
+      "replay": 200,
+      "id": 9
+    },
+    {
+      "kind": "create",
+      "round": 3,
+      "statuses": [
+        200,
+        201
+      ],
+      "replay": 200,
+      "id": 10
+    },
+    {
+      "kind": "create",
+      "round": 4,
+      "statuses": [
+        201,
+        200
+      ],
+      "replay": 200,
+      "id": 11
+    },
+    {
+      "kind": "media",
+      "statuses": [
+        201,
+        409
+      ],
+      "replay": 200,
+      "mediaCount": 1
+    },
+    {
+      "kind": "patch",
+      "statuses": [
+        409,
+        200
+      ]
+    }
+  ],
+  "nonJsonAccept401": true
+}

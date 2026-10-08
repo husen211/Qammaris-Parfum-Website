@@ -2,8 +2,10 @@
 
 namespace App\Actions\Blog;
 
+use App\Models\BlogAutomationActor;
 use App\Models\BlogPost;
 use App\Models\User;
+use App\Support\BlogWriteAccess;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
@@ -13,6 +15,7 @@ class RecordBlogPostChange
     public function snapshot(BlogPost $post): array
     {
         return $post->only(['title', 'slug', 'author', 'category', 'category_id', 'is_featured', 'is_published', 'featured_image_disk', 'seo_indexable', 'seo_followable']) + [
+            'automation_actor_id' => $post->automation_actor_id,
             'featured_media_id' => $post->featured_media_id,
             'related_product_ids' => $post->related_product_ids ?? [],
             'related_article_ids' => $post->related_article_ids ?? [],
@@ -36,13 +39,14 @@ class RecordBlogPostChange
         ];
     }
 
-    public function handle(BlogPost $post, User $actor, string $action, array $before): void
+    public function handle(BlogPost $post, User|BlogAutomationActor $actor, string $action, array $before): void
     {
         if (DB::transactionLevel() < 1) {
             throw new LogicException('Blog history must commit with the article mutation.');
         }
-        if (! in_array($action, ['created', 'updated', 'archived', 'restored', 'media_uploaded', 'media_updated', 'media_archived'], true)
-            || ! $actor->exists || $actor->role !== 'admin') {
+        BlogWriteAccess::assert($actor, $actor instanceof BlogAutomationActor ? $post : null);
+        if (! in_array($action, ['created', 'updated', 'archived', 'restored', 'media_uploaded', 'media_updated', 'media_archived', 'assigned'], true)
+            || ($actor instanceof BlogAutomationActor && ! in_array($action, ['created', 'updated', 'media_uploaded'], true))) {
             throw new InvalidArgumentException('An authenticated admin and known blog action are required.');
         }
 
@@ -53,7 +57,7 @@ class RecordBlogPostChange
         }
 
         DB::table('blog_post_changes')->insert([
-            'blog_post_id' => $post->getKey(), 'actor_type' => 'admin', 'actor_id' => $actor->getKey(),
+            'blog_post_id' => $post->getKey(), 'actor_type' => $actor instanceof BlogAutomationActor ? 'machine' : 'admin', 'actor_id' => $actor->getKey(),
             'action' => $action, 'revision' => $post->revision,
             'changed_fields' => json_encode($fields, JSON_THROW_ON_ERROR),
             'before' => json_encode(array_intersect_key($before, array_flip($fields)), JSON_THROW_ON_ERROR),

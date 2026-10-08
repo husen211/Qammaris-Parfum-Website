@@ -3,14 +3,18 @@
 namespace App\Actions\Blog;
 
 use App\Exceptions\BlogPostConflict;
+use App\Models\BlogAutomationActor;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\BlogTag;
 use App\Models\User;
 use App\Services\BlogImageProcessor;
 use App\Services\BlogMediaStorage;
+use App\Support\BlogAutomationFields;
 use App\Support\BlogComponentRules;
 use App\Support\BlogHtmlSanitizer;
+use App\Support\BlogWriteAccess;
+use Closure;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -30,11 +34,16 @@ class SaveBlogPost
         private BlogComponentRules $components,
     ) {}
 
-    public function handle(array $data, User $actor, ?BlogPost $post = null, ?UploadedFile $image = null): BlogPost
+    public function handle(array $data, User|BlogAutomationActor $actor, ?BlogPost $post = null, ?UploadedFile $image = null, ?Closure $afterSave = null): BlogPost
     {
-        abort_unless($actor->exists && $actor->role === 'admin', 403);
+        BlogWriteAccess::assert($actor, $post);
+        if ($actor instanceof BlogAutomationActor) {
+            BlogAutomationFields::rejectUnknown($data, [...BlogAutomationFields::EDITORIAL, 'revision']);
+            abort_if($image !== null, 403); // Machine media uses the owned upload endpoint.
+        }
         $path = null;
         $prepared = null;
+        $submittedContent = array_key_exists('content', $data);
 
         try {
             // File IO precedes the short DB transaction; failure never removes the current image.
@@ -43,7 +52,7 @@ class SaveBlogPost
                 $prepared = $this->processor->prepare($image, $this->storage->diskName(), $path);
             }
 
-            return DB::transaction(function () use ($data, $actor, $post, $path, $prepared): BlogPost {
+            return DB::transaction(function () use ($data, $actor, $post, $path, $prepared, $afterSave, $submittedContent): BlogPost {
                 $creating = $post === null;
                 if (! $creating) {
                     $post = BlogPost::query()->whereKey($post->getKey())->lockForUpdate()->firstOrFail();
@@ -55,8 +64,18 @@ class SaveBlogPost
                     }
                 }
 
+                BlogWriteAccess::assert($actor, $post, lock: true);
+                if ($actor instanceof BlogAutomationActor && $post !== null) {
+                    // PATCH preserves omitted fields using the locked current draft.
+                    $current = $post->only(array_diff(BlogAutomationFields::EDITORIAL, ['tag_ids']));
+                    $data = array_replace($current, $data);
+                }
+
                 $before = $creating ? [] : $this->audit->snapshot($post);
                 $post ??= new BlogPost;
+                if ($creating && $actor instanceof BlogAutomationActor) {
+                    $post->automation_actor_id = $actor->id;
+                }
                 $wasPublished = $post->is_published && $post->published_at !== null;
                 $oldCategory = $post->category;
                 $category = BlogCategory::query()->where('name', $data['category'] ?? $oldCategory ?? 'Tips')->lockForUpdate()->first();
@@ -88,6 +107,9 @@ class SaveBlogPost
                             $post->{$field} = $value;
                         }
                     }
+                }
+                if ($actor instanceof BlogAutomationActor && $submittedContent && preg_match('/<img\b/i', $post->content)) {
+                    throw ValidationException::withMessages(['content' => 'Upload images as files and insert owned data-qammaris-media/gallery markers. Raw image URLs are not supported by the agent API.']);
                 }
                 $this->components->validate($post);
                 // Retain the original enum column; new taxonomy does not rewrite legacy rows.
@@ -148,6 +170,8 @@ class SaveBlogPost
                     $post->content_updated_at = now();
                 }
                 if (! $creating && ! $tagsChanged && ! $post->isDirty()) {
+                    $afterSave?->__invoke($post);
+
                     return $post;
                 }
 
@@ -169,10 +193,11 @@ class SaveBlogPost
                 }
                 $post->unsetRelation('tags');
                 $this->audit->handle($post, $actor, $creating ? 'created' : 'updated', $before);
+                $afterSave?->__invoke($post);
                 $this->invalidateSitemap();
 
                 return $post;
-            });
+            }, attempts: 3);
         } catch (Throwable $error) {
             if ($prepared !== null) {
                 $this->processor->discard($prepared);

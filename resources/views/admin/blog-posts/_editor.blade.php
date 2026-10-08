@@ -75,4 +75,7 @@
         </div></details>
         <div class="journal-actions"><button type="submit" formaction="{{ $previewRoute }}" formtarget="_blank" data-preview>Preview ↗</button><button type="submit" class="journal-primary">{{ $editing ? 'Simpan perubahan' : 'Simpan artikel' }}</button><p data-save-feedback role="status"></p></div>
     </form>
+    @if($editing)
+        <p class="journal-notice"><a href="{{ route('admin.blog-automation.edit', $blogPost) }}">Kelola akses agent untuk draft →</a><br>Simpan isian editor sebelum membuka pengaturan akses. Agent tidak dapat menerbitkan artikel.</p>
+    @endif
 </div>
