@@ -14,26 +14,34 @@
 
 @section('content')
 <div class="qammaris-about">
-    <section class="about-hero about-container" aria-labelledby="about-title">
-        <div class="about-hero-copy">
+    {{-- CinematicHero: jahed / 21st demo11494. Real store photography replaces the demo app. --}}
+    <section class="about-cinematic" aria-labelledby="about-title" data-cinematic-hero>
+        <div class="about-container about-cinematic-heading">
             <p class="about-eyebrow">Qammaris Perfumes · Palu</p>
-            <h1 id="about-title">Coba parfum langsung<br><span>di Qammaris.</span></h1>
-            <p class="about-lead">Kami hadir bukan hanya untuk menjual parfum. Qammaris adalah ruang untuk mencoba, membandingkan, dan berdiskusi sampai Anda menemukan aroma yang terasa pas.</p>
-            <div class="about-actions">
-                <a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <x-icon name="arrow-up-right" /></a>
-                <a href="#cerita" class="about-text-link">Kenali cerita kami <x-icon name="arrow-down" /></a>
-            </div>
-            <p class="about-hero-note">Experience store parfum di Palu, Sulawesi Tengah.</p>
+            <h1 id="about-title">Coba dulu.<br><span>Temukan yang cocok.</span></h1>
+            <p class="about-lead">Experience store parfum di Palu. Coba koleksinya langsung, bandingkan aroma, dan diskusikan pilihan Anda dengan kami.</p>
+            <div class="about-actions"><a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <x-icon name="arrow-up-right" /></a><a href="#cerita" class="about-text-link">Kenali Qammaris <x-icon name="arrow-down" /></a></div>
         </div>
-        <figure class="about-hero-photo">
-            <img src="{{ asset('images/store/shelves-1200.webp') }}" srcset="{{ asset('images/store/shelves-480.webp') }} 480w, {{ asset('images/store/shelves-768.webp') }} 768w, {{ asset('images/store/shelves-1200.webp') }} {{ $aboutMedia['shelves']['width'] }}w" sizes="(min-width: 900px) 45vw, 100vw" width="{{ $aboutMedia['shelves']['width'] }}" height="{{ $aboutMedia['shelves']['height'] }}" alt="Rak lengkung dan koleksi parfum di dalam experience store Qammaris" fetchpriority="high" decoding="async">
-            <figcaption>Ruang untuk menemukan aroma pilihan Anda.</figcaption>
-        </figure>
+        <div class="about-cinematic-stage" data-hero-stage>
+            <div class="about-cinematic-card" data-hero-card>
+                <div class="about-cinematic-side"><p class="about-eyebrow">Di dalam Qammaris</p><h2>Parfum lebih mudah dipilih<br>kalau sudah dicoba.</h2><p>Kami hadir bukan hanya untuk menjual parfum. Di sini, Anda bisa mengenal aromanya sebelum memutuskan.</p></div>
+                <figure class="about-cinematic-photo" data-hero-photo>
+                    <img src="{{ asset('images/store/shelves-1200.webp') }}" srcset="{{ asset('images/store/shelves-480.webp') }} 480w, {{ asset('images/store/shelves-768.webp') }} 768w, {{ asset('images/store/shelves-1200.webp') }} {{ $aboutMedia['shelves']['width'] }}w" sizes="(min-width: 1100px) 360px, (min-width: 600px) 480px, 90vw" width="{{ $aboutMedia['shelves']['width'] }}" height="{{ $aboutMedia['shelves']['height'] }}" alt="Rak lengkung dan koleksi parfum di dalam experience store Qammaris" fetchpriority="high" decoding="async">
+                    <figcaption>Koleksi dan tester di toko Qammaris.</figcaption>
+                </figure>
+                <div class="about-cinematic-side about-cinematic-right"><span class="about-cinematic-mark" aria-hidden="true">Q</span><h3>Datang dengan rasa ingin tahu.</h3><p>Semua produk di toko tersedia testernya. Staf kami siap membantu, termasuk saat Anda baru mulai mengenal parfum.</p><a class="about-text-link" href="#pengalaman">Pengalaman di toko <x-icon name="arrow-down" /></a></div>
+            </div>
+        </div>
     </section>
 
-    <nav class="about-section-nav about-container" aria-label="Bagian halaman tentang Qammaris">
-        <a href="#cerita">Cerita kami</a><a href="#pengalaman">Pengalaman di toko</a><a href="#perjalanan">Perjalanan</a><a href="#galeri">Galeri</a><a href="#ulasan">Ulasan</a><a href="#kunjungan">Kunjungan</a>
-    </nav>
+    {{-- ScrollSpy23554 + ScrollProgress18715: native links and a contained mobile rail. --}}
+    <div class="about-nav-wrap">
+        <nav class="about-section-nav about-container" aria-label="Bagian halaman tentang Qammaris" data-about-spy>
+            <span class="about-nav-indicator" aria-hidden="true" hidden></span>
+            <a href="#cerita">Cerita kami</a><a href="#pengalaman">Pengalaman di toko</a><a href="#perjalanan">Perjalanan</a><a href="#galeri">Galeri</a><a href="#ulasan">Ulasan</a><a href="#kunjungan">Kunjungan</a><a href="#faq">FAQ</a>
+        </nav>
+        <div class="about-scroll-progress" aria-hidden="true" data-about-progress></div>
+    </div>
 
     <section id="cerita" class="about-section about-container about-story" aria-labelledby="story-title">
         <div><p class="about-eyebrow">Cerita kami</p><h2 id="story-title">Awal mula Qammaris</h2></div>
@@ -45,16 +53,16 @@
         </div>
     </section>
 
+    {{-- FeatureSection8706 + Steps6087: icon/copy grid and numbered connecting steps. --}}
     <section id="pengalaman" class="about-experience" aria-labelledby="experience-title">
-        <div class="about-container about-experience-layout">
-            <figure class="about-experience-photo"><img src="{{ asset('images/store/visitors-768.webp') }}" srcset="{{ asset('images/store/visitors-480.webp') }} 480w, {{ asset('images/store/visitors-768.webp') }} 768w, {{ asset('images/store/visitors-1200.webp') }} {{ $aboutMedia['visitors']['width'] }}w" sizes="(min-width: 900px) 40vw, 100vw" width="{{ $aboutMedia['visitors']['width'] }}" height="{{ $aboutMedia['visitors']['height'] }}" alt="Pengunjung mencoba dan berdiskusi tentang parfum di dalam toko Qammaris" loading="lazy" decoding="async"></figure>
-            <div><p class="about-eyebrow">Experience store</p><h2 id="experience-title">Datang, coba,<br>ceritakan kebutuhan Anda.</h2><p class="about-lead">Anda tidak perlu sudah mengerti parfum untuk datang ke Qammaris. Kami siap menemani proses menemukan aroma yang Anda sukai.</p>
-                <ol class="about-experience-list">
-                    <li><span aria-hidden="true">01</span><div><h3>Tester untuk setiap produk</h3><p>Semua produk di toko tersedia testernya. Gunakan paper test untuk mencoba dan membandingkan aroma sebelum memutuskan.</p></div></li>
-                    <li><span aria-hidden="true">02</span><div><h3>Rekomendasi sesuai kebutuhan</h3><p>Ceritakan selera, aktivitas, atau kesempatan pemakaiannya. Staf kami siap membantu menjelaskan dan merekomendasikan pilihan yang sesuai.</p></div></li>
-                    <li><span aria-hidden="true">03</span><div><h3>Ruang untuk berdiskusi</h3><p>Tanyakan, eksplorasi, dan luangkan waktu untuk mengenal aromanya. Kami melayani dengan sepenuh hati agar Anda merasa nyaman selama memilih.</p></div></li>
-                </ol>
-            </div>
+        <div class="about-container">
+            <div class="about-feature-heading"><p class="about-eyebrow">Experience store</p><h2 id="experience-title">Tidak harus paham parfum<br>untuk mulai mencoba.</h2><p class="about-lead">Kami siap membantu Anda mengenal pilihan aromanya. Mulai dari kebutuhan sehari-hari, acara tertentu, hingga hadiah.</p></div>
+            <ol class="about-feature-grid">
+                <li><span class="about-step-number" aria-hidden="true">1</span><div><h3>Ceritakan kebutuhan Anda</h3><p>Ceritakan selera, aktivitas, atau kesempatan pemakaiannya. Staf kami siap menjelaskan dan merekomendasikan pilihan yang sesuai.</p></div></li>
+                <li><span class="about-step-number" aria-hidden="true">2</span><div><h3>Coba dan bandingkan</h3><p>Semua produk di toko tersedia testernya. Gunakan paper test untuk mencoba dan membandingkan aroma sebelum memutuskan.</p></div></li>
+                <li><span class="about-step-number" aria-hidden="true">3</span><div><h3>Pilih yang terasa cocok</h3><p>Tanyakan dan luangkan waktu untuk mengenal aromanya. Kami melayani dengan sepenuh hati agar Anda nyaman selama memilih.</p></div></li>
+            </ol>
+            <div class="about-feature-help"><div><h3>Masih ingin tanya-tanya dulu?</h3><p>Kami juga bisa membantu melalui WhatsApp.</p></div><a class="about-button about-button-outline" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Diskusi dengan kami <x-icon name="arrow-up-right" /></a></div>
         </div>
     </section>
 
@@ -65,7 +73,6 @@
             @foreach ($aboutContent['timeline'] as $milestone)
                 <li>
                     <div class="about-timeline-copy"><p class="about-timeline-date">{{ $milestone['date'] }}</p><h3>{{ $milestone['title'] }}</h3><p>{{ $milestone['text'] }}</p></div>
-                    <figure class="about-timeline-photo"><img src="{{ asset('images/store/'.$milestone['photo'].'-768.webp') }}" width="{{ $aboutMedia[$milestone['photo']]['width'] }}" height="{{ $aboutMedia[$milestone['photo']]['height'] }}" alt="{{ collect($aboutContent['gallery'])->firstWhere('key', $milestone['photo'])['alt'] }}" loading="lazy" decoding="async">@if($loop->first)<figcaption>Eksplorasi aroma yang kini bisa Anda lakukan di Qammaris.</figcaption>@endif</figure>
                 </li>
             @endforeach
         </ol>
@@ -74,11 +81,19 @@
 
     <section id="galeri" class="about-gallery-section" aria-labelledby="gallery-title">
         <div class="about-container">
-            <div class="about-section-heading"><div><p class="about-eyebrow">Galeri</p><h2 id="gallery-title">Toko dan proses pembangunannya.</h2></div><p>Lihat toko hari ini dan dokumentasi di balik pembangunannya. Pilih foto untuk melihat lebih dekat.</p></div>
+            <div class="about-section-heading"><div><p class="about-eyebrow">Galeri</p><h2 id="gallery-title">Di balik pembangunan toko.</h2></div><p>Dari rancangan interior hingga pengerjaan rak. Pilih foto untuk melihat detailnya tanpa potongan.</p></div>
             {{-- Adapted from 0xUrvish/fluid-expanding-grid, 21st demo 10467. --}}
+            {{-- GalleryGridBlock10596 adds category filtering and a filter-aware lightbox. --}}
+            <div class="about-gallery-filters" role="group" aria-label="Kategori foto" data-gallery-filters hidden>
+                <button type="button" class="about-button" data-gallery-filter="Semua" aria-pressed="true">Semua</button>
+                @foreach (collect($aboutContent['gallery'])->pluck('category')->unique() as $category)
+                    <button type="button" class="about-button" data-gallery-filter="{{ $category }}" aria-pressed="false">{{ $category }}</button>
+                @endforeach
+            </div>
+            <p class="about-gallery-count" role="status" data-gallery-count></p>
             <div class="about-gallery" data-fluid-gallery>
                 @foreach ($aboutContent['gallery'] as $photo)
-                    <figure data-gallery-item>
+                    <figure data-gallery-item data-photo-category="{{ $photo['category'] }}">
                         <a class="about-gallery-link" href="{{ asset('images/store/'.$photo['key'].'-1200.webp') }}" data-about-photo data-photo-caption="{{ $photo['caption'] }}" data-photo-alt="{{ $photo['alt'] }}" aria-label="Perbesar foto: {{ $photo['title'] }}">
                             <img class="about-photo-contain" src="{{ asset('images/store/'.$photo['key'].'-480.webp') }}" srcset="{{ asset('images/store/'.$photo['key'].'-480.webp') }} 480w, {{ asset('images/store/'.$photo['key'].'-768.webp') }} 768w, {{ asset('images/store/'.$photo['key'].'-1200.webp') }} {{ $aboutMedia[$photo['key']]['width'] }}w" sizes="(min-width: 900px) 60vw, (min-width: 600px) 45vw, 100vw" width="{{ $aboutMedia[$photo['key']]['width'] }}" height="{{ $aboutMedia[$photo['key']]['height'] }}" alt="{{ $photo['alt'] }}" loading="lazy" decoding="async"><span class="about-photo-hint" aria-hidden="true">Lihat foto <x-icon name="arrow-up-right" /></span>
                         </a><figcaption><h3>{{ $photo['title'] }}</h3><p>{{ $photo['caption'] }}</p><button type="button" class="about-gallery-expand" data-expand-photo aria-pressed="false" aria-label="Perbesar {{ $photo['title'] }} di galeri" hidden><span data-expand-label>Perbesar di galeri</span> <x-icon name="plus" /></button></figcaption>
@@ -90,10 +105,11 @@
 
     <section class="about-section about-container about-reel-layout" aria-labelledby="reel-title">
         <div><p class="about-eyebrow">Dari Instagram kami</p><h2 id="reel-title">Kenali suasananya,<br>sebelum datang.</h2><p class="about-lead">Lihat Qammaris melalui video singkat dari akun Instagram kami.</p><p class="about-small-copy">Video dimuat dari Instagram saat Anda memilih untuk menontonnya.</p><a class="about-text-link" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Buka Reels di Instagram <x-icon name="arrow-up-right" /></a></div>
+        {{-- HeroVideoDialog1107: real thumbnail, centered play button and portrait modal. --}}
         <div class="about-reel" data-about-reel data-embed-url="{{ $aboutContent['reel_embed_url'] }}">
-            <div class="about-reel-preview"><img src="{{ asset('images/store/skin-test-480.webp') }}" width="{{ $aboutMedia['skin-test']['width'] }}" height="{{ $aboutMedia['skin-test']['height'] }}" alt="Mencoba parfum langsung di Qammaris" loading="lazy" decoding="async"><button type="button" class="about-button about-button-primary" data-load-reel hidden>Tonton Reels <x-icon name="play" /></button><noscript><a class="about-button about-button-primary" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Tonton di Instagram <x-icon name="arrow-up-right" /></a></noscript></div>
-            <p class="about-reel-status" role="status" data-reel-status></p>
-            <a class="about-reel-fallback about-text-link" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Jika video tidak tampil, buka di Instagram <x-icon name="arrow-up-right" /></a>
+            <div class="about-reel-preview"><img src="{{ asset('images/store/visitors-768.webp') }}" srcset="{{ asset('images/store/visitors-480.webp') }} 480w, {{ asset('images/store/visitors-768.webp') }} 768w, {{ asset('images/store/visitors-1200.webp') }} {{ $aboutMedia['visitors']['width'] }}w" sizes="(min-width: 900px) 375px, 90vw" width="{{ $aboutMedia['visitors']['width'] }}" height="{{ $aboutMedia['visitors']['height'] }}" alt="Suasana interior Qammaris dengan pengunjung dan meja koleksi parfum" loading="lazy" decoding="async"><button type="button" class="about-video-play" data-load-reel aria-label="Tonton Reels suasana Qammaris" aria-haspopup="dialog" hidden><x-icon name="play" /><span>Tonton Reels</span></button><noscript><a class="about-button about-button-primary" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Tonton di Instagram <x-icon name="arrow-up-right" /></a></noscript></div>
+            <p class="about-small-copy">Suasana di dalam toko Qammaris.</p>
+            <a class="about-reel-fallback about-text-link" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Buka Reels di Instagram <x-icon name="arrow-up-right" /></a>
         </div>
     </section>
 
@@ -103,9 +119,14 @@
             @include('store._rating-card', ['rating' => $aboutContent['google_rating'], 'checkedAt' => $aboutContent['rating_checked_at'], 'reviewsUrl' => $aboutContent['reviews_url']])
         </div>
         @if ($aboutContent['reviews'])
-            <div class="about-container about-review-grid">
-                @foreach ($aboutContent['reviews'] as $review)
-                    @include('store._review-card', ['review' => $review, 'reviewsUrl' => $aboutContent['reviews_url']])
+            {{-- ClientFeedback6268: three columns of alternating quote/identity cards. --}}
+            <div class="about-container about-review-columns">
+                @foreach (collect($aboutContent['reviews'])->chunk(2) as $column)
+                    <div class="about-review-column">
+                        @foreach ($column as $review)
+                            @include('store._review-card', ['review' => $review, 'reviewsUrl' => $aboutContent['reviews_url']])
+                        @endforeach
+                    </div>
                 @endforeach
             </div>
         @endif
@@ -116,7 +137,7 @@
         <div><p class="about-eyebrow">Kunjungi kami</p><h2 id="visit-title">Coba parfum langsung<br>di toko kami.</h2><p class="about-lead">Datang untuk mencoba koleksi, mengenal aroma baru, atau sekadar memulai percakapan tentang parfum.</p><dl class="about-store-details"><div><dt>Alamat</dt><dd>{{ $aboutAddress }}</dd></div><div><dt>Jam buka</dt><dd>Sabtu–Kamis · 09.00–21.00 WITA<br>Jumat tutup</dd></div></dl><div class="about-actions"><a class="about-button about-button-primary" href="{{ $aboutContent['reviews_url'] }}" target="_blank" rel="noopener noreferrer">Petunjuk arah <x-icon name="arrow-up-right" /></a><a class="about-text-link" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Hubungi lewat WhatsApp <x-icon name="arrow-up-right" /></a></div><a class="about-text-link about-catalog-link" href="{{ route('products.index') }}">Jelajahi katalog parfum <x-icon name="arrow-right" /></a></div>
     </section>
 
-    <section class="about-section about-container about-faq" aria-labelledby="faq-title"><p class="about-eyebrow">Sebelum berkunjung</p><h2 id="faq-title">Yang mungkin ingin Anda tahu.</h2>
+    <section id="faq" class="about-section about-container about-faq" aria-labelledby="faq-title"><p class="about-eyebrow">Sebelum berkunjung</p><h2 id="faq-title">Yang mungkin ingin Anda tahu.</h2>
         <x-faq name="about-faq" :items="[
             ['question' => 'Apakah semua produk bisa dicoba?', 'answer' => 'Ya. Semua produk di toko tersedia testernya. Anda bisa mencoba dengan paper test dan membandingkan pilihan aromanya.'],
             ['question' => 'Saya belum paham parfum. Apakah bisa dibantu?', 'answer' => 'Tentu. Ceritakan aroma yang Anda sukai dan kebutuhan pemakaiannya. Staf kami siap membantu menjelaskan serta merekomendasikan pilihan.'],
@@ -125,6 +146,15 @@
             ['question' => 'Apakah bisa memesan tanpa datang ke toko?', 'answer' => 'Bisa. Jelajahi katalog website, tambahkan produk ke keranjang, lalu isi data penerima untuk melanjutkan pemesanan melalui WhatsApp.'],
         ]" />
     </section>
+
+    {{-- Cta0118475, text balance via CSS; real catalog instead of a demo download. --}}
+    <section class="about-container about-catalog-cta" aria-labelledby="catalog-cta-title"><h2 id="catalog-cta-title">Lihat koleksinya sebelum datang.</h2><p>Jelajahi katalog parfum, lalu coba pilihan Anda langsung di Qammaris.</p><a class="about-button about-button-primary" href="{{ route('products.index') }}">Jelajahi katalog <x-icon name="arrow-right" /></a></section>
+
+    <dialog class="about-video-dialog" data-video-dialog aria-labelledby="video-dialog-title">
+        <div class="about-dialog-toolbar"><h2 id="video-dialog-title">Suasana Qammaris</h2><button type="button" data-close-video>Tutup <x-icon name="x" /></button></div>
+        <div data-video-frame></div><p class="about-reel-status" role="status" data-reel-status></p>
+        <a class="about-text-link" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Jika video tidak tampil, buka di Instagram <x-icon name="arrow-up-right" /></a>
+    </dialog>
 
     <dialog class="about-photo-dialog" data-about-dialog aria-labelledby="about-photo-caption">
         <div class="about-dialog-toolbar"><p data-photo-position></p><button type="button" data-close-photo aria-label="Tutup foto">Tutup <x-icon name="x" /></button></div>

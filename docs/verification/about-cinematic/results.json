@@ -1,0 +1,99 @@
+[
+  {
+    "width": 320,
+    "touch": true,
+    "pins": 0,
+    "motionRequests": 0,
+    "fullPhotos": true,
+    "filtersAndLightbox": true,
+    "reelOpenCloseReopen": true,
+    "faqDuration": [
+      150,
+      150,
+      400
+    ],
+    "overflow": false,
+    "errors": [],
+    "catalogSingleTap": true
+  },
+  {
+    "width": 390,
+    "touch": true,
+    "pins": 0,
+    "motionRequests": 0,
+    "fullPhotos": true,
+    "filtersAndLightbox": true,
+    "reelOpenCloseReopen": true,
+    "faqDuration": [
+      150,
+      150,
+      400
+    ],
+    "overflow": false,
+    "errors": [],
+    "catalogSingleTap": true
+  },
+  {
+    "width": 768,
+    "touch": false,
+    "pins": 0,
+    "motionRequests": 0,
+    "fullPhotos": true,
+    "filtersAndLightbox": true,
+    "reelOpenCloseReopen": true,
+    "faqDuration": [
+      150,
+      150,
+      400
+    ],
+    "overflow": false,
+    "errors": [],
+    "catalogSingleTap": true
+  },
+  {
+    "check": "bounded cinematic desktop motion",
+    "transforms": [
+      "matrix(0.94, 0, 0, 0.94, 0, 0)",
+      "matrix(0.9998, 0, 0, 0.9998, 0, 0)",
+      "matrix(0.96, 0, 0, 0.96, 0, 0)"
+    ],
+    "pinDistance": 480
+  },
+  {
+    "width": 1440,
+    "touch": false,
+    "pins": 1,
+    "motionRequests": 1,
+    "fullPhotos": true,
+    "filtersAndLightbox": true,
+    "reelOpenCloseReopen": true,
+    "faqDuration": [
+      150,
+      150,
+      400
+    ],
+    "overflow": false,
+    "errors": [],
+    "catalogSingleTap": true
+  },
+  {
+    "mode": "reduced-motion",
+    "nativeFAQ": true,
+    "allGalleryPhotosVisible": true,
+    "heroVisible": true,
+    "motionRequests": 0
+  },
+  {
+    "mode": "no-js",
+    "width": 390,
+    "nativeFAQ": true,
+    "allGalleryPhotosVisible": true,
+    "heroVisible": true,
+    "scriptedAnimations": 0
+  },
+  {
+    "check": "responsive motion cleanup",
+    "desktopToMobileToDesktop": true,
+    "changedReducedMotionRemovesPin": true
+  }
+]
