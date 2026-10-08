@@ -32,3 +32,19 @@ try {
 Base URL is also available as QAMMARIS_JOURNAL_BASE_URL. For other requests use the same in-memory Authorization header, the API contract's fields, stable create/upload keys and latest revision. No new account or admin password is needed. Read current API/docs status rather than treating dated BLOG-05/06 pre-activation evidence as current configuration.
 
 A cloud-only executor has no configured secret from this operation. Use its own scoped actor/token and actual supported secret store when its destination is selected; do not paste this laptop token into chat, a message to another thread, or committed setup scripts.
+
+## Windows process startup failure
+
+If a command fails **before execution** with `helper_unknown_error: setup refresh had errors`, do not report that Journal rejected the request. This is a local executor/sandbox startup failure. The2026-10-08 diagnosis found sharing violations (Windows error32) during sandbox ACL refresh, including the running `cua_node/.../node_repl.exe`. Resetting this chat's browser JS kernel did not repair default sandbox startup.
+
+A scoped approved execution successfully started PowerShell, read the current-user Journal credential without printing it, and fetched taxonomy/owned drafts/catalog (HTTP200). When the tool supports it, request the normal approval flow for that exact Owner-authorized command:
+
+- `sandbox_permissions`: `require_escalated`
+- `shell`: `C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`
+- `login`: `false`
+- `workdir`: the task's permitted local workspace
+- `justification`: describe the bounded Journal request and preceding startup failure; do not include a token.
+
+Honor any approval rejection; this is not permission to override managed policy. Do not automatically disable sandboxing, switch to full access, kill other agents' runtimes, change token abilities, or publish through the draft API. For genuine cloud-only executors, use the configured cloud secret instead; this Windows current-user credential was not installed there. If the approval execution path is unavailable, report that specific missing capability and the diagnostic evidence rather than claiming the website/API is broken.
+
+This is a **tested continuation path**, not a claim that the native Windows sandbox or another agent's session has been repaired. A fresh draft must still be confirmed by the API's returned ID/revision. No article was created in these diagnostic GETs.
