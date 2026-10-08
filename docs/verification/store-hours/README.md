@@ -14,3 +14,7 @@ Verification:
 [Browser results](browser.json), [mobile before](before-390.jpg)/[after](after-390.jpg), [desktop before](before-1440.jpg)/[after](after-1440.jpg).
 
 Release status: ready for review; not deployed. Release requires explicit production approval. Rollback is a source-copy revert, with no database or media recovery step. Next work remains Owner Journal acceptance; do not activate API credentials or start order work as a consequence of this correction.
+
+## Approved production release follow-up
+
+Owner explicitly approved PR34–37; final mainfb7ed28 CI/build/deploy and live About/location/Journal/API/runtime checks passed. [Release proof](../about-release/README.md) supersedes initial pending-release statements above; physical Safari and unrelated acceptance limits remain explicit.

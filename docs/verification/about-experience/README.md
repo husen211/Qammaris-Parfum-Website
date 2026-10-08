@@ -29,3 +29,7 @@ Remaining separate work: reviewed PR34/35 release, source-verifiable legacy Jour
 ## Review source follow-up
 
 Owner supplied eight Google Maps screenshots after the initial implementation. Six complete attributed five-star reviews now render in a responsive grid. [Provenance, changed files, fresh checks and limitations](reviews.md) supersede the initial empty-review source prerequisite; production authorization remains pending. Earlier full-suite/browser numbers above are dated initial implementation evidence, not newly rerun tests for this content follow-up.
+
+## Approved production release follow-up
+
+Owner explicitly approved PR34–37; final mainfb7ed28 CI/build/deploy and live About/location/Journal/API/runtime checks passed. [Release proof](../about-release/README.md) supersedes initial pending-release statements above; physical Safari and unrelated acceptance limits remain explicit.

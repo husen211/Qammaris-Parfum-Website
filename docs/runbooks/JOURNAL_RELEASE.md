@@ -1,6 +1,6 @@
 # Journal release and recovery
 
-BLOG-01–05 are installed on production through the approved2026-10-08 release. [Evidence](../verification/blog-06/README.md) is the runtime reference; older phase reports are dated implementation evidence. Order implementation is excluded. Production machine API remains OFF/no credentials; [activation](JOURNAL_AUTOMATION.md) requires a separate approved operation.
+BLOG-01–05 are installed on production through the approved2026-10-08 release. [Evidence](../verification/blog-06/README.md) is the runtime reference; older phase reports are dated implementation evidence. Order implementation is excluded. Production machine API was subsequently activated for one local actor in a separately approved operation; [activation evidence](../verification/journal-activation/README.md). About release preserved that identity/gate and verified GET access; new credentials still require separate approval.
 
 ## Repeatable release procedure
 
