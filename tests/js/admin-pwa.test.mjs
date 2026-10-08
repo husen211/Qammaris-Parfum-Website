@@ -207,3 +207,42 @@ test('submit guard blocks offline and repeated submits, and keeps the clicked bu
     assert.equal(guardSubmit(form(), { online: false, defaultPrevented: true, schedule }), null, 'a cancelled confirm() is left alone');
     assert.equal(guardSubmit({ ...form(), dataset: { submitGuard: 'off' } }, { online: false, defaultPrevented: false, schedule }), null);
 });
+
+test('busy state labels the pressed button, or the only button, after the form data is built', () => {
+    const scheduled = [];
+    const schedule = (fn) => scheduled.push(fn);
+    const button = (busyLabel) => ({ disabled: false, textContent: 'Simpan', dataset: busyLabel ? { busyLabel } : {} });
+    const form = (buttons) => ({ method: 'post', dataset: {}, setAttribute() {}, querySelectorAll: () => buttons });
+
+    const pressed = button('Menyimpan…');
+    const other = button('Lainnya…');
+    guardSubmit(form([pressed, other]), { online: true, defaultPrevented: false, submitter: pressed, schedule });
+    assert.equal(pressed.textContent, 'Simpan', 'label changes only after the browser built the form data');
+    scheduled.forEach((fn) => fn());
+    assert.equal(pressed.textContent, 'Menyimpan…');
+    assert.equal(other.textContent, 'Simpan');
+    assert.ok(pressed.disabled && other.disabled);
+
+    scheduled.length = 0;
+    const only = button('Mencatat…');
+    guardSubmit(form([only]), { online: true, defaultPrevented: false, schedule });
+    scheduled.forEach((fn) => fn());
+    assert.equal(only.textContent, 'Mencatat…');
+
+    scheduled.length = 0;
+    const plain = button(null);
+    guardSubmit(form([plain]), { online: true, defaultPrevented: false, schedule });
+    scheduled.forEach((fn) => fn());
+    assert.equal(plain.textContent, 'Simpan', 'no label configured: text stays');
+});
+
+test('a field named "method" cannot break the guard (it shadows form.method in the DOM)', () => {
+    const scheduled = [];
+    const form = {
+        method: { tagName: 'SELECT' }, getAttribute: (name) => (name === 'method' ? 'POST' : null),
+        dataset: {}, setAttribute() {}, querySelectorAll: () => [],
+    };
+    assert.equal(guardSubmit(form, { online: false, defaultPrevented: false, schedule: (fn) => scheduled.push(fn) }), 'offline');
+    assert.equal(guardSubmit(form, { online: true, defaultPrevented: false, schedule: (fn) => scheduled.push(fn) }), null);
+    assert.equal(form.dataset.submitting, 'true');
+});

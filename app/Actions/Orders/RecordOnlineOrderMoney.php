@@ -3,6 +3,7 @@
 namespace App\Actions\Orders;
 
 use App\Exceptions\OnlineOrderRejected;
+use App\Exceptions\OrderRevisionConflict;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderPayment;
 use App\Models\User;
@@ -146,7 +147,7 @@ class RecordOnlineOrderMoney
         return DB::transaction(function () use ($order, $revision, $actor, $change): OnlineOrder {
             $locked = OnlineOrder::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
             if ($locked->revision !== $revision) {
-                throw new OnlineOrderRejected('Pesanan sudah berubah. Muat ulang halaman lalu periksa sebelum mengulang.');
+                throw new OrderRevisionConflict($locked->revision);
             }
             $change($locked);
             if ($locked->isV2()) {

@@ -6,6 +6,7 @@ use App\Actions\Orders\CreateOnlineOrder;
 use App\Actions\Orders\OnlineOrderWorkflow;
 use App\Exceptions\DuplicateOnlineOrderSubmission;
 use App\Exceptions\OnlineOrderRejected;
+use App\Exceptions\OrderValidationFailed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\OnlineOrderStoreRequest;
 use App\Http\Requests\Admin\OnlineOrderUpdateRequest;
@@ -32,6 +33,10 @@ class AdminOnlineOrderController extends Controller
         'completed' => 'Selesai',
         'cancelled' => 'Dibatalkan',
         'reimburse' => 'Talangan belum diganti',
+        'issues' => 'Ada kendala',
+        'keep' => 'Keep aktif',
+        'refund' => 'Refund belum selesai',
+        'reconcile' => 'Perlu rekonsiliasi',
         'all' => 'Semua',
     ];
 
@@ -41,7 +46,7 @@ class AdminOnlineOrderController extends Controller
     {
         $filter = array_key_exists((string) $request->query('status'), self::FILTERS) ? (string) $request->query('status') : 'active';
         $search = SearchMatcher::term($request->query('search'));
-        $query = OnlineOrder::query()->with('items')->latest('id');
+        $query = OnlineOrder::query()->with('items')->withCount(['issues as open_issues_count' => fn ($issues) => $issues->where('status', 'open')])->latest('id');
 
         match ($filter) {
             'active' => $query->whereNotIn('stage', [OnlineOrder::STAGE_COMPLETED, OnlineOrder::STAGE_CANCELLED]),
@@ -49,6 +54,10 @@ class AdminOnlineOrderController extends Controller
             'needs_shipping' => $query->where('stage', OnlineOrder::STAGE_PAID),
             'in_transit' => $query->where('stage', OnlineOrder::STAGE_SHIPPED),
             'reimburse' => $query->where('driver_funding', 'staff_advance')->whereNotNull('staff_advance_amount')->whereNull('staff_reimbursed_at'),
+            'issues' => $query->whereHas('issues', fn ($issues) => $issues->where('status', 'open')),
+            'keep' => $query->where('keep_status', 'active'),
+            'refund' => $query->where('payment_status', 'refund_pending'),
+            'reconcile' => $query->where('refund_status', 'needs_reconciliation'),
             'all' => null,
             default => $query->where('stage', $filter),
         };
@@ -63,6 +72,11 @@ class AdminOnlineOrderController extends Controller
             'filter' => $filter,
             'search' => $search,
             'reimburseCount' => OnlineOrder::query()->where('driver_funding', 'staff_advance')->whereNotNull('staff_advance_amount')->whereNull('staff_reimbursed_at')->count(),
+            'attention' => [
+                'reconcile' => OnlineOrder::query()->where('refund_status', 'needs_reconciliation')->count(),
+                'refund' => OnlineOrder::query()->where('payment_status', 'refund_pending')->count(),
+                'issues' => OnlineOrder::query()->whereHas('issues', fn ($issues) => $issues->where('status', 'open'))->count(),
+            ],
         ]);
     }
 
@@ -78,7 +92,9 @@ class AdminOnlineOrderController extends Controller
     public function store(OnlineOrderStoreRequest $request, CreateOnlineOrder $create)
     {
         try {
-            [$order] = $create->handle($request->user(), $request->lines(), $request->customer(), $request->submissionToken());
+            [$order] = $create->handle($request->user(), $request->lines(), $request->customer(), $request->submissionToken(), $request->options());
+        } catch (OrderValidationFailed $invalid) {
+            return back()->withInput()->withErrors($invalid->fields)->with('error', $invalid->getMessage());
         } catch (OnlineOrderRejected $error) {
             return back()->withInput()->with('error', $error->getMessage());
         } catch (DuplicateOnlineOrderSubmission $duplicate) {
@@ -86,11 +102,16 @@ class AdminOnlineOrderController extends Controller
                 ->with('success', 'Pesanan '.$duplicate->order->code.' sudah dibuat sebelumnya. Kiriman ganda tidak membuat pesanan baru.');
         }
 
-        return redirect()->route('admin.orders.show', $order)->with('success', 'Pesanan '.$order->code.' dibuat. Salin link lalu kirim ke customer.');
+        return redirect()->route('admin.orders.show', $order)->with('success', $order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER
+            ? 'Pesanan '.$order->code.' dibuat. Salin link lalu kirim ke customer.'
+            : 'Pesanan '.$order->code.' dibuat dengan data lengkap. Customer tidak perlu mengisi form.');
     }
 
     public function show(OnlineOrder $order, OnlineOrderMessages $messages, InquiryWhatsApp $whatsApp)
     {
+        if ($order->isV2()) {
+            return app(AdminOnlineOrderV2Controller::class)->show($order, $messages, $whatsApp);
+        }
         $order->load(['items', 'events.actor']);
         $customerUrl = route('orders.customer.show', $order->customer_token_encrypted);
         $staffUrl = route('orders.staff.show', $order->staff_token_encrypted);

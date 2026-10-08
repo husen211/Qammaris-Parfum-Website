@@ -140,8 +140,11 @@
 
                 <div>
                     <button type="submit" class="flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-wait disabled:bg-gray-500 hover:bg-gray-800">
-                        {{ $order->stage === 'awaiting_customer' ? 'Kirim data pesanan' : 'Simpan perubahan' }}
+                        {{ $order->stage === 'awaiting_customer' ? 'Kirim data pesanan' : ($requestsChange ? 'Kirim permintaan perubahan' : 'Simpan perubahan') }}
                     </button>
+                    @if ($requestsChange)
+                        <p class="mt-2 text-sm leading-6 text-gray-700">Pesanan sudah diproses, jadi perubahan akan ditinjau toko dulu sebelum dipakai.</p>
+                    @endif
                     <p data-order-feedback role="status" aria-live="polite" class="mt-2 min-h-5 text-sm text-gray-600"></p>
                     @if ($order->stage !== 'awaiting_customer')
                         <a href="{{ route('orders.customer.show', $token) }}" class="mt-1 inline-flex min-h-11 items-center text-base text-gray-700 underline underline-offset-4">Batal, kembali ke status</a>
@@ -149,7 +152,7 @@
                 </div>
             </form>
         @else
-            @if ($order->stage === 'shipped' && $order->fulfillment !== 'pickup')
+            @if ($order->stage === 'shipped' && $order->fulfillment !== 'pickup' && ! ($order->isV2() && $order->delivery_status === 'delivered'))
                 <form method="POST" action="{{ route('orders.customer.received', $token) }}" class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" data-received-form>
                     @csrf
                     <p class="text-base font-semibold text-brand-black">Pesanan sedang dikirim</p>
@@ -182,8 +185,10 @@
                         <div><dt class="text-sm text-gray-600">Paperbag</dt><dd>{{ \App\Models\OnlineOrder::PACKAGING[$order->packaging] ?? '-' }}</dd></div>
                         @if ($order->customer_note)<div><dt class="text-sm text-gray-600">Catatan</dt><dd class="break-words">{{ $order->customer_note }}</dd></div>@endif
                     </dl>
-                    @if ($order->customerCanEdit())
-                        <a href="{{ route('orders.customer.show', ['token' => $token, 'ubah' => 1]) }}" class="mt-4 inline-flex min-h-12 items-center border border-brand-black px-5 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Ubah data</a>
+                    @if ($pendingChange)
+                        <p class="mt-4 border-l-4 border-brand-gold bg-[#FAF8F3] p-3 text-sm leading-6 text-gray-800">Permintaan perubahan Anda sedang ditinjau toko.</p>
+                    @elseif ($canEdit)
+                        <a href="{{ route('orders.customer.show', ['token' => $token, 'ubah' => 1]) }}" class="mt-4 inline-flex min-h-12 items-center border border-brand-black px-5 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ $requestsChange ? 'Ajukan perubahan' : 'Ubah data' }}</a>
                     @else
                         <p class="mt-4 text-sm leading-6 text-gray-600">Data sudah dikunci setelah pembayaran dikonfirmasi. Untuk perubahan, hubungi kami lewat WhatsApp.</p>
                     @endif

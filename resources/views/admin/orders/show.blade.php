@@ -97,6 +97,12 @@
                 </div>
             </section>
 
+            @can('orders.refund')
+                @if ($order->refund_status)
+                    @include('admin.orders.v2._money-panel')
+                @endif
+            @endcan
+
             {{-- Staff group message --}}
             <section class="{{ $card }}" aria-labelledby="group-title">
                 <h2 id="group-title" class="text-lg font-semibold text-gray-900">Pesan untuk grup staf</h2>

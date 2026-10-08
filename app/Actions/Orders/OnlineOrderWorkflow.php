@@ -30,6 +30,7 @@ class OnlineOrderWorkflow
     public function submitCustomerDetails(OnlineOrder $order, array $details): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($details): void {
+            $this->assertLegacy($order);
             if (! $order->customerLinkUsable() || ! $order->customerCanEdit()) {
                 throw new OnlineOrderRejected('Data pesanan ini sudah dikunci karena pembayaran telah dikonfirmasi. Hubungi kami lewat WhatsApp untuk perubahan.');
             }
@@ -46,6 +47,7 @@ class OnlineOrderWorkflow
     public function update(OnlineOrder $order, int $revision, array $data, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($revision, $data, $actor): void {
+            $this->assertLegacy($order);
             $this->assertAdmin($actor);
             if ($order->revision !== $revision) {
                 throw new OnlineOrderRejected('Pesanan ini baru saja diubah (oleh customer, staf, atau tab lain). Muat ulang lalu ulangi perubahan Anda.');
@@ -209,6 +211,7 @@ class OnlineOrderWorkflow
     {
         $token = Str::random(40);
         $this->mutate($order, function (OnlineOrder $order) use ($audience, $actor, $token): void {
+            $this->assertLegacy($order);
             $this->assertAdmin($actor);
             $prefix = $audience === 'staff' ? 'staff' : 'customer';
             $order->{$prefix.'_token_hash'} = OnlineOrder::tokenHash($token);

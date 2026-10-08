@@ -38,8 +38,10 @@ export async function syncServiceWorker({ enabled, url, scope }, container = glo
  * Mutations need the network. Offline submits are stopped before anything is sent, and a second
  * submit while the first is pending is ignored. Returns why a submit was blocked, or null.
  */
-export function guardSubmit(form, { online, defaultPrevented, schedule = (fn) => setTimeout(fn, 0) }) {
-    if (defaultPrevented || form.method?.toLowerCase() !== 'post' || form.dataset.submitGuard === 'off') {
+export function guardSubmit(form, { online, defaultPrevented, submitter = null, schedule = (fn) => setTimeout(fn, 0) }) {
+    // getAttribute: a field named "method" would shadow form.method.
+    const method = (form.getAttribute?.('method') ?? form.method ?? 'get').toString().toLowerCase();
+    if (defaultPrevented || method !== 'post' || form.dataset.submitGuard === 'off') {
         return null;
     }
     if (!online) {
@@ -51,9 +53,17 @@ export function guardSubmit(form, { online, defaultPrevented, schedule = (fn) =>
     form.dataset.submitting = 'true';
     form.setAttribute('aria-busy', 'true');
     // Disable after the browser has built the form data, so the clicked button's value is still sent.
-    schedule(() => form.querySelectorAll('button[type="submit"], button:not([type])').forEach((button) => {
-        button.disabled = true;
-    }));
+    schedule(() => {
+        const buttons = [...form.querySelectorAll('button[type="submit"], button:not([type])')];
+        buttons.forEach((button) => {
+            button.disabled = true;
+        });
+        // Loading state: the pressed button (or the only one) says what is happening.
+        const busy = submitter ?? (buttons.length === 1 ? buttons[0] : null);
+        if (busy?.dataset?.busyLabel) {
+            busy.textContent = busy.dataset.busyLabel;
+        }
+    });
 
     return null;
 }
@@ -81,7 +91,7 @@ export function boot(doc = document, win = window) {
     const showOffline = initConnectionNotice(doc, win);
 
     doc.addEventListener('submit', (event) => {
-        const blocked = guardSubmit(event.target, { online: win.navigator.onLine, defaultPrevented: event.defaultPrevented });
+        const blocked = guardSubmit(event.target, { online: win.navigator.onLine, defaultPrevented: event.defaultPrevented, submitter: event.submitter ?? null });
         if (blocked) {
             event.preventDefault();
             if (blocked === 'offline') {

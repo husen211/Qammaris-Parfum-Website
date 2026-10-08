@@ -2,6 +2,25 @@
 
 Untuk Owner/admin dan staf toko. Aturan: [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md). Menu admin: **Pesanan Online**.
 
+## Alur baru (V2, setelah `ORDERS_V2_ENABLED=true` disetujui untuk dirilis)
+
+Pesanan yang dibuat setelah saklar dinyalakan memakai alur baru. Pesanan lama tetap memakai alur di bawah sampai selesai.
+
+1. **Buat pesanan** (menu bawah **Buat**):
+   - pilih asal chat;
+   - pilih produk;
+   - cari pelanggan lama (nama/nomor WA) atau centang simpan sebagai pelanggan baru;
+   - pilih **Data sudah lengkap** bila nama, HP, cara menerima, dan paperbag sudah jelas di chat. Bila belum, pilih **Kirim link ke customer**.
+2. **Halaman pesanan**, kerjakan dari atas:
+   - **Pembayaran:** catat nominal + metode + sumber konfirmasi; centang Majoo bila sudah dicatat.
+   - **Packing:** isi jumlah yang benar-benar masuk paket untuk setiap barang. Kalau ada yang kurang, catat **Kendala**, jangan konfirmasi packing.
+   - **Kirim:** atur siapa memesan kurir, tandai kurir dipesan/tiba, lalu **Sudah diserahkan**. Untuk J&T: pickup diminta → QR → **Sudah dipickup J&T** (sekaligus tercatat diserahkan). Resi boleh menyusul.
+   - **Keep:** untuk pesanan yang disimpan dulu. Tandai stok sudah dipisahkan; perpanjang atau lepas saat lewat batas.
+3. Pesan grup bisa disalin dari **Link & WA**. Staf membuka link pesanan di aplikasi Qammaris Admin dengan akun masing-masing.
+4. **Super Admin** memakai panel **Keuangan** untuk keputusan refund, pembayaran refund, pembatalan entri yang salah catat, rekonsiliasi pesanan lama, dan menyetujui penyesuaian harga.
+
+Bila muncul **"Pesanan berubah"**, orang lain baru saja mengubah pesanan yang sama. Periksa data terbaru dulu, lalu ulangi bila masih perlu.
+
 ## Owner/admin
 
 1. **Customer sudah fix order** → Pesanan Online → **+ Buat pesanan** → cari produk → atur jumlah → **Buat pesanan & link**.

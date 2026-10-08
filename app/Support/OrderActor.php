@@ -28,6 +28,17 @@ final class OrderActor
         return new self(null, $appUserId, $displayName, $appRole);
     }
 
+    /** The customer through their order link; may only confirm receipt of a delivery. */
+    public static function customer(): self
+    {
+        return new self(null, null, 'Customer', 'customer');
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->user === null && $this->appRole === 'customer';
+    }
+
     /** Owner-level for override rules: Super Admin on the Website, `owner` in the App. */
     public function isOwner(): bool
     {
@@ -47,8 +58,10 @@ final class OrderActor
     /** @return array<string, mixed> event columns */
     public function eventAttributes(): array
     {
-        return $this->user
-            ? ['actor_type' => 'admin', 'actor_user_id' => $this->user->id]
-            : ['actor_type' => 'app', 'actor_app_user_id' => $this->appUserId, 'actor_display_name' => $this->displayName];
+        return match (true) {
+            $this->user !== null => ['actor_type' => 'admin', 'actor_user_id' => $this->user->id],
+            $this->isCustomer() => ['actor_type' => 'customer'],
+            default => ['actor_type' => 'app', 'actor_app_user_id' => $this->appUserId, 'actor_display_name' => $this->displayName],
+        };
     }
 }

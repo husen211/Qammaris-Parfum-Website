@@ -157,6 +157,16 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - Shared V2 lock/revision/settle: `Concerns\MutatesV2Order`.
 - `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
 
+### V2 order screens (ORD-02d, branch review)
+
+- `AdminOnlineOrderController@show` hands V2 orders to `AdminOnlineOrderV2Controller`.
+- Routes: `admin.orders.v2.*` (`can:orders.manage`); `admin.orders.money.*` (`can:orders.refund`, also for ORD-01 reconciliation); `admin.orders.customer-search` (JSON).
+- Each action calls exactly one V2 operation with the posted revision. Typed exceptions become a section-scoped `order_notice` (success / error / conflict) and field errors.
+- `OnlineOrderDetails` is the V2 counterpart of ORD-01 data edits, the customer form, and the customer link.
+- The ORD-01 workflow and bearer staff links refuse V2 orders.
+- `CreateOnlineOrder` options (source, repeat customer, saved address) apply in the order's transaction.
+- `OnlineOrderMessages::staffGroupV2` links to the Admin PWA order page.
+
 ### Admin PWA (ORD-02b, branch review)
 
 ```text

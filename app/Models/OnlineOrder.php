@@ -244,6 +244,11 @@ class OnlineOrder extends Model
 
     public function staffLinkUsable(): bool
     {
+        // D6: V2 orders are handled by signed-in staff in the Admin PWA (and later the App), never by a bearer link.
+        if ($this->isV2()) {
+            return false;
+        }
+
         return $this->closed_at === null || $this->closed_at->gt(now()->subDays(7));
     }
 

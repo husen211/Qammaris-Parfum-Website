@@ -135,6 +135,15 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 - Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
 - **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
 
+### Layar pesanan V2 (ORD-02d, branch review)
+
+- Staff Order membuat pesanan dari chat WhatsApp/Instagram: pilih produk, pilih pelanggan lama (dan alamat tersimpan) atau pelanggan baru, lalu pilih **data sudah lengkap** atau **kirim link ke customer**.
+- Bila data sudah lengkap dari chat, customer **tidak perlu** membuka form. Link tetap bisa dipakai customer untuk melihat status.
+- Form customer tetap sederhana: produk sudah terisi, tiga cara menerima, dua pilihan paperbag. Setelah Lunas atau packing dimulai, perubahan dari customer menjadi permintaan yang ditinjau toko.
+- Staff Order boleh menandai Lunas dengan sumber konfirmasi (bukti di chat, bukti diunggah, Majoo).
+- Keputusan refund, pembayaran refund, pembatalan entri, rekonsiliasi, dan persetujuan penyesuaian harga hanya untuk Super Admin.
+- Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
+
 ### Status pesanan terpisah (ORD-02c, branch review)
 
 - Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.

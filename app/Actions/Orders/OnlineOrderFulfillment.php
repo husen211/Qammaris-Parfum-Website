@@ -272,6 +272,8 @@ class OnlineOrderFulfillment
     /** Optional confirmation that the customer received the parcel; separate from handover (D10). */
     public function confirmDelivery(OnlineOrder $order, int $revision, OrderActor $actor, string $confirmedBy = 'website', ?DateTimeInterface $occurredAt = null): OnlineOrder
     {
+        $confirmedBy = $actor->isCustomer() ? 'customer' : $confirmedBy;
+
         return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($confirmedBy, $occurredAt): void {
             if ($order->handover_status !== 'handed_over' || $order->fulfillment === 'pickup') {
                 throw new InvalidOrderTransition('Konfirmasi diterima hanya untuk paket yang sudah diserahkan ke kurir.');
@@ -283,7 +285,7 @@ class OnlineOrderFulfillment
             $order->delivered_at = $occurredAt ?? now();
             $order->delivery_confirmed_by = in_array($confirmedBy, ['customer', 'website', 'app'], true) ? $confirmedBy : 'website';
             $this->record('delivered', 'Diterima customer');
-        });
+        }, allowCustomer: true);
     }
 
     public function openIssue(OnlineOrder $order, ?int $revision, OrderActor $actor, string $type, string $note, ?string $lineId = null, ?int $reportedQuantity = null): OnlineOrder
@@ -386,9 +388,9 @@ class OnlineOrderFulfillment
         });
     }
 
-    private function run(OnlineOrder $order, ?int $revision, OrderActor $actor, Closure $change): OnlineOrder
+    private function run(OnlineOrder $order, ?int $revision, OrderActor $actor, Closure $change, bool $allowCustomer = false): OnlineOrder
     {
-        if (! $actor->canManageOrders()) {
+        if (! $actor->canManageOrders() && ! ($allowCustomer && $actor->isCustomer())) {
             throw new OrderActionNotAllowed('Akun ini tidak dapat menangani pesanan.');
         }
         $this->lastEvent = null;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOnlineOrderController;
+use App\Http\Controllers\Admin\AdminOnlineOrderV2Controller;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
@@ -143,6 +144,39 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
     // Online orders (Super Admin, Staff Order, legacy admin); money changes need orders.finance
     Route::middleware('can:orders.manage')->group(function () {
         Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
+        Route::get('orders/customer-search', [AdminOnlineOrderV2Controller::class, 'customerSearch'])->name('orders.customer-search');
+
+        // V2 orders (ORD-02d): every action is a V2 domain operation; each form posts its revision.
+        Route::prefix('orders/{order}/v2')->name('orders.v2.')->controller(AdminOnlineOrderV2Controller::class)->group(function () {
+            Route::patch('details', 'updateDetails')->name('details');
+            Route::post('customer-link', 'regenerateCustomerLink')->name('customer-link');
+            Route::post('payments', 'recordPayment')->name('payments');
+            Route::post('preparation', 'startPreparation')->name('preparation');
+            Route::post('pack', 'pack')->name('pack');
+            Route::post('courier-responsibility', 'courierResponsibility')->name('courier-responsibility');
+            Route::post('courier', 'courier')->name('courier');
+            Route::post('jnt', 'jnt')->name('jnt');
+            Route::post('handover', 'handover')->name('handover');
+            Route::post('delivery', 'delivery')->name('delivery');
+            Route::post('issues', 'openIssue')->name('issues');
+            Route::post('issues/{issue}/resolve', 'resolveIssue')->name('issues.resolve');
+            Route::post('keep/{action}', 'keep')->whereIn('action', ['start', 'stock', 'extend', 'release'])->name('keep');
+            Route::post('cancel', 'cancel')->name('cancel');
+            Route::post('customer', 'linkCustomer')->name('customer');
+            Route::post('customer/address', 'saveAddress')->name('customer.address');
+            Route::post('customer/address/use', 'useAddress')->name('customer.address.use');
+            Route::post('adjustments', 'requestAdjustment')->name('adjustments');
+            Route::post('adjustments/{adjustment}/{decision}', 'decideAdjustment')->whereIn('decision', ['approve', 'reject'])
+                ->middleware('can:orders.approve-adjustment')->name('adjustments.decide');
+            Route::post('change-requests/{changeRequest}/{decision}', 'decideChange')->whereIn('decision', ['approve', 'reject'])->name('change-requests.decide');
+        });
+        // Super Admin money panel; also reconciles ORD-01 orders, so it is not V2-only.
+        Route::prefix('orders/{order}/money')->name('orders.money.')->controller(AdminOnlineOrderV2Controller::class)->middleware('can:orders.refund')->group(function () {
+            Route::post('refund-decision', 'decideRefund')->name('refund-decision');
+            Route::post('refunds', 'recordRefund')->name('refunds');
+            Route::post('ledger/{entry}/reverse', 'reverseEntry')->name('reverse');
+            Route::post('reconcile', 'reconcile')->name('reconcile');
+        });
         Route::patch('orders/{order}/advance', [AdminOnlineOrderController::class, 'advance'])->name('orders.advance');
         Route::patch('orders/{order}/revert', [AdminOnlineOrderController::class, 'revert'])->middleware('can:orders.finance')->name('orders.revert');
         Route::patch('orders/{order}/cancel', [AdminOnlineOrderController::class, 'cancel'])->name('orders.cancel');

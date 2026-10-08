@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Actions\Orders\CreateOnlineOrder;
+use App\Actions\Orders\OnlineOrderDetails;
 use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\OnlineOrderWorkflow;
 use App\Actions\Orders\RecordOnlineOrderMoney;
 use App\Exceptions\InvalidOrderTransition;
+use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderActionNotAllowed;
 use App\Exceptions\OrderRevisionConflict;
 use App\Exceptions\OrderValidationFailed;
@@ -61,7 +63,9 @@ class OnlineOrderV2OperationsTest extends TestCase
         $this->assertNull(OnlineOrderState::queue($waiting));
         $this->assertCount(2, array_filter($waiting->items->pluck('line_id')->all(), fn ($id) => preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/', $id)));
 
-        $active = app(OnlineOrderWorkflow::class)->submitCustomerDetails($waiting, $this->details('local_delivery'));
+        $this->assertFalse(app(OnlineOrderDetails::class)->submitByCustomer($waiting, $this->details('local_delivery')), 'First submit applies directly');
+        $active = $waiting->fresh();
+        $this->assertRejected(fn () => app(OnlineOrderWorkflow::class)->submitCustomerDetails($waiting, $this->details('pickup')), OnlineOrderRejected::class, 'legacy workflow refuses V2');
         $this->assertSame(['active', 'details_received', 'store', 'unassigned'], [$active->lifecycle, $active->stage, $active->courier_booking_responsibility, $active->courier_status]);
         $this->assertSame('needs_handling', OnlineOrderState::queue($active));
 

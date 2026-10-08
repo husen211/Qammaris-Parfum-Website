@@ -61,6 +61,59 @@ final class OnlineOrderMessages
         return implode("\n", $lines);
     }
 
+    /**
+     * V2 group message (ORD-02d). Staff act in the Admin PWA after signing in, so the message links to the order
+     * page there instead of a bearer task link (D6).
+     */
+    public function staffGroupV2(OnlineOrder $order, string $adminUrl): string
+    {
+        $local = $order->fulfillment === 'local_delivery';
+        $storeBooks = $local && $order->courier_booking_responsibility === 'store' && $order->courier_status === 'unassigned';
+        $jntNeeded = $order->fulfillment === 'intercity' && $order->jnt_status === 'not_requested';
+        $lines = [match (true) {
+            $order->fulfillment === 'pickup' => '*Pesanan online '.$order->code.' — DIAMBIL DI TOKO*',
+            $jntNeeded => '*MOHON REQUEST PICKUP J&T — '.$order->code.'*',
+            $storeBooks => '*MOHON DIPESANKAN KURIR — '.$order->code.'*',
+            $local && $order->courier_booking_responsibility === 'customer' => '*Pesanan online '.$order->code.' — KURIR DIPESAN CUSTOMER*',
+            default => '*Pesanan online '.$order->code.'*',
+        }];
+        $lines[] = 'Nama: '.$this->text($order->customer_name ?? '(belum diisi customer)');
+        $lines[] = 'Pesanan: '.$order->items->map(fn (OnlineOrderItem $item) => $this->text($item->label()).' '.$item->quantity.'x')->implode(', ');
+        $lines[] = 'Kemasan: '.(OnlineOrder::PACKAGING[$order->packaging] ?? '-');
+        if ($storeBooks || $order->fulfillment === 'intercity') {
+            $lines[] = 'HP penerima: '.$this->text($order->customer_phone ?? '-');
+            $lines[] = $order->fulfillment === 'intercity'
+                ? 'Alamat: '.($this->text(trim(($order->address ?? '').' '.($order->postcode ?? ''))) ?: '-')
+                : 'Lokasi: '.($order->location_url ?: 'sharelok diteruskan di grup ini');
+            if ($local && $order->address) {
+                $lines[] = 'Patokan: '.$this->text($order->address);
+            }
+        }
+        if ($order->keep_status === 'active') {
+            $lines[] = 'KEEP sampai '.$order->keep_until?->timezone('Asia/Makassar')->locale('id')->translatedFormat('j M, H.i')
+                .($order->keep_stock_confirmed_at ? ' (stok sudah dipisahkan)' : ' — mohon pisahkan stok');
+        }
+
+        $lines[] = '';
+        $notes = [$order->payment_status === 'paid'
+            ? 'sudah lunas'.($order->payment_method ? ' ('.mb_strtolower(OnlineOrder::PAYMENT_METHODS[$order->payment_method]).')' : '')
+            : 'belum lunas'];
+        if ($shipping = $this->shippingNote($order)) {
+            $notes[] = $shipping;
+        }
+        if ($order->staff_note) {
+            $notes[] = $this->text($order->staff_note);
+        }
+        $lines[] = 'Note: '.implode(', ', $notes);
+        if ($order->customer_note) {
+            $lines[] = 'Catatan customer: '.$this->text($order->customer_note);
+        }
+        $lines[] = '';
+        $lines[] = 'Buka pesanan di aplikasi Qammaris Admin (login akun masing-masing): '.$adminUrl;
+
+        return implode("\n", $lines);
+    }
+
     public function customerInvite(OnlineOrder $order, string $customerUrl): string
     {
         return implode("\n", [
