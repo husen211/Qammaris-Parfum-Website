@@ -1,0 +1,104 @@
+{
+  "phase": "after",
+  "checks": [
+    {
+      "type": "landing",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "type": "article",
+      "width": 320,
+      "status": 200,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "type": "landing",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "type": "article",
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "type": "landing",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "type": "article",
+      "width": 390,
+      "status": 200,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "type": "landing",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "type": "article",
+      "width": 768,
+      "status": 200,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "type": "landing",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "type": "article",
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "brokenImages": 0
+    }
+  ],
+  "articleChecks": [
+    {
+      "status": 200,
+      "canonicalPresent": true,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "BlogPosting",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "status": 200,
+      "canonicalPresent": true,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "BlogPosting",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "status": 200,
+      "canonicalPresent": true,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "BlogPosting",
+        "BreadcrumbList"
+      ]
+    }
+  ],
+  "touch": {
+    "singleTapNavigated": true,
+    "scrollMoved": true,
+    "touchPoints": 1,
+    "hover": false
+  },
+  "errors": []
+}

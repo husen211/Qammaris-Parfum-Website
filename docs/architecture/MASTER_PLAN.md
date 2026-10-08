@@ -55,9 +55,9 @@ Use the README read path. Existing current documents have distinct owners; histo
 
 ## Qammaris Journal — separate approved program
 
-Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md) and selected BLOG-01–04 in separate turns. Foundation, CMS/editor, public Journal/search/SEO and responsive owned media/complete components are implemented on dependent review branches, not released. BLOG-04 preserves originals and resolves current catalog cards/ordered relations at render. Order work is assigned separately to Claude Code. Next recommended draft-only agent API → acceptance/release; advance one selected item at a time. [Board](../planning/BACKLOG.md), [BLOG-01 evidence](../verification/blog-01/README.md), [BLOG-02 evidence](../verification/blog-02/README.md), [BLOG-03 evidence](../verification/blog-03/README.md), [BLOG-04 evidence](../verification/blog-04/README.md).
+Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md), BLOG-01–05 implementation and the blog-only release. PR31 installed foundation/CMS/public Journal/SEO/media/components/draft API code in production on2026-10-08 after authorized MySQL staging rehearsal and targeted production migrations. [Release evidence](../verification/blog-06/README.md) and [board](../planning/BACKLOG.md) distinguish delivered code from remaining Owner/editorial/device/credential review. Order PR27/32 are explicitly excluded.
 
-Preserve `/blog/...`, HTML format, IDs/authors/content/media; no old content rewrite. Tiptap vanilla is installed only for the admin editor in BLOG-02; Sanctum/API is still unimplemented. Original P9 remains open; approving this program does not accept those gates or authorize production deployment.
+Preserve `/blog/...`, HTML, IDs/authors/content/media. Tiptap vanilla is admin-only; Sanctum is implemented with separate machine identity/ownership, strict draft-only abilities and no catalog writes. Production machine API remains OFF with no actor/token; credential activation needs a separate operation. Original P9 remains open. This completed release is not permission for later automatic deployment, new credential grants or article rewrites.
 
 ## Other later programs, not started
 

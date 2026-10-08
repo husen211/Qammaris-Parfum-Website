@@ -1,13 +1,13 @@
 # BLOG-01 — preparation and safe release boundaries
 
-This is a runbook, not release authorization. Current implementation is an unmerged review branch. [ADR-032](../architecture/decisions/ADR-032-blog-write-foundation.md), [evidence](../verification/blog-01/README.md), [program](../planning/QAMMARIS_JOURNAL.md).
+This runbook does not authorize future operations. BLOG-01 is installed through the approved2026-10-08 [Journal release](../verification/blog-06/README.md). [ADR-032](../architecture/decisions/ADR-032-blog-write-foundation.md), [evidence](../verification/blog-01/README.md), [program](../planning/QAMMARIS_JOURNAL.md).
 
 ## Behavior and configuration
 
 - Admin create/edit uses SaveBlogPost, archive/restore uses ChangeBlogPostArchive; explicit actor and audit in the business transaction. Existing DELETE archives, PATCH restore returns draft. Public URLs/slugs preserved.
 - Edit/archive/restore submits current revision. Stale JSON receives409; browser retains typed text and offers reload. Copy unsaved work before reload; choose upload again after failed save (browsers cannot retain a file input).
 - BLOG_MEDIA_DISK selects a Laravel disk, default public. New files live under blog/; persist shared storage and expose that disk's normal URL. No package/cloud requirement. Existing image paths remain unchanged and disk remains null until a successful new upload.
-- Upload JPEG/PNG/WebP <=5MB and <=6000px per side. Original stored; no resizing yet. Ensure web/PHP upload limits allow the validated size on staging before release. Extension/MIME alone do not authorize other file types.
+- Upload JPEG/PNG/WebP <=5MB and <=6000px per side. Original retained; BLOG-04 additionally creates responsive/cropped variants. Ensure web/PHP upload limits allow the validated size on staging before release. Extension/MIME alone do not authorize other file types.
 - After-commit sitemap invalidation failure does not undo committed saves. Existing cache TTL remains; fresh scheduled-boundary SEO behavior is BLOG-03.
 
 ## Rehearsal before approved rollout
@@ -29,6 +29,6 @@ Archive keeps content/media/date; restore becomes draft. Physical purge is not i
 
 Application recovery must keep archive/public-visibility filtering, new disk resolver, revision controls and transactionally coupled audit. A pre-BLOG-01 rollback can re-expose archived published articles and break new media URLs; prepare a compatible rollback or forward fix. Keep additive columns/table/history/files. Do not run migration down against populated history. If a problem occurs before code activation, leave the additive schema unused while repairing the build.
 
-## Not confirmed yet
+## Historical phase limits
 
-Staging/production MySQL migration and lock contention, live upload permissions/config, server image-processing support, genuine touch/Safari, live infrastructure and release. BLOG-01 does not activate automation tokens or new API endpoints. Next item is BLOG-02 only after Owner direction.
+The original BLOG-01 report did not confirm staging/production MySQL/runtime/device/release. Those bounded checks were subsequently performed in [BLOG-06](../verification/blog-06/README.md); physical Safari, production native upload, sustained MySQL load and Owner walkthrough remain unconfirmed. Production machine API stays OFF; no automatic next phase.

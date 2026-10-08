@@ -1,6 +1,6 @@
-# Qammaris Journal — editorial CMS (BLOG-02–04 review)
+# Qammaris Journal — editorial CMS (BLOG-02–04)
 
-Not deployed. BLOG-01 is a prerequisite. Owner must separately approve staging migrations and production release.
+Installed with BLOG-01–05 through approved PR31. [Release evidence](../verification/blog-06/README.md) supersedes the old phase pending statements; future migrations/releases still need approval.
 
 ## Owner workflow
 
@@ -23,4 +23,4 @@ Dedicated frontend entry is in Vite manifest and only blog editor pages load it.
 
 Recovery: retain new tables/columns, pivot rows, original/old images and BLOG-01 audit history. Use compatible rollback/forward fix understanding category_id, revision, archive and image disk. Do not migrate down populated tables or switch to pre-Journal code. Back up current production before an approved migration/release; the historical launch waiver is not applicable.
 
-Media/crops and live product-price cards are implemented in BLOG-04 review. API tokens/production activation remain later items. Evidence and limits: [BLOG-02](../verification/blog-02/README.md), [BLOG-03](../verification/blog-03/README.md), [BLOG-04](../verification/blog-04/README.md).
+Media/crops and live product-price cards are implemented in BLOG-04; the BLOG-05 API code is installed with its production gate OFF. Production credential activation remains separate. Implementation evidence: [BLOG-02](../verification/blog-02/README.md), [BLOG-03](../verification/blog-03/README.md), [BLOG-04](../verification/blog-04/README.md). Current release/limits: [BLOG-06](../verification/blog-06/README.md).

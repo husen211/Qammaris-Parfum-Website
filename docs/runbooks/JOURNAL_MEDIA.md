@@ -1,6 +1,6 @@
-# Journal media and components — BLOG-04 review
+# Journal media and components — BLOG-04
 
-Not deployed. BLOG-01/02/03 and additive migration2026_10_07_000005 are prerequisites. No automatic historical media backfill or purge. Owner approves staging writes and production release separately.
+Installed with BLOG-01/02/03 and additive000005 through approved PR31 ([release evidence](../verification/blog-06/README.md)). No automatic historical media backfill or purge. Owner approves staging writes and production release separately.
 
 ## Editor workflow
 
