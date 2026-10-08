@@ -44,7 +44,7 @@
             <p>JPEG, PNG, atau WebP · maksimal 5 MB. Gambar sebelumnya tetap disimpan.</p>
             <x-journal-field name="featured_image_alt" label="Teks alternatif gambar utama" :value="$blogPost?->featured_image_alt" maxlength="255" placeholder="Jelaskan isi gambar secara singkat"/>
             @if($editing)
-                <p>Simpan perubahan artikel terlebih dahulu, lalu buka pengelola media. Kembali ke editor akan memuat revision terbaru.</p><a href="{{ route('admin.blog-media.index', $blogPost) }}">Upload media dan tinjau crop →</a>
+                <p>Simpan perubahan artikel terlebih dahulu, lalu buka pengelola media. Kembali ke editor akan memuat revision terbaru.</p><a href="{{ route('admin.blog-media.index', $blogPost) }}">Upload media dan tinjau crop <x-icon name="arrow-right" /></a>
                 @if($mediaChoices->isNotEmpty())<label for="featured_media_id">Pilih gambar utama dari media artikel</label><select id="featured_media_id" name="featured_media_id"><option value="">Pertahankan gambar saat ini</option>@foreach($mediaChoices as $media)<option value="{{ $media->id }}" @selected((int)old('featured_media_id', $blogPost->featured_media_id) === $media->id)>{{ $media->alt ?: 'Media '.$media->id }}</option>@endforeach</select><p>Upload file utama baru didahulukan bila keduanya dipilih.</p>@endif
             @else<p>Simpan draft untuk mengunggah media tambahan, galeri, metadata hak pakai dan crop.</p>@endif
         </div></details>
@@ -63,7 +63,7 @@
         </div></details>
         <details class="journal-section" @if($errors->has('tag_ids') || $errors->has('tag_ids.*')) open @endif><summary>Relasi <span>Tag dan tautan produk</span></summary><div class="journal-section-body">
             <input type="hidden" name="tags_present" value="1"><fieldset id="tag_ids"><legend>Tag artikel</legend><div class="journal-tags">@forelse($tags as $tag)<label><input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" @checked(in_array($tag->id, $selectedTags, true))>{{ $tag->name }}{{ !$tag->is_active ? ' (nonaktif)' : '' }}</label>@empty<p>Belum ada tag.</p>@endforelse</div></fieldset>
-            <a href="{{ route('admin.blog-taxonomy.index') }}" target="_blank" rel="noopener">Kelola kategori dan tag ↗</a>
+            <a href="{{ route('admin.blog-taxonomy.index') }}" target="_blank" rel="noopener">Kelola kategori dan tag <x-icon name="arrow-up-right" /></a>
             <div data-product-insert hidden><label for="editor-product">Produk katalog</label><select id="editor-product"><option value="">Pilih produk</option>@foreach($products as $product)<option value="{{ $product->id }}">{{ $product->name }}</option>@endforeach</select><button type="button" data-insert-product>Tambahkan tautan produk ke artikel</button></div>
             @include('admin.blog-posts._relations')
         </div></details>
@@ -73,9 +73,9 @@
             <x-journal-field name="published_at" label="Waktu tayang ({{ config('app.timezone') }})" type="datetime-local" :value="$blogPost?->published_at?->format('Y-m-d\TH:i')"/>
             <p>Artikel baru: kosongkan agar tayang sekarang. Saat mengedit, waktu lama dipertahankan bila dikosongkan. Draft tidak tampil di publik.</p>
         </div></details>
-        <div class="journal-actions"><button type="submit" formaction="{{ $previewRoute }}" formtarget="_blank" data-preview>Preview ↗</button><button type="submit" class="journal-primary">{{ $editing ? 'Simpan perubahan' : 'Simpan artikel' }}</button><p data-save-feedback role="status"></p></div>
+        <div class="journal-actions"><button type="submit" formaction="{{ $previewRoute }}" formtarget="_blank" data-preview>Preview <x-icon name="arrow-up-right" /></button><button type="submit" class="journal-primary">{{ $editing ? 'Simpan perubahan' : 'Simpan artikel' }}</button><p data-save-feedback role="status"></p></div>
     </form>
     @if($editing)
-        <p class="journal-notice"><a href="{{ route('admin.blog-automation.edit', $blogPost) }}">Kelola akses agent untuk draft →</a><br>Simpan isian editor sebelum membuka pengaturan akses. Agent tidak dapat menerbitkan artikel.</p>
+        <p class="journal-notice"><a href="{{ route('admin.blog-automation.edit', $blogPost) }}">Kelola akses agent untuk draft <x-icon name="arrow-right" /></a><br>Simpan isian editor sebelum membuka pengaturan akses. Agent tidak dapat menerbitkan artikel.</p>
     @endif
 </div>

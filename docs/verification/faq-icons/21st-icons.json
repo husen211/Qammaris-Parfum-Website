@@ -1,0 +1,42 @@
+{
+  "star": {
+    "id": "3ba160ee-4bda-4ace-96d3-4ad09921c828",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "plus": {
+    "id": "4a99ce17-415f-4cfd-aece-86df7d484ecf",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "minus": {
+    "id": "48d70fd5-80aa-4cea-ad4e-80ca0a547178",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "arrow-up-right": {
+    "id": "cde7859c-35e4-4f70-991f-3b19aec3ab89",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "arrow-right": {
+    "id": "f63bcea8-e50d-4b7b-a764-6773aed4000a",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "arrow-left": {
+    "id": "06a574a1-0b57-49f4-b86c-6c6533ba88c7",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "arrow-down": {
+    "id": "a58ff292-7c59-4473-ad84-12df17d8bf3d",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "arrow-up": {
+    "id": "343662c8-d356-4ffd-bde1-d10d68fbc284",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "play": {
+    "id": "d9535994-f348-460a-a4a3-f58b109129bc",
+    "source": "https://21st.dev/community/icons/lucide"
+  },
+  "x": {
+    "id": "e1122afd-4683-4a91-b44b-06d24af8028a",
+    "source": "https://21st.dev/community/icons/lucide"
+  }
+}

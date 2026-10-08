@@ -29,7 +29,7 @@
                 <h2 id="featured-title"><a href="{{ route('blog.show', $featured->slug) }}">{{ $featured->title }}</a></h2>
                 <p>{{ $featured->excerpt }}</p>
                 <p class="journal-meta"><time datetime="{{ $featured->published_at->toAtomString() }}">{{ $featured->published_date }}</time> · {{ $featured->reading_time }}</p>
-                <a href="{{ route('blog.show', $featured->slug) }}" class="journal-text-link">Baca artikel →</a>
+                <a href="{{ route('blog.show', $featured->slug) }}" class="journal-text-link">Baca artikel <x-icon name="arrow-right" /></a>
             </div>
         </section>
     @endif

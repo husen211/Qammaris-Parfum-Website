@@ -1,0 +1,20 @@
+/* Shared 21st FAQ Chat Accordion adaptation: native disclosure, no hydration required. */
+.q-icon{display:inline-block;width:1em;height:1em;min-width:1em;vertical-align:-.15em;flex-shrink:0}
+.q-faq{color:var(--color-brand-black);width:100%;font-size:.9rem}
+.q-faq-item{margin:0 0 14px}
+.q-faq-question{display:flex;align-items:center;justify-content:flex-start;gap:14px;min-height:48px;cursor:pointer;list-style:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:12px}
+.q-faq-question::-webkit-details-marker{display:none}
+.q-faq-question::marker{content:''}
+.q-faq-question-bubble{display:block;min-width:0;padding:13px 16px;border-radius:12px;background:#f3f2ee;line-height:1.65;font-weight:500;overflow-wrap:anywhere;transition:background-color .15s ease,color .15s ease}
+.q-faq-toggle{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:24px;color:#76674b;font-size:20px}
+.q-faq-minus{display:none}
+.q-faq-item[open]>.q-faq-question .q-faq-plus{display:none}
+.q-faq-item[open]>.q-faq-question .q-faq-minus{display:inline-block}
+.q-faq-item[open]>.q-faq-question .q-faq-question-bubble{background:#eee4d2;color:#59421c}
+.q-faq-answer{max-width:calc(100% - 28px);margin:8px 0 0 28px;padding:16px 20px;border-radius:16px;background:var(--color-brand-black);color:var(--color-brand-cream);width:fit-content}
+.q-faq-answer p{margin:0;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere}
+.q-faq-question:focus-visible{outline:2px solid #9a793b;outline-offset:4px}
+.q-faq-question:active .q-faq-question-bubble{background:#e9dec8}
+@media(hover:hover) and (pointer:fine){.q-faq-question:hover .q-faq-question-bubble{background:#eee4d2}}
+@media(min-width:768px){.q-faq-answer{margin-left:64px;max-width:calc(100% - 64px)}}
+@media(prefers-reduced-motion:reduce){.q-faq-question-bubble{transition:none}}

@@ -93,7 +93,7 @@
             <div class="mb-5 flex flex-wrap items-center justify-between gap-3 md:mb-7">
                 <a href="{{ $catalogUrl }}" data-catalog-return
                     class="inline-flex min-h-11 items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-black underline decoration-gray-300 underline-offset-4 transition-colors hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                    <span aria-hidden="true">←</span>
+                    <x-icon name="arrow-left" />
                     Kembali
                 </a>
 
@@ -129,10 +129,10 @@
                         @if ($galleryImages->count() > 1)
                             <div class="mt-2 flex items-center justify-between lg:hidden" aria-label="Navigasi foto produk">
                                 <button type="button" data-gallery-step="-1" aria-label="Foto sebelumnya" disabled
-                                    class="h-11 w-11 border border-gray-200 text-lg disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">←</button>
+                                    class="h-11 w-11 border border-gray-200 text-lg disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black"><x-icon name="arrow-left" /></button>
                                 <span data-gallery-position aria-live="polite" class="text-xs tabular-nums text-gray-500">1 / {{ $galleryImages->count() }}</span>
                                 <button type="button" data-gallery-step="1" aria-label="Foto berikutnya"
-                                    class="h-11 w-11 border border-gray-200 text-lg disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">→</button>
+                                    class="h-11 w-11 border border-gray-200 text-lg disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black"><x-icon name="arrow-right" /></button>
                             </div>
                             <div class="mt-3 flex justify-center gap-3 overflow-x-auto pb-2 lg:justify-start" aria-label="Pilihan foto produk">
                                 @foreach ($galleryImages as $image)

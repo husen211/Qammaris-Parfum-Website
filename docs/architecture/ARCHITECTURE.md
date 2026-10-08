@@ -161,3 +161,9 @@ Lightbox uses native`dialog`, click-only links, arrow controls/keyboard, Escape,
 Metadata reuses existing layout sections; encodedJSON-LD graph contains AboutPage/Store/BreadcrumbList with visible address/hours and no aggregateRating/review markup. Existing URLs, navbar, skeleton routing, catalog/media storage and order work retained. [Verification](../verification/about-experience/README.md).
 
 ABOUT-01/store-hours/scoped security patches were released through approved PR34–37 and verified live onfb7ed28; [bounded release proof](../verification/about-release/README.md). Persistent env/storage/API identity retained; no migrations or order changes.
+
+## UI-21ST-01 — shared public FAQ and static SVGs (implementation, release pending)
+
+`resources/views/components/faq.blade.php` is the single About/Journal/preview FAQ renderer. Native exclusive `details name` provides disclosure/keyboard/no-JS fallback; shared`faq.css` in appCSS supplies chat-bubble styles. `x-icon` renders a fixed switch of ten trusted21stLucideSVGs, escaped attributes and decorative accessibility; labels remain on containing controls. About/Journal/editor/photo UI use it; stored HTML is not rewritten. Trusted inline Journal article/video components now use Blade partials to render the same icons after sanitization.
+
+About reuses existing responsive images, native dialog/Reel code and page-only JS. Fluid grid supports explicit per-item expansion at larger widths, retaining all nine photos; phone links still open the full photo with one tap. Every gallery/timeline/hero/visit photo uses contain/native ratio. Alternating timeline preserves current story and adds Owner-confirmed2024/February2026 dates. No React/new dependency or persistence layer. [Source and bounded verification](../verification/faq-icons/README.md).

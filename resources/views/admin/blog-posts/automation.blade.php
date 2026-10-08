@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('content')
 <div class="max-w-2xl space-y-6">
-    <a class="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2" href="{{ route('admin.blog-posts.edit', $blogPost) }}">← Kembali ke editor</a>
+    <a class="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2" href="{{ route('admin.blog-posts.edit', $blogPost) }}"><x-icon name="arrow-left" /> Kembali ke editor</a>
     <div><h1 class="text-2xl font-semibold">Akses agent untuk draft</h1><p class="mt-2 text-gray-600 break-words">{{ $blogPost->title }}</p></div>
     <p class="text-sm leading-relaxed text-gray-600">Agent yang dipilih dapat membaca, mengedit, dan menambahkan foto pada draft ini. Agent tidak dapat menerbitkan artikel. Pilih “Tanpa agent” untuk mencabut aksesnya. Token dikelola terpisah dan tidak ditampilkan di sini.</p>
     @if(!config('blog_automation.enabled'))<p class="border-l-2 border-amber-600 pl-4 text-sm leading-relaxed">API agent belum diaktifkan. Pilihan ini hanya mencatat siapa yang boleh mengerjakan draft setelah aktivasi.</p>@endif

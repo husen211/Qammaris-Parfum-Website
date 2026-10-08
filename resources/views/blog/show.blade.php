@@ -53,17 +53,17 @@
                     <details class="journal-toc" open><summary>Daftar isi</summary><nav aria-label="Daftar isi"><ol>@foreach($toc as $entry)<li class="{{ $entry['level'] === 'h3' ? 'journal-toc-child' : '' }}"><a href="#{{ $entry['id'] }}">{{ $entry['text'] }}</a></li>@endforeach</ol></nav></details>
                 @endif
                 @if(($linkedProducts ?? collect())->isNotEmpty())
-                    <div class="journal-linked-products"><h2>Produk dalam artikel</h2><ul>@foreach($linkedProducts as $product)<li><a href="{{ route('products.show', $product->slug) }}">{{ $product->name }} →</a></li>@endforeach</ul></div>
+                    <div class="journal-linked-products"><h2>Produk dalam artikel</h2><ul>@foreach($linkedProducts as $product)<li><a href="{{ route('products.show', $product->slug) }}">{{ $product->name }} <x-icon name="arrow-right" /></a></li>@endforeach</ul></div>
                 @endif
             </aside>
         @endif
         <div class="journal-reading-main">
             <div class="journal-body">{!! $post->content !!}</div>
             @if($post->faqs)
-                <section class="journal-faq"><h2>Pertanyaan umum</h2>@foreach($post->faqs as $faq)<details><summary>{{ $faq['question'] }}</summary><p>{{ $faq['answer'] }}</p></details>@endforeach</section>
+                <section class="journal-faq"><h2>Pertanyaan umum</h2><x-faq :name="'journal-faq-'.$post->id" :items="$post->faqs" /></section>
             @endif
             @if($post->references)
-                <section class="journal-references"><h2>Referensi</h2><ol>@foreach($post->references as $reference)<li><a href="{{ $reference['url'] }}" target="_blank" rel="noopener noreferrer">{{ $reference['title'] }} ↗</a></li>@endforeach</ol></section>
+                <section class="journal-references"><h2>Referensi</h2><ol>@foreach($post->references as $reference)<li><a href="{{ $reference['url'] }}" target="_blank" rel="noopener noreferrer">{{ $reference['title'] }} <x-icon name="arrow-up-right" /></a></li>@endforeach</ol></section>
             @endif
             @if(($post->related_product_ids ?? []) && ($linkedProducts ?? collect())->isNotEmpty())
                 <section class="journal-recommended"><h2>Produk pilihan</h2><div class="journal-product-grid">@foreach($linkedProducts->whereIn('id', $post->related_product_ids) as $product) @include('blog._product', ['product' => $product]) @endforeach</div></section>
@@ -72,24 +72,24 @@
                 <section class="journal-share" aria-labelledby="share-heading" data-journal-share data-share-url="{{ $shareUrl }}" data-share-title="{{ $post->title }}">
                     <h2 id="share-heading">Bagikan artikel</h2>
                     <div class="journal-share-actions">
-                        <a href="https://wa.me/?text={{ rawurlencode($post->title.' '.$shareUrl) }}" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
+                        <a href="https://wa.me/?text={{ rawurlencode($post->title.' '.$shareUrl) }}" target="_blank" rel="noopener noreferrer">WhatsApp <x-icon name="arrow-up-right" /></a>
                         <button type="button" data-journal-copy>Salin tautan</button>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ rawurlencode($shareUrl) }}" target="_blank" rel="noopener noreferrer">Facebook ↗</a>
-                        <a href="https://x.com/intent/post?url={{ rawurlencode($shareUrl) }}&text={{ rawurlencode($post->title) }}" target="_blank" rel="noopener noreferrer">X ↗</a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ rawurlencode($shareUrl) }}" target="_blank" rel="noopener noreferrer">Facebook <x-icon name="arrow-up-right" /></a>
+                        <a href="https://x.com/intent/post?url={{ rawurlencode($shareUrl) }}&text={{ rawurlencode($post->title) }}" target="_blank" rel="noopener noreferrer">X <x-icon name="arrow-up-right" /></a>
                         <button type="button" data-journal-native hidden>Bagikan…</button>
                     </div>
                     <p role="status" data-share-status></p><input type="text" readonly aria-label="Tautan artikel untuk disalin" value="{{ $shareUrl }}" data-share-fallback hidden>
                 </section>
-                <section class="journal-store-cta"><h2>Temukan aroma pilihan Anda</h2><p>Jelajahi koleksi parfum Qammaris atau kunjungi toko untuk mencoba langsung.</p><a class="journal-button" href="{{ route('products.index') }}">Lihat katalog</a><a class="journal-text-link" href="{{ route('store.location') }}">Lokasi toko →</a></section>
+                <section class="journal-store-cta"><h2>Temukan aroma pilihan Anda</h2><p>Jelajahi koleksi parfum Qammaris atau kunjungi toko untuk mencoba langsung.</p><a class="journal-button" href="{{ route('products.index') }}">Lihat katalog</a><a class="journal-text-link" href="{{ route('store.location') }}">Lokasi toko <x-icon name="arrow-right" /></a></section>
             @endunless
         </div>
     </div>
 
         @if($relatedPosts->isNotEmpty())
-            <section class="journal-related"><div class="journal-section-heading"><h2>Artikel terkait</h2><a href="{{ route('blog.index') }}">Lihat Journal →</a></div><div class="journal-grid">@foreach($relatedPosts as $relatedPost) @include('blog._card', ['post' => $relatedPost]) @endforeach</div></section>
+            <section class="journal-related"><div class="journal-section-heading"><h2>Artikel terkait</h2><a href="{{ route('blog.index') }}">Lihat Journal <x-icon name="arrow-right" /></a></div><div class="journal-grid">@foreach($relatedPosts as $relatedPost) @include('blog._card', ['post' => $relatedPost]) @endforeach</div></section>
         @endif
     @unless($preview)
-        @if($nextPost ?? null)<nav class="journal-next" aria-label="Artikel berikutnya"><span>Artikel berikutnya</span><a href="{{ route('blog.show', $nextPost->slug) }}">{{ $nextPost->title }} →</a></nav>@endif
+        @if($nextPost ?? null)<nav class="journal-next" aria-label="Artikel berikutnya"><span>Artikel berikutnya</span><a href="{{ route('blog.show', $nextPost->slug) }}">{{ $nextPost->title }} <x-icon name="arrow-right" /></a></nav>@endif
     @endunless
 </article>
 @endsection

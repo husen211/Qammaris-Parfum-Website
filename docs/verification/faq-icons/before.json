@@ -1,0 +1,34 @@
+[
+  {
+    "url": "/store/about",
+    "width": 390,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": []
+  },
+  {
+    "url": "/blog/faq-local-preview",
+    "width": 390,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": []
+  },
+  {
+    "url": "/store/about",
+    "width": 1440,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": []
+  },
+  {
+    "url": "/blog/faq-local-preview",
+    "width": 1440,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": []
+  }
+]
