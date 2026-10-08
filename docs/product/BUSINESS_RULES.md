@@ -144,7 +144,7 @@ BLOG-04 menambahkan media milik artikel, metadata hak pakai, checksum original, 
 ## About — Owner-approved store identity (2026-10-08)
 
 - Qammaris is an experience store: every in-store product has a tester; staff help recommend according to preferences/needs. The store welcomes exploration and discussion, serving customers wholeheartedly. These are Owner-approved claims, not derived from review examples.
-- Founder story is based on the two first-party LinkedIn posts signed Husein; Jakarta university/fragrance exploration, difficulty trying before buying on return to Palu, then design/renovation/store experience. No founding/opening dates are verified: use named sequence stages without invented dates.
+- Founder story is based on the two first-party LinkedIn posts signed Husein; Jakarta university/fragrance exploration, difficulty trying before buying on return to Palu, then design/renovation/store experience. Owner subsequently confirmed (2026-10-08) that the journey begins in2024 and the store opened February2026. Intermediate design/build steps remain a named sequence without invented exact dates; current-store images illustrate the concept, not a dated2024 photo archive.
 - Nine Owner-supplied store/build/design/tester assets may be published. Keep original files; deploy optimized responsive derivatives through GitHub as curated site assets, independent of product/blog uploaded storage.
 - Google rating is a dated observation, not automatically live. Reviewer name/excerpt/stars require verified source; no fabricated demo testimonials/count or self-serving review structured data.
 - Public hours: Saturday–Thursday09:00–21:00WITA, Fridayclosed. Owner is authority where Google Maps differs; Google account editing is outside this implementation.

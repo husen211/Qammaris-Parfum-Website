@@ -1,7 +1,7 @@
 <?php
 
 return [
-    // Owner's original posts; milestone dates have not been confirmed.
+    // Owner confirmed the journey begins in 2024 and the store opened in February 2026.
     'story_url' => 'https://www.linkedin.com/posts/qammaris-perfumes_why-qammaris-exists-a-few-years-ago-i-activity-7466129668660690944-KmjG',
     'journey_url' => 'https://www.linkedin.com/posts/qammaris-perfumes_qammaris-entrepreneurship-retail-activity-7466133865032564736-yUbC',
     'reel_url' => 'https://www.instagram.com/reel/Dd0iMrDJURL/',
@@ -19,10 +19,10 @@ return [
         ['author' => 'Ferdiansyah Cahyadi', 'stars' => 5, 'quote' => 'karyawan ramah, selalu menjelaskan setiap wangi wangi an yg kita mau'],
     ],
     'timeline' => [
-        ['title' => 'Ketertarikan yang tumbuh di Jakarta', 'text' => 'Saat merantau untuk kuliah, Husein bertemu teman-teman yang gemar berdiskusi tentang parfum. Dari sana, ia mulai menjelajahi parfum lokal, designer, niche, hingga Timur Tengah.'],
-        ['title' => 'Sebuah pertanyaan saat kembali ke Palu', 'text' => 'Mencari parfum terasa berbeda ketika aromanya tidak bisa dicoba lebih dulu. Pengalaman membeli online dan berharap cocok memunculkan gagasan: bagaimana jika ada tempat untuk mencoba dan membandingkan langsung?'],
-        ['title' => 'Dari rancangan menjadi ruang nyata', 'text' => 'Ruang yang belum digunakan perlahan diubah menjadi toko. Perencanaan interior, pengerjaan rak, renovasi, dan persiapan jalur distribusi menjadi bagian dari perjalanan membangun Qammaris.'],
-        ['title' => 'Qammaris sebagai experience store', 'text' => 'Kini ruang itu menjadi tempat untuk mengenal aroma, bertanya, dan menemukan parfum yang sesuai kebutuhan. Setiap produk di toko tersedia testernya, dengan staf yang siap mendampingi.'],
+        ['date' => '2024', 'photo' => 'skin-test', 'title' => 'Ketertarikan yang tumbuh di Jakarta', 'text' => 'Saat merantau untuk kuliah, Husein bertemu teman-teman yang gemar berdiskusi tentang parfum. Dari sana, ia mulai menjelajahi parfum lokal, designer, niche, hingga Timur Tengah.'],
+        ['date' => 'Gagasan di Palu', 'photo' => 'design-board', 'title' => 'Sebuah pertanyaan saat kembali ke Palu', 'text' => 'Mencari parfum terasa berbeda ketika aromanya tidak bisa dicoba lebih dulu. Pengalaman membeli online dan berharap cocok memunculkan gagasan: bagaimana jika ada tempat untuk mencoba dan membandingkan langsung?'],
+        ['date' => 'Persiapan toko', 'photo' => 'construction', 'title' => 'Dari rancangan menjadi ruang nyata', 'text' => 'Ruang yang belum digunakan perlahan diubah menjadi toko. Perencanaan interior, pengerjaan rak, renovasi, dan persiapan jalur distribusi menjadi bagian dari perjalanan membangun Qammaris.'],
+        ['date' => 'Februari 2026', 'photo' => 'facade', 'title' => 'Qammaris sebagai experience store', 'text' => 'Pada Februari 2026, Qammaris membuka pintunya sebagai experience store di Palu. Kini ruang itu menjadi tempat untuk mengenal aroma, bertanya, dan menemukan parfum yang sesuai kebutuhan. Setiap produk di toko tersedia testernya, dengan staf yang siap mendampingi.'],
     ],
     'gallery' => [
         ['key' => 'facade', 'title' => 'Selamat datang di Qammaris', 'alt' => 'Fasad toko Qammaris Perfumes dengan pintu kaca dan papan nama Qammaris', 'caption' => 'Tampak depan toko di Jalan Sis Aljufri, Palu.', 'fit' => 'cover'],

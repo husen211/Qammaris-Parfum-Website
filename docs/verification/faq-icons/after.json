@@ -1,0 +1,60 @@
+[
+  {
+    "url": "/store/about",
+    "width": 390,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": [],
+    "singleOpen": true,
+    "secondOpen": true,
+    "collapsed": true,
+    "svgIcons": 83,
+    "textSymbols": false
+  },
+  {
+    "url": "/blog/faq-local-preview",
+    "width": 390,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": [],
+    "singleOpen": true,
+    "secondOpen": true,
+    "collapsed": true,
+    "svgIcons": 9,
+    "textSymbols": false
+  },
+  {
+    "url": "/store/about",
+    "width": 1440,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": [],
+    "singleOpen": true,
+    "secondOpen": true,
+    "collapsed": true,
+    "svgIcons": 83,
+    "textSymbols": false
+  },
+  {
+    "url": "/blog/faq-local-preview",
+    "width": 1440,
+    "status": 200,
+    "overflow": false,
+    "open": 1,
+    "errors": [],
+    "singleOpen": true,
+    "secondOpen": true,
+    "collapsed": true,
+    "svgIcons": 9,
+    "textSymbols": false
+  },
+  {
+    "width": 320,
+    "noJavaScript": true,
+    "open": 1,
+    "overflow": false
+  }
+]

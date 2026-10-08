@@ -47,10 +47,10 @@ final class RenderBlogContent
             if ($kind === 'article') {
                 $article = $articlesById->get((int) $value);
 
-                return $article ? '<div data-journal-component class="journal-inline-article"><span>Baca juga</span><a href="'.e(route('blog.show', $article->slug)).'">'.e($article->title).' →</a></div>' : '';
+                return $article ? view('blog._inline-article', compact('article'))->render() : '';
             }
             if ($kind === 'youtube') {
-                return '<div data-journal-component class="journal-video"><iframe src="https://www.youtube-nocookie.com/embed/'.e($value).'" title="Video artikel YouTube" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation" allowfullscreen></iframe><a href="https://www.youtube.com/watch?v='.e($value).'" target="_blank" rel="noopener noreferrer">Buka video di YouTube ↗</a></div>';
+                return view('blog._video', ['videoId' => $value])->render();
             }
             if ($kind === 'cta') {
                 return '<div data-journal-component class="journal-inline-cta"><a class="journal-button" href="'.e($value).'">'.e($element->getAttribute('data-label')).'</a></div>';

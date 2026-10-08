@@ -73,7 +73,7 @@
                                 <a href="{{ route('products.show', $product->slug) }}"
                                     class="mt-4 inline-flex items-center text-[10px] font-bold uppercase tracking-widest text-brand-gold">
                                     Lihat Produk
-                                    <span class="ml-2">→</span>
+                                    <span class="ml-2"><x-icon name="arrow-right" /></span>
                                 </a>
                             </div>
                         @endforeach

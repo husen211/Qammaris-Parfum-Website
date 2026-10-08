@@ -1,3 +1,21 @@
+// Fluid Expanding Grid: preserve all nine items, expand by click, never crop/zoom the image.
+const fluidGallery = document.querySelector('[data-fluid-gallery]');
+if (fluidGallery) {
+    const controls = [...fluidGallery.querySelectorAll('[data-expand-photo]')];
+    controls.forEach((button) => {
+        button.hidden = false;
+        button.addEventListener('click', () => {
+            const selected = button.getAttribute('aria-pressed') !== 'true';
+            controls.forEach((control) => {
+                const active = control === button && selected;
+                control.setAttribute('aria-pressed', String(active));
+                control.closest('[data-gallery-item]').classList.toggle('about-gallery-expanded', active);
+                control.querySelector('[data-expand-label]').textContent = active ? 'Kembalikan ukuran' : 'Perbesar di galeri';
+            });
+        });
+    });
+}
+
 const dialog = document.querySelector('[data-about-dialog]');
 const photos = [...document.querySelectorAll('[data-about-photo]')];
 

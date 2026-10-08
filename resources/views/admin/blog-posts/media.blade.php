@@ -23,7 +23,7 @@
                 @include('admin.blog-posts._media-fields', ['prefix' => 'media-'.$item->id])
                 <p>{{ $item->width }} × {{ $item->height }} px · {{ count($item->variants ?? []) }} versi responsif/crop</p>
                 @if($item->processing_warning)<p role="status" class="journal-notice">{{ $item->processing_warning }}</p>@endif
-                <p><a href="{{ $item->url }}" target="_blank" rel="noopener">Lihat gambar asli ↗</a></p>
+                <p><a href="{{ $item->url }}" target="_blank" rel="noopener">Lihat gambar asli <x-icon name="arrow-up-right" /></a></p>
                 <button type="submit" class="journal-primary">Simpan metadata dan crop</button><p data-media-status role="status"></p>
             </form>
             <div class="journal-media-result">@include('blog._media', ['media' => $item])</div>
