@@ -138,6 +138,14 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - `online_order_payments` is an append-only ledger with reversal rows.
   - `App\Actions\Orders\RecordOnlineOrderMoney` handles payments, refund decisions, payouts, reversals and reconciliation. Gate `orders.refund` = Super Admin.
   - `App\Support\OnlineOrderMoney` derives `refund_status` and the refund part of `payment_status`.
+- Slice 3:
+  - `App\Actions\Orders\OnlineOrderFulfillment` holds the V2 operations: preparation, packing with exact per-line quantities, courier responsibility/request, J&T with atomic `picked_up` → handover and optional tracking, handover, delivery, issues, and cancel.
+  - The operations are shared by the Admin PWA (ORD-02d) and API v1 (ORD-02e). `App\Support\OrderActor` represents a Website user or an App employee.
+  - Typed exceptions map to the contract error codes: `OrderRevisionConflict`, `InvalidOrderTransition`, `OrderValidationFailed` (fields), `OrderActionNotAllowed`.
+  - One logical change = one revision + one event (ULID `public_id`). A repeated identical step is a no-op.
+  - `App\Support\OnlineOrderV2State` sets V2 defaults, derives `stage` for rollback, and auto-completes when the completion rule holds.
+  - New: `online_order_issues`; `line_id` on items; `packed_items`; App actor columns on events.
+  - `ORDERS_V2_ENABLED` (default false) is the cutover switch for new orders.
 - `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
 
 ### Admin PWA (ORD-02b, branch review)

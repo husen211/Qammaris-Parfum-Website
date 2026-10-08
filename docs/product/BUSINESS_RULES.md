@@ -148,6 +148,10 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 - **Pesanan ORD-01 yang dibatalkan setelah Lunas** ditandai **perlu rekonsiliasi**, karena riwayat refund-nya tidak tercatat. Super Admin mengisi nominal diterima, nominal yang harus dikembalikan, dan yang sudah dikembalikan. Bila belum diketahui, tanda tetap ada.
 - Catatan pembayaran/refund tidak pernah diubah atau dihapus. Salah catat dibatalkan dengan entri pembatalan beralasan.
 - Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya oleh **Super Admin**, dan semuanya tercatat di riwayat pesanan. Staff Order boleh mencatat pembayaran masuk.
+- Packing baru dianggap selesai bila **setiap barang dikonfirmasi dengan jumlah persis sesuai pesanan**. Barang kurang dicatat sebagai **kendala stok**, bukan packing.
+- J&T: minta pickup, QR tersedia, dan dipickup adalah langkah terpisah. Saat dipickup, pesanan otomatis tercatat diserahkan ke J&T. Resi boleh ditambahkan kapan saja.
+- Kendala terbuka menahan status selesai. Kendala hanya bisa ditutup oleh pembukanya atau Owner/Super Admin.
+- Pesanan yang **sudah ada pembayaran** (walau sebagian) hanya bisa dibatalkan Super Admin. Saat membatalkan, ia wajib menetapkan nominal yang dikembalikan (boleh 0).
 - Peralihan ke model status baru terjadi per pesanan saat dibuat. Pesanan lama menyelesaikan alurnya sendiri; dua alur tidak pernah mengubah satu pesanan yang sama.
 
 ### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)

@@ -71,6 +71,8 @@ class CreateOnlineOrder
             $order->stage = OnlineOrder::STAGE_AWAITING_CUSTOMER;
             $order->created_by = $actor->id;
             $order->submission_token = $submissionToken;
+            // Cutover point (ADR-040): the state model is fixed when the order is created.
+            $order->state_model = config('orders.v2_enabled') ? OnlineOrder::STATE_V2 : OnlineOrder::STATE_LEGACY;
             $order->save();
             $order->code = 'QAM-'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT);
             $order->save();

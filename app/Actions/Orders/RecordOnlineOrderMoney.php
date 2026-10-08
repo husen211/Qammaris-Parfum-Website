@@ -7,6 +7,7 @@ use App\Models\OnlineOrder;
 use App\Models\OnlineOrderPayment;
 use App\Models\User;
 use App\Support\OnlineOrderMoney;
+use App\Support\OnlineOrderV2State;
 use App\Support\Rupiah;
 use Closure;
 use Illuminate\Support\Facades\DB;
@@ -142,7 +143,7 @@ class RecordOnlineOrderMoney
     {
         abort_unless($actor->exists && Gate::forUser($actor)->allows($ability), 403);
 
-        return DB::transaction(function () use ($order, $revision, $change): OnlineOrder {
+        return DB::transaction(function () use ($order, $revision, $actor, $change): OnlineOrder {
             $locked = OnlineOrder::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
             if ($locked->revision !== $revision) {
                 throw new OnlineOrderRejected('Pesanan sudah berubah. Muat ulang halaman lalu periksa sebelum mengulang.');
@@ -150,6 +151,9 @@ class RecordOnlineOrderMoney
             $change($locked);
             if ($locked->isV2()) {
                 OnlineOrderMoney::apply($locked, OnlineOrderMoney::basePaymentFromLedger($locked));
+                if ($locked->lifecycle === 'active' && OnlineOrderV2State::settle($locked)) {
+                    $locked->events()->create(['kind' => 'completed', 'stage' => OnlineOrder::STAGE_COMPLETED, 'actor_type' => 'admin', 'actor_user_id' => $actor->id]);
+                }
             }
             // Legacy rows recompute money state in the saving hook.
             $locked->revision++;

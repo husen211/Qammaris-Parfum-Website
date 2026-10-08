@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\OnlineOrder;
 use App\Models\User;
+use App\Support\OnlineOrderMoney;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -38,8 +39,16 @@ class AuthorizationServiceProvider extends ServiceProvider
                 return true;
             }
 
-            return $has($user, [User::ROLE_STAFF_ORDER])
-                && in_array($order->stage, [OnlineOrder::STAGE_AWAITING_CUSTOMER, OnlineOrder::STAGE_DETAILS_RECEIVED], true);
+            if (! $has($user, [User::ROLE_STAFF_ORDER])) {
+                return false;
+            }
+            if ($order->isV2()) {
+                // No recorded money at all, not just "not fully paid", and not handed over.
+                return $order->payment_status === 'unpaid' && $order->handover_status === 'pending'
+                    && OnlineOrderMoney::totals($order)['received'] === 0;
+            }
+
+            return in_array($order->stage, [OnlineOrder::STAGE_AWAITING_CUSTOMER, OnlineOrder::STAGE_DETAILS_RECEIVED], true);
         });
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\OnlineOrderLegacyState;
 use App\Support\OnlineOrderMoney;
+use App\Support\OnlineOrderV2State;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -76,6 +77,8 @@ class OnlineOrder extends Model
         'delivered_at' => 'datetime',
         'refund_due_amount' => 'decimal:2',
         'refund_decided_at' => 'datetime',
+        'packed_items' => 'array',
+        'courier_requested_at' => 'datetime',
     ];
 
     public const STATE_LEGACY = 'legacy';
@@ -90,10 +93,12 @@ class OnlineOrder extends Model
             $order->state_model ??= self::STATE_LEGACY;
         });
 
-        // Legacy rows only: ORD-01 screens drive `stage`, so the ORD-02 dimensions follow it one way.
-        // V2 rows are driven by the V2 operations and are never touched here.
+        // Legacy rows: ORD-01 screens drive `stage` and the ORD-02 dimensions follow it one way.
+        // V2 rows: the V2 operations drive the dimensions and `stage` is derived from them.
         static::saving(function (OnlineOrder $order): void {
             if ($order->state_model === self::STATE_V2) {
+                OnlineOrderV2State::normalize($order);
+
                 return;
             }
             $order->forceFill(OnlineOrderLegacyState::dimensions($order->getAttributes(), fn () => now()));
@@ -114,6 +119,11 @@ class OnlineOrder extends Model
     public function isV2(): bool
     {
         return $this->state_model === self::STATE_V2;
+    }
+
+    public function issues(): HasMany
+    {
+        return $this->hasMany(OnlineOrderIssue::class)->orderBy('id');
     }
 
     public function payments(): HasMany
