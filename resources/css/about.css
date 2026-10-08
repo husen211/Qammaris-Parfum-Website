@@ -74,10 +74,12 @@
 .about-rating-card footer { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; border-top:1px solid var(--about-line); margin-top:25px; padding-top:20px; }
 .about-rating-card footer strong { font-size:.75rem; }
 .about-rating-card footer p { font-size:.66rem; color:var(--about-muted); margin-top:6px; line-height:1.7; }
-.about-review-card { margin-top:18px !important; }
-.about-review-card blockquote { margin:0; font-size:.9rem; line-height:1.85; }
+.about-review-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin-top:40px; }
+.about-review-card { display:flex; flex-direction:column; min-width:0; margin:0 !important; }
+.about-review-card blockquote { flex:1; margin:0; font-size:.9rem; line-height:1.85; }
 .about-review-card figcaption { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px; margin-top:20px; }
-.about-review-card figcaption strong { font-size:.8rem; }
+.about-review-card figcaption strong { font-size:.8rem; overflow-wrap:anywhere; }
+.about-review-card .about-rating-stars { margin-top:0 !important; }
 .about-review-card figcaption a { display:block; font-size:.7rem; color:var(--about-muted); text-decoration:underline; min-height:44px; line-height:44px; }
 .about-visit { display:grid; grid-template-columns:.85fr 1fr; gap:80px; align-items:center; }
 .about-visit figure img { width:100%; aspect-ratio:3/4; object-fit:cover; object-position:50% 60%; }
@@ -114,6 +116,7 @@ body.about-photo-open { overflow:hidden; }
     .about-experience-photo { max-width:560px; }
     .about-experience-photo img { aspect-ratio:4/3; object-position:50% 55%; }
     .about-section,.about-experience,.about-gallery-section,.about-reviews-section { padding-block:55px; }
+    .about-review-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .about-timeline { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .about-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .about-reel { justify-self:start; }
@@ -137,6 +140,7 @@ body.about-photo-open { overflow:hidden; }
     .about-build-photos { grid-template-columns:1fr; }
     .about-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); gap:25px 16px; }
     .about-gallery img { max-height:460px; }
+    .about-review-grid { grid-template-columns:1fr; gap:18px; margin-top:30px; }
     .about-rating-card,.about-review-card { padding:24px; }
     .about-reel iframe { height:610px; }
     .about-reel-preview :is(button,a) { padding-inline:18px; }

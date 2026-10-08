@@ -25,10 +25,13 @@ class StoreAboutTest extends TestCase
             ->assertDontSee('Loading 3D...')->assertDontSee('about-lanyard')
             ->assertDontSee('<iframe', false)
             ->assertSee('https://www.instagram.com/reel/Dd0iMrDJURL/embed/', false)
-            ->assertSee('rating dapat berubah');
+            ->assertSee('rating dapat berubah')
+            ->assertSee('Owen Bryant Owen Bryant')->assertSee('Derry Qlay')
+            ->assertSee('Sniff dulu, cocok baru bayar.')
+            ->assertSee('5 dari 5 bintang');
 
         $response->assertViewHas('aboutContent', fn ($content) => count($content['gallery']) === 9
-            && count($content['timeline']) === 4 && $content['reviews'] === []);
+            && count($content['timeline']) === 4 && count($content['reviews']) === 6);
         foreach (config('store_about.gallery') as $photo) {
             foreach ([480, 768, 1200] as $width) {
                 $path = public_path('images/store/'.$photo['key'].'-'.$width.'.webp');

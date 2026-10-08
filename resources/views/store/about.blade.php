@@ -100,13 +100,15 @@
     <section id="ulasan" class="about-reviews-section" aria-labelledby="reviews-title">
         <div class="about-container about-reviews-layout">
             <div><p class="about-eyebrow">Ulasan pelanggan</p><h2 id="reviews-title">Pengalaman mereka,<br>cerita untuk Anda.</h2><p class="about-lead">Baca pengalaman pengunjung Qammaris di Google Maps sebelum merencanakan kunjungan Anda.</p></div>
-            <div>
-                @include('store._rating-card', ['rating' => $aboutContent['google_rating'], 'checkedAt' => $aboutContent['rating_checked_at'], 'reviewsUrl' => $aboutContent['reviews_url']])
+            @include('store._rating-card', ['rating' => $aboutContent['google_rating'], 'checkedAt' => $aboutContent['rating_checked_at'], 'reviewsUrl' => $aboutContent['reviews_url']])
+        </div>
+        @if ($aboutContent['reviews'])
+            <div class="about-container about-review-grid">
                 @foreach ($aboutContent['reviews'] as $review)
                     @include('store._review-card', ['review' => $review, 'reviewsUrl' => $aboutContent['reviews_url']])
                 @endforeach
             </div>
-        </div>
+        @endif
     </section>
 
     <section id="kunjungan" class="about-section about-container about-visit" aria-labelledby="visit-title">
