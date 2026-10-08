@@ -11,6 +11,7 @@ import './ui/navbar';
 import './ui/navigation-skeleton';
 import './ui/reveal';
 import './ui/toast';
+import './ui/faq';
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 if (csrfToken) {
