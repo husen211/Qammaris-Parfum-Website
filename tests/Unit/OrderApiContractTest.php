@@ -19,6 +19,8 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
+    private const BASELINE_OPENAPI_SHA256 = 'ee896e7e078df82fa6966141664b7ef152d7be108406f2d57f2769ceb438eeae';
+
     private array $spec;
 
     private string $markdown;
@@ -30,10 +32,18 @@ class OrderApiContractTest extends TestCase
         $this->markdown = file_get_contents($dir.'/QAMMARIS_ORDER_API_V1.md');
     }
 
-    public function test_versions_match_and_contract_is_the_r4_1_candidate(): void
+    public function test_openapi_baseline_is_frozen(): void
+    {
+        // API v1 baseline confirmed by both agents (r4.1). Changing the OpenAPI file needs a new revision note,
+        // the other agent's approval for breaking changes, and then a deliberate update of this hash.
+        $source = str_replace("\r\n", "\n", file_get_contents(dirname(__DIR__, 2).'/docs/integrations/qammaris-order-api-v1.openapi.yaml'));
+        $this->assertSame(self::BASELINE_OPENAPI_SHA256, hash('sha256', $source), 'OpenAPI v1 baseline changed: follow contract §14 change control');
+        $this->assertStringContainsString('**BASELINE API v1 — dibekukan (r4.1, OpenAPI `1.0.0-rc.4.1`', $this->markdown);
+    }
+
+    public function test_versions_match_and_contract_is_the_r4_1_baseline(): void
     {
         $this->assertSame('1.0.0-rc.4.1', $this->spec['info']['version']);
-        $this->assertStringContainsString('**r4.1 — kandidat final.**', $this->markdown);
         $this->assertStringContainsString('r4.1', $this->spec['info']['description']);
         // The App review commit is still local to the App machine; it must not be presented as a GitHub link.
         $this->assertStringNotContainsString('github.com/husen211/qammaris-reimbursement-management-system', $this->markdown);

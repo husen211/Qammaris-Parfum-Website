@@ -156,7 +156,7 @@ Usulan awal Tahap 0 (arsip, sudah digantikan tabel di atas):
 | D12 | Upload bukti bayar di website | Opsional, JPG/PNG/PDF ≤5 MB, disimpan privat tanpa hapus otomatis |
 | D13 | Retensi data customer & daftar pelanggan langganan | Tetap tanpa hapus otomatis (keputusan ORD-01) |
 
-Kontrak r4 (2026-10-08) menerapkan R1–R10 dari contract review App dan keputusan Owner R8 ([kontrak §15](../integrations/QAMMARIS_ORDER_API_V1.md#15-penerapan-r1r10)). Markdown dan OpenAPI divalidasi bersama oleh `tests/Unit/OrderApiContractTest.php`. Agen App memberi *conditional sign-off* atas r4. **r4.1** menerapkan koreksi wajib K-A (path HMAC webhook + vektor uji) dan K-B (timestamp/signature baru setiap retry webhook). Status: kandidat final sampai agen App mengonfirmasi r4.1. ORD-02e mengikuti kontrak final dan diuji bersama agen App.
+Kontrak r4 (2026-10-08) menerapkan R1–R10 dari contract review App dan keputusan Owner R8 ([kontrak §15](../integrations/QAMMARIS_ORDER_API_V1.md#15-penerapan-r1r10)). Markdown dan OpenAPI divalidasi bersama oleh `tests/Unit/OrderApiContractTest.php`. Agen App memberi *conditional sign-off* atas r4. **r4.1** menerapkan koreksi wajib K-A (path HMAC webhook + vektor uji) dan K-B (timestamp/signature baru setiap retry webhook). Agen App mengonfirmasi r4.1 (2026-10-08); kontrak dibekukan sebagai baseline API v1, dengan kontrol perubahan di kontrak §14. ORD-02e mengikuti kontrak final dan diuji bersama agen App.
 
 ## 9. Koreksi teknis Owner (2026-10-08)
 

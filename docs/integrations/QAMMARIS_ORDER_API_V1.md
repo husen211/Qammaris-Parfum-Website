@@ -1,6 +1,12 @@
 # Qammaris Order API v1 — kontrak Website ↔ Qammaris App
 
-Status: **r4.1 — kandidat final.** Agen Qammaris App memberi *conditional sign-off* atas r4 (2026-10-08) setelah memverifikasi HMAC, 16 contoh JSON, OpenAPI, enum, dan R1–R10. Syaratnya dua koreksi K-A dan K-B, yang diterapkan di r4.1 (§3, §12). Kontrak final setelah agen App mengonfirmasi r4.1. Endpoint ORD-02e diimplementasikan mengikuti kontrak final dan diuji bersama agen App.
+Status: **BASELINE API v1 — dibekukan (r4.1, OpenAPI `1.0.0-rc.4.1`, 2026-10-08).**
+- Agen Qammaris App memberi *conditional sign-off* atas r4 setelah memverifikasi HMAC, 16 contoh JSON, OpenAPI, enum, dan R1–R10. Syaratnya koreksi K-A dan K-B, yang diterapkan di r4.1 (§3, §12).
+- Agen App **mengonfirmasi r4.1** tanpa koreksi. Vektor webhook diverifikasi dengan kode signing App sendiri (`order-signing.ts`, branch App `dev/september-2026`).
+  - `sha256` raw body dan kedua signature cocok byte demi byte.
+  - Header lama ditolak `stale_timestamp` setelah +360 detik; header baru diterima. Toleransi App 300 detik.
+  - Konfirmasi App didasarkan pada vektor dan aturan yang dikutip, bukan dari membaca commit Website `a4902ea` (beda repository).
+- Endpoint ORD-02e diimplementasikan mengikuti baseline ini dan diuji bersama agen App. Perubahan berikutnya mengikuti [§14](#14-versi).
 
 Riwayat versi:
 - r1/r2: draf Tahap 0 dan revisi Owner.
@@ -8,7 +14,7 @@ Riwayat versi:
 - **r4 (2026-10-08)**: menerapkan R1–R10 dari contract review App dan keputusan final Owner R8. Pemetaan per butir ada di [§15](#15-penerapan-r1r10).
   - Review App: `docs/integrations/online-orders-contract-review.md` di repository Qammaris App, commit `6b52426`.
   - Commit itu **masih lokal** di mesin App dan belum ada di GitHub `main`, jadi belum ada tautan yang bisa dibuka.
-- **r4.1 (2026-10-08)**: koreksi wajib dari sign-off App:
+- **r4.1 (2026-10-08, BASELINE v1)**: koreksi wajib dari sign-off App, dikonfirmasi agen App:
   - **K-A:** `path_with_query` webhook dan vektor uji webhook (§3, §12);
   - **K-B:** setiap retry webhook memakai timestamp dan signature baru (§12).
   Tidak ada perubahan skema payload.
@@ -458,8 +464,15 @@ Pada retry +360 detik, header pertama sudah di luar toleransi 300 detik dan haru
 
 ## 14. Versi
 
-Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`. Urutan:
-1. r4 conditional sign-off App (selesai), r4.1 dikonfirmasi agen App;
+Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`.
+
+**Kontrol perubahan baseline:**
+- Perubahan **breaking** pada v1 (field/enum/kode error dihapus atau diubah artinya, field wajib baru, aturan signature/retry berubah) membutuhkan persetujuan **kedua agen**, dan dicatat sebagai revisi baru di riwayat versi.
+- Perubahan non-breaking juga memerlukan pemberitahuan ke agen App.
+- `tests/Unit/OrderApiContractTest.php` mengunci SHA-256 file OpenAPI baseline. Setiap perubahan file itu membuat test gagal sampai hash baseline diperbarui bersama catatan revisi dan persetujuannya.
+
+Urutan:
+1. r4 conditional sign-off App, r4.1 dikonfirmasi agen App (selesai, 2026-10-08);
 2. implementasi Website ORD-02e dan App mengikuti kontrak final;
 3. tes kontrak bersama agen App memakai contoh payload dan vektor HMAC resmi dokumen ini;
 4. staging bersama;
