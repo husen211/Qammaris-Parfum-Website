@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -16,7 +17,7 @@ return new class extends Migration
             $table->string('task', 16);
             $table->string('holder_app_user_id', 24);
             $table->string('holder_display_name', 60);
-            $table->timestamp('claimed_at');
+            $table->timestamp('claimed_at')->useCurrent();
             $table->unique(['online_order_id', 'task']);
         });
 
@@ -30,8 +31,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('status_code');
             $table->longText('response_body');
             $table->string('request_id', 64)->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('expires_at')->index();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('expires_at')->useCurrent()->index();
             $table->unique(['client', 'idempotency_key']);
         });
 
@@ -67,11 +68,11 @@ return new class extends Migration
             $table->decimal('reimbursement_amount', 12, 2);
             $table->string('proof', 10);
             $table->json('waiver')->nullable();
-            $table->timestamp('reimbursement_updated_at');
+            $table->timestamp('reimbursement_updated_at')->useCurrent();
             $table->unsignedInteger('source_version');
             $table->string('reported_by_app_user_id', 24);
             $table->string('reported_by_name', 60);
-            $table->timestamp('reported_at');
+            $table->timestamp('reported_at')->useCurrent();
             $table->timestamps();
         });
 
@@ -90,6 +91,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        // MariaDB instant ADD/DROP COLUMN keeps dropped columns as hidden metadata; a rollback after an earlier
+        // rollback/migrate cycle then fails the row-size check. A rebuild (data-preserving) clears it first.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE online_orders FORCE');
+        }
         Schema::table('online_orders', function (Blueprint $table) {
             $table->dropColumn(['jnt_qr_path', 'jnt_qr_mime']);
         });

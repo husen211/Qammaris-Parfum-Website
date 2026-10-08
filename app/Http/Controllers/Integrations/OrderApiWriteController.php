@@ -66,7 +66,9 @@ class OrderApiWriteController extends Controller
 
     public function qr(Request $request, string $id): JsonResponse
     {
-        return OrderApiIdempotency::run($request, function () use ($request, $id): JsonResponse {
+        $order = OrderApiReadController::findOrder($id);
+
+        return OrderApiIdempotency::run($request, function () use ($request, $order): JsonResponse {
             $form = SignedMultipart::parse($request);
             $revision = is_string($form['expected_revision'] ?? null) ? $form['expected_revision'] : '';
             $actor = is_string($form['actor'] ?? null) ? json_decode($form['actor'], false) : null;
@@ -91,7 +93,6 @@ class OrderApiWriteController extends Controller
             if ($fields) {
                 throw new OrderApiException(422, 'validation_failed', 'Data QR tidak valid.', ['fields' => $fields]);
             }
-            $order = OrderApiReadController::findOrder($id);
             $updated = $this->orders->storeJntQr($order, (int) $revision, $this->actorFrom($request, $actor), $file['content'], $mime);
 
             return $this->mutationResponse($request, $updated);
@@ -135,7 +136,9 @@ class OrderApiWriteController extends Controller
     /** @param  Closure(OnlineOrder, stdClass, OrderActor): OnlineOrder  $operation */
     private function mutate(Request $request, string $id, string $schema, Closure $operation): JsonResponse
     {
-        return OrderApiIdempotency::run($request, function () use ($request, $id, $schema, $operation): JsonResponse {
+        $order = OrderApiReadController::findOrder($id);
+
+        return OrderApiIdempotency::run($request, function () use ($request, $order, $schema, $operation): JsonResponse {
             $body = json_decode($request->getContent(), false);
             if (! $body instanceof stdClass) {
                 throw new OrderApiException(400, 'bad_request', 'Body harus objek JSON.');
@@ -143,7 +146,6 @@ class OrderApiWriteController extends Controller
             if ($fields = OrderApiSchema::fieldErrors($body, $schema)) {
                 throw new OrderApiException(422, 'validation_failed', 'Data tidak valid.', ['fields' => $fields]);
             }
-            $order = OrderApiReadController::findOrder($id);
 
             return $this->mutationResponse($request, $operation($order, $body, $this->actorFrom($request, $body->actor)));
         });

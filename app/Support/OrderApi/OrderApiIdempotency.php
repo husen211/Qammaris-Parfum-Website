@@ -4,6 +4,7 @@ namespace App\Support\OrderApi;
 
 use App\Exceptions\OrderApi\OrderApiException;
 use Closure;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ final class OrderApiIdempotency
         DB::table('integration_idempotency_keys')->where('client', $client)->where('idempotency_key', $key)->where('expires_at', '<', now())->delete();
 
         try {
-            return DB::transaction(function () use ($request, $client, $key, $hash, $operation): JsonResponse {
+            return self::transaction(function () use ($request, $client, $key, $hash, $operation): JsonResponse {
                 // Reserve the key first: a concurrent duplicate blocks on the unique index until this commits.
                 $id = self::store($request, $client, $key, $hash, 0, '');
                 $response = $operation();
@@ -55,6 +56,28 @@ final class OrderApiIdempotency
             }
 
             return $response;
+        }
+    }
+
+    /**
+     * MySQL/MariaDB: READ COMMITTED, so every read after the order row lock sees the latest committed rows (under
+     * REPEATABLE READ an earlier read pins a stale snapshot), and no gap locks. Deadlocks and serialization failures
+     * retry the whole transaction (found by the MariaDB concurrency tests, ORD-02e).
+     */
+    private static function transaction(Closure $callback): JsonResponse
+    {
+        for ($attempt = 1; ; $attempt++) {
+            if (DB::getDriverName() === 'mysql' && DB::transactionLevel() === 0) {
+                DB::statement('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            }
+            try {
+                return DB::transaction($callback);
+            } catch (QueryException $error) {
+                if ($attempt >= 3 || ! in_array($error->errorInfo[1] ?? null, [1213, 1205], true)) {
+                    throw $error;
+                }
+                usleep(random_int(20_000, 80_000));
+            }
         }
     }
 

@@ -38,7 +38,7 @@ return new class extends Migration
             $table->json('before');
             $table->json('after');
             $table->string('note', 200)->nullable();
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->useCurrent();
             $table->index(['user_id', 'created_at']);
             $table->index(['actor_id', 'created_at']);
         });

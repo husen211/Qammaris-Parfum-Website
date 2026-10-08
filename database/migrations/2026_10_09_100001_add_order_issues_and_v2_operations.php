@@ -59,6 +59,11 @@ return new class extends Migration
             $table->dropUnique(['public_id']);
             $table->dropColumn(['public_id', 'actor_app_user_id', 'actor_display_name']);
         });
+        // MariaDB instant ADD/DROP COLUMN keeps dropped columns as hidden metadata; a rollback after an earlier
+        // rollback/migrate cycle then fails the row-size check. A rebuild (data-preserving) clears it first.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE online_orders FORCE');
+        }
         Schema::table('online_orders', function (Blueprint $table) {
             $table->dropColumn(['packed_items', 'courier_requested_at', 'delivery_confirmed_by']);
         });

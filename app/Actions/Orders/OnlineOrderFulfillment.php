@@ -164,7 +164,8 @@ class OnlineOrderFulfillment
             if (! in_array($task, OnlineOrderClaim::TASKS, true)) {
                 throw new OrderValidationFailed('Tugas tidak dikenal.', ['task' => 'preparation, courier_booking, atau handover']);
             }
-            $existing = $order->claims()->where('task', $task)->first();
+            // Locking read: always the latest committed claim, whatever the isolation level.
+            $existing = $order->claims()->where('task', $task)->lockForUpdate()->first();
             if ($existing) {
                 if ($existing->holder_app_user_id === $actor->appUserId) {
                     return;
@@ -188,7 +189,7 @@ class OnlineOrderFulfillment
                 $order->claims()->create(['task' => $task, 'holder_app_user_id' => $actor->appUserId, 'holder_display_name' => Str::limit($actor->displayName, 57), 'claimed_at' => now()]);
             } catch (UniqueConstraintViolationException) {
                 // Defence in depth; the row lock already serialises claims on this order.
-                $holder = $order->claims()->where('task', $task)->firstOrFail();
+                $holder = $order->claims()->where('task', $task)->lockForUpdate()->firstOrFail();
                 throw new TaskAlreadyClaimed($task, $holder->holder_app_user_id, $holder->holder_display_name, $holder->claimed_at->utc()->format('Y-m-d\TH:i:s\Z'));
             }
             $this->record('claimed', "Klaim {$task}");
@@ -199,7 +200,7 @@ class OnlineOrderFulfillment
     public function releaseClaim(OnlineOrder $order, ?int $revision, OrderActor $actor, string $task, ?string $reason = null): OnlineOrder
     {
         return $this->run($order, null, $actor, function (OnlineOrder $order) use ($actor, $task, $revision, $reason): void {
-            $claim = $order->claims()->where('task', $task)->first();
+            $claim = $order->claims()->where('task', $task)->lockForUpdate()->first();
             if (! $claim) {
                 return;
             }
@@ -659,7 +660,7 @@ class OnlineOrderFulfillment
         if (! $actor->isApp()) {
             return;
         }
-        $claim = $order->claims()->where('task', $task)->first();
+        $claim = $order->claims()->where('task', $task)->lockForUpdate()->first();
         if (! $claim || $claim->holder_app_user_id !== $actor->appUserId) {
             throw new OrderActionNotAllowed($claim ? "Tugas {$task} sedang dipegang {$claim->holder_display_name}." : "Klaim tugas {$task} dulu sebelum aksi ini.");
         }

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -20,6 +21,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        // MariaDB instant ADD/DROP COLUMN keeps dropped columns as hidden metadata; a rollback after an earlier
+        // rollback/migrate cycle then fails the row-size check. A rebuild (data-preserving) clears it first.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE online_orders FORCE');
+        }
         Schema::table('online_orders', function (Blueprint $table) {
             $table->dropUnique(['created_by', 'submission_token']);
             $table->dropColumn('submission_token');

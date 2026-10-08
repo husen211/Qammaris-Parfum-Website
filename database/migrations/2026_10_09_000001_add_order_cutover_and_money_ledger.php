@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('state_model', 8)->default('legacy')->index()->after('source');
             $table->string('refund_status', 24)->nullable()->index()->after('payment_status');
             $table->decimal('refund_due_amount', 12, 2)->nullable()->after('refund_status');
-            $table->string('refund_reason', 300)->nullable()->after('refund_due_amount');
+            $table->text('refund_reason')->nullable()->after('refund_due_amount');
             $table->unsignedBigInteger('refund_decided_by')->nullable()->after('refund_reason');
             $table->timestamp('refund_decided_at')->nullable()->after('refund_decided_by');
         });
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->unsignedBigInteger('reverses_id')->nullable()->unique();
             $table->string('note', 300)->nullable();
             $table->unsignedBigInteger('recorded_by');
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->useCurrent();
             $table->index(['online_order_id', 'created_at']);
         });
 
@@ -58,6 +58,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('online_order_payments');
+        // MariaDB instant ADD/DROP COLUMN keeps dropped columns as hidden metadata; a rollback after an earlier
+        // rollback/migrate cycle then fails the row-size check. A rebuild (data-preserving) clears it first.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE online_orders FORCE');
+        }
         Schema::table('online_orders', function (Blueprint $table) {
             $table->dropIndex(['state_model']);
             $table->dropIndex(['refund_status']);
