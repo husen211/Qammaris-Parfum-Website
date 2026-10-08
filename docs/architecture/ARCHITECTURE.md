@@ -170,6 +170,8 @@ About reuses existing responsive images, native dialog/Reel code and page-only J
 
 Owner-approved PR39 deployed3063d63, verified live390touch/1440 with persistent DB/media/env retained; [release proof](../verification/faq-icons/RELEASE.md). Physical-device and other program acceptance remain separate.
 
-## UI-21ST-02 — shared FAQ motion correction (implementation, release pending)
+## UI-21ST-02 — shared FAQ motion correction (released)
 
 `x-faq` wraps answers in a flow-root/overflow-contained panel; common `ui/faq.js` progressively enhances native details with400ms height/opacity matching the actual21st source. Enhanced group exclusivity allows outgoing close motion; unenhanced markup retains native name. Rapid retargeting preserves visible progress and settles to natural height, with inert/aria state, reduced-motion/resize/pagehide handling. Shared public/admin app bundle covers About, Journal and preview. About copy is direct and uses “outside Palu”/“Mengenal parfum saat merantau”; timeline dates/media/SEO boundaries unchanged. [Verification](../verification/faq-motion/README.md). No data layer or new dependency.
+
+Owner-approved PR41 deployed8e1455b and actual motion/copy verified live390touch/1440; [release proof](../verification/faq-motion/RELEASE.md). Persistent data/media/env retained; physical Safari and other program acceptance remain separate.
