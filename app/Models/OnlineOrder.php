@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\OnlineOrderLegacyState;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class OnlineOrder extends Model
 {
@@ -66,7 +68,25 @@ class OnlineOrder extends Model
         'recorded_in_majoo' => 'boolean',
         'revision' => 'integer',
         'closed_at' => 'datetime',
+        'payment_confirmed_at' => 'datetime',
+        'jnt_pickup_requested_at' => 'datetime',
+        'jnt_picked_up_at' => 'datetime',
+        'handed_over_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (OnlineOrder $order): void {
+            $order->public_id ??= (string) Str::ulid();
+            $order->source ??= 'whatsapp';
+        });
+
+        // Transitional (ORD-02c slice 1): ORD-01 screens still drive `stage`; keep the ORD-02 dimensions in step.
+        static::saving(function (OnlineOrder $order): void {
+            $order->forceFill(OnlineOrderLegacyState::dimensions($order->getAttributes(), fn () => now()));
+        });
+    }
 
     public function items(): HasMany
     {

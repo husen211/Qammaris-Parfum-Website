@@ -135,6 +135,13 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 - Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
 - **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
 
+### Status pesanan terpisah (ORD-02c, branch review)
+
+- Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.
+- Pesanan **selesai** bila sudah diserahkan, Lunas, tanpa kendala terbuka, dan tanpa refund terbuka.
+- Talangan/reimburse staf yang belum diganti **tidak** menahan status selesai, tetapi tetap tampil sebagai kewajiban terbuka (keputusan Owner R8).
+- Pesanan yang dibatalkan setelah Lunas mendapat status pembayaran **refund belum selesai**, supaya terlihat sebagai kasus yang perlu ditangani (D4). Pesanan lama ORD-01 dipetakan dengan aturan yang sama.
+
 ### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)
 
 - Admin bisa dipasang sebagai aplikasi "Qammaris Admin" dan dibuka dari `/admin/login`. Website publik tidak berubah dan tidak dipasang sebagai aplikasi.

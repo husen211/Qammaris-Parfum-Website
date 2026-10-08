@@ -123,6 +123,18 @@ qammaris:grant-super-admin: explicit, previewed, audited bootstrap (actor null)
 
 A route-table test fails if any new `admin.*` route lacks its area ability. ORD-01 order operations use `orders.manage`, `orders.finance`, and the order-aware `orders.cancel`. [ADR-038](decisions/ADR-038-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md), [verification](../verification/ord-02a/README.md).
 
+### Order state dimensions (ORD-02c slice 1, branch review)
+
+- `online_orders` gains these columns (migration `2026_10_08_300001`):
+  - `public_id` (ULID) and `source`;
+  - `lifecycle`, `payment_status`, `preparation_status`;
+  - courier: booking responsibility, provider, status;
+  - `jnt_status`, `handover_status`, `handed_to`, `delivery_status`;
+  - their timestamps.
+- `App\Support\OnlineOrderLegacyState` maps ORD-01 `stage` to these columns. One class serves both the backfill (event times) and a transitional `OnlineOrder::saving` hook.
+- The sync is one-way while the ORD-01 screens still drive `stage`. ORD-02d reverses the authority and removes the hook.
+- `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
+
 ### Admin PWA (ORD-02b, branch review)
 
 ```text
