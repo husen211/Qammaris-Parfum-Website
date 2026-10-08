@@ -151,3 +151,5 @@ BLOG-04 menambahkan media milik artikel, metadata hak pakai, checksum original, 
 - Instagram Reel is opt-in click-to-load, portrait and always offers a direct source link. No dependency on video availability for reading/using About. Existing publicURL`/store/about` remains.
 
 Implementation/release status: [ABOUT-01](../planning/BACKLOG.md), [provenance](../verification/about-experience/source-notes.md).
+
+Owner About presentation correction2026-10-08 (ABOUT-02 implementation; release pending): paper-test and skin-test promotional posters leave visible About; keep all source/derivative files. Real shelves/interior/facade each have one placement, construction/design photos occupy the gallery. Timeline keeps the four approved factual steps without repeated illustrative photos. Ten actual21st source adaptations follow the brand and plain copy; mobile/reduced-motion need no pinned scroll or added motion download. [Source/photo mapping](../verification/about-cinematic/sources.md). Existing store facts and business behavior unchanged.
