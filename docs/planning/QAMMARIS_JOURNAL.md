@@ -2,7 +2,7 @@
 
 Owner approved implementation of this plan on 2026-10-07. This program is separate from the still-open P9 acceptance. Work on one item at a time; approval of the roadmap does not authorize automatic phase advancement, production deployment, credentials or broad content rewrites. Current status lives in [BACKLOG](BACKLOG.md), current rules in [BUSINESS_RULES](../product/BUSINESS_RULES.md).
 
-Current implementation/release: BLOG-01–05 installed through approved PR31 on2026-10-08; production machine credentials remain inactive. [Release evidence](../verification/blog-06/README.md) records remaining acceptance limits. This original plan is not recurring release authorization.
+Current implementation/release: BLOG-01–05 installed through approved PR31 on2026-10-08; production API/local machine credentials were separately authorized and activated2026-10-08 ([activation](../verification/journal-activation/README.md)). [Release evidence](../verification/blog-06/README.md) records remaining acceptance limits. This original plan is not recurring release authorization.
 
 ## Goal and fixed decisions
 

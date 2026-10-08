@@ -1,6 +1,6 @@
 # Journal machine API operations
 
-BLOG-05 code/schema installed through the approved2026-10-08 [Journal release](../verification/blog-06/README.md), after authorized MySQL/GD staging rehearsal and targeted production migrations. Production API remains OFF; no production actor/token issued. Credential activation is still separately approved. Existing pending-migration deployment guard remains.
+BLOG-05 code/schema installed through the approved2026-10-08 [Journal release](../verification/blog-06/README.md), after authorized MySQL/GD staging rehearsal and targeted production migrations. Owner separately authorized activation2026-10-08. Production API is ON; one local machine actor/token was issued and stored directly in Windows current-user environment. Read endpoints passed. [Activation evidence](../verification/journal-activation/README.md). New actors/rotation/cloud destinations still need their own bounded authorization. Existing pending-migration deployment guard remains.
 
 ## Activation after separate approval
 
@@ -29,4 +29,4 @@ To close the entire endpoint, set BLOG_AUTOMATION_ENABLED=false and rebuild conf
 
 ## Evidence and current limits
 
-[BLOG-05 evidence](../verification/blog-05/README.md), [API contract](../api/JOURNAL_AUTOMATION.md), [ADR-036](../architecture/decisions/ADR-036-journal-draft-automation.md). Local multipart/two workers and staging MySQL/kernel/GD rehearsal passed; local native file-input touch upload and production public touch were verified in BLOG-06. Owner walkthrough/physical Safari/production native upload and credential activation remain unperformed. Existing SEC-DEP-01/02 dependency findings remain in backlog and are not silently upgraded by Sanctum installation.
+[BLOG-05 evidence](../verification/blog-05/README.md), [API contract](../api/JOURNAL_AUTOMATION.md), [ADR-036](../architecture/decisions/ADR-036-journal-draft-automation.md). Local multipart/two workers and staging MySQL/kernel/GD rehearsal passed; local native file-input touch upload and production public touch were verified in BLOG-06. Owner walkthrough/physical Safari/production native upload remain unperformed. Production activation and local read checks completed separately2026-10-08; no production article or upload was created for this operation. Existing SEC-DEP-01/02 dependency findings remain in backlog and are not silently upgraded by Sanctum installation.

@@ -57,7 +57,7 @@ Use the README read path. Existing current documents have distinct owners; histo
 
 Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md), BLOG-01–05 implementation and the blog-only release. PR31 installed foundation/CMS/public Journal/SEO/media/components/draft API code in production on2026-10-08 after authorized MySQL staging rehearsal and targeted production migrations. [Release evidence](../verification/blog-06/README.md) and [board](../planning/BACKLOG.md) distinguish delivered code from remaining Owner/editorial/device/credential review. Order PR27/32 are explicitly excluded.
 
-Preserve `/blog/...`, HTML, IDs/authors/content/media. Tiptap vanilla is admin-only; Sanctum is implemented with separate machine identity/ownership, strict draft-only abilities and no catalog writes. Production machine API remains OFF with no actor/token; credential activation needs a separate operation. Original P9 remains open. This completed release is not permission for later automatic deployment, new credential grants or article rewrites.
+Preserve `/blog/...`, HTML, IDs/authors/content/media. Tiptap vanilla is admin-only; Sanctum is implemented with separate machine identity/ownership, strict draft-only abilities and no catalog writes. Production machine API/local actor and token were subsequently enabled in the separately approved2026-10-08 [activation operation](../verification/journal-activation/README.md). Cloud-only secret provisioning is not configured. Original P9 remains open. This completed release is not permission for later automatic deployment, new credential grants or article rewrites.
 
 ## Other later programs, not started
 
