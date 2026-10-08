@@ -2,6 +2,11 @@
 
 Konsolidasi AUD-02, 2026-10-07: merangkum keputusan Owner yang sudah diterima, bukan keputusan bisnis baru. Implementasi aktual ada di [ARCHITECTURE](../architecture/ARCHITECTURE.md); status/verifikasi di [BACKLOG](../planning/BACKLOG.md). [Dokumen sebelum konsolidasi](../history/2026-10-07-context/BUSINESS_RULES.md) mempertahankan seluruh keputusan launching, daftar yang disetujui, dan aturan yang kemudian digantikan. Angka produk/release dalam riwayat adalah bukti bertanggal, bukan konfigurasi atau izin pekerjaan baru.
 
+## Lokasi dan jam operasional toko
+
+- Keputusan Owner 2026-10-08: toko Palu buka **Sabtu–Kamis, 09.00–21.00 WITA**; **Jumat tutup**. Halaman lokasi harus menampilkan jadwal ini, bukan Senin–Sabtu/Minggu tutup.
+- Hari libur nasional mengikuti pengumuman terbaru toko di Instagram; jadwal ini tidak mengubah alur checkout atau menjanjikan balasan chat seketika.
+
 ## Identitas, ukuran, dan publication
 
 - Satu halaman mewakili satu produk, satu ukuran, satu harga. Ukuran berbeda biasanya produk terpisah. `ProductVariant` tetap detail teknis satu offer aktif; tidak ada penghapusan model/ID variant.
