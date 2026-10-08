@@ -8,6 +8,7 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Support\Rupiah;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class CreateOnlineOrder
@@ -19,7 +20,7 @@ class CreateOnlineOrder
      */
     public function handle(User $actor, array $lines, ?array $customer = null): array
     {
-        abort_unless($actor->exists && $actor->role === 'admin', 403);
+        abort_unless($actor->exists && Gate::forUser($actor)->allows('orders.manage'), 403);
         if ($lines === []) {
             throw new OnlineOrderRejected('Pilih minimal satu produk.');
         }

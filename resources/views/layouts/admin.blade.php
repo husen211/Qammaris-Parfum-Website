@@ -24,11 +24,14 @@
             </div>
 
             <nav class="flex-1 px-4 py-6 space-y-1">
+                @can('dashboard.view')
                 <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     Dashboard
                 </a>
+                @endcan
                 
+                @can('catalog.manage')
                 <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     Products
@@ -50,19 +53,35 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.9A5 5 0 0115.9 6H16a5 5 0 011 9.9M12 12v9m0-9l-3 3m3-3l3 3"/></svg>
                     Import Produk
                 </a>
+                @endcan
 
+                @can('blog.manage')
                 <a href="{{ route('admin.blog-posts.index') }}" class="{{ request()->routeIs('admin.blog-posts*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 5H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2zM7 9h10M7 13h10M7 17h6"/></svg>
                     Blog Posts
                 </a>
+                @endcan
 
+                @can('orders.manage')
                 <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     Pesanan Online
                 </a>
+                @endcan
+                @can('users.manage')
+                <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users*') ? 'active-nav' : '' }} flex min-h-11 items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.28.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Pengguna &amp; Role
+                </a>
+                @endcan
             </nav>
 
             <div class="p-4 border-t border-gray-100">
+                <div class="px-4 pb-3 text-sm">
+                    <p class="truncate font-semibold text-gray-900">{{ auth()->user()->name }}</p>
+                    <p class="text-xs text-gray-500">{{ auth()->user()->roleLabel() }}</p>
+                    <a href="{{ route('admin.account.password') }}" class="mt-1 inline-flex min-h-9 items-center text-xs text-gray-600 underline underline-offset-2 hover:text-black">Ganti password</a>
+                </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
@@ -79,14 +98,25 @@
                 <details class="group">
                     <summary class="cursor-pointer list-none rounded border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700">Menu</summary>
                     <nav class="absolute right-4 top-14 z-50 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-xl">
+                        @can('dashboard.view')
                         <a href="{{ route('admin.dashboard') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.dashboard') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Dashboard</a>
+                        @endcan
+                        @can('catalog.manage')
                         <a href="{{ route('admin.products.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Products</a>
                         <a href="{{ route('admin.app-products.index') }}" class="flex min-h-11 items-center rounded px-3 py-2 text-sm {{ request()->routeIs('admin.app-products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Produk dari aplikasi</a>
                         <a href="{{ route('admin.brands.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.brands*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Brand</a>
                         <a href="{{ route('admin.categories.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.categories*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Kategori</a>
                         <a href="{{ route('admin.shopee-imports.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.product-imports*', 'admin.shopee-imports*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Import Produk</a>
+                        @endcan
+                        @can('blog.manage')
                         <a href="{{ route('admin.blog-posts.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.blog-posts*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Blog Posts</a>
+                        @endcan
+                        @can('orders.manage')
                         <a href="{{ route('admin.orders.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.orders*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pesanan Online</a>
+                        @endcan
+                        @can('users.manage')<a href="{{ route('admin.users.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.users*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pengguna &amp; Role</a>@endcan
+                        <a href="{{ route('admin.account.password') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.account*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Ganti password</a>
+                        <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="block w-full rounded px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">Logout</button></form>
                     </nav>
                 </details>
             </header>

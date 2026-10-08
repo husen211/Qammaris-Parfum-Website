@@ -73,14 +73,14 @@
                 @endif
 
                 <div class="mt-4 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
-                    @if (! in_array($order->stage, [OnlineOrder::STAGE_AWAITING_CUSTOMER, OnlineOrder::STAGE_DETAILS_RECEIVED], true))
+                    @if (! in_array($order->stage, [OnlineOrder::STAGE_AWAITING_CUSTOMER, OnlineOrder::STAGE_DETAILS_RECEIVED], true) && auth()->user()->can('orders.finance'))
                         <form method="POST" action="{{ route('admin.orders.revert', $order) }}">
                             @csrf @method('PATCH')
                             <input type="hidden" name="from" value="{{ $order->stage }}">
                             <button class="{{ $secondary }}">{{ $order->stage === OnlineOrder::STAGE_CANCELLED ? 'Pulihkan pesanan' : 'Koreksi: batalkan “'.$order->stageLabel().'”' }}</button>
                         </form>
                     @endif
-                    @unless ($order->isClosed())
+                    @if (! $order->isClosed() && auth()->user()->can('orders.cancel', $order))
                         <details class="w-full sm:w-auto">
                             <summary class="inline-flex min-h-11 cursor-pointer items-center rounded-lg px-4 text-sm font-semibold text-red-700 hover:bg-red-50">Batalkan pesanan…</summary>
                             <form method="POST" action="{{ route('admin.orders.cancel', $order) }}" class="mt-3 flex flex-wrap items-end gap-3">
@@ -91,7 +91,9 @@
                                 <button class="inline-flex min-h-11 items-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800">Ya, batalkan</button>
                             </form>
                         </details>
-                    @endunless
+                    @elseif (! $order->isClosed())
+                        <p class="text-sm text-gray-500">Pesanan yang sudah dibayar atau diserahkan hanya dapat dibatalkan oleh Super Admin.</p>
+                    @endif
                 </div>
             </section>
 
@@ -205,10 +207,14 @@
                     <h2 id="advance-title" class="text-lg font-semibold text-gray-900">Talangan ongkir staf</h2>
                     <p class="mt-1 text-sm text-gray-800">{{ format_rupiah($order->staff_advance_amount) }} oleh {{ $order->staff_advance_by }}</p>
                     @if ($order->needsReimbursement())
+                        @can('orders.finance')
                         <form method="POST" action="{{ route('admin.orders.reimburse', $order) }}" class="mt-3">
                             @csrf @method('PATCH')
                             <button class="{{ $copyButton }}">Tandai sudah diganti</button>
                         </form>
+                        @else
+                        <p class="mt-2 text-sm text-gray-600">Penggantian talangan ditandai oleh Super Admin.</p>
+                        @endcan
                     @else
                         <p class="mt-1 text-sm text-green-800">Sudah diganti {{ $time($order->staff_reimbursed_at) }}</p>
                     @endif
@@ -230,6 +236,9 @@
 
                 <fieldset class="space-y-4 border-t border-gray-100 pt-4">
                     <legend class="pt-4 text-sm font-semibold uppercase tracking-wider text-gray-500">Pengiriman</legend>
+                    @cannot('orders.finance')
+                        <p id="finance-locked" class="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">Ongkir dan pendanaan driver hanya dapat diubah oleh Super Admin.</p>
+                    @endcannot
                     <div>
                         <span class="block text-sm font-medium text-gray-700">Siapa pesan driver/J&T?</span>
                         <div class="mt-1 flex flex-wrap gap-4">
@@ -254,17 +263,17 @@
                     </label>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="text-sm font-medium text-gray-700">Ongkir (Rp)
-                            <input name="shipping_fee" inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" placeholder="11500" class="{{ $input }}">
+                            <input name="shipping_fee" @cannot('orders.finance') disabled aria-describedby="finance-locked" @endcannot inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" placeholder="11500" class="{{ $input }}">
                         </label>
                         <label class="text-sm font-medium text-gray-700">Ongkir dibayar
-                            <select name="shipping_payer" class="{{ $input }}">
+                            <select name="shipping_payer" @cannot('orders.finance') disabled aria-describedby="finance-locked" @endcannot class="{{ $input }} disabled:bg-gray-100">
                                 <option value="">Belum ditentukan</option>
                                 @foreach (OnlineOrder::SHIPPING_PAYERS as $value => $label)<option value="{{ $value }}" @selected(old('shipping_payer', $order->shipping_payer) === $value)>{{ $label }}</option>@endforeach
                             </select>
                         </label>
                     </div>
                     <label class="block text-sm font-medium text-gray-700">Toko bayar driver dengan
-                        <select name="driver_funding" class="{{ $input }}">
+                        <select name="driver_funding" @cannot('orders.finance') disabled aria-describedby="finance-locked" @endcannot class="{{ $input }} disabled:bg-gray-100">
                             <option value="">Tidak perlu / belum ditentukan</option>
                             @foreach (OnlineOrder::DRIVER_FUNDING as $value => $label)<option value="{{ $value }}" @selected(old('driver_funding', $order->driver_funding) === $value)>{{ $label }}</option>@endforeach
                         </select>

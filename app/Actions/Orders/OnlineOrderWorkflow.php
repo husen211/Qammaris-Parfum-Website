@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\Rupiah;
 use Closure;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
@@ -19,6 +20,10 @@ class OnlineOrderWorkflow
     private const CUSTOMER_FIELDS = ['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'packaging', 'customer_note'];
 
     private const STAFF_STAGES = [OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED];
+
+    private const FINANCIAL_FIELDS = ['shipping_fee', 'shipping_payer', 'driver_funding', 'staff_advance_amount', 'staff_advance_by'];
+
+    private const RECIPIENT_FIELDS = ['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'location_url', 'packaging', 'customer_note'];
 
     private const STALE = 'Status pesanan sudah berubah. Muat ulang halaman untuk melihat data terbaru.';
 
@@ -49,6 +54,15 @@ class OnlineOrderWorkflow
             if ($order->driver_funding !== 'staff_advance' && $order->staff_reimbursed_at === null) {
                 $order->staff_advance_amount = null;
                 $order->staff_advance_by = null;
+            }
+            if (! Gate::forUser($actor)->allows('orders.finance')) {
+                // Owner D5: Staff Order may correct recipient/address details until handover, never money.
+                if ($order->isDirty(self::FINANCIAL_FIELDS)) {
+                    throw new OnlineOrderRejected('Perubahan ongkir atau pendanaan driver hanya dapat dilakukan Super Admin.');
+                }
+                if ($order->isDirty(self::RECIPIENT_FIELDS) && in_array($order->stage, [OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED, OnlineOrder::STAGE_CANCELLED], true)) {
+                    throw new OnlineOrderRejected('Data penerima tidak dapat diubah setelah pesanan diserahkan atau ditutup. Hubungi Super Admin.');
+                }
             }
             if (! $order->isDirty()) {
                 return;
@@ -119,7 +133,7 @@ class OnlineOrderWorkflow
     public function revert(OnlineOrder $order, string $from, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($from, $actor): void {
-            $this->assertAdmin($actor);
+            $this->assertAllowed($actor, 'orders.finance');
             if ($order->stage !== $from) {
                 throw new OnlineOrderRejected(self::STALE);
             }
@@ -140,7 +154,10 @@ class OnlineOrderWorkflow
     public function cancel(OnlineOrder $order, string $reason, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($reason, $actor): void {
-            $this->assertAdmin($actor);
+            $this->assertAllowed($actor, 'orders.manage');
+            if ($order->stage !== OnlineOrder::STAGE_CANCELLED && ! Gate::forUser($actor)->allows('orders.cancel', $order)) {
+                throw new OnlineOrderRejected('Pesanan yang sudah dibayar atau diserahkan hanya dapat dibatalkan oleh Super Admin.');
+            }
             if ($order->stage === OnlineOrder::STAGE_CANCELLED) {
                 return;
             }
@@ -173,7 +190,7 @@ class OnlineOrderWorkflow
     public function markReimbursed(OnlineOrder $order, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($actor): void {
-            $this->assertAdmin($actor);
+            $this->assertAllowed($actor, 'orders.finance');
             if (! $order->needsReimbursement()) {
                 return;
             }
@@ -228,6 +245,11 @@ class OnlineOrderWorkflow
 
     private function assertAdmin(?User $actor): void
     {
-        abort_unless($actor?->exists && $actor->role === 'admin', 403);
+        $this->assertAllowed($actor, 'orders.manage');
+    }
+
+    private function assertAllowed(?User $actor, string $ability): void
+    {
+        abort_unless($actor?->exists && Gate::forUser($actor)->allows($ability), 403);
     }
 }

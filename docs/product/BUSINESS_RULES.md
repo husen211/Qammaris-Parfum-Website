@@ -123,6 +123,18 @@ Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-034](../architectur
 - Ongkir memisahkan sisi customer (ditambahkan ke transfer / bayar ke driver / gratis) dari dana toko ke driver (cash kasir / GoPay staf dari admin / talangan staf → diganti admin).
 - Majoo tetap untuk QRIS, member, struk, dan poin; website hanya menandai "Sudah dicatat di Majoo". Pesan grup disalin manual, tidak dikirim otomatis. Customer tidak melihat nama staf, talangan, atau catatan internal.
 
+## Akses admin dan data pelanggan (ORD-02a, branch review)
+
+Keputusan Owner 2026-10-08; belum dirilis. [ADR-035](../architecture/decisions/ADR-035-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
+
+- Role admin: **Super Admin** (akses penuh, mengelola pengguna, menyetujui perubahan finansial), **Staff Order** (hanya Pesanan Online), dan **Admin (lama)** untuk akun sebelum ORD-02. Akun lama tetap bekerja seperti sebelumnya tanpa menu pengguna sampai dikonversi. Role lama tidak bisa diberikan ke akun baru.
+- Super Admin pertama hanya lewat bootstrap eksplisit di server setelah Owner memverifikasi identitas. Tidak ada promosi otomatis.
+- Login dengan email atau username, tanpa remember-me; sesi admin berakhir setelah 12 jam tidak aktif. Akun nonaktif tidak bisa masuk; nonaktif, ganti role, dan reset password mengakhiri semua sesi akun tersebut.
+- Super Admin aktif terakhir tidak dapat dinonaktifkan atau diturunkan.
+- Staff Order: membuat/mengubah pesanan, menandai Lunas, membatalkan pesanan yang belum Lunas dan belum diserahkan dengan alasan, dan mengubah alamat tanpa biaya sampai diserahkan. Perubahan ongkir/pendanaan, koreksi langkah, penggantian talangan, dan pembatalan setelah Lunas hanya Super Admin.
+- Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
+- **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
+
 ## UI, akses, dan batas program
 
 - Mobile-first, premium cream/charcoal/gold dengan whitespace; jangan memperluas focused task menjadi redesign/SPA/framework atau dependency baru.

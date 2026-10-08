@@ -110,6 +110,19 @@ Views: OnlineOrderTimeline (per-audience allowlist) + x-order-timeline, OnlineOr
 
 Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; the cart checkout path is unchanged and still stores nothing. No package, queue, scheduler, payment, or Majoo integration. [ADR-034](decisions/ADR-034-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
 
+## Admin access — ORD-02a review branch, not deployed
+
+```text
+Login (email|username, no remember-me) -> session auth_version + last activity
+admin.* routes -> auth + AdminMiddleware (active, auth_version, 12h idle, must-change-password)
+               -> can:{catalog|blog|orders|users}.manage (+ orders.finance) -> FormRequest gate -> action gate
+AuthorizationServiceProvider: super_admin | staff_order | admin (legacy) | customer
+ManageAdminUser: lock all Super Admins + target, last-Super-Admin guard, auth_version bump, user_admin_changes in transaction
+qammaris:grant-super-admin: explicit, previewed, audited bootstrap (actor null)
+```
+
+A route-table test fails if any new `admin.*` route lacks its area ability. ORD-01 order operations use `orders.manage`, `orders.finance`, and the order-aware `orders.cancel`. [ADR-035](decisions/ADR-035-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md), [verification](../verification/ord-02a/README.md).
+
 ## Runtime, deployment, and verification boundaries
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.

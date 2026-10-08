@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\AdminProductImportController;
 use App\Http\Controllers\Admin\AdminProductMaintenanceController;
 use App\Http\Controllers\Admin\AdminQammarisAppProductController;
 use App\Http\Controllers\Admin\AdminShopeeContentController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
@@ -73,66 +75,85 @@ Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('
 Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name('quiz.store');
 Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
 
+// Every admin route needs an active admin account (admin middleware) plus one area ability (ORD-02a).
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
 
-    Route::get('app-products', [AdminQammarisAppProductController::class, 'index'])->name('app-products.index');
-    Route::post('app-products/preview', [AdminQammarisAppProductController::class, 'preview'])->middleware('throttle:6,1')->name('app-products.preview');
-    Route::post('app-products/sync', [AdminQammarisAppProductController::class, 'sync'])->middleware('throttle:6,1')->name('app-products.sync');
-    Route::post('app-products/{productImportBatch}/apply', [AdminQammarisAppProductController::class, 'apply'])->name('app-products.apply');
-
-    // Dashboard Admin Sederhana
+    // Staff Order accounts are redirected from the dashboard to their order list.
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // === TAMBAHAN BARU (Untuk fitur hapus gambar saat Edit) ===
-    Route::delete('products/image/{productImage}', [AdminProductController::class, 'destroyImage'])->name('products.delete-image');
+    // Own account (all admin roles)
+    Route::get('account/password', [AdminAccountController::class, 'edit'])->name('account.password');
+    Route::put('account/password', [AdminAccountController::class, 'update'])->name('account.password.update');
 
-    // Archive is reversible; product hard deletion is intentionally unavailable in admin.
-    Route::patch('products/{product}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
-    Route::patch('products/{product}/images/{productImage}/primary', [AdminProductImageController::class, 'primary'])->name('products.images.primary');
-    Route::patch('products/{product}/images/{productImage}/move', [AdminProductImageController::class, 'move'])->name('products.images.move');
-    Route::delete('products/{product}/images/{productImage}', [AdminProductImageController::class, 'destroy'])->name('products.images.destroy');
+    // Catalog, taxonomy, imports and app products
+    Route::middleware('can:catalog.manage')->group(function () {
+        Route::get('app-products', [AdminQammarisAppProductController::class, 'index'])->name('app-products.index');
+        Route::post('app-products/preview', [AdminQammarisAppProductController::class, 'preview'])->middleware('throttle:6,1')->name('app-products.preview');
+        Route::post('app-products/sync', [AdminQammarisAppProductController::class, 'sync'])->middleware('throttle:6,1')->name('app-products.sync');
+        Route::post('app-products/{productImportBatch}/apply', [AdminQammarisAppProductController::class, 'apply'])->name('app-products.apply');
 
-    Route::get('product-imports', [AdminProductImportController::class, 'create'])->name('product-imports.create');
-    Route::get('shopee-imports', [AdminShopeeContentController::class, 'index'])->name('shopee-imports.index');
-    Route::post('shopee-imports/preview', [AdminShopeeContentController::class, 'preview'])->middleware('throttle:6,1')->name('shopee-imports.preview');
-    Route::post('shopee-imports/{productImportBatch}/rows/{productImportRow}/choose', [AdminShopeeContentController::class, 'choose'])->name('shopee-imports.choose');
-    Route::post('shopee-imports/{productImportBatch}/apply', [AdminShopeeContentController::class, 'apply'])->middleware('throttle:6,1')->name('shopee-imports.apply');
-    Route::post('shopee-imports/{productImportBatch}/refresh', [AdminShopeeContentController::class, 'refresh'])->middleware('throttle:6,1')->name('shopee-imports.refresh');
-    Route::post('shopee-imports/{productImportBatch}/images', [AdminShopeeContentController::class, 'images'])->middleware('throttle:6,1')->name('shopee-imports.images');
-    Route::post('shopee-imports/{productImportBatch}/publish', [AdminShopeeContentController::class, 'publish'])->middleware('throttle:6,1')->name('shopee-imports.publish');
-    Route::get('product-imports/template', [AdminProductImportController::class, 'template'])->name('product-imports.template');
-    Route::get('product-imports/catalog-snapshot.csv', [AdminProductImportController::class, 'catalogSnapshot'])->name('product-imports.catalog-snapshot');
-    Route::get('product-imports/{productImportBatch}/report.csv', [AdminProductImportController::class, 'report'])->name('product-imports.report');
-    Route::post('product-imports/preview', [AdminProductImportController::class, 'preview'])->name('product-imports.preview');
-    Route::post('product-imports/{productImportBatch}/apply', [AdminProductImportController::class, 'apply'])->name('product-imports.apply');
-    Route::post('product-imports/{productImportBatch}/images', [AdminProductImportController::class, 'acquireImages'])->name('product-imports.images');
-    Route::post('product-imports/{productImportBatch}/rows/{productImportRow}/resolve-protected', [AdminProductImportController::class, 'resolveProtected'])->name('product-imports.resolve-protected');
+        // === TAMBAHAN BARU (Untuk fitur hapus gambar saat Edit) ===
+        Route::delete('products/image/{productImage}', [AdminProductController::class, 'destroyImage'])->name('products.delete-image');
 
-    Route::get('product-maintenance', [AdminProductMaintenanceController::class, 'create'])->name('product-maintenance.create');
-    Route::get('product-maintenance/template', [AdminProductMaintenanceController::class, 'template'])->name('product-maintenance.template');
-    Route::post('product-maintenance/preview', [AdminProductMaintenanceController::class, 'preview'])->name('product-maintenance.preview');
-    Route::post('product-maintenance/{productImportBatch}/apply', [AdminProductMaintenanceController::class, 'apply'])->name('product-maintenance.apply');
+        // Archive is reversible; product hard deletion is intentionally unavailable in admin.
+        Route::patch('products/{product}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
+        Route::patch('products/{product}/images/{productImage}/primary', [AdminProductImageController::class, 'primary'])->name('products.images.primary');
+        Route::patch('products/{product}/images/{productImage}/move', [AdminProductImageController::class, 'move'])->name('products.images.move');
+        Route::delete('products/{product}/images/{productImage}', [AdminProductImageController::class, 'destroy'])->name('products.images.destroy');
 
-    // CRUD Produk (Bawaan)
-    Route::resource('products', AdminProductController::class);
+        Route::get('product-imports', [AdminProductImportController::class, 'create'])->name('product-imports.create');
+        Route::get('shopee-imports', [AdminShopeeContentController::class, 'index'])->name('shopee-imports.index');
+        Route::post('shopee-imports/preview', [AdminShopeeContentController::class, 'preview'])->middleware('throttle:6,1')->name('shopee-imports.preview');
+        Route::post('shopee-imports/{productImportBatch}/rows/{productImportRow}/choose', [AdminShopeeContentController::class, 'choose'])->name('shopee-imports.choose');
+        Route::post('shopee-imports/{productImportBatch}/apply', [AdminShopeeContentController::class, 'apply'])->middleware('throttle:6,1')->name('shopee-imports.apply');
+        Route::post('shopee-imports/{productImportBatch}/refresh', [AdminShopeeContentController::class, 'refresh'])->middleware('throttle:6,1')->name('shopee-imports.refresh');
+        Route::post('shopee-imports/{productImportBatch}/images', [AdminShopeeContentController::class, 'images'])->middleware('throttle:6,1')->name('shopee-imports.images');
+        Route::post('shopee-imports/{productImportBatch}/publish', [AdminShopeeContentController::class, 'publish'])->middleware('throttle:6,1')->name('shopee-imports.publish');
+        Route::get('product-imports/template', [AdminProductImportController::class, 'template'])->name('product-imports.template');
+        Route::get('product-imports/catalog-snapshot.csv', [AdminProductImportController::class, 'catalogSnapshot'])->name('product-imports.catalog-snapshot');
+        Route::get('product-imports/{productImportBatch}/report.csv', [AdminProductImportController::class, 'report'])->name('product-imports.report');
+        Route::post('product-imports/preview', [AdminProductImportController::class, 'preview'])->name('product-imports.preview');
+        Route::post('product-imports/{productImportBatch}/apply', [AdminProductImportController::class, 'apply'])->name('product-imports.apply');
+        Route::post('product-imports/{productImportBatch}/images', [AdminProductImportController::class, 'acquireImages'])->name('product-imports.images');
+        Route::post('product-imports/{productImportBatch}/rows/{productImportRow}/resolve-protected', [AdminProductImportController::class, 'resolveProtected'])->name('product-imports.resolve-protected');
 
-    // Taxonomy records are never hard-deleted; status changes are reversible.
-    Route::patch('brands/{brand}/status', [AdminBrandController::class, 'updateStatus'])->name('brands.status');
-    Route::resource('brands', AdminBrandController::class)->except(['show', 'destroy']);
-    Route::patch('categories/{category}/status', [AdminCategoryController::class, 'updateStatus'])->name('categories.status');
-    Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
+        Route::get('product-maintenance', [AdminProductMaintenanceController::class, 'create'])->name('product-maintenance.create');
+        Route::get('product-maintenance/template', [AdminProductMaintenanceController::class, 'template'])->name('product-maintenance.template');
+        Route::post('product-maintenance/preview', [AdminProductMaintenanceController::class, 'preview'])->name('product-maintenance.preview');
+        Route::post('product-maintenance/{productImportBatch}/apply', [AdminProductMaintenanceController::class, 'apply'])->name('product-maintenance.apply');
 
-    // Online orders
-    Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
-    Route::patch('orders/{order}/advance', [AdminOnlineOrderController::class, 'advance'])->name('orders.advance');
-    Route::patch('orders/{order}/revert', [AdminOnlineOrderController::class, 'revert'])->name('orders.revert');
-    Route::patch('orders/{order}/cancel', [AdminOnlineOrderController::class, 'cancel'])->name('orders.cancel');
-    Route::patch('orders/{order}/reimburse', [AdminOnlineOrderController::class, 'reimburse'])->name('orders.reimburse');
-    Route::post('orders/{order}/links', [AdminOnlineOrderController::class, 'regenerateLink'])->name('orders.regenerate-link');
-    Route::resource('orders', AdminOnlineOrderController::class)->only(['index', 'create', 'store', 'show', 'update']);
+        // CRUD Produk (Bawaan)
+        Route::resource('products', AdminProductController::class);
 
-    // CRUD Blog Posts
-    Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
+        // Taxonomy records are never hard-deleted; status changes are reversible.
+        Route::patch('brands/{brand}/status', [AdminBrandController::class, 'updateStatus'])->name('brands.status');
+        Route::resource('brands', AdminBrandController::class)->except(['show', 'destroy']);
+        Route::patch('categories/{category}/status', [AdminCategoryController::class, 'updateStatus'])->name('categories.status');
+        Route::resource('categories', AdminCategoryController::class)->except(['show', 'destroy']);
+    });
+
+    // Online orders (Super Admin, Staff Order, legacy admin); money changes need orders.finance
+    Route::middleware('can:orders.manage')->group(function () {
+        Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
+        Route::patch('orders/{order}/advance', [AdminOnlineOrderController::class, 'advance'])->name('orders.advance');
+        Route::patch('orders/{order}/revert', [AdminOnlineOrderController::class, 'revert'])->middleware('can:orders.finance')->name('orders.revert');
+        Route::patch('orders/{order}/cancel', [AdminOnlineOrderController::class, 'cancel'])->name('orders.cancel');
+        Route::patch('orders/{order}/reimburse', [AdminOnlineOrderController::class, 'reimburse'])->middleware('can:orders.finance')->name('orders.reimburse');
+        Route::post('orders/{order}/links', [AdminOnlineOrderController::class, 'regenerateLink'])->name('orders.regenerate-link');
+        Route::resource('orders', AdminOnlineOrderController::class)->only(['index', 'create', 'store', 'show', 'update']);
+    });
+
+    // Blog
+    Route::middleware('can:blog.manage')->group(function () {
+        Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
+    });
+
+    // Pengguna & Role (Super Admin only)
+    Route::middleware('can:users.manage')->group(function () {
+        Route::patch('users/{user}/status', [AdminUserController::class, 'status'])->name('users.status');
+        Route::post('users/{user}/password-reset', [AdminUserController::class, 'resetPassword'])->name('users.password-reset');
+        Route::resource('users', AdminUserController::class)->except(['destroy']);
+    });
 });
 
 // === ROUTE AUTHENTICATION (MANUAL) ===

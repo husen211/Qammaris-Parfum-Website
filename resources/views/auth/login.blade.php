@@ -19,19 +19,23 @@
         <form action="{{ route('login.perform') }}" method="POST" class="space-y-6">
             @csrf
 
+            @if (session('error'))
+                <p role="alert" class="border border-red-200 bg-red-50 p-3 text-sm text-red-800">{{ session('error') }}</p>
+            @endif
+
             <div class="group">
-                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Alamat Email</label>
-                <input type="email" name="email" value="{{ old('email') }}" required autofocus
-                    class="w-full bg-transparent border-b border-gray-300 py-3 text-sm focus:border-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
-                    placeholder="admin@qammaris.com">
-                @error('email')
+                <label for="login" class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Email atau username</label>
+                <input id="login" type="text" name="login" value="{{ old('login', old('email')) }}" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false"
+                    class="w-full bg-transparent border-b border-gray-300 py-3 text-base focus:border-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
+                    placeholder="admin@qammaris.com atau username">
+                @error('login')
                     <span class="text-xs text-red-500 mt-1">{{ $message }}</span>
                 @enderror
             </div>
 
             <div class="group">
-                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Kata Sandi</label>
-                <input type="password" name="password" required
+                <label for="password" class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Kata Sandi</label>
+                <input id="password" type="password" name="password" required autocomplete="current-password"
                     class="w-full bg-transparent border-b border-gray-300 py-3 text-sm focus:border-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
                     placeholder="Kata sandi">
             </div>

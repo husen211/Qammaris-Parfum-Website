@@ -1,0 +1,32 @@
+{
+  "ownerLanding": "/admin",
+  "users-index-1440:overflow": 0,
+  "users-create-1440:overflow": 0,
+  "tempPasswordShown": true,
+  "users-show-temp-password-1440:overflow": 0,
+  "users-index-390:overflow": 0,
+  "lastSuperAdminGuard": "Ini Super Admin aktif terakhir. Tambahkan Super Admin lain sebelum menonaktifkan atau mengubah role akun ini.",
+  "users-last-super-admin-guard-390:overflow": 0,
+  "staffForcedTo": "/admin/account/password",
+  "staff-change-password-390:overflow": 0,
+  "staffLanding": "/admin/orders",
+  "staffMenu": [
+    "Pesanan Online",
+    "Ganti password",
+    "Logout"
+  ],
+  "staff-orders-menu-390:overflow": 0,
+  "staffProductsTitle": "Forbidden | 403\nTHIS ACTION IS UNAUTHORIZED.",
+  "staffUsersBody": "403\nTHIS ACTION IS UNAUTHORIZED.",
+  "staffOrderUrl": "/admin/orders/1",
+  "staffSeesFinanceLock": true,
+  "staffSeesRevert": false,
+  "staff-order-show-390:overflow": 0,
+  "staffSidebar": [
+    "Pesanan Online"
+  ],
+  "staff-orders-1440:overflow": 0,
+  "inactiveError": "Email/username atau password salah.",
+  "login-inactive-390:overflow": 0,
+  "errors": []
+}

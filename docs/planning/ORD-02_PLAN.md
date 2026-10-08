@@ -10,7 +10,7 @@ Setiap sub-item adalah commit/PR review tersendiri. Item berikutnya tidak dimula
 
 | ID | Isi | Bergantung pada App? |
 |---|---|---|
-| ORD-02a | Role Super Admin/Staff Order, Gate/Policy, manajemen pengguna, audit akun, login `/admin/login`, last login, nonaktif | Tidak |
+| ORD-02a | Role Super Admin/Staff Order, Gate, manajemen pengguna, audit akun, last login, nonaktif — **IN_REVIEW** ([bukti](../verification/ord-02a/README.md)); login `/admin/login` dipindah ke ORD-02b (PWA scope) | Tidak |
 | ORD-02b | Admin PWA: manifest + service worker scope `/admin/`, ikon, mobile-first daftar pesanan, error/loading/offline state | Tidak |
 | ORD-02c | Model status baru (pembayaran/persiapan/kurir/J&T/handover/issue), pelanggan + alamat, sumber order, keep, permintaan perubahan, penyesuaian harga + persetujuan, migrasi data ORD-01 | Tidak |
 | ORD-02d | UI pembuatan & detail pesanan baru (Staff Order dan Super Admin), form customer diperbarui, instruksi WhatsApp | Tidak (link tugas pakai placeholder sampai KOORDINASI-6) |
