@@ -1,97 +1,105 @@
 # Qammaris Order API v1 — kontrak Website ↔ Qammaris App
 
-Status: **PROPOSED r3 — menunggu contract review agen Qammaris App. Belum final dan belum diimplementasikan.** Endpoint integrasi tidak dibuat sebelum kedua pihak menyepakati v1 (keputusan Owner 2026-10-08). Bagian bertanda **[KOORDINASI]** masih perlu jawaban App.
+Status: **PROPOSED r4 — menunggu persetujuan kedua agen. Belum final dan belum diimplementasikan.** Endpoint integrasi tidak dibuat sebelum r4 disetujui agen Website dan agen Qammaris App (keputusan Owner 2026-10-08).
 
 Riwayat versi:
-- r1: draf Tahap 0.
-- r2: revisi Owner — webhook jalur utama, otorisasi wajib di backend App, handover/delivered/kewajiban finansial dipisah.
-- **r3 (2026-10-08)**: diselaraskan dengan audit awal App dan keputusan Owner:
-  - App tanpa cron → webhook + sinkron saat halaman dibuka/aktif;
-  - izin App `orders.handle`;
-  - expense ID unik + status reimbursement dengan bukti menyusul/pengecualian Owner;
-  - klaim atomik;
-  - deep link yang mempertahankan tujuan setelah login.
+- r1/r2: draf Tahap 0 dan revisi Owner.
+- r3: audit awal App.
+- **r4 (2026-10-08)**: menerapkan R1–R10 dari [contract review App](https://github.com/husen211/qammaris-reimbursement-management-system/blob/main/docs/integrations/online-orders-contract-review.md) (commit `6b52426`) dan keputusan final Owner R8. Pemetaan per butir ada di [§15](#15-penerapan-r1r10).
 
-Pemilik di sisi Website: ORD-02 ([rencana](../planning/ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md)). Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml).
+Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml). Markdown dan OpenAPI harus sama. Test `tests/Unit/OrderApiContractTest.php` memvalidasi:
+- setiap `$ref` OpenAPI;
+- setiap contoh JSON bertanda `<!-- validate: Schema -->` di dokumen ini terhadap skema OpenAPI;
+- kesamaan daftar kode error dan enum utama di kedua dokumen;
+- setiap operasi punya respons sukses dan error.
 
-## 0. Fakta App yang menjadi dasar (audit agen App, 2026-10-08)
+## 0. Dasar
 
-- Backend Express + TypeScript + MongoDB; karyawan login di App. Reimbursement memakai akun staf yang login.
-- Expense punya **ID unik** yang mencegah reimbursement ganda.
-- Belum ada ledger kas keluar terpisah; pengeluaran kasir terkait **Tutup Kasir**.
-- Hosting App **tidak punya cron**. Sinkronisasi App hanya bisa dipicu webhook masuk atau aktivitas pengguna (halaman dibuka/aktif).
-- Deep link order dari WhatsApp harus **mempertahankan tujuan setelah login**.
+**Qammaris App** (audit + review App):
+- Express + TypeScript + MongoDB. Karyawan login di App. Reimburse memakai akun staf.
+- Expense punya ID unik (`exp_<uuid>`) yang mencegah reimburse ganda. Uang kasir dicatat sebagai saran pengeluaran di Tutup Kasir.
+- Hosting App **tanpa cron**.
 
-Keputusan Owner terkait:
-- Hanya karyawan dengan izin App `orders.handle` yang boleh menangani order.
-- Role Staff Order Website dan izin operasional App **terpisah**; tidak ada pemetaan otomatis antar keduanya.
-- Bukti ongkir boleh menyusul. **Approval reimbursement mensyaratkan bukti, atau pengecualian Owner yang diaudit.**
+**Keputusan Owner:**
+1. Bukti ongkir boleh menyusul. Reimburse tidak bisa disetujui tanpa bukti, kecuali pengecualian Owner yang tercatat.
+2. Hanya karyawan aktif dengan izin App `orders.handle` (atau `owner`) yang menangani order. Izin ini dicek App dan **tidak** dipetakan ke Staff Order Website.
+3. Deep link WhatsApp mempertahankan tujuan setelah login.
+4. Webhook adalah jalur utama.
+5. Satu talangan maksimal satu reimburse.
+6. **R8 final:** order boleh `completed` walaupun reimburse staf masih `awaiting_proof`/`submitted`/`approved`. Reimburse belum dibayar tetap kewajiban terbuka, tercatat di App dan tampil di detail order Website. Refund customer yang belum selesai tetap terlihat jelas sebagai kasus perlu penanganan.
 
 ## 1. Prinsip
 
-1. **Website adalah sumber kebenaran order**: item, harga snapshot, penerima, pembayaran, status persiapan dan pengiriman.
-2. **App adalah sumber kebenaran karyawan, expense, dan reimbursement.** Website menyimpan referensi expense dan status yang dilaporkan App.
-3. **Backend-to-backend.** Tidak ada credential di frontend App, browser, atau link.
-4. **Otorisasi berlapis.** Backend App memastikan karyawan login, aktif, dan punya `orders.handle` **sebelum** menandatangani request. Website memverifikasi tanda tangan, scope klien, `actor.permission`, dan validitas transisi. Website tidak menggantikan otorisasi App.
-5. **Setiap mutasi**: tanda tangan, `Idempotency-Key`, identitas aktor, dan audit. `expected_revision` dipakai untuk perubahan state order (§10).
-6. **Tidak ada klaim sinkron sebelum konfirmasi.** Website menganggap notifikasi terkirim hanya setelah App membalas 2xx. App menganggap perubahan diterapkan hanya setelah Website membalas 2xx dengan revision baru.
+1. Website sumber kebenaran **order**; App sumber kebenaran **karyawan, expense, reimburse**.
+2. Backend-to-backend. Tidak ada credential di frontend, browser, link, atau log.
+3. Otorisasi berlapis:
+   - backend App memeriksa karyawan aktif dan (`owner` atau `employee` + `orders.handle`) **sebelum** menandatangani;
+   - Website memverifikasi tanda tangan, scope klien, `app_role` untuk aksi khusus owner, dan validitas transisi.
+4. Setiap mutasi: tanda tangan, `Idempotency-Key`, aktor, audit; `expected_revision` sesuai §11.
+5. Tidak ada klaim sinkron sebelum 2xx dari penerima.
 
-## 2. Arah komunikasi
+## 2. Arah komunikasi dan rekonsiliasi (R1)
 
 ```text
-App backend ──(HTTPS, ditandatangani)──▶ Website /integrations/qammaris-app/orders/v1/*        (baca + mutasi)
-Website outbox ──(HTTPS, ditandatangani)──▶ App webhook  order.changed {order_id, revision}  (JALUR UTAMA, segera setelah commit, retry oleh Website)
-App saat halaman dibuka/aktif ──▶ GET /orders/{id}  atau  GET /orders?updated_since=…        (rekonsiliasi tanpa cron App)
+App backend ──(HMAC)──▶ Website /integrations/qammaris-app/orders/v1/*          baca + mutasi
+Website outbox ──(HMAC)──▶ POST https://api.qammarisapp.com/api/integrations/website/orders/events   JALUR UTAMA
+App (oportunistik) ──▶ GET /orders?updated_since=…  /  GET /orders/{id}         fallback tanpa cron
 ```
 
-- Website mengirim notifikasi **segera** setelah commit lewat worker queue. Website (punya cron/worker) yang menanggung **retry**, karena App tidak bisa menjadwalkan polling.
-- Notifikasi hanya berisi ID + revision, bukan data order, sehingga data pribadi tidak masuk log webhook.
-- Rekonsiliasi App terjadi **saat karyawan membuka/mengaktifkan halaman**:
-  - daftar order: `GET /orders?updated_since=<checkpoint terakhir App>`;
-  - detail order: selalu `GET /orders/{id}` sebelum menampilkan aksi.
-  Tidak ada asumsi polling berkala di App.
-
-**[KOORDINASI-1]** URL webhook App dan nama event. Usulan: `POST <app>/api/integrations/website/order-events`, event `order.changed`.
+- **Jaminan utama**: webhook Website dikirim segera setelah commit dan **di-retry oleh Website sampai 24 jam** (§12). Website punya worker/cron; App tidak.
+- App merekonsiliasi dengan `updated_since` **secara oportunistik**, tanpa jaminan interval:
+  - saat halaman Pesanan dibuka;
+  - refresh berkala hanya selama halaman aktif (usulan 60 detik, berhenti saat tab tersembunyi);
+  - tombol **Sinkronkan**;
+  - interval ringan di proses server App bila proses sedang hidup (tidak dijamin).
+- Admin Website menampilkan pengiriman webhook yang gagal setelah 24 jam, dengan aksi **Kirim ulang** per order. Itu fitur admin Website, bukan endpoint App.
 
 ## 3. Autentikasi layanan
 
 | Header | Isi |
 |---|---|
-| `X-Qammaris-Client` | ID klien tetap, mis. `qammaris-app-prod` |
+| `X-Qammaris-Client` | ID klien, mis. `qammaris-app-prod` / `qammaris-website-prod` |
 | `X-Qammaris-Timestamp` | Unix detik UTC; toleransi ±300 detik |
 | `X-Qammaris-Signature` | hex lowercase `HMAC-SHA256(secret, timestamp + "\n" + METHOD + "\n" + path_with_query + "\n" + sha256_hex(raw_body))` |
-| `Idempotency-Key` | wajib untuk POST/PUT/PATCH/DELETE; 16–128 karakter `[A-Za-z0-9_-]` |
-| `X-Request-Id` | opsional, korelasi log |
+| `Idempotency-Key` | wajib untuk POST/PUT/DELETE; `[A-Za-z0-9_-]{16,128}` |
+| `X-Request-Id` | ID aksi App, untuk korelasi audit dua sisi |
 
-- Secret order **terpisah** dari API key feed produk dan webhook produk; satu secret per arah (`QAMMARIS_ORDER_API_SECRET` App→Website, `QAMMARIS_ORDER_WEBHOOK_SECRET` Website→App). Rotasi dengan dua secret aktif (`current`, `previous`).
-- Klien App **tidak bisa** menandai Lunas, mengubah harga/item/penerima, refund, koreksi pembayaran, atau membatalkan order. Semua itu di Website (Staff Order/Super Admin).
+- `path_with_query` = path persis yang dikirim **termasuk base** `/integrations/qammaris-app/orders/v1`, query string persis seperti dikirim (urutan dan encoding tidak diubah), tanpa host. GET/DELETE tanpa body memakai `sha256_hex("")`.
+- Skema ini **berbeda** dari webhook produk lama (`timestamp.rawBody`). Header sama, secret berbeda.
+- Secret per arah, rotasi `current` + `previous`: penerima menerima keduanya, pengirim pindah ke yang baru, `previous` dikosongkan setelah 24 jam.
+  - Website: `QAMMARIS_ORDER_API_SECRET[_PREVIOUS]` (verifikasi App→Website), `QAMMARIS_ORDER_WEBHOOK_SECRET[_PREVIOUS]` (tanda tangan Website→App).
+  - App: `WEBSITE_ORDER_API_URL`, `WEBSITE_ORDER_CLIENT_ID`, `WEBSITE_ORDER_API_SECRET[_PREVIOUS]`, `WEBSITE_ORDER_WEBHOOK_SECRET[_PREVIOUS]`.
+  - Nilai secret tidak pernah dikirim lewat chat atau log.
 - Body ≤ 64 KiB (QR ≤ 2 MiB). Rate limit awal 120 request/menit per klien.
 
-**[KOORDINASI-2]** Konfirmasi HMAC per request (pola yang sudah dipakai kedua repo), lokasi penyimpanan secret di App, dan prosedur rotasi.
+**Vektor uji** (secret contoh `example-secret-not-real-0123456789`, timestamp `1791427500`):
 
-## 4. Identitas karyawan dan izin
+| Method | `path_with_query` | `sha256_hex(body)` | Signature |
+|---|---|---|---|
+| POST | `/integrations/qammaris-app/orders/v1/orders/01JABCDE2F3G4H5J6K7M8N9P0Q/claims` dengan body `{"task":"preparation","actor":{"app_user_id":"665f0c2a9b1e4a0012ab34cd","display_name":"Andi","app_role":"employee"}}` | `498cd3c62544bcf5238114dfa5b9696415978066c0941c38b42414f7141a9030` | `5ef1f4b24851124020a94ff92e30dada48125fbbe43d7a75ed1e1ec2f5f4ebdc` |
+| GET | `/integrations/qammaris-app/orders/v1/orders?updated_since=2026-10-08T00%3A00%3A00Z&limit=50` (body kosong) | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `d222078e2b81f8903c97f732dc99c73c72e6823cd3ae0b0efc1647d5999fd8d9` |
 
-Setiap mutasi menyertakan `actor` yang **sudah diverifikasi backend App**:
+## 4. Identitas aktor
 
+<!-- validate: Actor -->
 ```json
-{ "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee", "permission": "orders.handle" } }
+{ "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" }
 ```
 
-- `app_user_id`: ID karyawan App yang **stabil dan tidak pernah dipakai ulang** (usulan: ObjectId MongoDB 24 hex). `display_name` hanya untuk tampilan dan boleh berubah; audit Website menyimpan keduanya per event.
-- `permission` wajib bernilai `orders.handle`. Website menolak mutasi tanpa nilai ini (`403 action_not_allowed`). Ini **bukan** pengganti cek di App, tetapi bukti eksplisit bahwa App sudah mengeceknya, dan tercatat di audit.
-- Website tidak memetakan karyawan App ke akun Website. Role Staff Order Website dan `orders.handle` App terpisah (keputusan Owner).
-- Website tidak menyimpan email/HP karyawan.
-- Aksi override (lepas klaim milik orang lain) mensyaratkan `actor.app_role` yang disepakati, atau dilakukan Super Admin di Website.
-
-**[KOORDINASI-3]** Daftar `app_role` App dan role mana yang boleh override klaim (usulan: `owner`).
+- `app_user_id`: **24 hex huruf kecil** (Mongo ObjectId). Stabil; akun App tidak pernah dihapus permanen.
+- `app_role`: `owner` | `employee`. Role `mitra` App tidak memanggil API order.
+- `display_name`: snapshot nama saat aksi; Website menyimpannya apa adanya per event.
+- Izin `orders.handle` **tidak dikirim**. App yang memeriksanya sebelum menandatangani (Owner 2). Tidak ada pemetaan ke akun Website.
+- **Aksi khusus owner**, yang Website tegakkan sebagai lapisan kedua (`403 action_not_allowed` untuk `employee`):
+  - melepas/override klaim milik orang lain (wajib `reason`);
+  - menyelesaikan issue yang dibuka orang lain.
 
 ## 5. Konvensi data
 
-- Waktu: ISO 8601 UTC dengan `Z`. Tampilan WITA (Asia/Makassar) urusan UI.
-- Uang: **integer rupiah** + `currency: "IDR"`.
-- ID order: `id` = ULID publik stabil (bukan ID database); `number` = tampilan `QAM-0001`.
-- `revision`: integer naik monoton setiap perubahan yang terlihat oleh App.
-- Field tak dikenal diabaikan penerima; enum tak dikenal ditampilkan sebagai "lainnya".
+- Waktu ISO 8601 UTC (`Z`); tampilan WITA urusan UI.
+- Uang integer rupiah, `currency: "IDR"`.
+- `id` order = ULID publik stabil; `number` = `QAM-0001`. `revision` naik monoton.
+- Field/enum tak dikenal: diabaikan, atau ditampilkan sebagai "lainnya".
 
 ## 6. Model order
 
@@ -99,244 +107,353 @@ Setiap mutasi menyertakan `actor` yang **sudah diverifikasi backend App**:
 
 | Respons | Data penerima |
 |---|---|
-| `GET /orders` (daftar) | **Tidak ada** HP/alamat/lokasi. Hanya `recipient_display` (nama depan + inisial, mis. "Siti R.") dan `area` (`pickup`/`palu`/`luar_kota`) |
-| `GET /orders/{id}` untuk order `active` | `recipient` lengkap **sesuai kebutuhan tugas**: `pickup` → nama + HP; `local_delivery` → nama, HP, patokan, link lokasi; `intercity` → nama, HP, alamat lengkap, kode pos |
-| `GET /orders/{id}` untuk order `completed`/`cancelled` | Setelah 7 hari ditutup: `recipient` = `null` |
+| `GET /orders` | Tanpa HP/alamat/lokasi. Hanya `recipient_display` (nama depan + inisial) dan `area` |
+| `GET /orders/{id}`, order `active` | `pickup`: nama + HP. `local_delivery`: nama, HP, patokan, link lokasi. `intercity`: nama, HP, alamat, kode pos |
+| `GET /orders/{id}`, `completed`/`cancelled` | `recipient` = `null` setelah **30 hari** ditutup |
+| Webhook | Tidak pernah berisi data order/customer |
 
-Webhook tidak pernah membawa data customer. **[KOORDINASI-4]** App tidak menyimpan `recipient` permanen. Usulan: hanya cache memori/sesi saat halaman dibuka, tidak masuk koleksi Mongo dan tidak masuk log.
+App tidak menyimpan `recipient` di database; data penerima diambil langsung saat detail dibuka oleh pengguna berizin dan tidak di-cache/log. Proyeksi lokal App hanya field non-pribadi (KOORDINASI-4 App).
 
 ### 6.2 Contoh `GET /orders/{id}`
 
+<!-- validate: Order -->
 ```json
 {
   "id": "01JABCDE2F3G4H5J6K7M8N9P0Q",
   "number": "QAM-0012",
-  "revision": 14,
+  "revision": 21,
   "created_at": "2026-10-08T01:02:03Z",
-  "updated_at": "2026-10-08T03:15:00Z",
+  "updated_at": "2026-10-08T09:00:00Z",
   "source": "whatsapp",
-  "lifecycle": "active",
+  "lifecycle": "completed",
+  "queue": "done",
   "currency": "IDR",
   "items": [
     { "line_id": "01JABCDEFX0000000000000001", "product_id": 412, "variant_id": 498, "brand": "Rasasi", "name": "Hawas Fire",
-      "volume_ml": 100, "unit_price": 650000, "quantity": 1, "line_total": 650000 }
+      "volume_ml": 100, "unit_price": 650000, "quantity": 2, "line_total": 1300000 }
   ],
   "packaging": "no_paperbag",
-  "totals": { "subtotal": 650000, "adjustments": 0, "shipping_charge": 15000, "total": 665000 },
+  "totals": { "subtotal": 1300000, "adjustments": 0, "shipping_charge": 15000, "total": 1315000 },
   "payment": { "status": "paid", "method": "qris", "confirmation_source": "majoo", "confirmed_at": "2026-10-08T02:00:00Z", "recorded_in_majoo": true },
   "fulfillment": {
     "type": "local_delivery",
-    "recipient": { "name": "Siti Rahma", "phone": "+6281234567890", "address": "Depan Masjid Raya, pagar hijau", "postcode": null, "location_url": "https://maps.app.goo.gl/…" },
+    "recipient": { "name": "Siti Rahma", "phone": "+6281234567890", "address": "Depan Masjid Raya, pagar hijau", "postcode": null, "location_url": "https://maps.app.goo.gl/ContohLokasi" },
     "note": "Kirim sore",
-    "preparation": { "status": "packed", "updated_at": "2026-10-08T02:30:00Z" },
-    "courier": { "booking_responsibility": "store", "provider": "maxim", "status": "requested", "reference": "MX-889211", "requested_at": "2026-10-08T02:40:00Z" },
+    "preparation": { "status": "packed", "packed_items": [ { "line_id": "01JABCDEFX0000000000000001", "quantity": 2 } ], "updated_at": "2026-10-08T02:30:00Z" },
+    "courier": { "booking_responsibility": "store", "provider": "maxim", "status": "arrived", "reference": "MX-889211", "requested_at": "2026-10-08T02:40:00Z" },
     "jnt": null,
-    "handover": { "status": "pending", "handed_to": null, "handed_over_at": null },
+    "handover": { "status": "handed_over", "handed_to": "courier", "handed_over_at": "2026-10-08T03:05:00Z" },
     "delivery": { "status": "unconfirmed", "delivered_at": null, "confirmed_by": null }
   },
   "claims": {
     "preparation": { "holder": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi" }, "claimed_at": "2026-10-08T02:20:00Z" },
-    "courier_booking": null,
+    "courier_booking": { "holder": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi" }, "claimed_at": "2026-10-08T02:35:00Z" },
     "handover": null
   },
-  "obligations": [ { "type": "reimbursement", "status": "open", "amount": 15000, "ref": "EXP-2026-0042" } ],
+  "obligations": [
+    { "type": "reimbursement", "status": "open", "amount": 5000, "ref": "exp_9b2f4c1e8a7d4b6f9c0e1a2b3c4d5e6f", "blocks_completion": false }
+  ],
   "costs": [
-    { "expense_id": "EXP-2026-0042", "kind": "actual_shipping", "amount": 15000, "paid_by": "staff_advance",
-      "proof": { "status": "pending" },
-      "reimbursement": { "status": "submitted", "updated_at": "2026-10-08T02:45:00Z" },
-      "reported_by": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi" }, "reported_at": "2026-10-08T02:45:00Z" }
+    { "expense_ref": "exp_9b2f4c1e8a7d4b6f9c0e1a2b3c4d5e6f", "kind": "actual_shipping", "status": "active", "amount": 20000,
+      "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
+      "reimbursement": { "status": "awaiting_proof", "amount": 5000, "proof": "pending", "waiver": null, "updated_at": "2026-10-08T03:10:00Z" },
+      "reported_by": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi" }, "reported_at": "2026-10-08T03:10:00Z" }
   ],
   "issues": [],
   "keep": null,
-  "links": { "app_task": "https://<app-frontend>/orders/01JABCDE2F3G4H5J6K7M8N9P0Q" }
+  "flags": { "unpaid": false, "open_refund": false, "open_reimbursement": true },
+  "links": { "app_task": "https://qammarisapp.com/orders/01JABCDE2F3G4H5J6K7M8N9P0Q" }
 }
 ```
 
-- `jnt` (bila `type=intercity`): `{ "status": "not_requested|pickup_requested|qr_available|picked_up", "pickup_requested_at": "…", "qr_available": true, "qr_url": "/integrations/qammaris-app/orders/v1/orders/{id}/jnt/qr", "picked_up_at": null, "tracking_number": null }`.
-- `keep` (bila keep): `{ "status": "active|converted|expired|released", "until": "…", "stock_set_aside": { "confirmed": true, "by": {…}, "at": "…" } }`. Konfirmasi manual, bukan reservasi stok.
+Order di atas sudah `completed` walaupun reimburse staf masih `awaiting_proof` (R8). Kewajiban tetap terbuka dan ditandai `flags.open_reimbursement`.
+
+### 6.3 Contoh `GET /orders`
+
+<!-- validate: OrderListPage -->
+```json
+{
+  "data": [
+    { "id": "01JABCDE2F3G4H5J6K7M8N9P0Q", "number": "QAM-0012", "revision": 21, "updated_at": "2026-10-08T09:00:00Z",
+      "lifecycle": "completed", "queue": "done", "source": "whatsapp", "fulfillment_type": "local_delivery", "area": "palu",
+      "recipient_display": "Siti R.", "item_count": 2, "payment_status": "paid", "preparation_status": "packed",
+      "handover_status": "handed_over", "jnt_status": null,
+      "claims": { "preparation": null, "courier_booking": null, "handover": null },
+      "flags": { "unpaid": false, "open_refund": false, "open_reimbursement": true } }
+  ],
+  "next_cursor": "eyJ1IjoiMjAyNi0xMC0wOFQwOTowMDowMFoiLCJpZCI6IjAxSkFCQ0RFIn0",
+  "has_more": false
+}
+```
+
+`next_cursor` adalah string opak. App mengirimnya kembali tanpa ditafsirkan. Urutan selalu `(updated_at, id)` naik.
 
 ## 7. Status dan transisi
 
-Setiap dimensi berdiri sendiri; pembayaran tidak mengunci persiapan.
-
-| Dimensi | Nilai | Pengubah |
+| Dimensi | Nilai | Pengubah / aturan |
 |---|---|---|
-| `lifecycle` | `draft` → `awaiting_customer` → `active` → `completed` / `cancelled` | Website. `completed` bila handover selesai + `payment=paid` + tanpa issue/kewajiban terbuka; **tidak** menunggu `delivered` |
-| `payment.status` | `unpaid`, `paid`, `refund_pending`, `refunded` | Website saja |
-| `preparation.status` | `not_started` → `preparing` → `packed` | App (pemegang klaim `preparation`) atau Website |
-| `courier.status` (lokal) | `not_needed`, `unassigned` → `requested` → `arrived` | App (pemegang klaim `courier_booking`) atau Website. `booking_responsibility`: `store`/`customer`; bila `customer`, toko tidak memesan kurir |
-| `jnt.status` | `not_requested` → `pickup_requested` → `qr_available` → `picked_up` | App/Website. **Tiga status terpisah**; `pickup_requested` dan `qr_available` bukan bukti diambil. **Nomor resi tidak wajib** di status mana pun dan bisa ditambahkan kapan saja. Request di luar 09.00–16.00 WITA tetap diterima (peringatan UI) |
-| `handover.status` | `pending` → `handed_over` (`courier`, `customer`, `customer_courier`, `jnt`) | App/Website. Tugas staf selesai di sini. Untuk J&T, `picked_up` = handover |
-| `delivery.status` | `unconfirmed` → `delivered` | Opsional, terpisah; customer (link), Website, atau App |
-| `obligations[]` | refund (Website/Super Admin), reimbursement (status dari App) | Kewajiban terbuka mencegah `completed` |
-| `issues[]` | `open` → `resolved` | App/Website |
+| `lifecycle` | `draft` → `awaiting_customer` → `active` → `completed` / `cancelled` | Website. `completed` bila handover selesai, `payment=paid`, tanpa issue terbuka, dan **tanpa refund terbuka**. Reimburse staf yang belum dibayar **tidak** menahan (R8) |
+| `payment.status` | `unpaid`, `paid`, `refund_pending`, `refunded` | Website saja. `refund_pending` = kewajiban refund terbuka, ditampilkan sebagai kasus perlu penanganan |
+| `preparation.status` | `not_started` → `preparing` → `packed` | Pemegang klaim `preparation`. `packed` wajib `packed_items` (R4) |
+| `courier.status` | `not_needed`, `unassigned` → `requested` → `arrived` | Pemegang klaim `courier_booking`. Bila `booking_responsibility=customer`, toko tidak memesan |
+| `jnt.status` | `not_requested` → `pickup_requested` → `qr_available` → `picked_up` | Tiga status terpisah. **Resi tidak wajib.** `picked_up` sekaligus menyetel handover (R5) |
+| `handover.status` | `pending` → `handed_over` (`courier`, `customer`, `customer_courier`, `jnt`) | Tugas staf selesai di sini |
+| `delivery.status` | `unconfirmed` → `delivered` | Opsional, terpisah dari handover |
+| `obligations[]` | `refund`, `reimbursement` | Refund dari pembayaran, reimbursement diturunkan dari biaya. `blocks_completion`: `true` untuk refund, `false` untuk reimbursement (R8) |
+| `issues[]` | `open` → `resolved` | Issue terbuka menahan `completed` dan menempatkan order di antrean `has_issue` |
 
-Transisi tidak valid → `409 invalid_transition`. Transisi ke status yang sudah tercapai dengan payload identik → no-op 200.
+Transisi tidak valid → `409 invalid_transition`. Transisi ke status yang sudah tercapai dengan payload identik → no-op 200 (tanpa event baru).
 
 ## 8. Endpoint
 
-Base: `https://<website>/integrations/qammaris-app/orders/v1`.
+Base `https://<website>/integrations/qammaris-app/orders/v1`.
 
-| Method | Path | Fungsi | `expected_revision` |
+| Method | Path | Request schema | `expected_revision` |
 |---|---|---|---|
-| GET | `/orders?updated_since=&cursor=&limit=&lifecycle=` | Daftar incremental, tanpa data kontak | — |
-| GET | `/orders/{id}` | Detail sesuai §6.1 | — |
-| POST | `/orders/{id}/claims` | Klaim tugas secara atomik | opsional |
-| DELETE | `/orders/{id}/claims/{task}` | Lepas klaim | opsional |
-| POST | `/orders/{id}/preparation` | `preparing` / `packed` | wajib |
-| POST | `/orders/{id}/courier-requests` | Catat request kurir lokal | wajib |
-| POST | `/orders/{id}/jnt` | `pickup_requested`, `qr_available`, `picked_up`, tambah/ubah `tracking_number` | wajib |
-| PUT | `/orders/{id}/jnt/qr` | Unggah QR (png/jpeg ≤2 MiB) | wajib |
-| GET | `/orders/{id}/jnt/qr` | Ambil QR (bertanda tangan) | — |
-| POST | `/orders/{id}/handover` | Penyerahan ke kurir/customer/J&T | wajib |
-| POST | `/orders/{id}/delivery` | Konfirmasi diterima (opsional) | wajib |
-| POST | `/orders/{id}/issues` | Catat kendala | opsional |
-| POST | `/orders/{id}/issues/{issue_id}/resolve` | Selesaikan kendala | opsional |
-| PUT | `/orders/{id}/costs/{expense_id}` | Upsert biaya + status bukti/reimbursement | tidak dipakai (lihat §8.5) |
+| GET | `/orders?updated_since=&cursor=&limit=&lifecycle=&queue=` | — | — |
+| GET | `/orders/{id}` | — | — |
+| POST | `/orders/{id}/claims` | `ClaimRequest` | opsional (§8.1) |
+| DELETE | `/orders/{id}/claims/{task}` | `ReleaseClaimRequest` | opsional |
+| POST | `/orders/{id}/preparation` | `PreparationRequest` | wajib |
+| POST | `/orders/{id}/courier-requests` | `CourierRequest` | wajib |
+| POST | `/orders/{id}/jnt` | `JntRequest` | wajib |
+| PUT | `/orders/{id}/jnt/qr` | multipart (png/jpeg ≤2 MiB) | wajib |
+| GET | `/orders/{id}/jnt/qr` | — | — |
+| POST | `/orders/{id}/handover` | `HandoverRequest` | wajib |
+| POST | `/orders/{id}/delivery` | `DeliveryRequest` | wajib |
+| POST | `/orders/{id}/issues` | `IssueRequest` | opsional |
+| POST | `/orders/{id}/issues/{issue_id}/resolve` | `ResolveIssueRequest` | opsional |
+| PUT | `/orders/{id}/costs/{expense_ref}` | `CostRequest` | opsional; konflik lewat `source_version` (§8.5) |
 
-### 8.1 Siapa boleh apa
+Semua mutasi sukses mengembalikan `MutationResponse` `{ order, event_id }`. Replay idempotent mengembalikan respons tersimpan.
 
-Setiap mutasi memerlukan `actor.permission = orders.handle`. Mutasi tugas hanya oleh **pemegang klaim** tugas itu, atau oleh aktor override yang disepakati: `preparation` untuk `preparation`, `courier_booking` untuk `courier-requests`, dan `handover` untuk `handover`/`jnt`. Bila belum ada klaim, mutasi tugas mengklaim otomatis secara atomik (§8.2).
+### 8.1 Klaim atomik (R2)
 
-### 8.2 Klaim atomik
+- Satu pemegang aktif per `(order_id, task)`; `task` ∈ `preparation`, `courier_booking`, `handover`. Website memakai update bersyarat + unique constraint, bukan cek-lalu-tulis.
+- Bila tugas sudah dipegang orang lain → **`409 task_already_claimed`** dengan `details.holder`. Kode ini **diprioritaskan di atas** `revision_conflict`, walaupun `expected_revision` juga berbeda.
+- Klaim ulang oleh pemegang sama → no-op 200. Klaim tidak kedaluwarsa otomatis.
+- Melepas klaim orang lain hanya oleh `app_role=owner` dengan `reason`, atau Super Admin di Website.
 
-- Satu pemegang per `(order, task)`; `task` ∈ `preparation`, `courier_booking`, `handover`.
-- Website menerapkannya dengan **compare-and-set dalam transaksi + unique constraint** pada klaim aktif `(order_id, task)`. Dua klaim bersamaan menghasilkan tepat satu sukses; yang lain `409 task_already_claimed` dengan identitas pemegang.
-- Klaim ulang oleh pemegang yang sama = no-op 200. Klaim **tidak kedaluwarsa otomatis** (App tanpa cron; Website tidak melepas diam-diam). Klaim yang macet dilepas oleh pemegangnya, override App yang disepakati, atau Super Admin di Website. Semuanya tercatat.
-- `expected_revision` opsional untuk klaim. Bila dikirim dan tidak cocok → 409 `revision_conflict`. Bila tidak dikirim, keamanan dijamin oleh compare-and-set klaim. Ini supaya perubahan pembayaran di Website tidak menggagalkan klaim karyawan.
-
-```http
-POST /orders/01JABCDE…/claims
-Idempotency-Key: 665f0c2a-01JABCDE-claim-preparation-1
-{ "task": "preparation", "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee", "permission": "orders.handle" } }
+<!-- validate: ClaimRequest -->
+```json
+{ "task": "preparation", "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
 ```
 
+<!-- validate: Error -->
 ```json
-HTTP/1.1 409 Conflict
 { "error": { "code": "task_already_claimed", "message": "Tugas preparation sedang dipegang Ikrar.",
   "details": { "task": "preparation", "holder": { "app_user_id": "6660a1b2c3d4e5f601234567", "display_name": "Ikrar" }, "claimed_at": "2026-10-08T02:19:58Z" } },
-  "request_id": "01JABCF1…" }
+  "request_id": "01JABCF1QWERTYZXPASDFGHJKM" }
+```
+
+<!-- validate: ReleaseClaimRequest -->
+```json
+{ "reason": "Ikrar sakit, tugas dipindahkan", "actor": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner", "app_role": "owner" } }
+```
+
+### 8.2 Konfirmasi packing (R4)
+
+- `status=packed` wajib `packed_items` yang mencakup **setiap** `line_id` order, dengan `quantity` **sama persis** dengan jumlah order pada `expected_revision` yang dikirim. Selisih atau baris kurang → `422 validation_failed` (`details.fields`). Revision berbeda → `409 revision_conflict`, karena jumlah harus dikonfirmasi terhadap order terbaru.
+- Barang kurang **bukan** `packed`: staf membuka issue `stock_problem` dengan `line_id` dan `reported_quantity`.
+
+<!-- validate: PreparationRequest -->
+```json
+{ "status": "packed", "packed_items": [ { "line_id": "01JABCDEFX0000000000000001", "quantity": 2 } ], "expected_revision": 15,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
+```
+
+<!-- validate: IssueRequest -->
+```json
+{ "type": "stock_problem", "note": "Stok Hawas Fire hanya 1", "line_id": "01JABCDEFX0000000000000001", "reported_quantity": 1,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
 ```
 
 ### 8.3 Kurir lokal
 
+<!-- validate: CourierRequest -->
 ```json
-{ "provider": "maxim", "reference": "MX-889211", "booking_responsibility": "store", "expected_revision": 15, "actor": { "…": "…" } }
+{ "provider": "maxim", "reference": "MX-889211", "status": "requested", "expected_revision": 16,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
 ```
 
-Bila `booking_responsibility=customer`, endpoint ini tidak dipakai; staf langsung mencatat `handover` dengan `handed_to=customer_courier`.
+Bila `booking_responsibility=customer`, staf langsung mencatat handover `customer_courier`.
 
-### 8.4 J&T
-
+<!-- validate: HandoverRequest -->
 ```json
-{ "status": "pickup_requested", "occurred_at": "2026-10-08T03:00:00Z", "expected_revision": 16, "actor": { "…": "…" } }
-{ "status": "qr_available", "occurred_at": "2026-10-08T03:01:00Z", "expected_revision": 17, "actor": { "…": "…" } }
-{ "status": "picked_up", "occurred_at": "2026-10-08T07:10:00Z", "expected_revision": 18, "actor": { "…": "…" } }
-{ "tracking_number": "JX1234567890", "expected_revision": 19, "actor": { "…": "…" } }
+{ "handed_to": "customer_courier", "occurred_at": "2026-10-08T03:05:00Z", "expected_revision": 17,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
 ```
 
-- `picked_up` boleh tanpa `tracking_number`. Resi dikirim belakangan, termasuk keesokan hari, dengan request terpisah.
-- `qr_available` boleh disertai unggahan QR (`PUT …/jnt/qr`) atau tanpa file bila QR hanya ditunjukkan dari HP. **[KOORDINASI-8]**
+### 8.4 J&T (R5)
 
-### 8.5 Biaya dan reimbursement (expense ID unik)
+- `pickup_requested`, `qr_available`, dan `picked_up` adalah status terpisah. Request di luar 09.00–16.00 WITA hanya peringatan UI; server tidak menolak.
+- `PUT /jnt/qr` menyimpan QR dan **otomatis** menyetel `qr_available`. Bila status masih `not_requested`, `pickup_requested_at` ikut terisi. Event dan revision tetap satu.
+- `status=picked_up` menyetel `jnt.status=picked_up` **dan** `handover={handed_over, jnt}` dalam **satu revision dan satu event**. `POST /handover {handed_to: jnt}` diperlakukan sama.
+- `tracking_number` opsional di semua status, dan boleh dikirim sendiri belakangan.
 
-```http
-PUT /orders/{id}/costs/EXP-2026-0042
-Idempotency-Key: exp-EXP-2026-0042-v3
-{ "kind": "actual_shipping", "amount": 15000, "paid_by": "staff_advance",
-  "proof": { "status": "attached", "attached_at": "2026-10-08T05:00:00Z" },
-  "reimbursement": { "status": "approved", "updated_at": "2026-10-08T09:00:00Z",
-                     "approved_by": { "app_user_id": "6650…", "display_name": "Owner" }, "proof_exception": null },
+<!-- validate: JntRequest -->
+```json
+{ "status": "picked_up", "occurred_at": "2026-10-08T07:10:00Z", "expected_revision": 18,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
+```
+
+<!-- validate: JntRequest -->
+```json
+{ "tracking_number": "JX1234567890", "expected_revision": 19,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
+```
+
+### 8.5 Biaya dan reimburse (R6, R7, R9)
+
+- `expense_ref` = **ID expense asli dari App**: string opak `[A-Za-z0-9_-]{8,64}` (App memakai `exp_<uuid>`). Website tidak menafsirkan formatnya. ID ini stabil, kunci upsert, dan **terikat ke satu order**; ID sama untuk order lain → `409 expense_already_linked`.
+- `funding[]` (R6) untuk sumber uang campuran. Satu sumber = satu elemen, dan **Σ `funding.amount` = `amount`** (`422` bila tidak).
+
+  | `source` | Arti |
+  |---|---|
+  | `cashier_cash` | Uang kasir; di App menjadi saran baris Tutup Kasir |
+  | `owner_fund` | Dana dari Owner (r3: `owner_transfer`) |
+  | `staff_advance` | Talangan pribadi staf; satu-satunya sumber yang di-reimburse |
+  | `customer_cash_held` | Uang customer yang dipegang staf, dipakai dulu |
+  | `customer_direct` | Customer membayar driver langsung; toko tidak mengeluarkan uang, tidak ada reimburse |
+- `status`: `active` | `void`. Koreksi salah catat diberi status void, tidak dihapus.
+- `reimbursement` (R7), App sebagai sumber:
+  - `status` ∈ `not_applicable`, `awaiting_proof`, `submitted`, `approved`, `paid`, `rejected`, `cancelled`;
+  - `amount` = total bagian `staff_advance` (0 dan `not_applicable` bila tidak ada talangan);
+  - `proof` ∈ `pending`, `attached`, `waived`.
+- **Aturan bukti (Owner 1, divalidasi kedua sisi, `422 proof_required`)**:
+  - `approved`/`paid` hanya bila `proof=attached`, atau `proof=waived` dengan `waiver` (`by` owner, `reason`, `at`);
+  - `awaiting_proof` berarti `proof=pending`.
+- Konkurensi: `source_version` integer naik dari App. Versi lebih lama atau sama → no-op 200. `expected_revision` boleh dikirim, dan bila dikirim divalidasi. Ini supaya pembaruan reimburse mingguan tidak gagal hanya karena order berubah.
+- `obligations[type=reimbursement]` **diturunkan Website** dari `costs` (App tidak menulis obligations):
+  - `open` saat `awaiting_proof`, `submitted`, `approved`;
+  - `settled` saat `paid`, `rejected`, `cancelled`, `not_applicable`, atau biaya `void`.
+  `blocks_completion=false` (R8).
+
+<!-- validate: CostRequest -->
+```json
+{ "kind": "actual_shipping", "status": "active", "amount": 20000,
+  "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
+  "reimbursement": { "status": "awaiting_proof", "amount": 5000, "proof": "pending", "waiver": null, "updated_at": "2026-10-08T03:10:00Z" },
+  "source_version": 1,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
+```
+
+<!-- validate: CostRequest -->
+```json
+{ "kind": "actual_shipping", "status": "active", "amount": 20000,
+  "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
+  "reimbursement": { "status": "approved", "amount": 5000, "proof": "waived",
+    "waiver": { "by": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner" }, "reason": "Struk Maxim hilang, sudah dicek di aplikasi", "at": "2026-10-09T02:00:00Z" },
+    "updated_at": "2026-10-09T02:00:00Z" },
   "source_version": 3,
-  "actor": { "…": "…" } }
+  "actor": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner", "app_role": "owner" } }
 ```
 
-- `expense_id` = **ID expense App, unik dan tidak berubah**. Satu expense hanya bisa terikat ke **satu** order. Mengirim ID yang sama untuk order lain → `409 expense_already_linked`. Inilah pencegah reimbursement ganda di sisi Website.
-- Upsert: App adalah sumber; Website menyimpan versi dengan `source_version` (integer naik dari App) dan **mengabaikan versi yang lebih lama** (no-op 200). `expected_revision` order tidak dipakai, supaya pembaruan status reimbursement tidak gagal karena order berubah.
-- `paid_by`: `cashier_cash` (terkait Tutup Kasir di App), `owner_transfer`, `staff_advance`, `customer_direct`.
-- `proof.status`: `pending` (boleh menyusul), `attached`, `waived`. `reimbursement.status`: `submitted`, `approved`, `paid`, `rejected`, `not_applicable`.
-- **Aturan Owner, divalidasi kedua sisi**: `approved`/`paid` hanya bila `proof.status=attached`, **atau** `proof.status=waived` dengan `proof_exception` (`approved_by` Owner, `reason`, `at`). Website menolak payload yang melanggar (`422 proof_required`) dan menyimpan pengecualian di audit.
-- Kewajiban `reimbursement` di order terbuka sampai `paid`/`rejected`/`not_applicable`.
+## 9. Antrean `queue` (R10)
 
-**[KOORDINASI-5]** Format `expense_id`, enum final, dan apakah App memakai `source_version` atau `updated_at` monoton.
+Website menghitung `queue` sebagai **satu sumber aturan**. App menampilkan 7 filter dari field ini, tanpa menghitung sendiri. Aturan dievaluasi **berurutan**; yang pertama cocok dipakai:
 
-## 9. Error
+| # | Kondisi | `queue` |
+|---|---|---|
+| 1 | `lifecycle` ∈ `draft`, `awaiting_customer`, `cancelled` | `null` (tidak tampil di antrean App) |
+| 2 | Ada `issues[].status=open` | `has_issue` |
+| 3 | `lifecycle=completed` | `done` |
+| 4 | `handover=handed_over` dan (`fulfillment.type=pickup` atau `delivery=delivered`) | `done` |
+| 5 | `handover=handed_over` | `in_delivery` |
+| 6 | `preparation=packed` dan (`courier.status` ∈ `requested`, `arrived` atau `jnt.status` ∈ `pickup_requested`, `qr_available`) | `awaiting_pickup` |
+| 7 | `preparation=packed` | `ready` |
+| 8 | `preparation=preparing` atau klaim `preparation` aktif | `preparing` |
+| 9 | Selain itu | `needs_handling` |
 
+Nilai `queue`: `needs_handling`, `preparing`, `ready`, `awaiting_pickup`, `in_delivery`, `done`, `has_issue`.
+
+`flags.unpaid` dan `flags.open_refund` ditampilkan sebagai lencana di semua antrean dan tidak mengubah `queue`.
+
+## 10. Error
+
+<!-- validate: Error -->
 ```json
-{ "error": { "code": "revision_conflict", "message": "Order sudah berubah.", "details": { "current_revision": 16 } }, "request_id": "…" }
+{ "error": { "code": "revision_conflict", "message": "Order sudah berubah.", "details": { "current_revision": 16 } }, "request_id": "01JABCF2QWERTYZXPASDFGHJKM" }
 ```
 
 | HTTP | `code` | Tindakan App |
 |---|---|---|
 | 400 | `bad_request` | Perbaiki request |
-| 401 | `invalid_signature`, `stale_timestamp`, `unknown_client` | Jangan retry tanpa perbaikan |
-| 403 | `action_not_allowed` (termasuk `permission` ≠ `orders.handle`, bukan pemegang klaim) | Tampilkan pesan |
-| 404 | `order_not_found` | Order salah atau belum dibagikan (draft) |
-| 409 | `revision_conflict` | Ambil ulang order, tampilkan ke karyawan, ulangi bila masih relevan |
-| 409 | `task_already_claimed`, `invalid_transition`, `expense_already_linked` | Tampilkan pesan, jangan retry otomatis |
-| 409 | `idempotency_key_reused` | Key sama dengan payload berbeda; bug di App |
-| 413 | `payload_too_large` | — |
-| 422 | `validation_failed`, `proof_required` | Perbaiki input |
-| 429 | `rate_limited` (+ `Retry-After`) | Retry setelahnya |
-| 500/503 | `server_error`, `unavailable` | Retry dengan backoff dan **key yang sama** |
+| 401 | `invalid_signature` | Jangan retry tanpa perbaikan |
+| 401 | `stale_timestamp` | Periksa jam server |
+| 401 | `unknown_client` | Periksa konfigurasi |
+| 403 | `action_not_allowed` | Aksi owner-only oleh `employee`, atau di luar scope |
+| 404 | `order_not_found` | Order salah atau belum dibagikan |
+| 409 | `revision_conflict` | Baca ulang; bila diulang = aksi baru, key baru (§11) |
+| 409 | `task_already_claimed` | Tampilkan pemegang, jangan retry |
+| 409 | `invalid_transition` | Tampilkan pesan, jangan retry |
+| 409 | `expense_already_linked` | Bug data, laporkan |
+| 409 | `idempotency_key_reused` | Key sama, payload beda: bug App |
+| 413 | `payload_too_large` | Perkecil berkas |
+| 422 | `validation_failed` | Perbaiki input (`details.fields`) |
+| 422 | `proof_required` | Lampirkan bukti atau pengecualian owner |
+| 429 | `rate_limited` | Tunggu `Retry-After` |
+| 500 | `server_error` | Retry jaringan, key sama |
+| 503 | `unavailable` | Retry jaringan, key sama |
 
-## 10. Idempotency dan revision
+## 11. Idempotency dan revision (R3)
 
-- Website menyimpan `(client, Idempotency-Key)` → hash payload + status + body respons selama **7 hari**. Retry dengan payload sama mengembalikan respons tersimpan tanpa efek ganda; payload berbeda → `409 idempotency_key_reused`.
-- App membuat key **per aksi karyawan**, menyimpannya bersama aksi sebelum request dikirim, dan memakai ulang saat retry. Karena App tanpa cron, retry terjadi saat karyawan menekan "Coba lagi" atau saat halaman dibuka ulang, tetap dengan key yang sama.
-- `expected_revision` **wajib** untuk perubahan status order (preparation, courier, J&T, handover, delivery, QR). Bila tidak cocok → `409 revision_conflict` + `current_revision`; App mengambil ulang order dan menampilkan data terbaru sebelum karyawan mengulang.
-- Pengecualian yang disengaja: klaim (§8.2) dan biaya/reimbursement (§8.5) memakai mekanisme konflik sendiri, compare-and-set klaim dan `source_version`.
-- Event audit Website mencatat `app_user_id`, `display_name`, `permission`, `Idempotency-Key`, dan `request_id`. Replay idempotent tidak menambah event.
+- **Key unik per aksi logis.** Website menyimpan `(client, Idempotency-Key)` → hash payload (termasuk `expected_revision`), status, dan body respons selama 7 hari.
+- **Retry jaringan** (timeout, 5xx, 429): key **sama** + payload **identik**. Hasilnya respons tersimpan, tanpa efek ganda. App retry terbatas (±3 kali) hanya selama request staf berjalan; sisanya "Belum terkirim — Kirim ulang" dengan key yang sama. Tidak ada retry latar karena App tanpa cron.
+- **Setelah `409 revision_conflict`**: App membaca ulang order. Bila staf/App memutuskan mengulang, itu **aksi logis baru**: key **baru** dan `expected_revision` **baru**. Memakai key lama dengan payload baru → `409 idempotency_key_reused`.
+- `expected_revision` wajib untuk preparation, courier, J&T, QR, handover, delivery. Klaim/issue opsional (§8.1). Biaya memakai `source_version` (§8.5).
+- Audit Website per event: `app_user_id`, `display_name`, `app_role`, `Idempotency-Key`, `X-Request-Id`. Replay tidak menambah event.
 
-## 11. Notifikasi dan rekonsiliasi
+## 12. Webhook Website → App
 
+<!-- validate: WebhookEvent -->
 ```json
-POST <app_webhook_url>
-X-Qammaris-Client: qammaris-website-prod
-X-Qammaris-Timestamp: …
-X-Qammaris-Signature: …
-{ "event_id": "01JABCF0…", "type": "order.changed", "order_id": "01JABCDE…", "revision": 15, "occurred_at": "2026-10-08T03:15:00Z" }
+{ "event_id": "01JABCF0QWERTYZXPASDFGHJKM", "type": "order.changed", "order_id": "01JABCDE2F3G4H5J6K7M8N9P0Q", "revision": 15, "occurred_at": "2026-10-08T03:15:00Z" }
 ```
 
-- Website mengirim dari outbox **segera setelah commit**. Retry dilakukan Website (worker): segera, 1m, 5m, 15m, 1j, 6j, sampai 24 jam. Setelah itu ditandai gagal dan tampil di admin Website. Tidak ada ketergantungan pada cron App.
-- App membalas 2xx **setelah** menyimpan notifikasi secara durable, dedup berdasarkan `event_id`, dan mengabaikan revision ≤ yang sudah dimiliki.
-- Rekonsiliasi App tanpa cron:
-  - saat daftar order dibuka/kembali aktif: `GET /orders?updated_since=<checkpoint>` (overlap 2 menit; checkpoint maju hanya setelah halaman diproses);
-  - saat detail dibuka: `GET /orders/{id}`;
-  - sebelum setiap aksi, App memakai revision terbaru dari detail.
-- Event akibat mutasi App sendiri tetap dikirim (App boleh mengabaikan berdasarkan revision).
+- Tujuan `POST https://api.qammarisapp.com/api/integrations/website/orders/events` (staging: host API staging App). Header HMAC §3 dengan secret webhook.
+- Dikirim segera setelah commit. Retry oleh Website: segera, 1m, 5m, 15m, 1j, 6j, sampai 24 jam; setelah itu tampil di admin Website dengan aksi Kirim ulang.
+- App menyimpan event secara durable (unik per `event_id`) **sebelum** membalas 2xx, mengabaikan revision ≤ yang dimiliki, lalu mengambil `GET /orders/{id}`.
 
-## 12. Deep link tugas staf
+## 13. Deep link
 
-Instruksi grup WhatsApp memuat link App, bukan link bearer Website:
+`https://qammarisapp.com/orders/<order_id>`:
+- hanya berisi ULID order publik;
+- bila belum login, karyawan login lalu **kembali ke `/orders/<id>`**; tujuan divalidasi sebagai path internal App;
+- tanpa izin → "Tidak punya akses";
+- order `draft`/`awaiting_customer` → "Pesanan belum siap ditangani";
+- order `completed`/`cancelled` hanya baca di riwayat.
 
-```text
-https://<app-frontend>/orders/<order_id>
-```
+## 14. Versi
 
-- Link **hanya berisi ID order publik**, tanpa token, nama, atau alamat.
-- Bila belum login, App menyimpan tujuan dan **mengembalikan karyawan ke order tersebut setelah login**. Tujuan divalidasi sebagai path internal App, bukan URL bebas, untuk mencegah open redirect.
-- Setelah login, App memeriksa `orders.handle`. Tanpa izin, App menampilkan "Tidak punya akses" tanpa memuat data order dari Website.
-- Order `draft`/`awaiting_customer` tetap bisa dibuka tetapi tanpa aksi.
+Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`. Urutan:
+1. r4 disetujui kedua agen;
+2. implementasi Website ORD-02e dan App;
+3. tes kontrak memakai contoh payload resmi dokumen ini;
+4. staging bersama;
+5. rilis setelah persetujuan Owner.
 
-**[KOORDINASI-6]** Path final App dan perilaku setelah login.
+## 15. Penerapan R1–R10
 
-## 13. Versi dan perubahan
-
-- Breaking change hanya lewat `/v2`; penambahan field/enum tidak breaking. Header respons `X-Qammaris-Api-Version: 1`.
-- Urutan: contract review App → kontrak v1 disepakati (r-final) → implementasi Website ORD-02e + App → staging bersama → rilis setelah persetujuan Owner.
-
-## Daftar koordinasi
-
-| ID | Topik | Status r3 |
+| # | Review App | r4 |
 |---|---|---|
-| KOORDINASI-1 | URL webhook App + event | Menunggu App (usulan di §2) |
-| KOORDINASI-2 | HMAC per request, penyimpanan & rotasi secret | Menunggu App |
-| KOORDINASI-3 | `app_role` dan override klaim | Sebagian: `app_user_id` stabil + `orders.handle` (Owner). Role override menunggu App |
-| KOORDINASI-4 | Data penerima tidak disimpan permanen di App | Menunggu App |
-| KOORDINASI-5 | Format `expense_id`, enum, `source_version` | Sebagian: expense ID unik (audit App), aturan bukti (Owner) |
-| KOORDINASI-6 | Deep link + kembali setelah login | Sebagian: kebutuhan disepakati (audit App); path final menunggu App |
-| KOORDINASI-7 | Override klaim | Lihat KOORDINASI-3 |
-| KOORDINASI-8 | QR J&T: file atau hanya status | Menunggu App |
-| KOORDINASI-9 | Penanda `delivered` | Usulan: customer, Website, App |
-| KOORDINASI-10 | Contract review & sign-off | **Wajib sebelum implementasi endpoint** |
+| R1 | Rekonsiliasi oportunistik tanpa cron | §2, §11 |
+| R2 | `task_already_claimed` diprioritaskan di atas revision | §8.1 |
+| R3 | Key baru setelah revision conflict; retry jaringan key sama | §11 |
+| R4 | `packed_items` per baris, divalidasi terhadap revision terbaru | §8.2 |
+| R5 | `picked_up` menyetel handover atomik; `PUT qr` → `qr_available` | §8.4 |
+| R6 | `funding[]` campuran, `customer_cash_held`, `owner_fund`, biaya `void` | §8.5 |
+| R7 | `awaiting_proof`, `cancelled` | §8.5 |
+| R8 | Reimburse tertunda tidak menahan `completed` (**keputusan Owner final**); refund tetap menahan dan ditandai | §7, §8.5 |
+| R9 | `expense_ref` = ID asli App, opak, stabil | §8.5 |
+| R10 | Field `queue` turunan Website, pemetaan berurutan | §9 |
+
+Klarifikasi review lain yang ikut diterapkan:
+- contoh `GET /orders` (§6.3);
+- `X-Request-Id` = ID aksi App;
+- issue dengan `line_id`/`reported_quantity`;
+- vektor uji HMAC (§3);
+- URL webhook App (§12);
+- `app_user_id` 24 hex dan `app_role` owner/employee (§4);
+- izin `orders.handle` tidak dikirim (§4);
+- `recipient` null setelah 30 hari (§6.1).

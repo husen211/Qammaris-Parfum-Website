@@ -76,7 +76,7 @@ Pemetaan data ORD-01 (hanya data lokal/staging; production belum punya data ORD-
 | `details_received` | `lifecycle=active`, `payment=unpaid` |
 | `paid` | `lifecycle=active`, `payment=paid` |
 | `shipped` | + `handover=handed_over`, `handed_to` sesuai kurir (`jnt` → `jnt_status=picked_up`) |
-| `completed` | `lifecycle=completed`, `handover=delivered` |
+| `completed` | `lifecycle=completed`, `delivery=delivered` |
 | `cancelled` | `lifecycle=cancelled` |
 
 Kolom `stage` dipertahankan read-only selama transisi untuk rollback, lalu dihapus di item terpisah setelah rilis stabil.
@@ -87,7 +87,7 @@ Aturan final yang berlaku dicatat di BUSINESS_RULES saat masing-masing sub-item 
 
 1. **Pembayaran**: Staff Order/Super Admin menandai Lunas dengan metode + sumber konfirmasi (`bukti di chat`, `bukti diunggah`, `Majoo`). Upload bukti di website opsional (D12). "Sudah dicatat di Majoo" adalah centang terpisah. Tidak ada field poin. Koreksi pembayaran, refund, dan penyesuaian total membutuhkan Super Admin + alasan.
 2. **Dimensi status dipisah dan tidak saling mengunci**: pembayaran, progres packing, handover (penyerahan ke kurir/customer/J&T), delivered (konfirmasi diterima), serta kewajiban finansial terbuka (refund yang belum dibayar, reimburse/talangan yang belum diganti). Lunas bukan syarat packing.
-3. **Selesainya tugas staf ≠ diterima customer** (D10): tugas staf selesai saat handover tercatat; `delivered` adalah konfirmasi terpisah dan opsional. Order dianggap tuntas operasional bila Lunas + handover selesai + tanpa kendala/kewajiban finansial terbuka. Tidak menunggu `delivered`.
+3. **Selesainya tugas staf ≠ diterima customer** (D10): tugas staf selesai saat handover tercatat; `delivered` adalah konfirmasi terpisah dan opsional. Order `completed` bila Lunas + handover selesai + tanpa kendala + tanpa refund terbuka. Tidak menunggu `delivered`. **Keputusan Owner R8 (2026-10-08):** reimburse staf yang belum dibayar (`awaiting_proof`/`submitted`/`approved`) **tidak** menahan `completed`; ia tetap kewajiban terbuka di App dan tampil di detail order Website. Refund customer yang belum selesai tetap menahan `completed` dan ditandai sebagai kasus perlu penanganan.
 4. **Kurir lokal**: `booking_responsibility` = toko atau customer. Bila toko, satu orang mengklaim tugas pemesanan agar tidak dobel. Bila customer, staf cukup mencatat penyerahan ke kurir customer.
 5. **J&T**: request pickup, QR tersedia, dan dipickup adalah status terpisah. **Request pickup bukan konfirmasi berhasil.** Jam layanan 09.00–16.00 WITA hanya **peringatan**, bukan blokir (D8). Resi opsional dan bisa ditambahkan belakangan.
 6. **Keep** (D9): default 24 jam, boleh belum dibayar, konfirmasi manual "stok sudah dipisahkan" oleh staf. Lewat batas → ditandai perlu tindakan, **tidak** otomatis dibatalkan. Tidak ada klaim reservasi stok.
@@ -156,12 +156,12 @@ Usulan awal Tahap 0 (arsip, sudah digantikan tabel di atas):
 | D12 | Upload bukti bayar di website | Opsional, JPG/PNG/PDF ≤5 MB, disimpan privat tanpa hapus otomatis |
 | D13 | Retensi data customer & daftar pelanggan langganan | Tetap tanpa hapus otomatis (keputusan ORD-01) |
 
-Kontrak diselaraskan dengan audit App sebagai r3 (izin `orders.handle`, klaim atomik, expense ID unik + aturan bukti, deep link pasca-login, tanpa cron App). Endpoint integrasi **tidak** diimplementasikan sebelum contract review App dan kesepakatan v1. Koordinasi dengan agen Qammaris App: KOORDINASI-1 sampai 10 di [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md#daftar-koordinasi).
+Kontrak r4 (2026-10-08) menerapkan R1–R10 dari contract review App dan keputusan Owner R8 ([kontrak §15](../integrations/QAMMARIS_ORDER_API_V1.md#15-penerapan-r1r10)). Markdown dan OpenAPI divalidasi bersama oleh `tests/Unit/OrderApiContractTest.php`. Status: **PROPOSED r4**. Endpoint integrasi **tidak** diimplementasikan sebelum r4 disetujui agen Website dan agen App.
 
 ## 9. Koreksi teknis Owner (2026-10-08)
 
 1. `Clear-Site-Data` tidak dipakai karena berdampak ke seluruh origin publik. Diganti pembersihan cache SW `qammaris-admin-*` ([§3](#3-admin-pwa-ord-02b)).
-2. Webhook/outbox adalah **jalur notifikasi utama** dan retry ditanggung Website. Audit App 2026-10-08: hosting App **tanpa cron**, sehingga rekonsiliasi App terjadi saat halaman dibuka/aktif, bukan polling berkala (kontrak r3 §2, §11).
+2. Webhook/outbox adalah **jalur notifikasi utama** dan retry ditanggung Website. Audit App 2026-10-08: hosting App **tanpa cron**, sehingga rekonsiliasi App terjadi saat halaman dibuka/aktif, bukan polling berkala (kontrak r4 §2, §11).
 3. Backend App **wajib** memvalidasi user, role, dan izin aksi sebelum mengirim request bertanda tangan. Website tetap membatasi aksi per klien sebagai lapisan kedua (kontrak §3–4).
 4. Kontrak API **tidak difinalkan** sebelum contract review oleh agen Qammaris App (kontrak §0).
 5. Pemisahan pembayaran, packing, handover, delivered, dan kewajiban refund/reimburse dipertahankan di model data dan API ([§5](#5-aturan-bisnis-keputusan-owner-2026-10-08), kontrak §7).
