@@ -156,12 +156,12 @@ Usulan awal Tahap 0 (arsip, sudah digantikan tabel di atas):
 | D12 | Upload bukti bayar di website | Opsional, JPG/PNG/PDF ≤5 MB, disimpan privat tanpa hapus otomatis |
 | D13 | Retensi data customer & daftar pelanggan langganan | Tetap tanpa hapus otomatis (keputusan ORD-01) |
 
-Koordinasi dengan agen Qammaris App: KOORDINASI-1 sampai 10 di [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md#daftar-koordinasi).
+Kontrak diselaraskan dengan audit App sebagai r3 (izin `orders.handle`, klaim atomik, expense ID unik + aturan bukti, deep link pasca-login, tanpa cron App). Endpoint integrasi **tidak** diimplementasikan sebelum contract review App dan kesepakatan v1. Koordinasi dengan agen Qammaris App: KOORDINASI-1 sampai 10 di [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md#daftar-koordinasi).
 
 ## 9. Koreksi teknis Owner (2026-10-08)
 
 1. `Clear-Site-Data` tidak dipakai karena berdampak ke seluruh origin publik. Diganti pembersihan cache SW `qammaris-admin-*` ([§3](#3-admin-pwa-ord-02b)).
-2. Webhook/outbox adalah **jalur notifikasi utama**. Rekonsiliasi 5 menit hanya fallback (kontrak §11).
+2. Webhook/outbox adalah **jalur notifikasi utama** dan retry ditanggung Website. Audit App 2026-10-08: hosting App **tanpa cron**, sehingga rekonsiliasi App terjadi saat halaman dibuka/aktif, bukan polling berkala (kontrak r3 §2, §11).
 3. Backend App **wajib** memvalidasi user, role, dan izin aksi sebelum mengirim request bertanda tangan. Website tetap membatasi aksi per klien sebagai lapisan kedua (kontrak §3–4).
 4. Kontrak API **tidak difinalkan** sebelum contract review oleh agen Qammaris App (kontrak §0).
 5. Pemisahan pembayaran, packing, handover, delivered, dan kewajiban refund/reimburse dipertahankan di model data dan API ([§5](#5-aturan-bisnis-keputusan-owner-2026-10-08), kontrak §7).

@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
   title: Qammaris Order API (Website ↔ Qammaris App)
-  version: 1.0.0-draft.2
+  version: 1.0.0-draft.3
   description: |
-    PROPOSED draft matching docs/integrations/QAMMARIS_ORDER_API_V1.md (r2). Awaiting Qammaris App contract review; not final.
-    The App backend must authorize the employee (login, role, action permission) before signing any request.
-    The Website is the source of truth for orders; Qammaris App for employees and reimbursements.
-    All requests are signed (X-Qammaris-Client / X-Qammaris-Timestamp / X-Qammaris-Signature).
+    PROPOSED draft matching docs/integrations/QAMMARIS_ORDER_API_V1.md r3. Awaiting Qammaris App contract review; not final, not implemented.
+    The Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.
+    The App backend must verify the employee is logged in, active and holds `orders.handle` before signing any request.
+    The App has no cron: the Website webhook is the primary notification path and the App reconciles when pages are opened.
 servers:
   - url: https://{website}/integrations/qammaris-app/orders/v1
     variables:
@@ -17,7 +17,7 @@ paths:
   /orders:
     get:
       operationId: listOrders
-      summary: Incremental order list ordered by (updated_at, id)
+      summary: Incremental order list ordered by (updated_at, id); never includes contact data
       parameters:
         - { name: updated_since, in: query, schema: { type: string, format: date-time } }
         - { name: cursor, in: query, schema: { type: string } }
@@ -25,14 +25,14 @@ paths:
         - { name: lifecycle, in: query, schema: { $ref: '#/components/schemas/Lifecycle' } }
       responses:
         '200':
-          description: Page of orders
+          description: Page of order summaries
           content:
             application/json:
               schema:
                 type: object
                 required: [data, next_cursor, has_more]
                 properties:
-                  data: { type: array, items: { $ref: '#/components/schemas/Order' } }
+                  data: { type: array, items: { $ref: '#/components/schemas/OrderSummary' } }
                   next_cursor: { type: [string, 'null'] }
                   has_more: { type: boolean }
         default: { $ref: '#/components/responses/Error' }
@@ -46,6 +46,7 @@ paths:
   /orders/{id}/claims:
     post:
       operationId: claimTask
+      summary: Atomic compare-and-set claim; one holder per (order, task)
       parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
@@ -53,11 +54,11 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/MutationBase'
+                - $ref: '#/components/schemas/MutationOptionalRevision'
                 - type: object
                   required: [task]
                   properties:
-                    task: { type: string, enum: [preparation, courier_booking] }
+                    task: { $ref: '#/components/schemas/Task' }
       responses:
         '200': { $ref: '#/components/responses/Mutation' }
         default: { $ref: '#/components/responses/Error' }
@@ -67,10 +68,17 @@ paths:
       parameters:
         - { $ref: '#/components/parameters/OrderId' }
         - { $ref: '#/components/parameters/IdempotencyKey' }
-        - { name: task, in: path, required: true, schema: { type: string, enum: [preparation, courier_booking] } }
+        - { name: task, in: path, required: true, schema: { $ref: '#/components/schemas/Task' } }
       requestBody:
         required: true
-        content: { application/json: { schema: { $ref: '#/components/schemas/MutationBase' } } }
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationOptionalRevision'
+                - type: object
+                  properties:
+                    override_reason: { type: [string, 'null'], maxLength: 200, description: "Required when releasing another holder's claim" }
       responses:
         '200': { $ref: '#/components/responses/Mutation' }
         default: { $ref: '#/components/responses/Error' }
@@ -104,12 +112,11 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/MutationBase'
                 - type: object
-                  required: [provider, booking_responsibility]
+                  required: [provider]
                   properties:
                     provider: { type: string, enum: [maxim, gosend, grab, other] }
                     provider_label: { type: [string, 'null'], maxLength: 40 }
                     reference: { type: [string, 'null'], maxLength: 80 }
-                    booking_responsibility: { type: string, enum: [store, customer] }
                     status: { type: string, enum: [requested, arrived], default: requested }
       responses:
         '200': { $ref: '#/components/responses/Mutation' }
@@ -117,6 +124,7 @@ paths:
   /orders/{id}/jnt:
     post:
       operationId: recordJnt
+      summary: pickup_requested, qr_available and picked_up are separate; tracking number never required
       parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
@@ -126,6 +134,7 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/MutationBase'
                 - type: object
+                  minProperties: 3
                   properties:
                     status: { type: string, enum: [pickup_requested, qr_available, picked_up] }
                     occurred_at: { type: string, format: date-time }
@@ -169,9 +178,8 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/MutationBase'
                 - type: object
-                  required: [status]
+                  required: [handed_to]
                   properties:
-                    status: { type: string, enum: [handed_over] }
                     handed_to: { type: string, enum: [courier, customer, customer_courier, jnt] }
                     occurred_at: { type: string, format: date-time }
       responses:
@@ -205,7 +213,7 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/MutationBase'
+                - $ref: '#/components/schemas/MutationOptionalRevision'
                 - type: object
                   required: [type, note]
                   properties:
@@ -227,34 +235,36 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/MutationBase'
+                - $ref: '#/components/schemas/MutationOptionalRevision'
                 - type: object
                   properties:
                     note: { type: [string, 'null'], maxLength: 500 }
       responses:
         '200': { $ref: '#/components/responses/Mutation' }
         default: { $ref: '#/components/responses/Error' }
-  /orders/{id}/costs/{expense_ref}:
+  /orders/{id}/costs/{expense_id}:
     put:
       operationId: upsertCost
+      summary: Upsert by unique App expense ID; one expense links to one order; stale source_version is a no-op
       parameters:
         - { $ref: '#/components/parameters/OrderId' }
         - { $ref: '#/components/parameters/IdempotencyKey' }
-        - { name: expense_ref, in: path, required: true, schema: { type: string, maxLength: 64 } }
+        - { name: expense_id, in: path, required: true, schema: { type: string, maxLength: 64 } }
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              allOf:
-                - $ref: '#/components/schemas/MutationBase'
-                - type: object
-                  required: [kind, amount, paid_by, reimbursement]
-                  properties:
-                    kind: { type: string, enum: [actual_shipping, packaging, other] }
-                    amount: { type: integer, minimum: 0, maximum: 100000000 }
-                    paid_by: { type: string, enum: [cashier_cash, owner_transfer, staff_advance, customer_direct] }
-                    reimbursement: { $ref: '#/components/schemas/Reimbursement' }
+              type: object
+              required: [kind, amount, paid_by, proof, reimbursement, source_version, actor]
+              properties:
+                kind: { type: string, enum: [actual_shipping, packaging, other] }
+                amount: { type: integer, minimum: 0, maximum: 100000000 }
+                paid_by: { type: string, enum: [cashier_cash, owner_transfer, staff_advance, customer_direct] }
+                proof: { $ref: '#/components/schemas/Proof' }
+                reimbursement: { $ref: '#/components/schemas/Reimbursement' }
+                source_version: { type: integer, minimum: 1 }
+                actor: { $ref: '#/components/schemas/Actor' }
       responses:
         '200': { $ref: '#/components/responses/Mutation' }
         default: { $ref: '#/components/responses/Error' }
@@ -287,28 +297,84 @@ components:
   schemas:
     Actor:
       type: object
-      required: [app_user_id, display_name]
+      required: [app_user_id, display_name, permission]
       properties:
-        app_user_id: { type: string, maxLength: 64 }
+        app_user_id: { type: string, maxLength: 64, description: 'Stable, never reused App employee ID' }
         display_name: { type: string, maxLength: 60 }
         app_role: { type: [string, 'null'], maxLength: 30 }
+        permission: { type: string, const: orders.handle, description: 'Asserted by the App backend after its own authorization' }
+    ActorRef:
+      type: object
+      properties:
+        app_user_id: { type: string }
+        display_name: { type: string }
     MutationBase:
       type: object
       required: [expected_revision, actor]
       properties:
         expected_revision: { type: integer, minimum: 1 }
         actor: { $ref: '#/components/schemas/Actor' }
+    MutationOptionalRevision:
+      type: object
+      required: [actor]
+      properties:
+        expected_revision: { type: [integer, 'null'], minimum: 1 }
+        actor: { $ref: '#/components/schemas/Actor' }
+    Task: { type: string, enum: [preparation, courier_booking, handover] }
     Lifecycle: { type: string, enum: [draft, awaiting_customer, active, completed, cancelled] }
     Money: { type: integer, description: Whole rupiah }
-    Reimbursement:
+    Proof:
       type: object
       required: [status]
       properties:
+        status: { type: string, enum: [pending, attached, waived] }
+        attached_at: { type: [string, 'null'], format: date-time }
+    Reimbursement:
+      type: object
+      required: [status]
+      description: approved/paid require proof.status=attached, or proof.status=waived with proof_exception (Owner rule)
+      properties:
         status: { type: string, enum: [not_applicable, submitted, approved, paid, rejected] }
         updated_at: { type: string, format: date-time }
+        approved_by: { oneOf: [{ $ref: '#/components/schemas/ActorRef' }, { type: 'null' }] }
+        proof_exception:
+          type: [object, 'null']
+          properties:
+            approved_by: { $ref: '#/components/schemas/ActorRef' }
+            reason: { type: string, maxLength: 200 }
+            at: { type: string, format: date-time }
+    Claim:
+      type: [object, 'null']
+      properties:
+        holder: { $ref: '#/components/schemas/ActorRef' }
+        claimed_at: { type: string, format: date-time }
+    OrderSummary:
+      type: object
+      required: [id, number, revision, updated_at, lifecycle]
+      properties:
+        id: { type: string }
+        number: { type: string }
+        revision: { type: integer }
+        updated_at: { type: string, format: date-time }
+        lifecycle: { $ref: '#/components/schemas/Lifecycle' }
+        source: { type: string, enum: [whatsapp, instagram, website, manual] }
+        fulfillment_type: { type: [string, 'null'], enum: [pickup, local_delivery, intercity, null] }
+        area: { type: [string, 'null'], enum: [pickup, palu, luar_kota, null] }
+        recipient_display: { type: [string, 'null'], description: 'First name + initial only' }
+        item_count: { type: integer }
+        payment_status: { type: string, enum: [unpaid, paid, refund_pending, refunded] }
+        preparation_status: { type: string, enum: [not_started, preparing, packed] }
+        handover_status: { type: string, enum: [pending, handed_over] }
+        jnt_status: { type: [string, 'null'], enum: [not_requested, pickup_requested, qr_available, picked_up, null] }
+        claims:
+          type: object
+          properties:
+            preparation: { $ref: '#/components/schemas/Claim' }
+            courier_booking: { $ref: '#/components/schemas/Claim' }
+            handover: { $ref: '#/components/schemas/Claim' }
     Order:
       type: object
-      required: [id, number, revision, created_at, updated_at, source, lifecycle, currency, items, packaging, totals, payment, fulfillment, costs, issues]
+      required: [id, number, revision, created_at, updated_at, source, lifecycle, currency, items, packaging, totals, payment, fulfillment, claims, obligations, costs, issues]
       properties:
         id: { type: string }
         number: { type: string, example: QAM-0012 }
@@ -358,6 +424,7 @@ components:
             type: { type: [string, 'null'], enum: [pickup, local_delivery, intercity, null] }
             recipient:
               type: [object, 'null']
+              description: Task-scoped; null 7 days after the order is closed (contract §6.1)
               properties:
                 name: { type: string }
                 phone: { type: string }
@@ -369,15 +436,13 @@ components:
               type: object
               properties:
                 status: { type: string, enum: [not_started, preparing, packed] }
-                claimed_by: { oneOf: [{ $ref: '#/components/schemas/Actor' }, { type: 'null' }] }
                 updated_at: { type: [string, 'null'], format: date-time }
             courier:
               type: [object, 'null']
               properties:
                 booking_responsibility: { type: string, enum: [store, customer] }
-                assignee: { oneOf: [{ $ref: '#/components/schemas/Actor' }, { type: 'null' }] }
                 provider: { type: [string, 'null'], enum: [maxim, gosend, grab, other, null] }
-                status: { type: string, enum: [not_needed, unassigned, assigned, requested, arrived] }
+                status: { type: string, enum: [not_needed, unassigned, requested, arrived] }
                 reference: { type: [string, 'null'] }
                 requested_at: { type: [string, 'null'], format: date-time }
             jnt:
@@ -401,6 +466,12 @@ components:
                 status: { type: string, enum: [unconfirmed, delivered] }
                 delivered_at: { type: [string, 'null'], format: date-time }
                 confirmed_by: { type: [string, 'null'], enum: [customer, website, app, null] }
+        claims:
+          type: object
+          properties:
+            preparation: { $ref: '#/components/schemas/Claim' }
+            courier_booking: { $ref: '#/components/schemas/Claim' }
+            handover: { $ref: '#/components/schemas/Claim' }
         obligations:
           type: array
           items:
@@ -416,12 +487,15 @@ components:
           items:
             type: object
             properties:
-              expense_ref: { type: string }
+              expense_id: { type: string }
               kind: { type: string, enum: [actual_shipping, packaging, other] }
               amount: { $ref: '#/components/schemas/Money' }
               paid_by: { type: string, enum: [cashier_cash, owner_transfer, staff_advance, customer_direct] }
-              reported_at: { type: string, format: date-time }
+              proof: { $ref: '#/components/schemas/Proof' }
               reimbursement: { $ref: '#/components/schemas/Reimbursement' }
+              reported_by: { $ref: '#/components/schemas/ActorRef' }
+              reported_at: { type: string, format: date-time }
+              source_version: { type: integer }
         issues:
           type: array
           items:
@@ -431,7 +505,7 @@ components:
               type: { type: string }
               status: { type: string, enum: [open, resolved] }
               note: { type: string }
-              opened_by: { $ref: '#/components/schemas/Actor' }
+              opened_by: { $ref: '#/components/schemas/ActorRef' }
               opened_at: { type: string, format: date-time }
               resolved_at: { type: [string, 'null'], format: date-time }
         keep:
@@ -443,12 +517,12 @@ components:
               type: object
               properties:
                 confirmed: { type: boolean }
-                by: { oneOf: [{ $ref: '#/components/schemas/Actor' }, { type: 'null' }] }
+                by: { oneOf: [{ $ref: '#/components/schemas/ActorRef' }, { type: 'null' }] }
                 at: { type: [string, 'null'], format: date-time }
         links:
           type: object
           properties:
-            website_admin: { type: string }
+            app_task: { type: string, description: 'App deep link; contains only the public order ID' }
     Error:
       type: object
       required: [error, request_id]
@@ -460,8 +534,8 @@ components:
             code:
               type: string
               enum: [bad_request, invalid_signature, stale_timestamp, unknown_client, action_not_allowed, order_not_found,
-                     revision_conflict, invalid_transition, task_already_claimed, idempotency_key_reused, payload_too_large,
-                     validation_failed, rate_limited, server_error, unavailable]
+                     revision_conflict, invalid_transition, task_already_claimed, expense_already_linked, idempotency_key_reused,
+                     payload_too_large, validation_failed, proof_required, rate_limited, server_error, unavailable]
             message: { type: string }
             details: { type: object }
         request_id: { type: string }
