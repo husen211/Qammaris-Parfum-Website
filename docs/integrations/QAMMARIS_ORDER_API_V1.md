@@ -1,17 +1,24 @@
 # Qammaris Order API v1 — kontrak Website ↔ Qammaris App
 
-Status: **PROPOSED r4 — menunggu persetujuan kedua agen. Belum final dan belum diimplementasikan.** Endpoint integrasi tidak dibuat sebelum r4 disetujui agen Website dan agen Qammaris App (keputusan Owner 2026-10-08).
+Status: **r4.1 — kandidat final.** Agen Qammaris App memberi *conditional sign-off* atas r4 (2026-10-08) setelah memverifikasi HMAC, 16 contoh JSON, OpenAPI, enum, dan R1–R10. Syaratnya dua koreksi K-A dan K-B, yang diterapkan di r4.1 (§3, §12). Kontrak final setelah agen App mengonfirmasi r4.1. Endpoint ORD-02e diimplementasikan mengikuti kontrak final dan diuji bersama agen App.
 
 Riwayat versi:
 - r1/r2: draf Tahap 0 dan revisi Owner.
 - r3: audit awal App.
-- **r4 (2026-10-08)**: menerapkan R1–R10 dari [contract review App](https://github.com/husen211/qammaris-reimbursement-management-system/blob/main/docs/integrations/online-orders-contract-review.md) (commit `6b52426`) dan keputusan final Owner R8. Pemetaan per butir ada di [§15](#15-penerapan-r1r10).
+- **r4 (2026-10-08)**: menerapkan R1–R10 dari contract review App dan keputusan final Owner R8. Pemetaan per butir ada di [§15](#15-penerapan-r1r10).
+  - Review App: `docs/integrations/online-orders-contract-review.md` di repository Qammaris App, commit `6b52426`.
+  - Commit itu **masih lokal** di mesin App dan belum ada di GitHub `main`, jadi belum ada tautan yang bisa dibuka.
+- **r4.1 (2026-10-08)**: koreksi wajib dari sign-off App:
+  - **K-A:** `path_with_query` webhook dan vektor uji webhook (§3, §12);
+  - **K-B:** setiap retry webhook memakai timestamp dan signature baru (§12).
+  Tidak ada perubahan skema payload.
 
 Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml). Markdown dan OpenAPI harus sama. Test `tests/Unit/OrderApiContractTest.php` memvalidasi:
 - setiap `$ref` OpenAPI;
 - setiap contoh JSON bertanda `<!-- validate: Schema -->` di dokumen ini terhadap skema OpenAPI;
 - kesamaan daftar kode error dan enum utama di kedua dokumen;
-- setiap operasi punya respons sukses dan error.
+- setiap operasi punya respons sukses dan error;
+- vektor HMAC App → Website dan webhook (termasuk retry melewati toleransi 300 detik), serta path webhook yang sama di Markdown dan OpenAPI.
 
 ## 0. Dasar
 
@@ -64,7 +71,11 @@ App (oportunistik) ──▶ GET /orders?updated_since=…  /  GET /orders/{id} 
 | `Idempotency-Key` | wajib untuk POST/PUT/DELETE; `[A-Za-z0-9_-]{16,128}` |
 | `X-Request-Id` | ID aksi App, untuk korelasi audit dua sisi |
 
-- `path_with_query` = path persis yang dikirim **termasuk base** `/integrations/qammaris-app/orders/v1`, query string persis seperti dikirim (urutan dan encoding tidak diubah), tanpa host. GET/DELETE tanpa body memakai `sha256_hex("")`.
+- `path_with_query` = path persis yang dikirim, tanpa host:
+  - **App → Website:** **termasuk base** `/integrations/qammaris-app/orders/v1`, dengan query string persis seperti dikirim (urutan dan encoding tidak diubah);
+  - **Website → App (webhook, K-A):** `/api/integrations/website/orders/events`, sesuai URL webhook yang disepakati (§12).
+- GET/DELETE tanpa body memakai `sha256_hex("")`. Webhook memakai raw body persis yang dikirim.
+- Penerima menolak timestamp yang selisihnya lebih dari 300 detik dari jam server (`401 stale_timestamp`).
 - Skema ini **berbeda** dari webhook produk lama (`timestamp.rawBody`). Header sama, secret berbeda.
 - Secret per arah, rotasi `current` + `previous`: penerima menerima keduanya, pengirim pindah ke yang baru, `previous` dikosongkan setelah 24 jam.
   - Website: `QAMMARIS_ORDER_API_SECRET[_PREVIOUS]` (verifikasi App→Website), `QAMMARIS_ORDER_WEBHOOK_SECRET[_PREVIOUS]` (tanda tangan Website→App).
@@ -411,8 +422,29 @@ Nilai `queue`: `needs_handling`, `preparing`, `ready`, `awaiting_pickup`, `in_de
 { "event_id": "01JABCF0QWERTYZXPASDFGHJKM", "type": "order.changed", "order_id": "01JABCDE2F3G4H5J6K7M8N9P0Q", "revision": 15, "occurred_at": "2026-10-08T03:15:00Z" }
 ```
 
-- Tujuan `POST https://api.qammarisapp.com/api/integrations/website/orders/events` (staging: host API staging App). Header HMAC §3 dengan secret webhook.
+- Tujuan `POST https://api.qammarisapp.com/api/integrations/website/orders/events` (staging: host API staging App).
+- Header HMAC §3 dengan secret webhook. **`path_with_query` = `/api/integrations/website/orders/events`** (tanpa host, tanpa query) (K-A).
 - Dikirim segera setelah commit. Retry oleh Website: segera, 1m, 5m, 15m, 1j, 6j, sampai 24 jam; setelah itu tampil di admin Website dengan aksi Kirim ulang.
+- **Setiap pengiriman, termasuk retry dan Kirim ulang manual, menghitung `X-Qammaris-Timestamp` dan `X-Qammaris-Signature` baru dari jam saat itu (K-B).**
+  - `event_id` dan raw body peristiwa **tidak berubah**, supaya App bisa deduplikasi.
+  - Timestamp atau signature lama tidak pernah dipakai ulang; retry setelah 5 menit dengan header lama pasti ditolak `stale_timestamp`.
+  - `Idempotency-Key` webhook = `event_id`.
+
+Raw body yang ditandatangani (byte persis):
+
+<!-- hmac-raw-body: webhook -->
+```text
+{"event_id":"01JABCF0QWERTYZXPASDFGHJKM","type":"order.changed","order_id":"01JABCDE2F3G4H5J6K7M8N9P0Q","revision":15,"occurred_at":"2026-10-08T03:15:00Z"}
+```
+
+**Vektor uji webhook** (secret contoh `example-webhook-secret-not-real-9876543210`, `POST`, path `/api/integrations/website/orders/events`):
+
+| Pengiriman | `X-Qammaris-Timestamp` | `sha256_hex(body)` | Signature |
+|---|---|---|---|
+| Pertama | `1791427500` | `0cd0c66644296d3a2a6e8292c42646ba2ae0c7d8ee0a1aef040f9c0f2ea65fa0` | `3ace8b1498db0e559e75e962f36370db46f2bd3233f928c269b175d144b399b7` |
+| Retry +360 detik | `1791427860` | `0cd0c66644296d3a2a6e8292c42646ba2ae0c7d8ee0a1aef040f9c0f2ea65fa0` | `4acc135964061b49f09ae8b6d2a5121450983c535840286716c17b1de8173f6b` |
+
+Pada retry +360 detik, header pertama sudah di luar toleransi 300 detik dan harus ditolak. Header baru diterima. Body dan `event_id` sama.
 - App menyimpan event secara durable (unik per `event_id`) **sebelum** membalas 2xx, mengabaikan revision ≤ yang dimiliki, lalu mengambil `GET /orders/{id}`.
 
 ## 13. Deep link
@@ -427,9 +459,9 @@ Nilai `queue`: `needs_handling`, `preparing`, `ready`, `awaiting_pickup`, `in_de
 ## 14. Versi
 
 Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`. Urutan:
-1. r4 disetujui kedua agen;
-2. implementasi Website ORD-02e dan App;
-3. tes kontrak memakai contoh payload resmi dokumen ini;
+1. r4 conditional sign-off App (selesai), r4.1 dikonfirmasi agen App;
+2. implementasi Website ORD-02e dan App mengikuti kontrak final;
+3. tes kontrak bersama agen App memakai contoh payload dan vektor HMAC resmi dokumen ini;
 4. staging bersama;
 5. rilis setelah persetujuan Owner.
 
@@ -447,6 +479,8 @@ Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`. Urutan:
 | R8 | Reimburse tertunda tidak menahan `completed` (**keputusan Owner final**); refund tetap menahan dan ditandai | §7, §8.5 |
 | R9 | `expense_ref` = ID asli App, opak, stabil | §8.5 |
 | R10 | Field `queue` turunan Website, pemetaan berurutan | §9 |
+| K-A | `path_with_query` webhook + vektor uji webhook (r4.1) | §3, §12 |
+| K-B | Timestamp/signature baru setiap retry webhook; `event_id` dan body tetap (r4.1) | §12 |
 
 Klarifikasi review lain yang ikut diterapkan:
 - contoh `GET /orders` (§6.3);

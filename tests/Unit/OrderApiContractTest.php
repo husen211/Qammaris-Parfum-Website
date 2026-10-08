@@ -30,11 +30,71 @@ class OrderApiContractTest extends TestCase
         $this->markdown = file_get_contents($dir.'/QAMMARIS_ORDER_API_V1.md');
     }
 
-    public function test_versions_match_and_contract_is_still_proposed(): void
+    public function test_versions_match_and_contract_is_the_r4_1_candidate(): void
     {
-        $this->assertSame('1.0.0-draft.4', $this->spec['info']['version']);
-        $this->assertStringContainsString('PROPOSED r4', $this->markdown);
-        $this->assertStringContainsString('r4', $this->spec['info']['description']);
+        $this->assertSame('1.0.0-rc.4.1', $this->spec['info']['version']);
+        $this->assertStringContainsString('**r4.1 — kandidat final.**', $this->markdown);
+        $this->assertStringContainsString('r4.1', $this->spec['info']['description']);
+        // The App review commit is still local to the App machine; it must not be presented as a GitHub link.
+        $this->assertStringNotContainsString('github.com/husen211/qammaris-reimbursement-management-system', $this->markdown);
+    }
+
+    public function test_webhook_signs_the_agreed_path_and_raw_body(): void
+    {
+        $webhook = $this->spec['webhooks']['orderChanged']['post'];
+        $path = '/api/integrations/website/orders/events';
+        $this->assertSame($path, $webhook['x-signature-path']);
+        $this->assertStringContainsString("**`path_with_query` = `{$path}`**", $this->markdown);
+        $this->assertSame(1, preg_match('/Tujuan `POST (https:\/\/[^`]+)`/', $this->markdown, $url));
+        $this->assertSame($path, parse_url($url[1], PHP_URL_PATH), 'Signed path must equal the agreed webhook URL path');
+        $this->assertStringContainsString($url[1], $webhook['summary']);
+
+        [$body, $secret] = $this->webhookVectorInputs();
+        $event = json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+        $errors = [];
+        $this->validate($event, ['$ref' => '#/components/schemas/WebhookEvent'], 'webhook raw body', $errors);
+        $this->assertSame([], $errors, implode(PHP_EOL, $errors));
+        $this->assertEquals($this->firstExample('WebhookEvent'), $event, 'Raw body is the documented webhook example');
+        $this->assertSame(json_encode($event, JSON_UNESCAPED_SLASHES), $body, 'Raw body is compact JSON, byte for byte');
+
+        foreach ($this->webhookVectors() as $vector) {
+            $this->assertSame(hash('sha256', $body), $vector['body_hash']);
+            $this->assertSame($this->sign($secret, $vector['timestamp'], 'POST', $path, $body), $vector['signature']);
+        }
+    }
+
+    public function test_webhook_retry_beyond_timestamp_tolerance_uses_new_headers_and_the_same_event(): void
+    {
+        $tolerance = $this->spec['x-timestamp-tolerance-seconds'];
+        $this->assertSame(300, $tolerance);
+        $this->assertStringContainsString('lebih dari 300 detik', $this->markdown);
+        $retry = $this->spec['webhooks']['orderChanged']['post']['x-retry'];
+        $this->assertTrue($retry['new-timestamp-and-signature-per-attempt']);
+        $this->assertEqualsCanonicalizing(['event_id', 'body'], $retry['unchanged']);
+        $this->assertSame('event_id', $retry['idempotency-key']);
+        $this->assertSame(86400, $retry['give-up-after-seconds']);
+        $this->assertSame([0, 60, 300, 900, 3600, 21600], $retry['schedule-seconds']);
+        $this->assertStringContainsString('segera, 1m, 5m, 15m, 1j, 6j, sampai 24 jam', $this->markdown);
+        $this->assertNotEmpty(array_filter($retry['schedule-seconds'], fn ($delay) => $delay > $tolerance), 'Real retries outlive the tolerance');
+        $this->assertStringContainsString('menghitung `X-Qammaris-Timestamp` dan `X-Qammaris-Signature` baru', $this->markdown);
+
+        [$body, $secret] = $this->webhookVectorInputs();
+        $path = '/api/integrations/website/orders/events';
+        [$first, $second] = $this->webhookVectors();
+        $this->assertGreaterThan($tolerance, $second['timestamp'] - $first['timestamp']);
+        $this->assertSame($first['body_hash'], $second['body_hash'], 'A retry resends the same raw body');
+        $this->assertNotSame($first['signature'], $second['signature']);
+
+        $now = $second['timestamp'];
+        $this->assertTrue($this->verify($secret, $first['timestamp'], $first['signature'], $body, $path, $first['timestamp']), 'First attempt is valid when sent');
+        $this->assertFalse($this->verify($secret, $first['timestamp'], $first['signature'], $body, $path, $now), 'Reused headers are stale on retry');
+        $this->assertFalse($this->verify($secret, $second['timestamp'], $first['signature'], $body, $path, $now), 'An old signature with a new timestamp fails');
+        $this->assertTrue($this->verify($secret, $second['timestamp'], $second['signature'], $body, $path, $now), 'Fresh retry headers are accepted');
+        $edge = $now - $tolerance;
+        $this->assertTrue($this->verify($secret, $edge, $this->sign($secret, $edge, 'POST', $path, $body), $body, $path, $now), 'Exactly 300 s old is accepted');
+        $this->assertFalse($this->verify($secret, $edge - 1, $this->sign($secret, $edge - 1, 'POST', $path, $body), $body, $path, $now), '301 s old is stale');
+        // Signing with the host or another base path never verifies.
+        $this->assertFalse($this->verify($secret, $now, $this->sign($secret, $now, 'POST', 'https://api.qammarisapp.com'.$path, $body), $body, $path, $now));
     }
 
     public function test_every_ref_resolves_and_every_component_schema_is_used(): void
@@ -329,6 +389,40 @@ class OrderApiContractTest extends TestCase
             $this->assertSame(trim($cells[3], ' `'), $signature, "Signature for {$cells[0]} {$path}");
             $this->assertStringStartsWith('/integrations/qammaris-app/orders/v1/', $path);
         }
+    }
+
+    /** Reference receiver check (contract §3): timestamp within tolerance and constant-time signature match. */
+    private function verify(string $secret, int $timestamp, string $signature, string $body, string $path, int $now): bool
+    {
+        return abs($now - $timestamp) <= $this->spec['x-timestamp-tolerance-seconds']
+            && hash_equals($this->sign($secret, $timestamp, 'POST', $path, $body), $signature);
+    }
+
+    private function sign(string $secret, int $timestamp, string $method, string $path, string $body): string
+    {
+        return hash_hmac('sha256', implode("\n", [$timestamp, $method, $path, hash('sha256', $body)]), $secret);
+    }
+
+    /** @return array{0: string, 1: string} raw body, secret */
+    private function webhookVectorInputs(): array
+    {
+        $this->assertSame(1, preg_match('/<!-- hmac-raw-body: webhook -->\n```text\n(.+?)\n```/s', $this->markdown, $body));
+        $this->assertSame(1, preg_match('/Vektor uji webhook\*\* \(secret contoh `([^`]+)`/', $this->markdown, $secret));
+
+        return [$body[1], $secret[1]];
+    }
+
+    /** @return list<array{timestamp: int, body_hash: string, signature: string}> */
+    private function webhookVectors(): array
+    {
+        $rows = $this->tableRows('| Pengiriman | `X-Qammaris-Timestamp` |');
+        $this->assertCount(2, $rows);
+
+        return array_map(fn ($cells) => [
+            'timestamp' => (int) trim($cells[1], ' `'),
+            'body_hash' => trim($cells[2], ' `'),
+            'signature' => trim($cells[3], ' `'),
+        ], $rows);
     }
 
     private function cost(array $override): array

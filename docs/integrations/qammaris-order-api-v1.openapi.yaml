@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
   title: Qammaris Order API (Website ↔ Qammaris App)
-  version: 1.0.0-draft.4
+  version: 1.0.0-rc.4.1
   description: |
-    PROPOSED r4 matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4. Awaiting approval by both the Website and
-    Qammaris App agents; not final, not implemented.
+    r4.1 final candidate matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.1. Qammaris App gave conditional
+    sign-off on r4; r4.1 applies the required corrections K-A (webhook signature path + vectors) and K-B (new
+    timestamp and signature on every webhook retry). Final once the App agent confirms r4.1; not implemented.
     The Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.
     The App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that
     permission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles
@@ -16,6 +17,8 @@ servers:
       website: { default: example.invalid }
 security:
   - qammarisSignature: []
+x-timestamp-tolerance-seconds: 300
+x-signature-path-prefix: /integrations/qammaris-app/orders/v1
 x-common-error-codes: [bad_request, invalid_signature, stale_timestamp, unknown_client, rate_limited, server_error, unavailable]
 x-mutation-error-codes: [idempotency_key_reused, payload_too_large, validation_failed]
 paths:
@@ -173,7 +176,22 @@ webhooks:
     post:
       operationId: orderChangedWebhook
       summary: Website → App at POST https://api.qammarisapp.com/api/integrations/website/orders/events; no order or customer data
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      description: |
+        Signed with the webhook secret over path_with_query /api/integrations/website/orders/events (no host) and
+        the raw body (K-A). Every attempt, including retries and manual resends, carries a new timestamp and
+        signature; event_id and the raw body never change, and Idempotency-Key equals event_id (K-B).
+      x-signature-path: /api/integrations/website/orders/events
+      x-retry:
+        new-timestamp-and-signature-per-attempt: true
+        unchanged: [event_id, body]
+        idempotency-key: event_id
+        schedule-seconds: [0, 60, 300, 900, 3600, 21600]
+        give-up-after-seconds: 86400
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: '#/components/parameters/QammarisClient' }
+        - { $ref: '#/components/parameters/QammarisTimestamp' }
+        - { $ref: '#/components/parameters/QammarisSignature' }
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/WebhookEvent' } } } }
       x-error-codes: []
       responses:
@@ -190,6 +208,9 @@ components:
   parameters:
     OrderId: { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/Ulid' } }
     IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,128}$' } }
+    QammarisClient: { name: X-Qammaris-Client, in: header, required: true, schema: { type: string, maxLength: 64 } }
+    QammarisTimestamp: { name: X-Qammaris-Timestamp, in: header, required: true, description: 'Unix seconds at send time; new on every attempt', schema: { type: string, pattern: '^[0-9]{10}$' } }
+    QammarisSignature: { name: X-Qammaris-Signature, in: header, required: true, description: 'Lowercase hex HMAC-SHA256; new on every attempt', schema: { type: string, pattern: '^[0-9a-f]{64}$' } }
   responses:
     Mutation:
       description: Applied, no-op, or idempotent replay
