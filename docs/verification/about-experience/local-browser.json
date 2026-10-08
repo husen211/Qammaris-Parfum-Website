@@ -1,0 +1,511 @@
+{
+  "base": "http://127.0.0.1:8029",
+  "widths": [
+    {
+      "width": 320,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029",
+          "logo": "http://127.0.0.1:8029/images/logo.png",
+          "image": "http://127.0.0.1:8029/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "http://127.0.0.1:8029/store/about#webpage",
+              "url": "http://127.0.0.1:8029/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "http://127.0.0.1:8029/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "http://127.0.0.1:8029/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "http://127.0.0.1:8029/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "http://127.0.0.1:8029/store/location",
+              "image": "http://127.0.0.1:8029/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "http://127.0.0.1:8029/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "http://127.0.0.1:8029"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "http://127.0.0.1:8029/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "gallery": 9,
+      "heavy3DLoaded": false,
+      "errors": []
+    },
+    {
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029",
+          "logo": "http://127.0.0.1:8029/images/logo.png",
+          "image": "http://127.0.0.1:8029/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "http://127.0.0.1:8029/store/about#webpage",
+              "url": "http://127.0.0.1:8029/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "http://127.0.0.1:8029/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "http://127.0.0.1:8029/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "http://127.0.0.1:8029/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "http://127.0.0.1:8029/store/location",
+              "image": "http://127.0.0.1:8029/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "http://127.0.0.1:8029/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "http://127.0.0.1:8029"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "http://127.0.0.1:8029/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "gallery": 9,
+      "heavy3DLoaded": false,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029",
+          "logo": "http://127.0.0.1:8029/images/logo.png",
+          "image": "http://127.0.0.1:8029/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "http://127.0.0.1:8029/store/about#webpage",
+              "url": "http://127.0.0.1:8029/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "http://127.0.0.1:8029/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "http://127.0.0.1:8029/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "http://127.0.0.1:8029/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "http://127.0.0.1:8029/store/location",
+              "image": "http://127.0.0.1:8029/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "http://127.0.0.1:8029/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "http://127.0.0.1:8029"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "http://127.0.0.1:8029/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "gallery": 9,
+      "heavy3DLoaded": false,
+      "errors": []
+    },
+    {
+      "width": 768,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029",
+          "logo": "http://127.0.0.1:8029/images/logo.png",
+          "image": "http://127.0.0.1:8029/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "http://127.0.0.1:8029/store/about#webpage",
+              "url": "http://127.0.0.1:8029/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "http://127.0.0.1:8029/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "http://127.0.0.1:8029/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "http://127.0.0.1:8029/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "http://127.0.0.1:8029/store/location",
+              "image": "http://127.0.0.1:8029/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "http://127.0.0.1:8029/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "http://127.0.0.1:8029"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "http://127.0.0.1:8029/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "gallery": 9,
+      "heavy3DLoaded": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029",
+          "logo": "http://127.0.0.1:8029/images/logo.png",
+          "image": "http://127.0.0.1:8029/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "http://127.0.0.1:8029"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "http://127.0.0.1:8029/store/about#webpage",
+              "url": "http://127.0.0.1:8029/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "http://127.0.0.1:8029/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "http://127.0.0.1:8029/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "http://127.0.0.1:8029/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "http://127.0.0.1:8029/store/location",
+              "image": "http://127.0.0.1:8029/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "http://127.0.0.1:8029/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "http://127.0.0.1:8029"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "http://127.0.0.1:8029/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "gallery": 9,
+      "heavy3DLoaded": false,
+      "errors": []
+    }
+  ],
+  "interactions": {
+    "gallery": {
+      "click": true,
+      "keyboardNext": true,
+      "escape": true,
+      "focusReturned": true
+    },
+    "faq": true,
+    "instagram": {
+      "iframeCreated": true,
+      "src": "https://www.instagram.com/reel/Dd0iMrDJURL/embed/",
+      "fallback": true,
+      "frameText": "qammaris\nSteve Lacy · oh yeah?\nView profile\nPlay\nWatch on Instagram\nqammaris\n133 posts · 4K followers\nView more on Instagram\nLike\nComment\nShare\nSave\n27 likes\nAdd a comment...\nInstagram"
+    },
+    "touch": {
+      "touchPoints": 1,
+      "hover": false,
+      "scrollBefore": 0,
+      "scrollAfter": 360,
+      "singleTapPhoto": true,
+      "singleTapFAQ": true,
+      "singleTapNavigation": true,
+      "finalPath": "/store/location"
+    }
+  },
+  "errors": []
+}

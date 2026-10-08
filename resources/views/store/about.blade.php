@@ -1,262 +1,136 @@
 @extends('layouts.app')
 
-@section('title', 'Tentang Qammaris Perfumes')
-@section('meta_description', 'Tentang Qammaris Perfumes, toko parfum Middle East di Palu dengan pengalaman coba langsung.')
+@section('title', 'Tentang Qammaris — Experience Store Parfum di Palu')
+@section('meta_description', 'Kenali cerita Qammaris Perfumes di Palu. Coba tester setiap produk, bandingkan aroma, dan berdiskusi dengan staf untuk menemukan parfum sesuai kebutuhan Anda.')
+@section('canonical_url', route('store.about'))
+@section('og_image', asset('images/store/facade-1200.webp'))
+
+@push('styles')
+    @vite('resources/css/about.css')
+@endpush
+@push('jsonld')
+    <script type="application/ld+json">{!! json_encode($aboutSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) !!}</script>
+@endpush
 
 @section('content')
-    <div class="pt-24 md:pt-28">
-    <section class="pb-12 bg-white">
-        <div class="container mx-auto px-6 text-center">
-            <p class="text-xs md:text-sm font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">
-                Tentang Qammaris
-            </p>
-            <h1 class="font-mayluxa text-4xl md:text-6xl text-brand-black mb-4">
-                Tentang Qammaris Perfumes
-            </h1>
-            <p class="text-gray-500 font-light text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                Toko parfum Middle East di Palu, Sulawesi Tengah, dengan pengalaman coba langsung sebelum membeli.
-            </p>
-        </div>
-    </section>
-
-    <section class="py-14 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl mx-auto text-center">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">Preview Produk</p>
-                <h2 class="font-mayluxa text-2xl md:text-3xl text-brand-black mb-6">
-                    Lihat detail sebelum mencoba langsung
-                </h2>
-                <div class="mx-auto w-full max-w-[520px]">
-                    <div class="relative aspect-square rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-                        <div id="about-lanyard"
-                            class="absolute inset-0 w-full h-full"
-                            data-fallback-image="{{ asset('images/about-section.jpg') }}"
-                            data-fallback-alt="Produk parfum Qammaris">
-                            <div class="absolute inset-0 flex items-center justify-center bg-white/70 text-[11px] font-semibold uppercase tracking-[0.3em] text-gray-400 animate-pulse"
-                                data-lanyard-placeholder>
-                                Loading 3D...
-                            </div>
-                            <noscript>
-                                <figure class="w-full h-full flex items-center justify-center p-6">
-                                    <img src="{{ asset('images/about-section.jpg') }}" alt="Produk parfum Qammaris"
-                                        loading="lazy" decoding="async" class="max-h-full max-w-full object-contain" />
-                                </figure>
-                            </noscript>
-                        </div>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-500 mt-4">
-                    Untuk pengalaman terbaik, Anda bisa mencoba aroma langsung di toko.
-                </p>
+<div class="qammaris-about">
+    <section class="about-hero about-container" aria-labelledby="about-title">
+        <div class="about-hero-copy">
+            <p class="about-eyebrow">Qammaris Perfumes · Palu</p>
+            <h1 id="about-title">Aroma yang tepat<br>dimulai dari<br><span>pengalaman.</span></h1>
+            <p class="about-lead">Kami hadir bukan hanya untuk menjual parfum. Qammaris adalah ruang untuk mencoba, membandingkan, dan berdiskusi sampai Anda menemukan aroma yang terasa pas.</p>
+            <div class="about-actions">
+                <a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <span aria-hidden="true">↗</span></a>
+                <a href="#cerita" class="about-text-link">Kenali cerita kami <span aria-hidden="true">↓</span></a>
             </div>
+            <p class="about-hero-note">Experience store parfum di Palu, Sulawesi Tengah.</p>
+        </div>
+        <figure class="about-hero-photo">
+            <img src="{{ asset('images/store/shelves-1200.webp') }}" srcset="{{ asset('images/store/shelves-480.webp') }} 480w, {{ asset('images/store/shelves-768.webp') }} 768w, {{ asset('images/store/shelves-1200.webp') }} {{ $aboutMedia['shelves']['width'] }}w" sizes="(min-width: 900px) 45vw, 100vw" width="{{ $aboutMedia['shelves']['width'] }}" height="{{ $aboutMedia['shelves']['height'] }}" alt="Rak lengkung dan koleksi parfum di dalam experience store Qammaris" fetchpriority="high" decoding="async">
+            <figcaption>Ruang untuk menemukan aroma pilihan Anda.</figcaption>
+        </figure>
+    </section>
+
+    <nav class="about-section-nav about-container" aria-label="Bagian halaman tentang Qammaris">
+        <a href="#cerita">Cerita kami</a><a href="#pengalaman">Pengalaman di toko</a><a href="#perjalanan">Perjalanan</a><a href="#galeri">Galeri</a><a href="#ulasan">Ulasan</a><a href="#kunjungan">Kunjungan</a>
+    </nav>
+
+    <section id="cerita" class="about-section about-container about-story" aria-labelledby="story-title">
+        <div><p class="about-eyebrow">Cerita kami</p><h2 id="story-title">Berawal dari rasa ingin tahu.<br>Tumbuh menjadi sebuah ruang.</h2><p class="about-signature">Cerita Husein, perintis Qammaris</p></div>
+        <div class="about-prose">
+            <p>Saat merantau ke Jakarta untuk kuliah, Husein mulai mengenal parfum melalui obrolan dengan teman-temannya. Parfum bukan lagi sekadar wangi yang enak, tetapi juga bagian dari rasa percaya diri dan cara mengekspresikan diri.</p>
+            <p>Eksplorasi itu membawanya dari parfum lokal, designer, dan niche ke parfum Timur Tengah. Ketika kembali ke Palu, ia merasakan satu hal yang berbeda: tidak selalu mudah menemukan tempat untuk mencoba aroma sebelum membeli.</p>
+            <p>Membeli online sering berarti berharap aromanya cocok ketika paket tiba. Padahal, pengalaman setiap orang terhadap aroma berbeda. Dari situ muncul gagasan untuk membangun Qammaris: tempat orang bisa mencoba, membandingkan, dan memilih berdasarkan pengalamannya sendiri.</p>
+            <a class="about-text-link" href="{{ $aboutContent['story_url'] }}" target="_blank" rel="noopener noreferrer">Baca cerita Husein di LinkedIn <span aria-hidden="true">↗</span></a>
         </div>
     </section>
 
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-4">Cerita Kami</p>
-                <h2 class="font-mayluxa text-3xl md:text-4xl text-brand-black mb-6">Kenapa Qammaris hadir di Palu</h2>
-                <div class="space-y-4 text-gray-600 leading-relaxed">
-                    <p>
-                        Ketertarikan kami pada parfum Middle East berawal dari pengalaman pribadi mencari aroma yang
-                        sesuai karakter. Kami menyadari banyak pilihan yang menarik, namun sulit ditentukan tanpa mencoba.
-                    </p>
-                    <p>
-                        Di Palu, opsi mencoba langsung masih terbatas. Qammaris hadir untuk menjembatani kebutuhan itu,
-                        agar memilih parfum tidak hanya berdasarkan deskripsi online.
-                    </p>
-                    <p>
-                        Kami membangun toko yang rapi dan nyaman, sehingga siapa pun bisa mencium langsung dan memahami
-                        aromanya sebelum memutuskan.
-                    </p>
-                </div>
+    <section id="pengalaman" class="about-experience" aria-labelledby="experience-title">
+        <div class="about-container about-experience-layout">
+            <figure class="about-experience-photo"><img src="{{ asset('images/store/visitors-768.webp') }}" srcset="{{ asset('images/store/visitors-480.webp') }} 480w, {{ asset('images/store/visitors-768.webp') }} 768w, {{ asset('images/store/visitors-1200.webp') }} {{ $aboutMedia['visitors']['width'] }}w" sizes="(min-width: 900px) 40vw, 100vw" width="{{ $aboutMedia['visitors']['width'] }}" height="{{ $aboutMedia['visitors']['height'] }}" alt="Pengunjung mencoba dan berdiskusi tentang parfum di dalam toko Qammaris" loading="lazy" decoding="async"></figure>
+            <div><p class="about-eyebrow">Experience store</p><h2 id="experience-title">Datang, coba,<br>ceritakan kebutuhan Anda.</h2><p class="about-lead">Anda tidak perlu sudah mengerti parfum untuk datang ke Qammaris. Kami siap menemani proses menemukan aroma yang Anda sukai.</p>
+                <ol class="about-experience-list">
+                    <li><span aria-hidden="true">01</span><div><h3>Tester untuk setiap produk</h3><p>Semua produk di toko tersedia testernya. Gunakan paper test untuk mencoba dan membandingkan aroma sebelum memutuskan.</p></div></li>
+                    <li><span aria-hidden="true">02</span><div><h3>Rekomendasi sesuai kebutuhan</h3><p>Ceritakan selera, aktivitas, atau kesempatan pemakaiannya. Staf kami siap membantu menjelaskan dan merekomendasikan pilihan yang sesuai.</p></div></li>
+                    <li><span aria-hidden="true">03</span><div><h3>Ruang untuk berdiskusi</h3><p>Tanyakan, eksplorasi, dan luangkan waktu untuk mengenal aromanya. Kami melayani dengan sepenuh hati agar Anda merasa nyaman selama memilih.</p></div></li>
+                </ol>
             </div>
         </div>
     </section>
 
-    <section class="py-16 bg-brand-cream">
-        <div class="container mx-auto px-6">
-            <div class="flex items-center justify-between flex-wrap gap-4 mb-10">
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">Kenapa Qammaris Ada</p>
-                    <h2 class="font-mayluxa text-3xl md:text-4xl text-brand-black">Kami tahu parfum itu subjektif</h2>
-                </div>
-            </div>
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <h3 class="font-semibold text-brand-black text-base mb-3">Parfum itu subjektif</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Aroma yang cocok untuk satu orang belum tentu cocok untuk orang lain. Itu sebabnya memilih parfum
-                        perlu ruang dan waktu yang tepat.
-                    </p>
-                </div>
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <h3 class="font-semibold text-brand-black text-base mb-3">Harus bisa coba langsung</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Kami menyediakan pengalaman sniff agar pelanggan bisa menilai aroma dengan nyaman sebelum membeli.
-                    </p>
-                </div>
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <h3 class="font-semibold text-brand-black text-base mb-3">Tidak semua cocok blind buy</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Pilihan yang tepat sering datang dari pengalaman langsung, bukan sekadar review atau tren.
-                    </p>
-                </div>
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <h3 class="font-semibold text-brand-black text-base mb-3">Fokus kenyamanan, bukan hype</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Kami mengutamakan kesesuaian aroma dengan kebutuhan harian, bukan sekadar popularitas.
-                    </p>
-                </div>
+    <section id="perjalanan" class="about-section about-container" aria-labelledby="journey-title">
+        <div class="about-section-heading"><div><p class="about-eyebrow">Perjalanan Qammaris</p><h2 id="journey-title">Dari gagasan,<br>menjadi tempat bertemu.</h2></div><p>Setiap sudut dibangun untuk memberi ruang pada pengalaman memilih parfum.</p></div>
+        <ol class="about-timeline">
+            @foreach ($aboutContent['timeline'] as $milestone)
+                <li><span class="about-timeline-index" aria-hidden="true">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><div><h3>{{ $milestone['title'] }}</h3><p>{{ $milestone['text'] }}</p></div></li>
+            @endforeach
+        </ol>
+        <div class="about-build-photos">
+            @foreach (['design-board' => 'Rancangan awal interior', 'construction' => 'Proses pengerjaan ruang toko'] as $key => $caption)
+                <figure><img src="{{ asset('images/store/'.$key.'-768.webp') }}" srcset="{{ asset('images/store/'.$key.'-480.webp') }} 480w, {{ asset('images/store/'.$key.'-768.webp') }} 768w, {{ asset('images/store/'.$key.'-1200.webp') }} {{ $aboutMedia[$key]['width'] }}w" sizes="(min-width: 768px) 45vw, 100vw" width="{{ $aboutMedia[$key]['width'] }}" height="{{ $aboutMedia[$key]['height'] }}" alt="{{ $caption }} Qammaris" loading="lazy" decoding="async"><figcaption>{{ $caption }}</figcaption></figure>
+            @endforeach
+        </div>
+        <a class="about-text-link" href="{{ $aboutContent['journey_url'] }}" target="_blank" rel="noopener noreferrer">Cerita pembangunan di LinkedIn <span aria-hidden="true">↗</span></a>
+    </section>
+
+    <section id="galeri" class="about-gallery-section" aria-labelledby="gallery-title">
+        <div class="about-container">
+            <div class="about-section-heading"><div><p class="about-eyebrow">Galeri</p><h2 id="gallery-title">Ruang, proses,<br>dan pengalaman.</h2></div><p>Lihat toko hari ini dan dokumentasi di balik pembangunannya. Pilih foto untuk melihat lebih dekat.</p></div>
+            <div class="about-gallery">
+                @foreach ($aboutContent['gallery'] as $photo)
+                    <figure>
+                        <a class="about-gallery-link" href="{{ asset('images/store/'.$photo['key'].'-1200.webp') }}" data-about-photo data-photo-caption="{{ $photo['caption'] }}" data-photo-alt="{{ $photo['alt'] }}" aria-label="Perbesar foto: {{ $photo['title'] }}">
+                            <img class="about-photo-{{ $photo['fit'] }}" src="{{ asset('images/store/'.$photo['key'].'-480.webp') }}" srcset="{{ asset('images/store/'.$photo['key'].'-480.webp') }} 480w, {{ asset('images/store/'.$photo['key'].'-768.webp') }} 768w" sizes="(min-width: 900px) 30vw, (min-width: 600px) 45vw, 100vw" width="{{ $aboutMedia[$photo['key']]['width'] }}" height="{{ $aboutMedia[$photo['key']]['height'] }}" alt="{{ $photo['alt'] }}" loading="lazy" decoding="async"><span class="about-photo-hint" aria-hidden="true">Lihat foto ↗</span>
+                        </a><figcaption><h3>{{ $photo['title'] }}</h3><p>{{ $photo['caption'] }}</p></figcaption>
+                    </figure>
+                @endforeach
             </div>
         </div>
     </section>
 
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl mb-10">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">Apa yang Kami Lakukan</p>
-                <h2 class="font-mayluxa text-3xl md:text-4xl text-brand-black">Pendekatan sederhana, hasilnya jelas</h2>
-            </div>
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center mb-4">
-                        <span class="text-xs font-bold text-brand-black">01</span>
-                    </div>
-                    <h3 class="font-semibold text-brand-black text-base mb-2">Kurasi brand Middle East</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Kami memilih brand dari Dubai dan Timur Tengah yang relevan dengan preferensi lokal.
-                    </p>
-                </div>
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center mb-4">
-                        <span class="text-xs font-bold text-brand-black">02</span>
-                    </div>
-                    <h3 class="font-semibold text-brand-black text-base mb-2">Edukasi ringan</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Kami menjelaskan aroma dengan bahasa sederhana agar mudah dipahami tanpa menggurui.
-                    </p>
-                </div>
-                <div class="bg-white border border-gray-100 p-6 shadow-sm">
-                    <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center mb-4">
-                        <span class="text-xs font-bold text-brand-black">03</span>
-                    </div>
-                    <h3 class="font-semibold text-brand-black text-base mb-2">Bantu pilih yang cocok</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Tim kami siap memberi rekomendasi berdasarkan karakter, aktivitas, dan preferensi Anda.
-                    </p>
-                </div>
-            </div>
+    <section class="about-section about-container about-reel-layout" aria-labelledby="reel-title">
+        <div><p class="about-eyebrow">Dari Instagram kami</p><h2 id="reel-title">Kenali suasananya,<br>sebelum datang.</h2><p class="about-lead">Lihat Qammaris melalui video singkat dari akun Instagram kami.</p><p class="about-small-copy">Video dimuat dari Instagram saat Anda memilih untuk menontonnya.</p><a class="about-text-link" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Buka Reels di Instagram <span aria-hidden="true">↗</span></a></div>
+        <div class="about-reel" data-about-reel data-embed-url="{{ $aboutContent['reel_embed_url'] }}">
+            <div class="about-reel-preview"><img src="{{ asset('images/store/skin-test-480.webp') }}" width="{{ $aboutMedia['skin-test']['width'] }}" height="{{ $aboutMedia['skin-test']['height'] }}" alt="Mencoba parfum langsung di Qammaris" loading="lazy" decoding="async"><button type="button" class="about-button about-button-primary" data-load-reel hidden>Tonton Reels <span aria-hidden="true">▶</span></button><noscript><a class="about-button about-button-primary" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Tonton di Instagram ↗</a></noscript></div>
+            <p class="about-reel-status" role="status" data-reel-status></p>
+            <a class="about-reel-fallback about-text-link" href="{{ $aboutContent['reel_url'] }}" target="_blank" rel="noopener noreferrer">Jika video tidak tampil, buka di Instagram ↗</a>
         </div>
     </section>
 
-    <section class="py-16 bg-brand-cream">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl mb-8">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">Komitmen Kami</p>
-                <h2 class="font-mayluxa text-3xl md:text-4xl text-brand-black">Dasar kerja yang kami pegang</h2>
-            </div>
-            <div class="space-y-4">
-                <div class="flex flex-col md:flex-row md:items-center gap-4 bg-white border border-gray-100 p-5">
-                    <span class="text-xs font-bold uppercase tracking-widest text-brand-gold">Produk Original</span>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Produk berasal dari sumber resmi dengan kualitas yang dapat ditelusuri.
-                    </p>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-4 bg-white border border-gray-100 p-5">
-                    <span class="text-xs font-bold uppercase tracking-widest text-brand-gold">Kurasi Selektif</span>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Koleksi disusun agar mudah dicoba dan relevan dengan kebutuhan pengguna.
-                    </p>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-4 bg-white border border-gray-100 p-5">
-                    <span class="text-xs font-bold uppercase tracking-widest text-brand-gold">Pendekatan Personal</span>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Kami memberi ruang untuk eksplorasi agar setiap orang menemukan aroma yang pas.
-                    </p>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-4 bg-white border border-gray-100 p-5">
-                    <span class="text-xs font-bold uppercase tracking-widest text-brand-gold">Transparan</span>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        Informasi produk disampaikan apa adanya, tanpa klaim berlebihan.
-                    </p>
-                </div>
-            </div>
+    <section id="ulasan" class="about-reviews-section" aria-labelledby="reviews-title">
+        <div class="about-container about-reviews-layout">
+            <div><p class="about-eyebrow">Ulasan pelanggan</p><h2 id="reviews-title">Pengalaman mereka,<br>cerita untuk Anda.</h2><p class="about-lead">Baca pengalaman pengunjung Qammaris di Google Maps sebelum merencanakan kunjungan Anda.</p></div>
+            @include('store._rating-card', ['rating' => $aboutContent['google_rating'], 'checkedAt' => $aboutContent['rating_checked_at'], 'reviewsUrl' => $aboutContent['reviews_url']])
         </div>
+        @if ($aboutContent['reviews'])
+            <div class="about-container about-review-grid">
+                @foreach ($aboutContent['reviews'] as $review)
+                    @include('store._review-card', ['review' => $review, 'reviewsUrl' => $aboutContent['reviews_url']])
+                @endforeach
+            </div>
+        @endif
     </section>
 
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl mb-8">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">Visual</p>
-                <h2 class="font-mayluxa text-3xl md:text-4xl text-brand-black">Ruang & aktivitas Qammaris</h2>
-            </div>
-            <!-- Slot untuk foto toko / aktivitas / produk -->
-            <div class="grid gap-6 md:grid-cols-3">
-                <div class="h-48 md:h-56 bg-gray-100 border border-gray-200"></div>
-                <div class="h-48 md:h-56 bg-gray-100 border border-gray-200"></div>
-                <div class="h-48 md:h-56 bg-gray-100 border border-gray-200"></div>
-            </div>
-        </div>
+    <section id="kunjungan" class="about-section about-container about-visit" aria-labelledby="visit-title">
+        <figure><img src="{{ asset('images/store/facade-768.webp') }}" srcset="{{ asset('images/store/facade-480.webp') }} 480w, {{ asset('images/store/facade-768.webp') }} 768w, {{ asset('images/store/facade-1200.webp') }} {{ $aboutMedia['facade']['width'] }}w" sizes="(min-width: 900px) 40vw, 100vw" width="{{ $aboutMedia['facade']['width'] }}" height="{{ $aboutMedia['facade']['height'] }}" alt="Tampak depan toko Qammaris Perfumes di Jalan Sis Aljufri Palu" loading="lazy" decoding="async"></figure>
+        <div><p class="about-eyebrow">Kunjungi kami</p><h2 id="visit-title">Mari temukan aroma<br>yang terasa seperti Anda.</h2><p class="about-lead">Datang untuk mencoba koleksi, mengenal aroma baru, atau sekadar memulai percakapan tentang parfum.</p><dl class="about-store-details"><div><dt>Alamat</dt><dd>{{ $aboutAddress }}</dd></div><div><dt>Jam buka</dt><dd>Sabtu–Kamis · 09.00–21.00 WITA<br>Jumat tutup</dd></div></dl><div class="about-actions"><a class="about-button about-button-primary" href="{{ $aboutContent['reviews_url'] }}" target="_blank" rel="noopener noreferrer">Petunjuk arah ↗</a><a class="about-text-link" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Hubungi lewat WhatsApp ↗</a></div><a class="about-text-link about-catalog-link" href="{{ route('products.index') }}">Jelajahi katalog parfum <span aria-hidden="true">→</span></a></div>
     </section>
 
-    <section class="py-16 bg-brand-cream">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl mb-8">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] text-brand-gold mb-3">FAQ</p>
-                <h2 class="font-mayluxa text-3xl md:text-4xl text-brand-black">Pertanyaan yang sering muncul</h2>
-            </div>
-            <div class="space-y-4">
-                <div class="collapse collapse-plus bg-white border border-gray-200 rounded-none">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-sm font-semibold text-brand-black">Bisa coba parfum di toko?</div>
-                    <div class="collapse-content text-sm text-gray-600">
-                        Tentu. Anda bisa mencoba aroma secara langsung sebelum memutuskan membeli.
-                    </div>
-                </div>
-                <div class="collapse collapse-plus bg-white border border-gray-200 rounded-none">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-sm font-semibold text-brand-black">Harus beli setelah coba?</div>
-                    <div class="collapse-content text-sm text-gray-600">
-                        Tidak. Anda bebas mencoba dulu hingga yakin dengan pilihan Anda.
-                    </div>
-                </div>
-                <div class="collapse collapse-plus bg-white border border-gray-200 rounded-none">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-sm font-semibold text-brand-black">Fokus parfum apa?</div>
-                    <div class="collapse-content text-sm text-gray-600">
-                        Kami fokus pada parfum Middle East/Dubai dengan berbagai karakter aroma.
-                    </div>
-                </div>
-                <div class="collapse collapse-plus bg-white border border-gray-200 rounded-none">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-sm font-semibold text-brand-black">Cocok untuk pemula?</div>
-                    <div class="collapse-content text-sm text-gray-600">
-                        Cocok. Tim kami membantu menjelaskan aroma agar mudah dipahami untuk pemula.
-                    </div>
-                </div>
-                <div class="collapse collapse-plus bg-white border border-gray-200 rounded-none">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-sm font-semibold text-brand-black">Bisa order via WhatsApp?</div>
-                    <div class="collapse-content text-sm text-gray-600">
-                        Bisa. Kami melayani konsultasi dan pemesanan via WhatsApp.
-                    </div>
-                </div>
-                <div class="collapse collapse-plus bg-white border border-gray-200 rounded-none">
-                    <input type="checkbox" />
-                    <div class="collapse-title text-sm font-semibold text-brand-black">Lokasi toko di Palu?</div>
-                    <div class="collapse-content text-sm text-gray-600">
-                        Lokasi toko ada di Palu, Sulawesi Tengah. Detail alamat tersedia di halaman lokasi.
-                    </div>
-                </div>
-            </div>
-        </div>
+    <section class="about-section about-container about-faq" aria-labelledby="faq-title"><p class="about-eyebrow">Sebelum berkunjung</p><h2 id="faq-title">Yang mungkin ingin Anda tahu.</h2>
+        <details><summary>Apakah semua produk bisa dicoba?</summary><p>Ya. Semua produk di toko tersedia testernya. Anda bisa mencoba dengan paper test dan membandingkan pilihan aromanya.</p></details>
+        <details><summary>Saya belum paham parfum. Apakah bisa dibantu?</summary><p>Tentu. Ceritakan aroma yang Anda sukai dan kebutuhan pemakaiannya. Staf kami siap membantu menjelaskan serta merekomendasikan pilihan.</p></details>
+        <details><summary>Apakah bisa berdiskusi dulu sebelum memilih?</summary><p>Bisa. Qammaris hadir sebagai ruang eksplorasi dan diskusi. Anda bisa bertanya, mencoba, serta membandingkan parfum dengan nyaman.</p></details>
+        <details><summary>Kapan toko buka?</summary><p>Kami buka Sabtu sampai Kamis, pukul 09.00–21.00 WITA. Jumat tutup. Untuk perubahan pada hari libur, cek Instagram atau hubungi kami.</p></details>
+        <details><summary>Apakah bisa memesan tanpa datang ke toko?</summary><p>Bisa. Jelajahi katalog website, tambahkan produk ke keranjang, lalu isi data penerima untuk melanjutkan pemesanan melalui WhatsApp.</p></details>
     </section>
 
-    </div>
-
-    @push('scripts')
-        @vite('resources/js/reactbits/about-lanyard-loader.js')
-    @endpush
+    <dialog class="about-photo-dialog" data-about-dialog aria-labelledby="about-photo-caption">
+        <div class="about-dialog-toolbar"><p data-photo-position></p><button type="button" data-close-photo aria-label="Tutup foto">Tutup <span aria-hidden="true">×</span></button></div>
+        <figure><img data-dialog-photo alt=""><figcaption id="about-photo-caption"></figcaption></figure>
+        <div class="about-dialog-controls"><button type="button" data-photo-prev aria-label="Foto sebelumnya">← Sebelumnya</button><button type="button" data-photo-next aria-label="Foto berikutnya">Berikutnya →</button></div>
+    </dialog>
+</div>
+@push('scripts')
+    @vite('resources/js/about.js')
+@endpush
 @endsection
