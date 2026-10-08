@@ -19,7 +19,7 @@ class StoreAboutTest extends TestCase
     public function test_about_uses_owner_story_real_media_and_click_to_load_video(): void
     {
         $response = $this->get('/store/about')->assertOk()
-            ->assertSee('Husein')->assertSee('Jakarta')
+            ->assertSee('Husein')->assertSee('Mengenal parfum saat merantau')
             ->assertSee('Semua produk di toko tersedia testernya.')
             ->assertSee('Sabtu–Kamis · 09.00–21.00 WITA')->assertSee('Jumat tutup')
             ->assertDontSee('Loading 3D...')->assertDontSee('about-lanyard')

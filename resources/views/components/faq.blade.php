@@ -7,7 +7,7 @@
                 <span class="q-faq-question-bubble">{{ $item['question'] }}</span>
                 <span class="q-faq-toggle"><x-icon name="plus" class="q-faq-plus" /><x-icon name="minus" class="q-faq-minus" /></span>
             </summary>
-            <div class="q-faq-answer"><p>{{ $item['answer'] }}</p></div>
+            <div class="q-faq-panel"><div class="q-faq-answer"><p>{{ $item['answer'] }}</p></div></div>
         </details>
     @endforeach
 </div>

@@ -17,7 +17,7 @@
     <section class="about-hero about-container" aria-labelledby="about-title">
         <div class="about-hero-copy">
             <p class="about-eyebrow">Qammaris Perfumes · Palu</p>
-            <h1 id="about-title">Aroma yang tepat<br>dimulai dari<br><span>pengalaman.</span></h1>
+            <h1 id="about-title">Coba parfum langsung<br><span>di Qammaris.</span></h1>
             <p class="about-lead">Kami hadir bukan hanya untuk menjual parfum. Qammaris adalah ruang untuk mencoba, membandingkan, dan berdiskusi sampai Anda menemukan aroma yang terasa pas.</p>
             <div class="about-actions">
                 <a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <x-icon name="arrow-up-right" /></a>
@@ -36,11 +36,11 @@
     </nav>
 
     <section id="cerita" class="about-section about-container about-story" aria-labelledby="story-title">
-        <div><p class="about-eyebrow">Cerita kami</p><h2 id="story-title">Berawal dari rasa ingin tahu.<br>Tumbuh menjadi sebuah ruang.</h2><p class="about-signature">Cerita Husein, perintis Qammaris</p></div>
+        <div><p class="about-eyebrow">Cerita kami</p><h2 id="story-title">Awal mula Qammaris</h2></div>
         <div class="about-prose">
-            <p>Saat merantau ke Jakarta untuk kuliah, Husein mulai mengenal parfum melalui obrolan dengan teman-temannya. Parfum bukan lagi sekadar wangi yang enak, tetapi juga bagian dari rasa percaya diri dan cara mengekspresikan diri.</p>
-            <p>Eksplorasi itu membawanya dari parfum lokal, designer, dan niche ke parfum Timur Tengah. Ketika kembali ke Palu, ia merasakan satu hal yang berbeda: tidak selalu mudah menemukan tempat untuk mencoba aroma sebelum membeli.</p>
-            <p>Membeli online sering berarti berharap aromanya cocok ketika paket tiba. Padahal, pengalaman setiap orang terhadap aroma berbeda. Dari situ muncul gagasan untuk membangun Qammaris: tempat orang bisa mencoba, membandingkan, dan memilih berdasarkan pengalamannya sendiri.</p>
+            <p>Saat kuliah di luar Palu, Husein mulai mengenal parfum melalui obrolan dengan teman-temannya. Ia mencoba berbagai aroma dan mulai mempelajari karakter masing-masing parfum.</p>
+            <p>Dari parfum lokal, designer, dan niche, ia kemudian mengenal parfum Timur Tengah. Saat kembali ke Palu, ia ingin menyediakan tempat untuk mencoba parfum sebelum membeli.</p>
+            <p>Qammaris dibangun agar pelanggan bisa mencoba langsung, membandingkan pilihan, dan berdiskusi dengan staf. Tujuannya sederhana: membantu pelanggan memilih parfum yang sesuai selera dan kebutuhan.</p>
             <a class="about-text-link" href="{{ $aboutContent['story_url'] }}" target="_blank" rel="noopener noreferrer">Baca cerita Husein di LinkedIn <x-icon name="arrow-up-right" /></a>
         </div>
     </section>
@@ -59,7 +59,7 @@
     </section>
 
     <section id="perjalanan" class="about-section about-container" aria-labelledby="journey-title">
-        <div class="about-section-heading"><div><p class="about-eyebrow">Perjalanan Qammaris</p><h2 id="journey-title">Dari gagasan,<br>menjadi tempat bertemu.</h2></div><p>Setiap sudut dibangun untuk memberi ruang pada pengalaman memilih parfum.</p></div>
+        <div class="about-section-heading"><div><p class="about-eyebrow">Perjalanan Qammaris</p><h2 id="journey-title">Perjalanan membangun Qammaris.</h2></div><p>Dari ide dan persiapan interior hingga toko mulai buka.</p></div>
         {{-- Adapted from shadcnspace/timeline-01, 21st demo 28273. --}}
         <ol class="about-timeline" data-about-timeline>
             @foreach ($aboutContent['timeline'] as $milestone)
@@ -74,7 +74,7 @@
 
     <section id="galeri" class="about-gallery-section" aria-labelledby="gallery-title">
         <div class="about-container">
-            <div class="about-section-heading"><div><p class="about-eyebrow">Galeri</p><h2 id="gallery-title">Ruang, proses,<br>dan pengalaman.</h2></div><p>Lihat toko hari ini dan dokumentasi di balik pembangunannya. Pilih foto untuk melihat lebih dekat.</p></div>
+            <div class="about-section-heading"><div><p class="about-eyebrow">Galeri</p><h2 id="gallery-title">Toko dan proses pembangunannya.</h2></div><p>Lihat toko hari ini dan dokumentasi di balik pembangunannya. Pilih foto untuk melihat lebih dekat.</p></div>
             {{-- Adapted from 0xUrvish/fluid-expanding-grid, 21st demo 10467. --}}
             <div class="about-gallery" data-fluid-gallery>
                 @foreach ($aboutContent['gallery'] as $photo)
@@ -99,7 +99,7 @@
 
     <section id="ulasan" class="about-reviews-section" aria-labelledby="reviews-title">
         <div class="about-container about-reviews-layout">
-            <div><p class="about-eyebrow">Ulasan pelanggan</p><h2 id="reviews-title">Pengalaman mereka,<br>cerita untuk Anda.</h2><p class="about-lead">Baca pengalaman pengunjung Qammaris di Google Maps sebelum merencanakan kunjungan Anda.</p></div>
+            <div><p class="about-eyebrow">Ulasan pelanggan</p><h2 id="reviews-title">Apa kata<br>pelanggan kami.</h2><p class="about-lead">Baca pengalaman pengunjung Qammaris di Google Maps sebelum merencanakan kunjungan Anda.</p></div>
             @include('store._rating-card', ['rating' => $aboutContent['google_rating'], 'checkedAt' => $aboutContent['rating_checked_at'], 'reviewsUrl' => $aboutContent['reviews_url']])
         </div>
         @if ($aboutContent['reviews'])
@@ -113,7 +113,7 @@
 
     <section id="kunjungan" class="about-section about-container about-visit" aria-labelledby="visit-title">
         <figure><img src="{{ asset('images/store/facade-768.webp') }}" srcset="{{ asset('images/store/facade-480.webp') }} 480w, {{ asset('images/store/facade-768.webp') }} 768w, {{ asset('images/store/facade-1200.webp') }} {{ $aboutMedia['facade']['width'] }}w" sizes="(min-width: 900px) 40vw, 100vw" width="{{ $aboutMedia['facade']['width'] }}" height="{{ $aboutMedia['facade']['height'] }}" alt="Tampak depan toko Qammaris Perfumes di Jalan Sis Aljufri Palu" loading="lazy" decoding="async"></figure>
-        <div><p class="about-eyebrow">Kunjungi kami</p><h2 id="visit-title">Mari temukan aroma<br>yang terasa seperti Anda.</h2><p class="about-lead">Datang untuk mencoba koleksi, mengenal aroma baru, atau sekadar memulai percakapan tentang parfum.</p><dl class="about-store-details"><div><dt>Alamat</dt><dd>{{ $aboutAddress }}</dd></div><div><dt>Jam buka</dt><dd>Sabtu–Kamis · 09.00–21.00 WITA<br>Jumat tutup</dd></div></dl><div class="about-actions"><a class="about-button about-button-primary" href="{{ $aboutContent['reviews_url'] }}" target="_blank" rel="noopener noreferrer">Petunjuk arah <x-icon name="arrow-up-right" /></a><a class="about-text-link" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Hubungi lewat WhatsApp <x-icon name="arrow-up-right" /></a></div><a class="about-text-link about-catalog-link" href="{{ route('products.index') }}">Jelajahi katalog parfum <x-icon name="arrow-right" /></a></div>
+        <div><p class="about-eyebrow">Kunjungi kami</p><h2 id="visit-title">Coba parfum langsung<br>di toko kami.</h2><p class="about-lead">Datang untuk mencoba koleksi, mengenal aroma baru, atau sekadar memulai percakapan tentang parfum.</p><dl class="about-store-details"><div><dt>Alamat</dt><dd>{{ $aboutAddress }}</dd></div><div><dt>Jam buka</dt><dd>Sabtu–Kamis · 09.00–21.00 WITA<br>Jumat tutup</dd></div></dl><div class="about-actions"><a class="about-button about-button-primary" href="{{ $aboutContent['reviews_url'] }}" target="_blank" rel="noopener noreferrer">Petunjuk arah <x-icon name="arrow-up-right" /></a><a class="about-text-link" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Hubungi lewat WhatsApp <x-icon name="arrow-up-right" /></a></div><a class="about-text-link about-catalog-link" href="{{ route('products.index') }}">Jelajahi katalog parfum <x-icon name="arrow-right" /></a></div>
     </section>
 
     <section class="about-section about-container about-faq" aria-labelledby="faq-title"><p class="about-eyebrow">Sebelum berkunjung</p><h2 id="faq-title">Yang mungkin ingin Anda tahu.</h2>

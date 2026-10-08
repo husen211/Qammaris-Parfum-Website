@@ -19,10 +19,10 @@ return [
         ['author' => 'Ferdiansyah Cahyadi', 'stars' => 5, 'quote' => 'karyawan ramah, selalu menjelaskan setiap wangi wangi an yg kita mau'],
     ],
     'timeline' => [
-        ['date' => '2024', 'photo' => 'skin-test', 'title' => 'Ketertarikan yang tumbuh di Jakarta', 'text' => 'Saat merantau untuk kuliah, Husein bertemu teman-teman yang gemar berdiskusi tentang parfum. Dari sana, ia mulai menjelajahi parfum lokal, designer, niche, hingga Timur Tengah.'],
-        ['date' => 'Gagasan di Palu', 'photo' => 'design-board', 'title' => 'Sebuah pertanyaan saat kembali ke Palu', 'text' => 'Mencari parfum terasa berbeda ketika aromanya tidak bisa dicoba lebih dulu. Pengalaman membeli online dan berharap cocok memunculkan gagasan: bagaimana jika ada tempat untuk mencoba dan membandingkan langsung?'],
-        ['date' => 'Persiapan toko', 'photo' => 'construction', 'title' => 'Dari rancangan menjadi ruang nyata', 'text' => 'Ruang yang belum digunakan perlahan diubah menjadi toko. Perencanaan interior, pengerjaan rak, renovasi, dan persiapan jalur distribusi menjadi bagian dari perjalanan membangun Qammaris.'],
-        ['date' => 'Februari 2026', 'photo' => 'facade', 'title' => 'Qammaris sebagai experience store', 'text' => 'Pada Februari 2026, Qammaris membuka pintunya sebagai experience store di Palu. Kini ruang itu menjadi tempat untuk mengenal aroma, bertanya, dan menemukan parfum yang sesuai kebutuhan. Setiap produk di toko tersedia testernya, dengan staf yang siap mendampingi.'],
+        ['date' => '2024', 'photo' => 'skin-test', 'title' => 'Mengenal parfum saat merantau', 'text' => 'Saat merantau untuk kuliah, Husein bertemu teman-teman yang gemar berdiskusi tentang parfum. Dari sana, ia mulai mencoba parfum lokal, designer, niche, hingga Timur Tengah.'],
+        ['date' => 'Gagasan di Palu', 'photo' => 'design-board', 'title' => 'Ide membuka toko di Palu', 'text' => 'Saat kembali ke Palu, Husein ingin membuat tempat untuk mencoba parfum sebelum membeli. Pelanggan bisa membandingkan aroma dan meminta rekomendasi langsung.'],
+        ['date' => 'Persiapan toko', 'photo' => 'construction', 'title' => 'Menyiapkan toko', 'text' => 'Persiapan mencakup rancangan interior, renovasi, pengerjaan rak, dan pengadaan koleksi parfum serta testernya.'],
+        ['date' => 'Februari 2026', 'photo' => 'facade', 'title' => 'Toko Qammaris dibuka', 'text' => 'Qammaris mulai buka di Palu pada Februari 2026. Semua produk di toko tersedia testernya. Staf siap membantu pelanggan mencoba, membandingkan, dan memilih parfum sesuai kebutuhan.'],
     ],
     'gallery' => [
         ['key' => 'facade', 'title' => 'Selamat datang di Qammaris', 'alt' => 'Fasad toko Qammaris Perfumes dengan pintu kaca dan papan nama Qammaris', 'caption' => 'Tampak depan toko di Jalan Sis Aljufri, Palu.', 'fit' => 'cover'],

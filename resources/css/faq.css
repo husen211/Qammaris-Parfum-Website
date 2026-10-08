@@ -1,4 +1,4 @@
-/* Shared 21st FAQ Chat Accordion adaptation: native disclosure, no hydration required. */
+/* Shared 21st FAQ Chat Accordion adaptation: native fallback with height/opacity motion matching the source. */
 .q-icon{display:inline-block;width:1em;height:1em;min-width:1em;vertical-align:-.15em;flex-shrink:0}
 .q-faq{color:var(--color-brand-black);width:100%;font-size:.9rem}
 .q-faq-item{margin:0 0 14px}
@@ -7,10 +7,11 @@
 .q-faq-question::marker{content:''}
 .q-faq-question-bubble{display:block;min-width:0;padding:13px 16px;border-radius:12px;background:#f3f2ee;line-height:1.65;font-weight:500;overflow-wrap:anywhere;transition:background-color .15s ease,color .15s ease}
 .q-faq-toggle{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:24px;color:#76674b;font-size:20px}
+.q-faq-panel{display:flow-root;overflow:hidden}
 .q-faq-minus{display:none}
-.q-faq-item[open]>.q-faq-question .q-faq-plus{display:none}
-.q-faq-item[open]>.q-faq-question .q-faq-minus{display:inline-block}
-.q-faq-item[open]>.q-faq-question .q-faq-question-bubble{background:#eee4d2;color:#59421c}
+.q-faq-item[open]:not([data-faq-expanded])>.q-faq-question .q-faq-plus,.q-faq-item[data-faq-expanded="true"]>.q-faq-question .q-faq-plus{display:none}
+.q-faq-item[open]:not([data-faq-expanded])>.q-faq-question .q-faq-minus,.q-faq-item[data-faq-expanded="true"]>.q-faq-question .q-faq-minus{display:inline-block}
+.q-faq-item[open]:not([data-faq-expanded])>.q-faq-question .q-faq-question-bubble,.q-faq-item[data-faq-expanded="true"]>.q-faq-question .q-faq-question-bubble{background:#eee4d2;color:#59421c}
 .q-faq-answer{max-width:calc(100% - 28px);margin:8px 0 0 28px;padding:16px 20px;border-radius:16px;background:var(--color-brand-black);color:var(--color-brand-cream);width:fit-content}
 .q-faq-answer p{margin:0;line-height:1.85;white-space:pre-line;overflow-wrap:anywhere}
 .q-faq-question:focus-visible{outline:2px solid #9a793b;outline-offset:4px}
