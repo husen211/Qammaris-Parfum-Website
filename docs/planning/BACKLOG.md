@@ -33,9 +33,10 @@ Owner requested and approved ORD-01 on 2026-10-07, developed in parallel with th
 | ID | Status | Current scope / next prerequisite |
 |---|---|---|
 | ORD-01 | IN_REVIEW | Admin-created order + customer completion link, price snapshot, admin payment/shipping/funding, tracking timeline, staff group message + secret staff task link, shipping-fee advance/reimburse. Branch `modernization/ord-01-online-orders`; not deployed. [Evidence](../verification/ord-01/README.md), [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md) |
-| ORD-02 | BACKLOG | Cart checkout creates the same online order (changes ADR-028); needs Owner approval |
-| ORD-03 | BACKLOG | Keep/titip rule (duration, payment, stock); Owner rule undecided |
-| ORD-04 | BACKLOG | Authenticated staff accounts instead of bearer links; permission change |
+| ORD-02 | IN_PROGRESS | Owner-requested redesign (2026-10-08): Super Admin/Staff Order roles + user management, Admin PWA, separate payment/preparation/courier/J&T/handover states, repeat customers, keep, private API v1 for Qammaris App. Stage 0 audit + proposed contract done on `modernization/ord-02-online-order-redesign`; implementation waits for Owner decisions D1–D13 and App coordination. [Plan](ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md), [API v1](../integrations/QAMMARIS_ORDER_API_V1.md) |
+| ORD-03 | Absorbed | Keep is part of ORD-02 |
+| ORD-04 | Absorbed | Authenticated staff (Staff Order role + App task link) is part of ORD-02 |
+| ORD-06 | BACKLOG | Cart checkout creates the same online order (changes ADR-028); needs Owner approval |
 | ORD-05 | BACKLOG | Customer-data retention/anonymization policy; currently no automatic deletion |
 
 ORD-01 local verification: 14 new tests/142 assertions; full suite and browser flow at 320/375/390/1440 on an isolated synthetic SQLite DB; staging MySQL, genuine touch/Safari and real WhatsApp sending not confirmed.

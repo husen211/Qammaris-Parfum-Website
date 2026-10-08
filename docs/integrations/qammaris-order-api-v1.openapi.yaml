@@ -1,0 +1,432 @@
+openapi: 3.1.0
+info:
+  title: Qammaris Order API (Website ↔ Qammaris App)
+  version: 1.0.0-draft.1
+  description: |
+    PROPOSED draft matching docs/integrations/QAMMARIS_ORDER_API_V1.md. Not implemented yet.
+    The Website is the source of truth for orders; Qammaris App for employees and reimbursements.
+    All requests are signed (X-Qammaris-Client / X-Qammaris-Timestamp / X-Qammaris-Signature).
+servers:
+  - url: https://{website}/integrations/qammaris-app/orders/v1
+    variables:
+      website: { default: example.invalid }
+security:
+  - qammarisSignature: []
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: Incremental order list ordered by (updated_at, id)
+      parameters:
+        - { name: updated_since, in: query, schema: { type: string, format: date-time } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - { name: lifecycle, in: query, schema: { $ref: '#/components/schemas/Lifecycle' } }
+      responses:
+        '200':
+          description: Page of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, next_cursor, has_more]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Order' } }
+                  next_cursor: { type: [string, 'null'] }
+                  has_more: { type: boolean }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      responses:
+        '200': { description: Order, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/claims:
+    post:
+      operationId: claimTask
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  required: [task]
+                  properties:
+                    task: { type: string, enum: [preparation, courier_booking] }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/claims/{task}:
+    delete:
+      operationId: releaseClaim
+      parameters:
+        - { $ref: '#/components/parameters/OrderId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { name: task, in: path, required: true, schema: { type: string, enum: [preparation, courier_booking] } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MutationBase' } } }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/preparation:
+    post:
+      operationId: updatePreparation
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  required: [status]
+                  properties:
+                    status: { type: string, enum: [preparing, packed] }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/courier-requests:
+    post:
+      operationId: recordCourierRequest
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  required: [provider, booking_responsibility]
+                  properties:
+                    provider: { type: string, enum: [maxim, gosend, grab, other] }
+                    provider_label: { type: [string, 'null'], maxLength: 40 }
+                    reference: { type: [string, 'null'], maxLength: 80 }
+                    booking_responsibility: { type: string, enum: [store, customer] }
+                    status: { type: string, enum: [requested, arrived], default: requested }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/jnt:
+    post:
+      operationId: recordJnt
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  properties:
+                    status: { type: string, enum: [pickup_requested, qr_available, picked_up] }
+                    occurred_at: { type: string, format: date-time }
+                    tracking_number: { type: [string, 'null'], maxLength: 40, pattern: '^[A-Za-z0-9-]+$' }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/jnt/qr:
+    put:
+      operationId: uploadJntQr
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, expected_revision, actor]
+              properties:
+                file: { type: string, format: binary, description: 'image/png or image/jpeg, max 2 MiB' }
+                expected_revision: { type: integer }
+                actor: { type: string, description: JSON-encoded Actor }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+    get:
+      operationId: getJntQr
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      responses:
+        '200': { description: QR image, content: { image/png: {}, image/jpeg: {} } }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/handover:
+    post:
+      operationId: recordHandover
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  required: [status]
+                  properties:
+                    status: { type: string, enum: [handed_over, delivered] }
+                    handed_to: { type: string, enum: [courier, customer, customer_courier, jnt] }
+                    occurred_at: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/issues:
+    post:
+      operationId: openIssue
+      parameters: [{ $ref: '#/components/parameters/OrderId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  required: [type, note]
+                  properties:
+                    type: { type: string, enum: [stock_problem, courier_problem, customer_unreachable, address_problem, payment_problem, other] }
+                    note: { type: string, maxLength: 500 }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/issues/{issue_id}/resolve:
+    post:
+      operationId: resolveIssue
+      parameters:
+        - { $ref: '#/components/parameters/OrderId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { name: issue_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  properties:
+                    note: { type: [string, 'null'], maxLength: 500 }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+  /orders/{id}/costs/{expense_ref}:
+    put:
+      operationId: upsertCost
+      parameters:
+        - { $ref: '#/components/parameters/OrderId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { name: expense_ref, in: path, required: true, schema: { type: string, maxLength: 64 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MutationBase'
+                - type: object
+                  required: [kind, amount, paid_by, reimbursement]
+                  properties:
+                    kind: { type: string, enum: [actual_shipping, packaging, other] }
+                    amount: { type: integer, minimum: 0, maximum: 100000000 }
+                    paid_by: { type: string, enum: [cashier_cash, owner_transfer, staff_advance, customer_direct] }
+                    reimbursement: { $ref: '#/components/schemas/Reimbursement' }
+      responses:
+        '200': { $ref: '#/components/responses/Mutation' }
+        default: { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    qammarisSignature:
+      type: apiKey
+      in: header
+      name: X-Qammaris-Signature
+      description: HMAC-SHA256 over timestamp, method, path+query and body hash; see contract §3.
+  parameters:
+    OrderId: { name: id, in: path, required: true, schema: { type: string, description: ULID } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,128}$' } }
+  responses:
+    Mutation:
+      description: Applied (or idempotent replay)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [order, event_id]
+            properties:
+              order: { $ref: '#/components/schemas/Order' }
+              event_id: { type: [string, 'null'] }
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Actor:
+      type: object
+      required: [app_user_id, display_name]
+      properties:
+        app_user_id: { type: string, maxLength: 64 }
+        display_name: { type: string, maxLength: 60 }
+        app_role: { type: [string, 'null'], maxLength: 30 }
+    MutationBase:
+      type: object
+      required: [expected_revision, actor]
+      properties:
+        expected_revision: { type: integer, minimum: 1 }
+        actor: { $ref: '#/components/schemas/Actor' }
+    Lifecycle: { type: string, enum: [draft, awaiting_customer, active, completed, cancelled] }
+    Money: { type: integer, description: Whole rupiah }
+    Reimbursement:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [not_applicable, submitted, approved, paid, rejected] }
+        updated_at: { type: string, format: date-time }
+    Order:
+      type: object
+      required: [id, number, revision, created_at, updated_at, source, lifecycle, currency, items, packaging, totals, payment, fulfillment, costs, issues]
+      properties:
+        id: { type: string }
+        number: { type: string, example: QAM-0012 }
+        revision: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        source: { type: string, enum: [whatsapp, instagram, website, manual] }
+        lifecycle: { $ref: '#/components/schemas/Lifecycle' }
+        currency: { type: string, const: IDR }
+        items:
+          type: array
+          items:
+            type: object
+            required: [line_id, product_id, variant_id, name, unit_price, quantity, line_total]
+            properties:
+              line_id: { type: string }
+              product_id: { type: integer }
+              variant_id: { type: integer }
+              brand: { type: [string, 'null'] }
+              name: { type: string }
+              volume_ml: { type: [integer, 'null'] }
+              unit_price: { $ref: '#/components/schemas/Money' }
+              quantity: { type: integer, minimum: 1, maximum: 99 }
+              line_total: { $ref: '#/components/schemas/Money' }
+        packaging: { type: [string, 'null'], enum: [paperbag, no_paperbag, null] }
+        totals:
+          type: object
+          required: [subtotal, adjustments, shipping_charge, total]
+          properties:
+            subtotal: { $ref: '#/components/schemas/Money' }
+            adjustments: { type: integer }
+            shipping_charge: { $ref: '#/components/schemas/Money' }
+            total: { $ref: '#/components/schemas/Money' }
+        payment:
+          type: object
+          required: [status, recorded_in_majoo]
+          properties:
+            status: { type: string, enum: [unpaid, paid, refund_pending, refunded] }
+            method: { type: [string, 'null'], enum: [transfer, qris, cash, null] }
+            confirmation_source: { type: [string, 'null'], enum: [proof_in_chat, proof_uploaded, majoo, null] }
+            confirmed_at: { type: [string, 'null'], format: date-time }
+            recorded_in_majoo: { type: boolean }
+        fulfillment:
+          type: object
+          required: [type]
+          properties:
+            type: { type: [string, 'null'], enum: [pickup, local_delivery, intercity, null] }
+            recipient:
+              type: [object, 'null']
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                address: { type: [string, 'null'] }
+                postcode: { type: [string, 'null'] }
+                location_url: { type: [string, 'null'] }
+            note: { type: [string, 'null'] }
+            preparation:
+              type: object
+              properties:
+                status: { type: string, enum: [not_started, preparing, packed] }
+                claimed_by: { oneOf: [{ $ref: '#/components/schemas/Actor' }, { type: 'null' }] }
+                updated_at: { type: [string, 'null'], format: date-time }
+            courier:
+              type: [object, 'null']
+              properties:
+                booking_responsibility: { type: string, enum: [store, customer] }
+                assignee: { oneOf: [{ $ref: '#/components/schemas/Actor' }, { type: 'null' }] }
+                provider: { type: [string, 'null'], enum: [maxim, gosend, grab, other, null] }
+                status: { type: string, enum: [not_needed, unassigned, assigned, requested, arrived] }
+                reference: { type: [string, 'null'] }
+                requested_at: { type: [string, 'null'], format: date-time }
+            jnt:
+              type: [object, 'null']
+              properties:
+                status: { type: string, enum: [not_requested, pickup_requested, qr_available, picked_up] }
+                pickup_requested_at: { type: [string, 'null'], format: date-time }
+                qr_available: { type: boolean }
+                qr_url: { type: [string, 'null'] }
+                picked_up_at: { type: [string, 'null'], format: date-time }
+                tracking_number: { type: [string, 'null'] }
+            handover:
+              type: object
+              properties:
+                status: { type: string, enum: [pending, handed_over, delivered] }
+                handed_to: { type: [string, 'null'], enum: [courier, customer, customer_courier, jnt, null] }
+                handed_over_at: { type: [string, 'null'], format: date-time }
+        costs:
+          type: array
+          items:
+            type: object
+            properties:
+              expense_ref: { type: string }
+              kind: { type: string, enum: [actual_shipping, packaging, other] }
+              amount: { $ref: '#/components/schemas/Money' }
+              paid_by: { type: string, enum: [cashier_cash, owner_transfer, staff_advance, customer_direct] }
+              reported_at: { type: string, format: date-time }
+              reimbursement: { $ref: '#/components/schemas/Reimbursement' }
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              type: { type: string }
+              status: { type: string, enum: [open, resolved] }
+              note: { type: string }
+              opened_by: { $ref: '#/components/schemas/Actor' }
+              opened_at: { type: string, format: date-time }
+              resolved_at: { type: [string, 'null'], format: date-time }
+        keep:
+          type: [object, 'null']
+          properties:
+            status: { type: string, enum: [active, converted, expired, released] }
+            until: { type: string, format: date-time }
+            stock_set_aside:
+              type: object
+              properties:
+                confirmed: { type: boolean }
+                by: { oneOf: [{ $ref: '#/components/schemas/Actor' }, { type: 'null' }] }
+                at: { type: [string, 'null'], format: date-time }
+        links:
+          type: object
+          properties:
+            website_admin: { type: string }
+    Error:
+      type: object
+      required: [error, request_id]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [bad_request, invalid_signature, stale_timestamp, unknown_client, action_not_allowed, order_not_found,
+                     revision_conflict, invalid_transition, task_already_claimed, idempotency_key_reused, payload_too_large,
+                     validation_failed, rate_limited, server_error, unavailable]
+            message: { type: string }
+            details: { type: object }
+        request_id: { type: string }
