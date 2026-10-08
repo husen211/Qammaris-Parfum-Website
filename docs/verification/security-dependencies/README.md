@@ -19,7 +19,7 @@ Files: `package.json`, `package-lock.json`, `composer.lock`, this evidence and `
 - Vite production build and git diff whitespace check passed. Existing DaisyUI `@property` and large 3D chunk warnings remain; About does not load that 3D module.
 - Post-build installed Chrome smoke at 390 and 1440 px: HTTP 200, nine gallery photos, no page overflow, no JS errors, no Instagram iframe before customer action. [Results](browser-smoke.json). No new UI was introduced; the full About five-width and genuine touch screenshots are in [ABOUT-01](../about-experience/README.md).
 
-Audits are dated package-database checks, not proof of absence of all possible security defects. Physical Safari and production verification are not claimed. CI/release still pending for this branch. No new test framework or implementation-mirroring tests added.
+Audits are dated package-database checks, not proof of absence of all possible security defects. Physical Safari and production verification are not claimed. PR37 CI37753448048 passed both PHP/Laravel and Node/Vite jobs. Production release remains pending. [PR37](https://github.com/husen211/Qammaris-Parfum-Website/pull/37), [CI](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37753448048). No new test framework or implementation-mirroring tests added.
 
 ## Release / recovery
 
