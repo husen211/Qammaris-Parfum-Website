@@ -2,6 +2,8 @@
 
 Owner approved implementation of this plan on 2026-10-07. This program is separate from the still-open P9 acceptance. Work on one item at a time; approval of the roadmap does not authorize automatic phase advancement, production deployment, credentials or broad content rewrites. Current status lives in [BACKLOG](BACKLOG.md), current rules in [BUSINESS_RULES](../product/BUSINESS_RULES.md).
 
+Current implementation/release: BLOG-01–05 installed through approved PR31 on2026-10-08; production machine credentials remain inactive. [Release evidence](../verification/blog-06/README.md) records remaining acceptance limits. This original plan is not recurring release authorization.
+
 ## Goal and fixed decisions
 
 Keep Laravel, Blade, Eloquent, MySQL, current typography and cream/charcoal/gold identity. Display name becomes Qammaris Journal in BLOG-03; preserve `/blog/...`, IDs, slugs, existing content, authors and media. Existing HTML remains the content format, sanitized on the server. No JSON-block conversion, generic repository, SPA or author-profile system.

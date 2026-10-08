@@ -1,0 +1,18 @@
+{
+    "environment": "staging",
+    "targeted_migrations_ms": {
+        "2026_10_07_000002_add_blog_write_safety.php": 97,
+        "2026_10_07_000003_add_blog_editorial_cms.php": 76,
+        "2026_10_07_000004_add_blog_search_metadata.php": 21,
+        "2026_10_07_000005_add_journal_media_and_relations.php": 39,
+        "2026_10_08_000001_add_blog_automation.php": 142
+    },
+    "legacy_columns_preserved": true,
+    "user_ids_preserved": true,
+    "unrelated_tables_preserved": true,
+    "replay_noop": true,
+    "blog_count": 0,
+    "blog_audit_count": 0,
+    "machine_actor_count": 0,
+    "api_default_off": true
+}

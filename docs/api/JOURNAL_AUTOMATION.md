@@ -1,6 +1,6 @@
 # Journal automation v1 — draft only
 
-BLOG-05 review implementation, 2026-10-08. Not deployed/activated. Base `/api/automation/v1`. This contract is separate from Qammaris App feed, the human admin session, and customer orders. The API is disabled by default (`BLOG_AUTOMATION_ENABLED=false`).
+BLOG-05 installed through PR31, 2026-10-08 ([release evidence](../verification/blog-06/README.md)). Production activation is OFF; no machine credentials issued. Base `/api/automation/v1`. This contract is separate from Qammaris App feed, the human admin session, and customer orders. The API is disabled by default (`BLOG_AUTOMATION_ENABLED=false`).
 
 ## Authentication and limits
 

@@ -1,6 +1,6 @@
 # Journal machine API operations
 
-BLOG-05 code review only, 2026-10-08. No production actor/token issued, no staging/production migration or deployment performed. BLOG-06 separately covers staging/MySQL/GD rehearsal, Owner acceptance and production authorization. Existing pending-migration deployment guard remains.
+BLOG-05 code/schema installed through the approved2026-10-08 [Journal release](../verification/blog-06/README.md), after authorized MySQL/GD staging rehearsal and targeted production migrations. Production API remains OFF; no production actor/token issued. Credential activation is still separately approved. Existing pending-migration deployment guard remains.
 
 ## Activation after separate approval
 
@@ -29,4 +29,4 @@ To close the entire endpoint, set BLOG_AUTOMATION_ENABLED=false and rebuild conf
 
 ## Evidence and current limits
 
-[BLOG-05 evidence](../verification/blog-05/README.md), [API contract](../api/JOURNAL_AUTOMATION.md), [ADR-036](../architecture/decisions/ADR-036-journal-draft-automation.md). Local file multipart + two PHP workers are covered; staging/MySQL/native Owner flow/physical Safari and credential operations on production remain unperformed. Existing SEC-DEP-01/02 dependency findings remain in backlog and are not silently upgraded by Sanctum installation.
+[BLOG-05 evidence](../verification/blog-05/README.md), [API contract](../api/JOURNAL_AUTOMATION.md), [ADR-036](../architecture/decisions/ADR-036-journal-draft-automation.md). Local multipart/two workers and staging MySQL/kernel/GD rehearsal passed; local native file-input touch upload and production public touch were verified in BLOG-06. Owner walkthrough/physical Safari/production native upload and credential activation remain unperformed. Existing SEC-DEP-01/02 dependency findings remain in backlog and are not silently upgraded by Sanctum installation.

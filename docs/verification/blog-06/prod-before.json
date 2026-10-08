@@ -1,0 +1,17 @@
+{
+    "environment": "production",
+    "driver": "mysql",
+    "mysql_version": "11.8.9-MariaDB-log",
+    "pending": [],
+    "blog_count": 3,
+    "gd": true,
+    "webp": true,
+    "memory_limit": "1536M",
+    "upload_max_filesize": "1536M",
+    "post_max_size": "1536M",
+    "cache": "file",
+    "disk": "public",
+    "automation_enabled": false,
+    "products": 453,
+    "images": 1131
+}

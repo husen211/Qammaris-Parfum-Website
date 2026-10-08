@@ -1,0 +1,28 @@
+{
+  "searches": [
+    {
+      "query": "royal",
+      "status": 200,
+      "cards": 1,
+      "empty": false
+    },
+    {
+      "query": "royall",
+      "status": 200,
+      "cards": 1,
+      "empty": false
+    },
+    {
+      "query": "qztrabcdefghijkl",
+      "status": 200,
+      "cards": 0,
+      "empty": true
+    }
+  ],
+  "categoryStatus": 200,
+  "categoryCards": 1,
+  "tocOpened": true,
+  "sitemapStatus": 200,
+  "sitemapArticleUrls": 3,
+  "errors": []
+}

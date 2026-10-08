@@ -1,6 +1,6 @@
-# Public Journal and SEO — BLOG-03 review
+# Public Journal and SEO — BLOG-03
 
-Not deployed. Depends on BLOG-01/02. [Verification](../verification/blog-03/README.md), [ADR-034](../architecture/decisions/ADR-034-public-journal-search-seo.md).
+Installed with BLOG-01/02 through approved PR31 ([release evidence](../verification/blog-06/README.md)). [Verification](../verification/blog-03/README.md), [ADR-034](../architecture/decisions/ADR-034-public-journal-search-seo.md).
 
 ## Owner workflow
 
@@ -10,7 +10,7 @@ SEO title falls back to title; description to excerpt; OG title/description to t
 
 An OG image override references an already-available Owner-owned image; it does not upload/download a file or replace the hero. Prefer the persisted main image. Content changes use existing revision conflict handling. SEO-only changes preserve editorial time.
 
-Use H2 for main sections/H3 for subsections. Three nonempty H2 sections enable the generated TOC; repeated headings receive unique anchors. Tables scroll within the article. Product markers resolve eligible live catalog names/links, not submitted prices. Full card/media/FAQ components are future BLOG-04. Existing prose prices/stocks require human editorial correction in BLOG-06; no automatic rewrite.
+Use H2 for main sections/H3 for subsections. Three nonempty H2 sections enable the generated TOC; repeated headings receive unique anchors. Tables scroll within the article. Product markers resolve eligible live catalog names/links, not submitted prices. Full card/media/FAQ components are implemented in BLOG-04. Existing prose prices/stocks require human editorial correction in BLOG-06; no automatic rewrite.
 
 Share actions use the clean article URL. Copy failure exposes a selectable URL and retry. Native share appears only when supported. External share links open providers; no automatic message is sent.
 

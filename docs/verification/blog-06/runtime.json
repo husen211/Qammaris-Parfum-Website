@@ -1,0 +1,13 @@
+{
+    "server_revision": "3c8d35f8aa33ad8c3ce614ce7e7ed01497c30e3f",
+    "worker_count": 1,
+    "workers_current": true,
+    "watchdog_heartbeat": "2026-10-08T04:08:02Z",
+    "scheduler_heartbeat": "2026-10-08T04:08:02Z",
+    "laravel_errors_since_activation": 0,
+    "existing_articles_published": 3,
+    "legacy_articles_alt_review": 3,
+    "legacy_articles_prose_price_stock_review": 1,
+    "production_actor_count": 0,
+    "automation_enabled": false
+}
