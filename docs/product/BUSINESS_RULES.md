@@ -2,6 +2,11 @@
 
 Konsolidasi AUD-02, 2026-10-07: merangkum keputusan Owner yang sudah diterima, bukan keputusan bisnis baru. Implementasi aktual ada di [ARCHITECTURE](../architecture/ARCHITECTURE.md); status/verifikasi di [BACKLOG](../planning/BACKLOG.md). [Dokumen sebelum konsolidasi](../history/2026-10-07-context/BUSINESS_RULES.md) mempertahankan seluruh keputusan launching, daftar yang disetujui, dan aturan yang kemudian digantikan. Angka produk/release dalam riwayat adalah bukti bertanggal, bukan konfigurasi atau izin pekerjaan baru.
 
+## Lokasi dan jam operasional toko
+
+- Keputusan Owner 2026-10-08: toko Palu buka **Sabtu–Kamis, 09.00–21.00 WITA**; **Jumat tutup**. Halaman lokasi harus menampilkan jadwal ini, bukan Senin–Sabtu/Minggu tutup.
+- Hari libur nasional mengikuti pengumuman terbaru toko di Instagram; jadwal ini tidak mengubah alur checkout atau menjanjikan balasan chat seketika.
+
 ## Identitas, ukuran, dan publication
 
 - Satu halaman mewakili satu produk, satu ukuran, satu harga. Ukuran berbeda biasanya produk terpisah. `ProductVariant` tetap detail teknis satu offer aktif; tidak ada penghapusan model/ID variant.
@@ -112,7 +117,7 @@ Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-ch
 
 ## Journal — implemented; production agent activation separate
 
-BLOG-05 installed via approved PR31 release2026-10-08 ([evidence](../verification/blog-06/README.md)): identitas mesin Sanctum terpisah dari admin/feed; token hash, ability terbatas dan kedaluwarsa 90 hari. Agent hanya membaca/menulis draft miliknya; tayang/jadwal/arsip/aktor lain ditolak, termasuk setelah lock dan saat replay. Owner memberi/mencabut akses per draft di admin. Harga/stok/katalog/taxonomy tidak ditulis agent. Input publication/actor/unknown ditolak; PATCH membutuhkan revision dan mempertahankan field yang tidak dikirim. Foto melalui upload file milik draft dan marker ID, bukan fetch/hotlink arbitrer; HTML legacy yang tidak dikirim tetap dipertahankan. Create/upload memakai Idempotency-Key, pointer/revision replay atomik dengan mutasi/audit; key/body/token raw tidak disimpan. Audit membedakan admin/machine dan hash isi. API default OFF; belum ada kredensial/aktivasi produksi. [ADR-036](../architecture/decisions/ADR-036-journal-draft-automation.md), [kontrak](../api/JOURNAL_AUTOMATION.md).
+BLOG-05 installed via approved PR31 release2026-10-08 ([evidence](../verification/blog-06/README.md)): identitas mesin Sanctum terpisah dari admin/feed; token hash, ability terbatas dan kedaluwarsa 90 hari. Agent hanya membaca/menulis draft miliknya; tayang/jadwal/arsip/aktor lain ditolak, termasuk setelah lock dan saat replay. Owner memberi/mencabut akses per draft di admin. Harga/stok/katalog/taxonomy tidak ditulis agent. Input publication/actor/unknown ditolak; PATCH membutuhkan revision dan mempertahankan field yang tidak dikirim. Foto melalui upload file milik draft dan marker ID, bukan fetch/hotlink arbitrer; HTML legacy yang tidak dikirim tetap dipertahankan. Create/upload memakai Idempotency-Key, pointer/revision replay atomik dengan mutasi/audit; key/body/token raw tidak disimpan. Audit membedakan admin/machine dan hash isi. API tetap default OFF untuk environment baru. Owner mengizinkan aktivasi produksi dan token lokal2026-10-08; satu actor/token lokal aktif dengan hak draft-only ([bukti](../verification/journal-activation/README.md)). [ADR-036](../architecture/decisions/ADR-036-journal-draft-automation.md), [kontrak](../api/JOURNAL_AUTOMATION.md).
 
 Program [Qammaris Journal](../planning/QAMMARIS_JOURNAL.md) disetujui terpisah dari P9. Nama tampilan Journal, URL `/blog/...`/ID/slug/konten/author/media existing dipertahankan. Editor visual + HTML dengan sanitasi server; admin boleh langsung memperbarui artikel tayang. API agent draft-only milik actor, tanpa hak publish atau perubahan katalog, kode/schema sudah terpasang pada produksi BLOG-05; kredensial produksi belum diaktifkan.
 

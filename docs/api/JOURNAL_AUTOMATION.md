@@ -1,6 +1,6 @@
 # Journal automation v1 — draft only
 
-BLOG-05 installed through PR31, 2026-10-08 ([release evidence](../verification/blog-06/README.md)). Production activation is OFF; no machine credentials issued. Base `/api/automation/v1`. This contract is separate from Qammaris App feed, the human admin session, and customer orders. The API is disabled by default (`BLOG_AUTOMATION_ENABLED=false`).
+BLOG-05 installed through PR31, 2026-10-08 ([release evidence](../verification/blog-06/README.md)). Owner authorized production activation2026-10-08; one local machine actor/token is active ([activation evidence](../verification/journal-activation/README.md)). Base `/api/automation/v1`. This contract is separate from Qammaris App feed, the human admin session, and customer orders. The API is disabled by default (`BLOG_AUTOMATION_ENABLED=false`).
 
 ## Authentication and limits
 
@@ -55,7 +55,7 @@ PATCH uses revision instead of Idempotency-Key. On 409 GET the latest own draft,
 
 ## Example flow
 
-Use an authorized environment’s BASE_URL and a token from the agent secret store; no production token is active for this branch.
+Use an authorized environment’s BASE_URL and a token from the agent secret store; the approved local token is available from Windows current-user environment as QAMMARIS_JOURNAL_TOKEN; do not print it. Cloud-only secret provisioning is not configured.
 
 1. GET `/blog-taxonomy`, GET `/products?search=afnan`.
 2. POST `/blog-posts` with a stable key and `{"title":"Panduan aroma segar","category":"Panduan","excerpt":"Panduan memilih parfum sehari-hari.","content":"<h2>Memilih aroma</h2><p>Isi editorial...</p>"}`.
