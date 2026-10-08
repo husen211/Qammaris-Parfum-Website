@@ -12,6 +12,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/admin-pwa.js',
                 'resources/js/reactbits/about-lanyard-loader.js',
                 'resources/js/reactbits/card-nav.jsx'
             ],

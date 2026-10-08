@@ -37,7 +37,7 @@ class AdminProductImportApplyTest extends TestCase
         $this->app['auth']->guard()->logout();
 
         $this->post(route('admin.product-imports.apply', $batch), ['confirm_apply' => '1'])
-            ->assertRedirect(route('login'));
+            ->assertRedirect(route('admin.login'));
 
         $customer = User::factory()->create();
         $this->actingAs($customer)

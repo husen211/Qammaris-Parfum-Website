@@ -112,7 +112,7 @@ Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-ch
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 
-Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
+Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
 
 - Admin membuat pesanan dari produk published dengan offer aktif berharga positif. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok, diskon, atau edit item setelah dibuat (batalkan lalu buat ulang).
 - **Data customer (nama, HP, alamat, catatan) disimpan di DB tanpa hapus otomatis**, hanya terlihat oleh admin dan link tugas staf pesanan itu. Ini pengecualian terarah dari aturan checkout keranjang.
@@ -125,7 +125,7 @@ Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-034](../architectur
 
 ## Akses admin dan data pelanggan (ORD-02a, branch review)
 
-Keputusan Owner 2026-10-08; belum dirilis. [ADR-035](../architecture/decisions/ADR-035-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
+Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/ADR-038-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
 
 - Role admin: **Super Admin** (akses penuh, mengelola pengguna, menyetujui perubahan finansial), **Staff Order** (hanya Pesanan Online), dan **Admin (lama)** untuk akun sebelum ORD-02. Akun lama tetap bekerja seperti sebelumnya tanpa menu pengguna sampai dikonversi. Role lama tidak bisa diberikan ke akun baru.
 - Super Admin pertama hanya lewat bootstrap eksplisit di server setelah Owner memverifikasi identitas. Tidak ada promosi otomatis.
@@ -134,6 +134,17 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-035](../architecture/decisions/A
 - Staff Order: membuat/mengubah pesanan, menandai Lunas, membatalkan pesanan yang belum Lunas dan belum diserahkan dengan alasan, dan mengubah alamat tanpa biaya sampai diserahkan. Perubahan ongkir/pendanaan, koreksi langkah, penggantian talangan, dan pembatalan setelah Lunas hanya Super Admin.
 - Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
 - **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
+
+### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)
+
+- Admin bisa dipasang sebagai aplikasi "Qammaris Admin" dan dibuka dari `/admin/login`. Website publik tidak berubah dan tidak dipasang sebagai aplikasi.
+- Data pesanan dan customer **tidak disimpan di HP**. Setiap halaman admin diambil langsung dari server; tanpa internet hanya muncul halaman "Tidak ada koneksi".
+- Perubahan hanya bisa dikirim saat online. Satu formulir Buat pesanan menghasilkan paling banyak satu pesanan, walaupun tombol ditekan dua kali atau dikirim ulang.
+- HP toko dipakai bersama:
+  - nama akun yang sedang masuk selalu terlihat;
+  - **Keluar** selalu tersedia;
+  - setelah keluar, tombol Kembali tidak menampilkan halaman admin lagi.
+- [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md).
 
 ## UI, akses, dan batas program
 

@@ -23,6 +23,7 @@ class OnlineOrderStoreRequest extends FormRequest
             'items.*.variant_id' => ['required', 'integer', 'min:1', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
             'fill_customer' => ['boolean'],
+            'submission_token' => ['nullable', 'uuid'],
         ] + $customer;
     }
 
@@ -37,6 +38,11 @@ class OnlineOrderStoreRequest extends FormRequest
     public function lines(): array
     {
         return collect($this->validated('items'))->mapWithKeys(fn ($item) => [(int) $item['variant_id'] => (int) $item['quantity']])->all();
+    }
+
+    public function submissionToken(): ?string
+    {
+        return $this->validated('submission_token');
     }
 
     public function customer(): ?array

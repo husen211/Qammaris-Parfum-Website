@@ -19,6 +19,16 @@ class AdminRbacTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Admin entry points that must stay reachable before login (ORD-02b), with their exact middleware. */
+    private const PUBLIC_ADMIN_ROUTES = [
+        'admin.login' => ['web', 'guest'],
+        'admin.login.perform' => ['web', 'guest'],
+        'admin.logout' => ['web', 'auth'],
+        'admin.pwa.manifest' => [],
+        'admin.pwa.service-worker' => [],
+        'admin.pwa.offline' => [],
+    ];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -35,6 +45,14 @@ class AdminRbacTest extends TestCase
                 continue;
             }
             $middleware = $route->gatherMiddleware();
+            if (array_key_exists($name, self::PUBLIC_ADMIN_ROUTES)) {
+                $this->assertNotContains('admin', $middleware, $name);
+                $plain = array_values(array_filter($middleware, fn ($item) => is_string($item) && ! str_starts_with($item, 'cache.headers')));
+                $this->assertEqualsCanonicalizing(self::PUBLIC_ADMIN_ROUTES[$name], $plain, $name);
+                $public[] = $name;
+
+                continue;
+            }
             $this->assertContains('auth', $middleware, $name);
             $this->assertContains('admin', $middleware, $name);
             $expected = $this->expectedAbility($name);
@@ -48,6 +66,7 @@ class AdminRbacTest extends TestCase
             $checked++;
         }
         $this->assertGreaterThan(60, $checked);
+        $this->assertEqualsCanonicalizing(array_keys(self::PUBLIC_ADMIN_ROUTES), $public ?? []);
     }
 
     public function test_staff_order_is_forbidden_from_every_non_order_admin_page(): void
@@ -60,7 +79,8 @@ class AdminRbacTest extends TestCase
 
         foreach (Route::getRoutes() as $route) {
             $name = (string) $route->getName();
-            if (! str_starts_with($name, 'admin.') || ! in_array('GET', $route->methods(), true) || $this->expectedAbility($name) === 'orders.manage') {
+            if (! str_starts_with($name, 'admin.') || ! in_array('GET', $route->methods(), true) || $this->expectedAbility($name) === 'orders.manage'
+                || array_key_exists($name, self::PUBLIC_ADMIN_ROUTES)) {
                 continue;
             }
             $parameters = $route->parameterNames();
@@ -71,7 +91,7 @@ class AdminRbacTest extends TestCase
             $response = $this->actingAs($staff)->get($url);
             if ($name === 'admin.dashboard') {
                 $response->assertRedirect(route('admin.orders.index'));
-            } elseif (str_starts_with($name, 'admin.account.')) {
+            } elseif ($name === 'admin.account' || str_starts_with($name, 'admin.account.')) {
                 $response->assertOk();
             } else {
                 $response->assertForbidden();
@@ -112,7 +132,7 @@ class AdminRbacTest extends TestCase
         $this->actingAs($customer)->get(route('admin.dashboard'))->assertForbidden();
 
         $inactive = $this->user(User::ROLE_SUPER_ADMIN, ['is_active' => false]);
-        $this->actingAs($inactive)->get(route('admin.users.index'))->assertRedirect(route('login'));
+        $this->actingAs($inactive)->get(route('admin.users.index'))->assertRedirect(route('admin.login'));
         $this->assertGuest();
     }
 
@@ -191,7 +211,7 @@ class AdminRbacTest extends TestCase
     private function expectedAbility(string $name): ?string
     {
         return match (true) {
-            $name === 'admin.dashboard', str_starts_with($name, 'admin.account.') => null,
+            $name === 'admin.dashboard', $name === 'admin.account', str_starts_with($name, 'admin.account.') => null,
             str_starts_with($name, 'admin.orders.') => 'orders.manage',
             str_starts_with($name, 'admin.users.') => 'users.manage',
             str_starts_with($name, 'admin.blog-posts.') => 'blog.manage',

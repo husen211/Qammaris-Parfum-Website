@@ -11,7 +11,7 @@ Setiap sub-item adalah commit/PR review tersendiri. Item berikutnya tidak dimula
 | ID | Isi | Bergantung pada App? |
 |---|---|---|
 | ORD-02a | Role Super Admin/Staff Order, Gate, manajemen pengguna, audit akun, last login, nonaktif — **IN_REVIEW** ([bukti](../verification/ord-02a/README.md)); login `/admin/login` dipindah ke ORD-02b (PWA scope) | Tidak |
-| ORD-02b | Admin PWA: manifest + service worker scope `/admin/`, ikon, mobile-first daftar pesanan, error/loading/offline state | Tidak |
+| ORD-02b | Admin PWA: manifest + service worker scope `/admin`, ikon, login di dalam scope, navigasi bawah, offline state, token kirim ganda — **IN_REVIEW** ([bukti](../verification/ord-02b/README.md), [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md)) | Tidak |
 | ORD-02c | Model status baru (pembayaran/persiapan/kurir/J&T/handover/issue), pelanggan + alamat, sumber order, keep, permintaan perubahan, penyesuaian harga + persetujuan, migrasi data ORD-01 | Tidak |
 | ORD-02d | UI pembuatan & detail pesanan baru (Staff Order dan Super Admin), form customer diperbarui, instruksi WhatsApp | Tidak (link tugas pakai placeholder sampai KOORDINASI-6) |
 | ORD-02e | API v1: auth HMAC, idempotency, endpoint baca + mutasi, outbox notifikasi, rekonsiliasi | **Ya**, setelah kontrak disetujui |
@@ -37,9 +37,9 @@ Setiap sub-item adalah commit/PR review tersendiri. Item berikutnya tidak dimula
 
 ## 3. Admin PWA (ORD-02b)
 
-- Manifest `/admin/manifest.webmanifest`: `id: "/admin/"`, `start_url: "/admin/orders?source=pwa"`, `scope: "/admin/"`, `display: "standalone"`, nama "Qammaris Admin", warna dari token brand. Ikon 192/512 + maskable + `apple-touch-icon` 180. Website publik tidak punya PWA, jadi tidak ada bentrok manifest.
+- Manifest `/admin/manifest.webmanifest`: `id: "/admin"`, `start_url: "/admin/orders?source=pwa"`, `scope: "/admin"` (tanpa garis miring akhir karena dashboard ada di `/admin`; diterapkan di ORD-02b), `display: "standalone"`, nama "Qammaris Admin", warna dari token brand. Ikon 192/512 + maskable + `apple-touch-icon` 180. Website publik tidak punya PWA, jadi tidak ada bentrok manifest.
 - Login dipindah/ditambah di `/admin/login` agar tetap di dalam scope (iPhone standalone membuka URL di luar scope di Safari dan memutus session).
-- Service worker `/admin/sw.js` (scope `/admin/`):
+- Service worker `/admin/sw.js` (scope `/admin`):
   - cache-first hanya untuk `/build/*` (aset ber-hash), ikon, dan halaman offline statis;
   - navigasi **network-only**, dengan fallback "Tidak ada koneksi" yang statis (tanpa data);
   - tidak menyimpan HTML admin, JSON, upload, atau respons POST;

@@ -1,24 +1,31 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" @include('admin._pwa-attributes')>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex,nofollow">
-    <title>Login - Qammaris Perfumes</title>
+    <title>Masuk - Qammaris Admin</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('admin._pwa-head')
+    <style>
+        @media (display-mode: standalone) { [data-browser-only] { display: none; } }
+    </style>
 </head>
 <body data-navigation-shell="auth" class="bg-white text-brand-black antialiased flex items-center justify-center min-h-screen">
 
     <div data-navigation-content class="w-full max-w-md p-8">
-        
+
         <div class="text-center mb-12">
             <h1 class="font-bold tracking-[0.3em] text-2xl uppercase mb-2">Qammaris</h1>
             <p class="text-[10px] uppercase tracking-widest text-gray-400">Akses Admin</p>
         </div>
 
-        <form action="{{ route('login.perform') }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.login.perform') }}" method="POST" class="space-y-6">
             @csrf
 
+            @if (session('status'))
+                <p role="status" class="border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800">{{ session('status') }}</p>
+            @endif
             @if (session('error'))
                 <p role="alert" class="border border-red-200 bg-red-50 p-3 text-sm text-red-800">{{ session('error') }}</p>
             @endif
@@ -36,7 +43,7 @@
             <div class="group">
                 <label for="password" class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 group-focus-within:text-black transition-colors">Kata Sandi</label>
                 <input id="password" type="password" name="password" required autocomplete="current-password"
-                    class="w-full bg-transparent border-b border-gray-300 py-3 text-sm focus:border-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
+                    class="w-full bg-transparent border-b border-gray-300 py-3 text-base focus:border-black focus:outline-none focus:ring-0 transition-colors placeholder-gray-300"
                     placeholder="Kata sandi">
             </div>
 
@@ -45,10 +52,11 @@
                     Masuk
                 </button>
             </div>
-            
+
+            <p class="text-center text-xs leading-relaxed text-gray-500">HP toko dipakai bersama: jangan simpan password di browser, dan tekan <strong class="font-semibold text-gray-700">Keluar</strong> setelah selesai.</p>
         </form>
 
-        <div class="mt-8 text-center">
+        <div class="mt-8 text-center" data-browser-only>
             <a href="{{ route('home') }}" class="text-[10px] text-gray-400 hover:text-black uppercase tracking-widest border-b border-transparent hover:border-black transition-colors pb-0.5">
                 Kembali ke Beranda
             </a>

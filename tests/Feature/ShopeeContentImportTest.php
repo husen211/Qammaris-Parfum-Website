@@ -656,7 +656,7 @@ class ShopeeContentImportTest extends TestCase
 
     public function test_admin_routes_are_authenticated_actor_bound_and_child_scoped(): void
     {
-        $this->get(route('admin.shopee-imports.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.shopee-imports.index'))->assertRedirect(route('admin.login'));
         $this->actingAs(User::factory()->create())->get(route('admin.shopee-imports.index'))->assertForbidden();
         $p = $this->product();
         $batch = $this->preview();

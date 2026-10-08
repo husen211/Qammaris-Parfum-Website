@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Models\User;
+use App\Support\AdminHome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -54,14 +54,7 @@ class AuthController extends Controller
             $request->session()->put(AdminMiddleware::SESSION_AUTH_VERSION, (int) ($user->auth_version ?? 1));
             $request->session()->put(AdminMiddleware::SESSION_LAST_ACTIVITY, now()->timestamp);
 
-            if (Gate::forUser($user)->allows('dashboard.view')) {
-                return redirect()->intended(route('admin.dashboard'));
-            }
-            if (Gate::forUser($user)->allows('orders.manage')) {
-                return redirect()->intended(route('admin.orders.index'));
-            }
-
-            return redirect()->intended(route('home'));
+            return redirect()->intended(AdminHome::url($user));
         }
 
         RateLimiter::hit($throttleKey, 60);
@@ -71,14 +64,19 @@ class AuthController extends Controller
         ])->onlyInput($field);
     }
 
-    // Proses Logout
+    /**
+     * Logout returns to the admin login inside the PWA scope. The flag lets that page delete the
+     * qammaris-admin-* caches; Clear-Site-Data is not used because it would wipe the public cart too.
+     */
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('admin.login')
+            ->with('status', 'Anda sudah keluar. HP ini aman dipakai orang lain.')
+            ->with('admin_clear_caches', true);
     }
 
     private function throttleKey(Request $request, string $identifier): string

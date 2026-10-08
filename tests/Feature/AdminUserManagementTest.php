@@ -95,7 +95,7 @@ class AdminUserManagementTest extends TestCase
 
         app(ManageAdminUser::class)->setActive($super, $staff, false, 'Resign');
         $this->app['auth']->forgetGuards();
-        $this->get(route('admin.orders.index'))->assertRedirect(route('login'))->assertSessionHas('error');
+        $this->get(route('admin.orders.index'))->assertRedirect(route('admin.login'))->assertSessionHas('error');
         $this->assertGuest();
 
         app(ManageAdminUser::class)->setActive($super, $staff->fresh(), true);
@@ -103,7 +103,7 @@ class AdminUserManagementTest extends TestCase
         $this->get(route('admin.orders.index'))->assertOk();
         $temporary = app(ManageAdminUser::class)->resetPassword($super, $staff->fresh());
         $this->app['auth']->forgetGuards();
-        $this->get(route('admin.orders.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.orders.index'))->assertRedirect(route('admin.login'));
         $this->post(route('login.perform'), ['login' => 'andi', 'password' => self::PASSWORD])->assertSessionHasErrors('login');
         $this->post(route('login.perform'), ['login' => 'andi', 'password' => $temporary])->assertRedirect(route('admin.orders.index'));
     }
@@ -132,7 +132,7 @@ class AdminUserManagementTest extends TestCase
         $this->get(route('admin.orders.index'))->assertOk();
         $this->travel(12)->hours();
         $this->travel(1)->minutes();
-        $this->get(route('admin.orders.index'))->assertRedirect(route('login'))->assertSessionHas('error', 'Sesi berakhir karena tidak aktif. Silakan masuk kembali.');
+        $this->get(route('admin.orders.index'))->assertRedirect(route('admin.login'))->assertSessionHas('error', 'Sesi berakhir karena tidak aktif. Silakan masuk kembali.');
     }
 
     public function test_last_active_super_admin_cannot_be_deactivated_or_demoted(): void

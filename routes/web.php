@@ -75,13 +75,21 @@ Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('
 Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name('quiz.store');
 Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
 
+// Admin login/logout stay inside the installed PWA scope /admin (ORD-02b). Admin pages are never stored by browsers.
+Route::middleware(['guest', 'cache.headers:no_store;private'])->group(function () {
+    Route::get('admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('admin/login', [AuthController::class, 'login'])->name('admin.login.perform');
+});
+Route::post('admin/logout', [AuthController::class, 'logout'])->name('admin.logout')->middleware('auth');
+
 // Every admin route needs an active admin account (admin middleware) plus one area ability (ORD-02a).
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.headers:no_store;private'])->group(function () {
 
     // Staff Order accounts are redirected from the dashboard to their order list.
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Own account (all admin roles)
+    Route::get('account', [AdminAccountController::class, 'show'])->name('account');
     Route::get('account/password', [AdminAccountController::class, 'edit'])->name('account.password');
     Route::put('account/password', [AdminAccountController::class, 'update'])->name('account.password.update');
 
@@ -158,7 +166,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
 // === ROUTE AUTHENTICATION (MANUAL) ===
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    // Kept for old bookmarks; the form lives at /admin/login. POST stays for older clients.
+    Route::redirect('/login', '/admin/login')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 });
 

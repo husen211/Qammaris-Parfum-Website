@@ -8,7 +8,7 @@
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Pesanan Online</h1>
             <p class="mt-1 text-sm text-gray-500">Pesanan dari WhatsApp: link data customer, pembayaran, pengiriman, dan tugas staf.</p>
         </div>
-        <a href="{{ route('admin.orders.create') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">+ Buat pesanan</a>
+        <a href="{{ route('admin.orders.create') }}" class="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 sm:w-auto">+ Buat pesanan</a>
     </div>
 
     @if ($reimburseCount > 0 && $filter !== 'reimburse')

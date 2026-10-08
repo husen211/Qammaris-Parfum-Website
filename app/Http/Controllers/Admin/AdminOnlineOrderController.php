@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Orders\CreateOnlineOrder;
 use App\Actions\Orders\OnlineOrderWorkflow;
+use App\Exceptions\DuplicateOnlineOrderSubmission;
 use App\Exceptions\OnlineOrderRejected;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\OnlineOrderStoreRequest;
@@ -77,9 +78,12 @@ class AdminOnlineOrderController extends Controller
     public function store(OnlineOrderStoreRequest $request, CreateOnlineOrder $create)
     {
         try {
-            [$order] = $create->handle($request->user(), $request->lines(), $request->customer());
+            [$order] = $create->handle($request->user(), $request->lines(), $request->customer(), $request->submissionToken());
         } catch (OnlineOrderRejected $error) {
             return back()->withInput()->with('error', $error->getMessage());
+        } catch (DuplicateOnlineOrderSubmission $duplicate) {
+            return redirect()->route('admin.orders.show', $duplicate->order)
+                ->with('success', 'Pesanan '.$duplicate->order->code.' sudah dibuat sebelumnya. Kiriman ganda tidak membuat pesanan baru.');
         }
 
         return redirect()->route('admin.orders.show', $order)->with('success', 'Pesanan '.$order->code.' dibuat. Salin link lalu kirim ke customer.');

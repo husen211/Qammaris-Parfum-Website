@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" @include('admin._pwa-attributes')>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="@yield('robots', 'noindex,nofollow')">
-    <title>Admin Dashboard - Qammaris</title>
+    <title>Qammaris Admin</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('admin._pwa-head')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     @stack('styles')
     <style>
@@ -15,7 +16,7 @@
 </head>
 <body data-navigation-shell="admin" class="bg-gray-50 text-gray-800 antialiased">
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-dvh overflow-hidden">
         
         <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
             <div class="h-16 flex items-center px-8 border-b border-gray-100">
@@ -82,7 +83,7 @@
                     <p class="text-xs text-gray-500">{{ auth()->user()->roleLabel() }}</p>
                     <a href="{{ route('admin.account.password') }}" class="mt-1 inline-flex min-h-9 items-center text-xs text-gray-600 underline underline-offset-2 hover:text-black">Ganti password</a>
                 </div>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -93,8 +94,14 @@
         </aside>
 
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-            <header class="relative md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-                <span class="font-bold tracking-widest">QAMMARIS</span>
+            <header class="relative md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <span class="block font-bold tracking-widest">QAMMARIS</span>
+                    {{-- Shared store phones: always show whose account is signed in. --}}
+                    <span class="block truncate text-xs text-gray-500">{{ auth()->user()->name }} · {{ auth()->user()->roleLabel() }}</span>
+                </div>
+                <div class="flex shrink-0 items-center gap-2">
+                @canany(['dashboard.view', 'catalog.manage', 'blog.manage', 'users.manage'])
                 <details class="group">
                     <summary class="cursor-pointer list-none rounded border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700">Menu</summary>
                     <nav class="absolute right-4 top-14 z-50 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-xl">
@@ -115,13 +122,19 @@
                         <a href="{{ route('admin.orders.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.orders*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pesanan Online</a>
                         @endcan
                         @can('users.manage')<a href="{{ route('admin.users.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.users*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pengguna &amp; Role</a>@endcan
-                        <a href="{{ route('admin.account.password') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.account*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Ganti password</a>
-                        <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="block w-full rounded px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">Logout</button></form>
+                        <a href="{{ route('admin.account') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.account*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Akun</a>
                     </nav>
                 </details>
+                @endcanany
+                <form method="POST" action="{{ route('admin.logout') }}">@csrf<button type="submit" class="min-h-11 rounded border border-gray-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50">Keluar</button></form>
+                </div>
             </header>
 
-            <div data-navigation-content class="container mx-auto px-6 py-8">
+            <div data-admin-offline hidden tabindex="-1" role="status" class="sticky top-0 z-30 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 focus:outline-none">
+                Tidak ada koneksi internet. Perubahan tidak bisa dikirim sampai HP online lagi.
+            </div>
+
+            <div data-navigation-content class="container mx-auto px-4 py-6 sm:px-6 sm:py-8 @can('orders.manage') pb-28 md:pb-8 @endcan">
                 @if(session('success'))
                 <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
@@ -139,6 +152,32 @@
         </main>
 
     </div>
+
+    @can('orders.manage')
+    @php
+        $bottomNav = [
+            ['route' => 'admin.orders.index', 'active' => request()->routeIs('admin.orders.index', 'admin.orders.show'), 'label' => 'Pesanan',
+                'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h4'],
+            ['route' => 'admin.orders.create', 'active' => request()->routeIs('admin.orders.create'), 'label' => 'Buat',
+                'icon' => 'M12 5v14M5 12h14'],
+            ['route' => 'admin.account', 'active' => request()->routeIs('admin.account*'), 'label' => 'Akun',
+                'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+        ];
+    @endphp
+    <nav aria-label="Navigasi pesanan" data-admin-bottom-nav class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+        <ul class="grid grid-cols-3">
+            @foreach ($bottomNav as $item)
+                <li>
+                    <a href="{{ route($item['route']) }}" @if ($item['active']) aria-current="page" @endif
+                        class="flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-semibold focus-visible:bg-gray-100 focus-visible:outline-none {{ $item['active'] ? 'text-black' : 'text-gray-500' }}">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="{{ $item['active'] ? '2.25' : '1.75' }}" d="{{ $item['icon'] }}"/></svg>
+                        {{ $item['label'] }}
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </nav>
+    @endcan
     @stack('scripts')
     @include('components.navigation-skeleton')
 </body>

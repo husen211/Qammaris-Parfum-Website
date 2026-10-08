@@ -9,9 +9,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
-/** Any active admin account: change own password (mandatory after a temporary password). */
+/** Any active admin account: own account page, and change own password (mandatory after a temporary password). */
 class AdminAccountController extends Controller
 {
+    public function show(Request $request)
+    {
+        return view('admin.account.show', ['user' => $request->user()]);
+    }
+
     public function edit(Request $request)
     {
         return view('admin.account.password', ['user' => $request->user()]);

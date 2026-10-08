@@ -54,6 +54,6 @@ class AdminMiddleware
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('error', $message);
+        return redirect()->route('admin.login')->with('error', $message)->with('admin_clear_caches', true);
     }
 }

@@ -1,0 +1,1 @@
+data-admin-pwa="{{ config('admin.pwa_enabled') ? 'on' : 'off' }}" data-admin-sw="{{ route('admin.pwa.service-worker', [], false) }}" data-admin-scope="{{ \App\Http\Controllers\Admin\AdminPwaController::SCOPE }}"@if (session('admin_clear_caches')) data-admin-clear-caches="true"@endif

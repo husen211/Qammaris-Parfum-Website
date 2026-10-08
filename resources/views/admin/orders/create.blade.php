@@ -17,6 +17,8 @@
 
     <form method="POST" action="{{ route('admin.orders.store') }}" class="space-y-6" data-order-create>
         @csrf
+        {{-- One token per opened form: a double tap or retry returns the first order instead of creating another. --}}
+        <input type="hidden" name="submission_token" value="{{ old('submission_token', (string) \Illuminate\Support\Str::uuid()) }}">
         <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="products-title">
             <h2 id="products-title" class="text-lg font-semibold text-gray-900">Produk</h2>
             <label for="product-search" class="mt-4 block text-sm font-medium text-gray-700">Cari produk</label>

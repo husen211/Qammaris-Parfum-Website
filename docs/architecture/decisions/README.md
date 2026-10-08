@@ -37,7 +37,8 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-029 | [Shared admin editor save and Shopee guards](ADR-029-shared-product-editor-save.md) |
 | ADR-030 | [Whole rupiah and current-catalog cart totals](ADR-030-whole-rupiah-and-current-cart-totals.md) |
 | ADR-031 | [Narrow admin product change history](ADR-031-admin-product-change-history.md) |
-| ADR-034 | [Online order links, tracking, and staff task links](ADR-034-online-order-links-and-tracking.md) (ADR-032/033 belong to the parallel Journal branch) |
-| ADR-035 | [Admin roles, abilities, and user management](ADR-035-admin-roles-and-user-management.md) |
+| ADR-037 | [Online order links, tracking, and staff task links](ADR-037-online-order-links-and-tracking.md) (alias: [ADR-034 filename](ADR-034-online-order-links-and-tracking.md) on the ORD-01 branch) |
+| ADR-038 | [Admin roles, abilities, and user management](ADR-038-admin-roles-and-user-management.md) (alias: [ADR-035 filename](ADR-035-admin-roles-and-user-management.md) on the ORD-02 branch) |
+| ADR-039 | [Qammaris Admin PWA](ADR-039-admin-pwa.md) |
 
-Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.
+Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. ADR-032–036 belong to the Journal on main; the order ADRs were renumbered to 037/038 when the branches met. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.
