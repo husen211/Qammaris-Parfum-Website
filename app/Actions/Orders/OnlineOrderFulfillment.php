@@ -78,6 +78,65 @@ class OnlineOrderFulfillment
         });
     }
 
+    /**
+     * Keep (D9): the customer reserves the items, payment may follow. Default 24 hours. Staff confirm by hand that
+     * stock is set aside; past the deadline the order needs action but is never cancelled automatically.
+     */
+    public function startKeep(OnlineOrder $order, int $revision, OrderActor $actor, int $hours = 24): OnlineOrder
+    {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($hours): void {
+            if (! in_array($order->lifecycle, ['awaiting_customer', 'active'], true) || $order->handover_status === 'handed_over' || $order->payment_status !== 'unpaid') {
+                throw new InvalidOrderTransition('Keep hanya untuk pesanan yang belum dibayar dan belum diserahkan.');
+            }
+            if ($order->keep_status === 'active') {
+                throw new InvalidOrderTransition('Pesanan ini sudah di-keep. Perpanjang bila perlu.');
+            }
+            $this->assertKeepHours($hours);
+            $order->keep_status = 'active';
+            $order->keep_until = now()->addHours($hours);
+            $order->keep_stock_confirmed_at = null;
+            $order->keep_stock_confirmed_by = null;
+            $this->record('keep_started', "Keep {$hours} jam");
+        });
+    }
+
+    public function confirmKeepStock(OnlineOrder $order, int $revision, OrderActor $actor): OnlineOrder
+    {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor): void {
+            $this->assertKeepActive($order);
+            if ($order->keep_stock_confirmed_at !== null) {
+                return;
+            }
+            $order->keep_stock_confirmed_at = now();
+            $order->keep_stock_confirmed_by = $actor->user?->id;
+            $this->record('keep_stock_set_aside', 'Stok sudah dipisahkan oleh '.$actor->displayName);
+        });
+    }
+
+    public function extendKeep(OnlineOrder $order, int $revision, OrderActor $actor, int $hours): OnlineOrder
+    {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($hours): void {
+            $this->assertKeepActive($order);
+            $this->assertKeepHours($hours);
+            $order->keep_until = now()->addHours($hours);
+            $this->record('keep_extended', "Keep diperpanjang {$hours} jam");
+        });
+    }
+
+    /** Ends the keep; the stock is free again. The order itself stays open until cancelled or paid. */
+    public function releaseKeep(OnlineOrder $order, int $revision, OrderActor $actor, string $reason): OnlineOrder
+    {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($reason): void {
+            $this->assertKeepActive($order);
+            $reason = trim($reason);
+            if (mb_strlen($reason) < 5) {
+                throw new OrderValidationFailed('Tuliskan alasan keep dilepas.', ['reason' => 'Minimal 5 karakter']);
+            }
+            $order->keep_status = 'released';
+            $this->record('keep_released', $reason);
+        });
+    }
+
     /** Store or customer books the local driver. Only while nothing is handed over. */
     public function setCourierResponsibility(OnlineOrder $order, int $revision, OrderActor $actor, string $responsibility): OnlineOrder
     {
@@ -408,6 +467,20 @@ class OnlineOrderFulfillment
                 'completed' => 'Pesanan sudah selesai.',
                 default => 'Data customer belum lengkap, pesanan belum bisa diproses.',
             });
+        }
+    }
+
+    private function assertKeepActive(OnlineOrder $order): void
+    {
+        if ($order->keep_status !== 'active') {
+            throw new InvalidOrderTransition('Pesanan ini tidak sedang di-keep.');
+        }
+    }
+
+    private function assertKeepHours(int $hours): void
+    {
+        if ($hours < 1 || $hours > 168) {
+            throw new OrderValidationFailed('Lama keep 1 sampai 168 jam.', ['hours' => '1–168']);
         }
     }
 

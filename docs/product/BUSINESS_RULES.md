@@ -156,6 +156,17 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
   - Admin menghubungkan pesanan ke pelanggan secara sadar. Pesanan tidak pernah otomatis digabung berdasarkan nomor, dan satu nomor boleh dimiliki beberapa pelanggan (misalnya keluarga).
   - Alamat disimpan setelah dikonfirmasi admin dan dipakai ulang dengan memilihnya. Alamat itu disalin ke pesanan; mengubah pesanan tidak mengubah alamat tersimpan.
   - Alamat diarsipkan, tidak dihapus, dan tidak bisa diganti setelah pesanan diserahkan.
+- **Keep (D9):**
+  - Default 24 jam (1–168 jam), boleh belum dibayar.
+  - Staf mengonfirmasi manual bahwa stok sudah dipisahkan.
+  - Lewat batas waktu, keep ditandai **perlu tindakan** dan tidak pernah dibatalkan otomatis.
+  - Keep berakhir sendiri saat pesanan Lunas atau diserahkan, dan dilepas bila pesanan dibatalkan.
+- **Penyesuaian harga:**
+  - Siapa pun dengan akses pesanan boleh mengajukan, dengan alasan; hanya Super Admin yang menyetujui. Total berubah setelah disetujui.
+  - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Pengembaliannya tetap butuh keputusan refund Super Admin.
+- **Permintaan perubahan customer:**
+  - Customer mengubah data langsung hanya selama belum Lunas dan packing belum dimulai. Setelah itu perubahan menjadi permintaan yang ditinjau admin.
+  - Staff Order menyetujui perubahan penerima/alamat sampai diserahkan. Perubahan cara pengiriman (bisa mengubah biaya) hanya oleh Super Admin, dan tidak bisa bila kurir/J&T sudah diminta.
 - Peralihan ke model status baru terjadi per pesanan saat dibuat. Pesanan lama menyelesaikan alurnya sendiri; dua alur tidak pernah mengubah satu pesanan yang sama.
 
 ### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)

@@ -80,6 +80,8 @@ class OnlineOrder extends Model
         'refund_decided_at' => 'datetime',
         'packed_items' => 'array',
         'courier_requested_at' => 'datetime',
+        'keep_until' => 'datetime',
+        'keep_stock_confirmed_at' => 'datetime',
     ];
 
     public const STATE_LEGACY = 'legacy';
@@ -125,6 +127,26 @@ class OnlineOrder extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(OnlineOrderAdjustment::class)->orderBy('id');
+    }
+
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(OnlineOrderChangeRequest::class)->orderBy('id');
+    }
+
+    /** Contract keep status: an active keep past its deadline is `expired` (needs action, never auto-cancelled). */
+    public function keepState(): ?string
+    {
+        if ($this->keep_status === 'active' && $this->keep_until !== null && $this->keep_until->isPast()) {
+            return 'expired';
+        }
+
+        return $this->keep_status;
     }
 
     public function issues(): HasMany
@@ -250,12 +272,24 @@ class OnlineOrder extends Model
     /** Shipping is only part of the customer's payment when it was added to the transfer. */
     public function customerTotal(): string
     {
-        $amounts = [$this->subtotal()];
+        $cents = Rupiah::minorUnits($this->subtotal());
         if ($this->shipping_payer === 'added_to_transfer' && $this->shipping_fee !== null) {
-            $amounts[] = $this->shipping_fee;
+            $cents += Rupiah::minorUnits($this->shipping_fee);
+        }
+        $cents += $this->approvedAdjustmentCents();
+
+        return Rupiah::decimal($cents);
+    }
+
+    /** Sum of Super Admin approved price adjustments (signed, whole cents). */
+    public function approvedAdjustmentCents(): int
+    {
+        if (! $this->exists) {
+            return 0;
         }
 
-        return Rupiah::sum($amounts);
+        return (int) $this->adjustments()->where('status', 'approved')->get(['amount'])
+            ->sum(fn (OnlineOrderAdjustment $adjustment) => Rupiah::minorUnits($adjustment->amount));
     }
 
     public function needsReimbursement(): bool

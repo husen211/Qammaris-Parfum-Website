@@ -150,6 +150,11 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - `customers` (normalized phone, indexed, not unique) and `customer_addresses` (confirmed, archived not deleted); `online_orders.customer_id` and `customer_address_id`.
   - `App\Actions\Orders\OnlineOrderCustomers` links a customer, saves a confirmed address, and copies a saved address into an order. Nothing happens automatically.
   - `App\Support\PhoneNumber` is the shared normalizer, also used by checkout.
+- Slice 5:
+  - Keep columns on `online_orders`. Ops live in `OnlineOrderFulfillment`; `keepState()` derives `expired`; the V2 normalizer converts/releases the keep.
+  - `online_order_adjustments` + `OnlineOrderAdjustments`: request; approve/reject under gate `orders.approve-adjustment`, Super Admin. Approved amounts enter `customerTotal()`.
+  - `online_order_change_requests` + `OnlineOrderChangeRequests`.
+  - Shared V2 lock/revision/settle: `Concerns\MutatesV2Order`.
 - `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
 
 ### Admin PWA (ORD-02b, branch review)

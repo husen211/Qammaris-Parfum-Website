@@ -33,6 +33,8 @@ class AuthorizationServiceProvider extends ServiceProvider
         Gate::define('orders.finance', fn (User $user) => $has($user, self::FULL_ADMIN));
         // Refund decisions, refund payouts, ledger reversals and reconciliation: Super Admin only (Owner 2026-10-09).
         Gate::define('orders.refund', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
+        // Price adjustments and cost-relevant customer changes need Super Admin approval (plan §5.1, D5).
+        Gate::define('orders.approve-adjustment', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // Owner D4: Staff Order may cancel only while unpaid and not handed over, always with a reason.
         Gate::define('orders.cancel', function (User $user, OnlineOrder $order) use ($has): bool {
             if ($has($user, self::FULL_ADMIN)) {

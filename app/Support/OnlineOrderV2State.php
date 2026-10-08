@@ -37,6 +37,14 @@ final class OnlineOrderV2State
                 $order->jnt_status = $order->fulfillment === 'intercity' ? ($order->jnt_status ?? 'not_requested') : null;
             }
         }
+        // A keep ends by itself once the order goes ahead (paid or handed over) or is closed (D9).
+        if ($order->keep_status === 'active') {
+            if ($order->lifecycle === 'cancelled') {
+                $order->keep_status = 'released';
+            } elseif ($order->payment_status === 'paid' || $order->handover_status === 'handed_over' || $order->lifecycle === 'completed') {
+                $order->keep_status = 'converted';
+            }
+        }
         $order->stage = self::stage($order);
     }
 
