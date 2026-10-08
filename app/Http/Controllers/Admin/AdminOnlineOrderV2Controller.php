@@ -49,7 +49,7 @@ class AdminOnlineOrderV2Controller extends Controller
     {
         $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses']);
         $customerUrl = route('orders.customer.show', $order->customer_token_encrypted);
-        $groupMessage = $messages->staffGroupV2($order, route('admin.orders.show', $order));
+        $groupMessage = $messages->staffGroupV2($order, route('admin.orders.task', $order->public_id));
         $inviteMessage = $messages->customerInvite($order, $customerUrl);
         $totals = OnlineOrderMoney::totals($order);
         $totalCents = Rupiah::minorUnits($order->customerTotal());

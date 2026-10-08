@@ -29,6 +29,8 @@ class CreateOnlineOrder
      *
      * @throws DuplicateOnlineOrderSubmission
      */
+    public const FIXTURE_BRAND = 'E2E Sintetis';
+
     public const SOURCES = ['whatsapp' => 'WhatsApp', 'instagram' => 'Instagram', 'website' => 'Website', 'manual' => 'Langsung/lainnya'];
 
     public function handle(User $actor, array $lines, ?array $customer = null, ?string $submissionToken = null, array $options = []): array
@@ -69,8 +71,11 @@ class CreateOnlineOrder
                 ]);
             }
             // Admins confirm stock in the chat, so any published offer with a valid price may be ordered.
+            // Staging fixtures (never production) use draft products of the synthetic brand only.
+            $fixture = ($options['fixture'] ?? false) === true && ! app()->environment('production');
             $variants = ProductVariant::with('product.brand')->active()
-                ->whereHas('product', fn ($query) => $query->published())
+                ->when(! $fixture, fn ($query) => $query->whereHas('product', fn ($product) => $product->published()))
+                ->when($fixture, fn ($query) => $query->whereHas('product.brand', fn ($brand) => $brand->where('name', self::FIXTURE_BRAND)))
                 ->whereIn('id', array_keys($lines))->get()->keyBy('id');
             if ($variants->count() !== count($lines)) {
                 throw new OnlineOrderRejected('Ada produk yang tidak lagi tersedia di katalog. Pilih ulang produknya.');

@@ -109,7 +109,7 @@ final class OnlineOrderMessages
             $lines[] = 'Catatan customer: '.$this->text($order->customer_note);
         }
         $lines[] = '';
-        $lines[] = 'Buka pesanan di aplikasi Qammaris Admin (login akun masing-masing): '.$adminUrl;
+        $lines[] = 'Buka tugas (login akun masing-masing): '.$adminUrl;
 
         return implode("\n", $lines);
     }

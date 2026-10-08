@@ -27,6 +27,7 @@ class AuthorizationServiceProvider extends ServiceProvider
         Gate::define('catalog.manage', fn (User $user) => $has($user, self::FULL_ADMIN));
         Gate::define('blog.manage', fn (User $user) => $has($user, self::FULL_ADMIN));
         Gate::define('users.manage', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
+        Gate::define('integrations.manage', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
 
         Gate::define('orders.manage', fn (User $user) => $has($user, self::ORDER_ROLES));
         // Money changes (shipping charge/funding, reimbursements, step corrections) are not Staff Order work.

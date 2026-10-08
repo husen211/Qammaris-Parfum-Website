@@ -146,9 +146,9 @@ final class OrderSerializer
     }
 
     /** `{event_id, type, order_id, revision, occurred_at}`; no order or customer data (contract §12). */
-    public static function webhookEvent(string $eventId, OnlineOrder $order, DateTimeInterface $occurredAt): array
+    public static function webhookEvent(string $eventId, OnlineOrder $order, DateTimeInterface $occurredAt, ?int $revision = null): array
     {
-        return ['event_id' => $eventId, 'type' => 'order.changed', 'order_id' => $order->public_id, 'revision' => $order->revision, 'occurred_at' => self::time($occurredAt)];
+        return ['event_id' => $eventId, 'type' => 'order.changed', 'order_id' => $order->public_id, 'revision' => $revision ?? $order->revision, 'occurred_at' => self::time($occurredAt)];
     }
 
     public static function displayName(?string $name): ?string

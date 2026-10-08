@@ -27,6 +27,7 @@ class AdminRbacTest extends TestCase
         'admin.pwa.manifest' => [],
         'admin.pwa.service-worker' => [],
         'admin.pwa.offline' => [],
+        'admin.orders.task' => [],
     ];
 
     protected function setUp(): void
@@ -214,6 +215,7 @@ class AdminRbacTest extends TestCase
             $name === 'admin.dashboard', $name === 'admin.account', str_starts_with($name, 'admin.account.') => null,
             str_starts_with($name, 'admin.orders.') => 'orders.manage',
             str_starts_with($name, 'admin.users.') => 'users.manage',
+            str_starts_with($name, 'admin.integrations.') => 'integrations.manage',
             str_starts_with($name, 'admin.blog-posts.') => 'blog.manage',
             default => 'catalog.manage',
         };

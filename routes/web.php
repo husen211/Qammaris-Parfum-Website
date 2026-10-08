@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOnlineOrderController;
 use App\Http\Controllers\Admin\AdminOnlineOrderV2Controller;
+use App\Http\Controllers\Admin\AdminOrderIntegrationController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
@@ -188,6 +189,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
     // Blog
     Route::middleware('can:blog.manage')->group(function () {
         Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
+    });
+
+    // Qammaris App order integration status (Super Admin only, ORD-02e)
+    Route::middleware('can:integrations.manage')->group(function () {
+        Route::get('integrations/orders', [AdminOrderIntegrationController::class, 'index'])->name('integrations.orders');
+        Route::post('integrations/orders/outbox/{outbox}/resend', [AdminOrderIntegrationController::class, 'resend'])->name('integrations.orders.resend');
     });
 
     // Pengguna & Role (Super Admin only)

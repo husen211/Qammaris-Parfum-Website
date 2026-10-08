@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\OnlineOrderLegacyState;
 use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderV2State;
+use App\Support\OrderApi\OrderWebhookOutbox;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -94,6 +95,18 @@ class OnlineOrder extends Model
             $order->public_id ??= (string) Str::ulid();
             $order->source ??= 'whatsapp';
             $order->state_model ??= self::STATE_LEGACY;
+        });
+
+        // V2 order changed (new or new revision): tell the App through the outbox (ORD-02e, contract §12).
+        static::created(function (OnlineOrder $order): void {
+            if ($order->isV2()) {
+                OrderWebhookOutbox::record($order);
+            }
+        });
+        static::updated(function (OnlineOrder $order): void {
+            if ($order->isV2() && $order->wasChanged('revision')) {
+                OrderWebhookOutbox::record($order);
+            }
         });
 
         // Legacy rows: ORD-01 screens drive `stage` and the ORD-02 dimensions follow it one way.
