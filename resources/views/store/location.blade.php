@@ -73,15 +73,15 @@
                 </div>
 
                 <div>
-                    <h3 class="font-mayluxa text-3xl text-brand-black mb-8 border-b border-gray-100 pb-4">Opening Hours</h3>
+                    <h3 class="font-mayluxa text-3xl text-brand-black mb-8 border-b border-gray-100 pb-4">Jam Operasional</h3>
                     <div class="grid grid-cols-2 gap-x-8 gap-y-6">
                         <div>
-                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Mon - Sat</p>
-                            <p class="text-brand-black font-medium">09:00 - 21:00 WIB</p>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Sabtu–Kamis</p>
+                            <p class="text-brand-black font-medium">09.00–21.00 WITA</p>
                         </div>
                         <div>
-                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Sunday</p>
-                            <p class="text-brand-black font-medium opacity-50">Closed</p>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Jumat</p>
+                            <p class="text-brand-black font-medium opacity-50">Tutup</p>
                         </div>
                     </div>
                     <div class="mt-8 p-4 bg-[#FAFAFA] border border-gray-100 flex items-start gap-3">
