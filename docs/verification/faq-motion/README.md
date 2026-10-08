@@ -1,6 +1,6 @@
 # UI-21ST-02 — FAQ motion and direct About copy
 
-2026-10-08. Owner rejected the abrupt FAQ transition and poetic About copy, asking for the actual21st component behavior. Bounded correction only; implementation verified locally, **not yet deployed**.
+2026-10-08. Owner rejected the abrupt FAQ transition and poetic About copy, asking for the actual21st component behavior. Bounded correction only; implementation verified locally, then Owner-approved PR41 deployed and verified live. [Release proof](RELEASE.md) supersedes pending-release remarks below.
 
 The exact [anshuman008 FAQ Chat Accordion](https://21st.dev/@anshuman008/components/faq-chat-accordion) was retrieved again through21st MCP demo1517/component273 (paid success). Its actual source uses Framer Motion with open `{opacity:1,height:"auto"}`, collapsed `{opacity:0,height:0}`, **0.4second transition**, force-mounted content and a single collapsible item. The previous native-only adaptation omitted this motion; this patch restores the behavior with the browser Web Animations API, not another animation dependency.
 
