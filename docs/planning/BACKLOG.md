@@ -8,6 +8,10 @@ Updated 2026-10-08, approved Journal production release; audit scope retained. T
 
 BACKLOG = proposed/not approved for execution; READY = accepted bounded scope ready; IN_PROGRESS = active work; IN_REVIEW = complete within stated scope, review/limits still open; BLOCKED = named external prerequisite; DONE = accepted criteria and stated verification completed. One approved implementation item at a time. A released feature may have separate IN_REVIEW device/runtime acceptance; do not infer either code unreleased or all tests passed from the label alone.
 
+## SEC-DEP-01/02 — Bounded dependency patches — IN_REVIEW
+
+Owner requested finishing remaining work after reporting safe site testing. Separately scoped after ABOUT-01 implementation: patch shell-quote/source-map-js/CommonMark only; no orders, package-major upgrade, database/media/content/credential change. Exact parent pin requires a concurrently-scoped shell-quote override. npm/Composer audits now report zero findings; clean npm install,469Laravel/3662assertions(two conditional skips),31Node tests, Vite, strict Composer and Chrome390/1440 smoke passed. Historical baseline findings remain below; patch is not yet deployed. [Evidence and limits](../verification/security-dependencies/README.md).
+
 ## ABOUT-01 — Real store story, experience and media — IN_REVIEW
 
 Owner approved2026-10-08: complete remaining reviewed work, use nine supplied store/construction/design/tester images, the two first-party LinkedIn posts, portrait Instagram Reel, and clevision21st rating-card via MCP. Public review requested; production merges/deployment remain pending a specific approval after automatic review rejected the combined merge action.
@@ -33,9 +37,9 @@ BLOG-01 acceptance implemented: failed file/DB/audit write keeps current article
 
 ## Original catalog program board
 
-Unrelated finding SEC-DEP-01 (BACKLOG, not authorized for automatic package upgrades): npm audit reports concurrently9.2.4/shell-quote1.9.0 (critical) and source-map-js1.2.1 (high). Versions are identical in cb0a1c3 and BLOG-02; not introduced by Tiptap. Assess/update in a separately scoped dependency task, then repeat audit before release.
+Historical finding SEC-DEP-01 (now patched locally; release pending, see IN_REVIEW above): npm audit reports concurrently9.2.4/shell-quote1.9.0 (critical) and source-map-js1.2.1 (high). Versions are identical in cb0a1c3 and BLOG-02; not introduced by Tiptap. Assess/update in a separately scoped dependency task, then repeat audit before release.
 
-Unrelated finding SEC-DEP-02 (BACKLOG): BLOG-04 locked Composer audit reports two existing league/commonmark advisories, medium GHSA-97jj-33gv-5xf9 and high GHSA-3q6v-r5mr-hxv8. BLOG-04 does not change either lockfile; Journal content uses the existing HTML sanitizer, not Markdown conversion. Assess affected application paths and package update separately; dependency audits are not clean.
+Historical finding SEC-DEP-02 (now patched locally; release pending, see IN_REVIEW above): BLOG-04 locked Composer audit reports two existing league/commonmark advisories, medium GHSA-97jj-33gv-5xf9 and high GHSA-3q6v-r5mr-hxv8. BLOG-04 does not change either lockfile; Journal content uses the existing HTML sanitizer, not Markdown conversion. Assess affected application paths and package update separately; dependency audits are not clean.
 
 | ID | Phase | Status retained | Current meaning / evidence |
 |---|---|---|---|
