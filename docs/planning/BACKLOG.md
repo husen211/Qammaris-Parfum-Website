@@ -8,6 +8,10 @@ Updated 2026-10-08, approved Journal production release; audit scope retained. T
 
 BACKLOG = proposed/not approved for execution; READY = accepted bounded scope ready; IN_PROGRESS = active work; IN_REVIEW = complete within stated scope, review/limits still open; BLOCKED = named external prerequisite; DONE = accepted criteria and stated verification completed. One approved implementation item at a time. A released feature may have separate IN_REVIEW device/runtime acceptance; do not infer either code unreleased or all tests passed from the label alone.
 
+## Bounded store copy correction
+
+**STORE-HOURS — IN_REVIEW:** Owner confirmed Sabtu–Kamis 09.00–21.00 WITA; Jumat tutup. Blade copy corrected and business rule recorded; Chrome390/1440 preview and Blade compilation pass. Production release approval pending. [Verification](../verification/store-hours/README.md). No data/API/order change or next-phase authorization.
+
 ## Active separate program — Qammaris Journal
 
 Owner approved the [Journal plan](QAMMARIS_JOURNAL.md), BLOG-01–05 implementation, transaction-only staging fixtures, five additive staging/production migrations after staging passed, and a blog-only production release. Order work is excluded. [BLOG-06 release evidence](../verification/blog-06/README.md) supersedes earlier phase “not deployed/staging unconfirmed” statements; it does not close P9 or activate production agent credentials.
