@@ -9,7 +9,7 @@ class StoreController extends Controller
     public function location()
     {
         $storeInfo = cache()->remember('store_info', 3600, function () {
-            return StoreInfo::first() ?? new StoreInfo();
+            return StoreInfo::first() ?? new StoreInfo;
         });
         $fallbackAddress = "Qammaris Perfumes\nJl Sis Aljufri, Palu Barat\nKota Palu, Sulawesi Tengah";
         $addressTextRaw = trim((string) $storeInfo->address);
@@ -51,14 +51,66 @@ class StoreController extends Controller
             'displayAddress'
         ));
     }
-    
+
     public function about()
     {
         $storeInfo = cache()->remember('store_info', 3600, function () {
-            return StoreInfo::first() ?? new StoreInfo();
+            return StoreInfo::first() ?? new StoreInfo;
         });
 
-        return view('store.about', compact('storeInfo'));
+        $aboutContent = config('store_about');
+        $aboutMedia = config('store_about_media');
+        $aboutAddress = trim((string) $storeInfo->address);
+        if ($aboutAddress === '' || str_contains(strtolower($aboutAddress), 'contoh')) {
+            $aboutAddress = 'Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111';
+        }
+        $storeId = route('store.location').'#store';
+        $aboutSchema = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'AboutPage',
+                    '@id' => route('store.about').'#webpage',
+                    'url' => route('store.about'),
+                    'name' => 'Tentang Qammaris — Experience Store Parfum di Palu',
+                    'inLanguage' => 'id-ID',
+                    'mainEntity' => ['@id' => $storeId],
+                    'breadcrumb' => ['@id' => route('store.about').'#breadcrumb'],
+                ],
+                [
+                    '@type' => 'Store',
+                    '@id' => $storeId,
+                    'name' => 'Qammaris Perfumes',
+                    'url' => route('store.location'),
+                    'image' => asset('images/store/facade-1200.webp'),
+                    'telephone' => '+'.$storeInfo->whatsapp_number,
+                    'address' => [
+                        '@type' => 'PostalAddress',
+                        'streetAddress' => $aboutAddress,
+                        'addressLocality' => 'Palu',
+                        'addressRegion' => 'Sulawesi Tengah',
+                        'addressCountry' => 'ID',
+                    ],
+                    'openingHoursSpecification' => [[
+                        '@type' => 'OpeningHoursSpecification',
+                        'dayOfWeek' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+                        'opens' => '09:00',
+                        'closes' => '21:00',
+                    ]],
+                    'sameAs' => ['https://www.instagram.com/qammaris', 'https://www.linkedin.com/company/qammaris-perfumes'],
+                ],
+                [
+                    '@type' => 'BreadcrumbList',
+                    '@id' => route('store.about').'#breadcrumb',
+                    'itemListElement' => [
+                        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Beranda', 'item' => url('/')],
+                        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Tentang Qammaris', 'item' => route('store.about')],
+                    ],
+                ],
+            ],
+        ];
+
+        return view('store.about', compact('storeInfo', 'aboutContent', 'aboutMedia', 'aboutAddress', 'aboutSchema'));
     }
 
     private function resolveMapsLink(?string $address, ?string $explicitEmbed = null): string
@@ -66,7 +118,7 @@ class StoreController extends Controller
         $explicitEmbed = trim((string) $explicitEmbed);
         if ($explicitEmbed !== '' && str_contains($explicitEmbed, 'pb=')) {
             // Derive a view link from the embed if possible
-            return 'https://www.google.com/maps/search/?api=1&query=' . urlencode($address ?: 'Qammaris Perfumes Palu');
+            return 'https://www.google.com/maps/search/?api=1&query='.urlencode($address ?: 'Qammaris Perfumes Palu');
         }
 
         $address = trim((string) $address);
@@ -75,7 +127,7 @@ class StoreController extends Controller
             return 'https://maps.app.goo.gl/npKqotHHTo2AAyag9';
         }
 
-        return 'https://www.google.com/maps/search/?api=1&query=' . urlencode($address);
+        return 'https://www.google.com/maps/search/?api=1&query='.urlencode($address);
     }
 
     private function resolveWhatsappLink(?string $number): string
@@ -87,10 +139,10 @@ class StoreController extends Controller
         }
 
         if (str_starts_with($normalized, '0')) {
-            $normalized = '62' . substr($normalized, 1);
+            $normalized = '62'.substr($normalized, 1);
         }
 
-        return 'https://wa.me/' . $normalized;
+        return 'https://wa.me/'.$normalized;
     }
 
     private function resolveWhatsappNumber(?string $number): string
@@ -102,7 +154,7 @@ class StoreController extends Controller
         }
 
         if (str_starts_with($normalized, '0')) {
-            $normalized = '62' . substr($normalized, 1);
+            $normalized = '62'.substr($normalized, 1);
         }
 
         return $normalized === '6285144924931' ? $normalized : '6285144924931';
@@ -115,6 +167,7 @@ class StoreController extends Controller
             if (str_contains($embed, '<iframe')) {
                 return $embed;
             }
+
             return $embed;
         }
 
@@ -123,7 +176,7 @@ class StoreController extends Controller
             $query = 'Qammaris Perfumes Palu';
         }
 
-        return 'https://www.google.com/maps?q=' . urlencode($query) . '&t=&z=16&ie=UTF8&iwloc=&output=embed';
+        return 'https://www.google.com/maps?q='.urlencode($query).'&t=&z=16&ie=UTF8&iwloc=&output=embed';
     }
 
     private function resolveMapsEmbedSrc(?string $embed, ?string $address, ?string $fallbackSrc = null): string
@@ -156,7 +209,7 @@ class StoreController extends Controller
             return $fallbackSrc;
         }
 
-        return 'https://www.google.com/maps?q=' . urlencode($query) . '&t=&z=16&ie=UTF8&iwloc=&output=embed';
+        return 'https://www.google.com/maps?q='.urlencode($query).'&t=&z=16&ie=UTF8&iwloc=&output=embed';
     }
 
     private function formatPhoneDisplay(?string $number): string
@@ -168,7 +221,7 @@ class StoreController extends Controller
         }
 
         if (str_starts_with($normalized, '0')) {
-            $normalized = '62' . substr($normalized, 1);
+            $normalized = '62'.substr($normalized, 1);
         }
 
         if (preg_match('/^(\d{2})(\d{3})(\d{4})(\d{4})$/', $normalized, $matches)) {

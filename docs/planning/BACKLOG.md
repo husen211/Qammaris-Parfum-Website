@@ -8,6 +8,14 @@ Updated 2026-10-08, approved Journal production release; audit scope retained. T
 
 BACKLOG = proposed/not approved for execution; READY = accepted bounded scope ready; IN_PROGRESS = active work; IN_REVIEW = complete within stated scope, review/limits still open; BLOCKED = named external prerequisite; DONE = accepted criteria and stated verification completed. One approved implementation item at a time. A released feature may have separate IN_REVIEW device/runtime acceptance; do not infer either code unreleased or all tests passed from the label alone.
 
+## ABOUT-01 — Real store story, experience and media — IN_REVIEW
+
+Owner approved2026-10-08: complete remaining reviewed work, use nine supplied store/construction/design/tester images, the two first-party LinkedIn posts, portrait Instagram Reel, and clevision21st rating-card via MCP. Public review requested; production merges/deployment remain pending a specific approval after automatic review rejected the combined merge action.
+
+Bounded scope: `/store/about` editorial redesign, verified story of Husein's Jakarta exploration/return to Palu, named timeline stages without unverified dates, all-product tester/staff recommendation/discussion/wholehearted-service claims approved by Owner, responsive real gallery/lightbox, click-to-load Instagram with fallback, dated Maps4,9 rating and only verified attributed review excerpts, local SEO/metadata, correct Owner hours. No catalog/order/API/database mutation or new package. Implementation/localverification complete:469Laravel/3662assertions,31JS,Vite/Pint,diff; realChrome320/375/390/768/1440 and genuine touch passed. Reviewquotes and productionauthorization remain separate prerequisites.
+
+User reports previous real-site testing was safe and asks review directly on production. Record that Owner observation without claiming unperformed device/event/checkout/load checks were independently passed. PR34hours and PR35API-documentation are ready and CI-green, not yet merged. Source/evidence: [ABOUT-01](../verification/about-experience/README.md).
+
 ## Active separate program — Qammaris Journal
 
 Owner approved the [Journal plan](QAMMARIS_JOURNAL.md), BLOG-01–05 implementation, transaction-only staging fixtures, five additive staging/production migrations after staging passed, and a blog-only production release. Order work is excluded. [BLOG-06 release evidence](../verification/blog-06/README.md) supersedes earlier phase “not deployed/staging unconfirmed” statements; it does not close P9 or activate production agent credentials.
