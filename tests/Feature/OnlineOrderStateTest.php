@@ -87,19 +87,19 @@ class OnlineOrderStateTest extends TestCase
         $this->assertSame('paid', $order->payment_status);
     }
 
-    public function test_cancel_after_payment_leaves_a_visible_refund_and_a_restore_brings_payment_back(): void
+    public function test_cancel_after_payment_needs_reconciliation_and_never_assumes_a_refund_is_owed(): void
     {
         $order = $this->step($this->order('local_delivery'), 'paid', ['payment_method' => 'transfer']);
         $order = $this->workflow->cancel($order, 'Customer batal', $this->owner);
-        $this->assertState($order, ['lifecycle' => 'cancelled', 'payment_status' => 'refund_pending']);
-        $this->assertTrue(OnlineOrderState::flags($order)['open_refund']);
+        $this->assertState($order, ['lifecycle' => 'cancelled', 'payment_status' => 'paid', 'refund_status' => 'needs_reconciliation']);
+        $this->assertFalse(OnlineOrderState::flags($order)['open_refund'], 'Unknown refund history is not an open refund');
         $this->assertNull(OnlineOrderState::queue($order));
 
         $order = $this->workflow->revert($order, 'cancelled', $this->owner);
-        $this->assertState($order, ['lifecycle' => 'active', 'payment_status' => 'paid']);
+        $this->assertState($order, ['lifecycle' => 'active', 'payment_status' => 'paid', 'refund_status' => null]);
 
         $unpaid = $this->workflow->cancel($this->order('pickup'), 'Tidak jadi', $this->owner);
-        $this->assertState($unpaid, ['lifecycle' => 'cancelled', 'payment_status' => 'unpaid']);
+        $this->assertState($unpaid, ['lifecycle' => 'cancelled', 'payment_status' => 'unpaid', 'refund_status' => null]);
     }
 
     public function test_pending_staff_reimbursement_does_not_block_completion_but_refunds_and_issues_do(): void
@@ -164,7 +164,8 @@ class OnlineOrderStateTest extends TestCase
                 array_diff_key($this->stateOf($fresh), array_flip(['payment_confirmed_at', 'handed_over_at', 'jnt_picked_up_at', 'delivered_at'])), "order {$order->id}");
         }
         $this->assertSame('2026-10-01 05:06:07', $shipped->fresh()->handed_over_at->format('Y-m-d H:i:s'), 'Handover time comes from the shipped event');
-        $this->assertSame('refund_pending', $cancelled->fresh()->payment_status, 'A paid order cancelled under ORD-01 keeps a visible refund');
+        $this->assertSame(['paid', 'needs_reconciliation'], [$cancelled->fresh()->payment_status, $cancelled->fresh()->refund_status],
+            'A paid order cancelled under ORD-01 needs reconciliation; no refund debt is assumed');
     }
 
     private function stateOf(OnlineOrder $order): array

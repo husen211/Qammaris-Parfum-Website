@@ -140,7 +140,15 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 - Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.
 - Pesanan **selesai** bila sudah diserahkan, Lunas, tanpa kendala terbuka, dan tanpa refund terbuka.
 - Talangan/reimburse staf yang belum diganti **tidak** menahan status selesai, tetapi tetap tampil sebagai kewajiban terbuka (keputusan Owner R8).
-- Pesanan yang dibatalkan setelah Lunas mendapat status pembayaran **refund belum selesai**, supaya terlihat sebagai kasus yang perlu ditangani (D4). Pesanan lama ORD-01 dipetakan dengan aturan yang sama.
+- **Refund tidak pernah diasumsikan** (koreksi Owner 2026-10-09):
+  - Pembatalan setelah Lunas tidak otomatis berarti ada utang refund.
+  - Super Admin menetapkan nominal yang harus dikembalikan (boleh 0, wajib alasan).
+  - Setiap pengembalian dicatat. Refund sebagian maupun penuh didukung.
+  - Pesanan tampil sebagai **refund belum selesai** hanya selama masih ada sisa yang benar-benar terutang.
+- **Pesanan ORD-01 yang dibatalkan setelah Lunas** ditandai **perlu rekonsiliasi**, karena riwayat refund-nya tidak tercatat. Super Admin mengisi nominal diterima, nominal yang harus dikembalikan, dan yang sudah dikembalikan. Bila belum diketahui, tanda tetap ada.
+- Catatan pembayaran/refund tidak pernah diubah atau dihapus. Salah catat dibatalkan dengan entri pembatalan beralasan.
+- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya oleh **Super Admin**, dan semuanya tercatat di riwayat pesanan. Staff Order boleh mencatat pembayaran masuk.
+- Peralihan ke model status baru terjadi per pesanan saat dibuat. Pesanan lama menyelesaikan alurnya sendiri; dua alur tidak pernah mengubah satu pesanan yang sama.
 
 ### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\OnlineOrderLegacyState;
+use App\Support\OnlineOrderMoney;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -73,19 +74,51 @@ class OnlineOrder extends Model
         'jnt_picked_up_at' => 'datetime',
         'handed_over_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'refund_due_amount' => 'decimal:2',
+        'refund_decided_at' => 'datetime',
     ];
+
+    public const STATE_LEGACY = 'legacy';
+
+    public const STATE_V2 = 'v2';
 
     protected static function booted(): void
     {
         static::creating(function (OnlineOrder $order): void {
             $order->public_id ??= (string) Str::ulid();
             $order->source ??= 'whatsapp';
+            $order->state_model ??= self::STATE_LEGACY;
         });
 
-        // Transitional (ORD-02c slice 1): ORD-01 screens still drive `stage`; keep the ORD-02 dimensions in step.
+        // Legacy rows only: ORD-01 screens drive `stage`, so the ORD-02 dimensions follow it one way.
+        // V2 rows are driven by the V2 operations and are never touched here.
         static::saving(function (OnlineOrder $order): void {
+            if ($order->state_model === self::STATE_V2) {
+                return;
+            }
             $order->forceFill(OnlineOrderLegacyState::dimensions($order->getAttributes(), fn () => now()));
+            $basePayment = $order->payment_status;
+
+            if ($order->isDirty('stage') && $order->refund_due_amount === null) {
+                // ORD-01 has no refund records, so a cancel after payment is flagged for reconciliation, never assumed.
+                if ($order->stage === self::STAGE_CANCELLED && $basePayment === 'paid') {
+                    $order->refund_status = 'needs_reconciliation';
+                } elseif ($order->getOriginal('stage') === self::STAGE_CANCELLED && $order->refund_status === 'needs_reconciliation') {
+                    $order->refund_status = null;
+                }
+            }
+            OnlineOrderMoney::apply($order, $basePayment);
         });
+    }
+
+    public function isV2(): bool
+    {
+        return $this->state_model === self::STATE_V2;
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OnlineOrderPayment::class)->orderBy('id');
     }
 
     public function items(): HasMany

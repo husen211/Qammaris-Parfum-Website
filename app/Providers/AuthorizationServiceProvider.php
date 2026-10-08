@@ -30,6 +30,8 @@ class AuthorizationServiceProvider extends ServiceProvider
         Gate::define('orders.manage', fn (User $user) => $has($user, self::ORDER_ROLES));
         // Money changes (shipping charge/funding, reimbursements, step corrections) are not Staff Order work.
         Gate::define('orders.finance', fn (User $user) => $has($user, self::FULL_ADMIN));
+        // Refund decisions, refund payouts, ledger reversals and reconciliation: Super Admin only (Owner 2026-10-09).
+        Gate::define('orders.refund', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // Owner D4: Staff Order may cancel only while unpaid and not handed over, always with a reason.
         Gate::define('orders.cancel', function (User $user, OnlineOrder $order) use ($has): bool {
             if ($has($user, self::FULL_ADMIN)) {

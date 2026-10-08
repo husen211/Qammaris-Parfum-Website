@@ -26,10 +26,11 @@ final class OnlineOrderLegacyState
             $base = isset($order['previous_stage'], self::RANK[$order['previous_stage']])
                 ? self::dimensions(['stage' => $order['previous_stage']] + $order, $reachedAt)
                 : [];
+            // Whether money was received stays as it was. Any refund comes from the money ledger and a Super Admin
+            // decision (OnlineOrderMoney), never from the cancel itself.
             $payment = $base['payment_status'] ?? $order['payment_status'] ?? 'unpaid';
 
-            // Owner D4: cancelling after payment leaves a refund obligation that must stay visible.
-            return ['lifecycle' => 'cancelled', 'payment_status' => in_array($payment, ['paid', 'refund_pending'], true) ? 'refund_pending' : $payment] + $base;
+            return ['lifecycle' => 'cancelled', 'payment_status' => in_array($payment, ['refund_pending', 'refunded'], true) ? 'paid' : $payment] + $base;
         }
 
         $rank = self::RANK[$stage];

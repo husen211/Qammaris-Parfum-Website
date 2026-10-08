@@ -83,6 +83,7 @@ class OnlineOrderWorkflow
     public function advance(OnlineOrder $order, string $from, string $to, string $actorType, ?User $actor = null, ?string $staffName = null, array $extra = []): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($from, $to, $actorType, $actor, $staffName, $extra): void {
+            $this->assertLegacy($order);
             if ($actorType === 'admin') {
                 $this->assertAdmin($actor);
             } elseif ($actorType === 'customer') {
@@ -133,6 +134,7 @@ class OnlineOrderWorkflow
     public function revert(OnlineOrder $order, string $from, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($from, $actor): void {
+            $this->assertLegacy($order);
             $this->assertAllowed($actor, 'orders.finance');
             if ($order->stage !== $from) {
                 throw new OnlineOrderRejected(self::STALE);
@@ -154,6 +156,7 @@ class OnlineOrderWorkflow
     public function cancel(OnlineOrder $order, string $reason, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($reason, $actor): void {
+            $this->assertLegacy($order);
             $this->assertAllowed($actor, 'orders.manage');
             if ($order->stage !== OnlineOrder::STAGE_CANCELLED && ! Gate::forUser($actor)->allows('orders.cancel', $order)) {
                 throw new OnlineOrderRejected('Pesanan yang sudah dibayar atau diserahkan hanya dapat dibatalkan oleh Super Admin.');
@@ -175,6 +178,7 @@ class OnlineOrderWorkflow
     public function recordStaffAdvance(OnlineOrder $order, string $amount, string $staffName): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($amount, $staffName): void {
+            $this->assertLegacy($order);
             if ($order->stage === OnlineOrder::STAGE_CANCELLED || $order->staff_reimbursed_at !== null) {
                 throw new OnlineOrderRejected('Talangan untuk pesanan ini sudah ditutup. Hubungi admin bila perlu koreksi.');
             }
@@ -190,6 +194,7 @@ class OnlineOrderWorkflow
     public function markReimbursed(OnlineOrder $order, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($actor): void {
+            $this->assertLegacy($order);
             $this->assertAllowed($actor, 'orders.finance');
             if (! $order->needsReimbursement()) {
                 return;
@@ -241,6 +246,14 @@ class OnlineOrderWorkflow
             'staff_name' => $staffName,
             'note' => $note === null ? null : Str::limit($note, 197),
         ]);
+    }
+
+    /** ORD-01 step operations never touch V2 orders; V2 state has its own operations (cutover per order at creation). */
+    private function assertLegacy(OnlineOrder $order): void
+    {
+        if ($order->isV2()) {
+            throw new OnlineOrderRejected('Pesanan ini memakai alur status baru. Gunakan tombol di halaman pesanan yang baru.');
+        }
     }
 
     private function assertAdmin(?User $actor): void

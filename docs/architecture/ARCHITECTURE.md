@@ -133,6 +133,11 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - their timestamps.
 - `App\Support\OnlineOrderLegacyState` maps ORD-01 `stage` to these columns. One class serves both the backfill (event times) and a transitional `OnlineOrder::saving` hook.
 - The sync is one-way while the ORD-01 screens still drive `stage`. ORD-02d reverses the authority and removes the hook.
+- Slice 2 ([ADR-040](decisions/ADR-040-order-cutover-and-money-ledger.md)):
+  - `state_model` (`legacy`|`v2`) is fixed per order. The stage hook runs for legacy rows only; ORD-01 step operations refuse V2 rows.
+  - `online_order_payments` is an append-only ledger with reversal rows.
+  - `App\Actions\Orders\RecordOnlineOrderMoney` handles payments, refund decisions, payouts, reversals and reconciliation. Gate `orders.refund` = Super Admin.
+  - `App\Support\OnlineOrderMoney` derives `refund_status` and the refund part of `payment_status`.
 - `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
 
 ### Admin PWA (ORD-02b, branch review)
