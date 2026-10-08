@@ -25,3 +25,7 @@ Browser baseline actualproduction390/1440; screenshots under[screenshots](screen
 Implementation not yet merged/deployed. Production approval pending. NormalGitHubCI/release, no new migrations. Code rollback may remove About only; keep curated photo variants and source files. Token/APIenv/actor and persistent product/blog media must remain unchanged. Do not include Claude's order work.
 
 Remaining separate work: reviewed PR34/35 release, source-verifiable legacy Journal alt/price prose, P9limits and SEC-DEP01/02 patching. Owner's reported successful testing is recorded without converting untested gates into pass claims.
+
+## Review source follow-up
+
+Owner supplied eight Google Maps screenshots after the initial implementation. Six complete attributed five-star reviews now render in a responsive grid. [Provenance, changed files, fresh checks and limitations](reviews.md) supersede the initial empty-review source prerequisite; production authorization remains pending. Earlier full-suite/browser numbers above are dated initial implementation evidence, not newly rerun tests for this content follow-up.

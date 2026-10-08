@@ -6,6 +6,8 @@ LinkedIn story and journey loaded in actual installed Chrome, HTTP200. Editorial
 
 Google search share URL opened a challenge; no CAPTCHA was solved. The normal Google Maps business page loaded and displayed 4,9, full address and phone; limited-view mode did not expose review text or count. Publish no invented testimonials/count. Rating is a dated observation, not live API synchronization. Google Maps displayed closing23:00; Owner's09:00–21:00 WITA/Fridayclosed is authority for website. Maps hours need manual Owner correction separately; no Google account write performed.
 
+Owner later supplied eight Google Maps screenshots; six fully visible customer reviews are transcribed with exact names/stars/text. [Review provenance and checks](reviews.md). The initial limited-view observation above remains historical; testimonial source availability is now resolved. No review count, date or omitted text inferred.
+
 Instagram's /embed/ endpoint returnedHTTP200 and the Qammaris account/player in installed Chrome. Embed is click-to-load with an always-visible Instagram fallback; playback remains controlled by Instagram/browser availability.
 
 21st MCP get_component8993 succeeded, paid tier. Used **demoCode CardTestimonialDemo** (componentCode is an unrelated login example): quote, content/footer, attributed identity and star composition adapted to semantic Blade. No shadcn/React/Radix package installation, demo identities or testimonials copied into website. Component: https://21st.dev/@clevision/components/card-studio/rating-card.

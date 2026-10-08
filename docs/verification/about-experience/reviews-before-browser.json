@@ -1,0 +1,29 @@
+{
+  "phase": "before",
+  "widths": [
+    {
+      "width": 390,
+      "status": 200,
+      "overflow": false,
+      "count": 0,
+      "names": [],
+      "stars": [],
+      "columns": null,
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "count": 0,
+      "names": [],
+      "stars": [],
+      "columns": null,
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    }
+  ]
+}

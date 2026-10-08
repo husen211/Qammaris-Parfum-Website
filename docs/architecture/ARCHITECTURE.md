@@ -154,7 +154,7 @@ The draft-only Journal machine API code/schema is installed in production and di
 
 ## Store About — ABOUT-01
 
-`GET /store/about` → `StoreController::about` → existing cached`StoreInfo` read, curated`config/store_about.php`/`store_about_media.php` → Blade About, semantic rating/review partials, page-onlyVite`about.css`/`about.js`. No schema/write/API/CMS abstraction. Story/review changes are reviewed code content; public review excerpts are empty until source verified. Twenty-seven WebP480/768/1200-budget derivatives preserve original composition and do not upscale; native master width is the srcset descriptor.
+`GET /store/about` → `StoreController::about` → existing cached`StoreInfo` read, curated`config/store_about.php`/`store_about_media.php` → Blade About, semantic rating/review partials, page-onlyVite`about.css`/`about.js`. No schema/write/API/CMS abstraction. Story/review changes are reviewed code content; six complete attributed Google Maps reviews are curated from Owner-provided screenshots and escaped through the existing review partial; source/date limits are documented. Twenty-seven WebP480/768/1200-budget derivatives preserve original composition and do not upscale; native master width is the srcset descriptor.
 
 Lightbox uses native`dialog`, click-only links, arrow controls/keyboard, Escape, focus restoration and image-failure text; no-JS image links still open. Native`details` FAQ and anchor navigation remain usable without JS. Instagram iframe is constructed only after explicit click, exact static source allowlisted, with status/timeouts and permanent direct fallback. About no longer loads its3D island; homepage3D is untouched.
 

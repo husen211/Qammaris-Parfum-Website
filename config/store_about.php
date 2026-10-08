@@ -9,8 +9,15 @@ return [
     'reviews_url' => 'https://share.google/hkWHVisQuT9g3H78Y',
     'google_rating' => '4,9',
     'rating_checked_at' => '8 Oktober 2026',
-    // Add only independently verified, attributed excerpts. Never demo testimonials.
-    'reviews' => [],
+    // Transcribed from complete Google Maps reviews in Owner-provided screenshots.
+    'reviews' => [
+        ['author' => 'Owen Bryant Owen Bryant', 'stars' => 5, 'quote' => 'Saya ke sini bersama teman. Kami berdua berhasil menemukan parfum yang sesuai selera masing-masing. Stafnya membantu dan tokonya bersih serta wangi.'],
+        ['author' => 'Dede Persib', 'stars' => 5, 'quote' => 'Saya ke sini atas saran kolega. Tokonya memang bersih dan wangi seperti yang diceritakan. Varian parfumnya sangat banyak dan bisa dicoba semua. Harganya masih terjangkau.'],
+        ['author' => 'Derry Qlay', 'stars' => 5, 'quote' => 'Saya ke sini untuk mencari parfum sebagai kado. Stafnya sangat membantu mencarikan aroma yang sesuai untuk penerimanya. Tokonya bersih dan harganya terjangkau.'],
+        ['author' => 'Ria Rizki', 'stars' => 5, 'quote' => 'Baru tau ada toko parfum selengkap ini di Palu. Langsung nyoba sniff beberapa varian dan akhirnya dapet yang cocok.'],
+        ['author' => 'Muhammad Zaidan Mufid', 'stars' => 5, 'quote' => 'Bosen beli parfum online dan sering kecewa karena gak sesuai bayangan. Ke sini dan semua masalah itu selesai. Sniff dulu, cocok baru bayar.'],
+        ['author' => 'Ferdiansyah Cahyadi', 'stars' => 5, 'quote' => 'karyawan ramah, selalu menjelaskan setiap wangi wangi an yg kita mau'],
+    ],
     'timeline' => [
         ['title' => 'Ketertarikan yang tumbuh di Jakarta', 'text' => 'Saat merantau untuk kuliah, Husein bertemu teman-teman yang gemar berdiskusi tentang parfum. Dari sana, ia mulai menjelajahi parfum lokal, designer, niche, hingga Timur Tengah.'],
         ['title' => 'Sebuah pertanyaan saat kembali ke Palu', 'text' => 'Mencari parfum terasa berbeda ketika aromanya tidak bisa dicoba lebih dulu. Pengalaman membeli online dan berharap cocok memunculkan gagasan: bagaimana jika ada tempat untuk mencoba dan membandingkan langsung?'],
