@@ -159,3 +159,5 @@ The draft-only Journal machine API code/schema is installed in production and di
 Lightbox uses native`dialog`, click-only links, arrow controls/keyboard, Escape, focus restoration and image-failure text; no-JS image links still open. Native`details` FAQ and anchor navigation remain usable without JS. Instagram iframe is constructed only after explicit click, exact static source allowlisted, with status/timeouts and permanent direct fallback. About no longer loads its3D island; homepage3D is untouched.
 
 Metadata reuses existing layout sections; encodedJSON-LD graph contains AboutPage/Store/BreadcrumbList with visible address/hours and no aggregateRating/review markup. Existing URLs, navbar, skeleton routing, catalog/media storage and order work retained. [Verification](../verification/about-experience/README.md).
+
+ABOUT-01/store-hours/scoped security patches were released through approved PR34–37 and verified live onfb7ed28; [bounded release proof](../verification/about-release/README.md). Persistent env/storage/API identity retained; no migrations or order changes.

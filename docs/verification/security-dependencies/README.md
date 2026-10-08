@@ -24,3 +24,7 @@ Audits are dated package-database checks, not proof of absence of all possible s
 ## Release / recovery
 
 Normal GitHub CI and separately authorized production release. No migrations. After release verify exact revision and public About/blog/location responses. App rollback can use the previous release without rolling back data; reintroducing vulnerable packages should be temporary only, with a reviewed forward patch preferred. Keep media and machine token configuration unchanged. Next item: Owner About review / verified testimonial excerpts and explicit production release, without automatically starting another feature.
+
+## Approved production release follow-up
+
+Owner explicitly approved PR34–37; final mainfb7ed28 CI/build/deploy and live About/location/Journal/API/runtime checks passed. [Release proof](../about-release/README.md) supersedes initial pending-release statements above; physical Safari and unrelated acceptance limits remain explicit.
