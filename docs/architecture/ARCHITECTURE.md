@@ -146,6 +146,10 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - `App\Support\OnlineOrderV2State` sets V2 defaults, derives `stage` for rollback, and auto-completes when the completion rule holds.
   - New: `online_order_issues`; `line_id` on items; `packed_items`; App actor columns on events.
   - `ORDERS_V2_ENABLED` (default false) is the cutover switch for new orders.
+- Slice 4:
+  - `customers` (normalized phone, indexed, not unique) and `customer_addresses` (confirmed, archived not deleted); `online_orders.customer_id` and `customer_address_id`.
+  - `App\Actions\Orders\OnlineOrderCustomers` links a customer, saves a confirmed address, and copies a saved address into an order. Nothing happens automatically.
+  - `App\Support\PhoneNumber` is the shared normalizer, also used by checkout.
 - `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
 
 ### Admin PWA (ORD-02b, branch review)

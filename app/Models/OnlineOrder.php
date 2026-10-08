@@ -7,6 +7,7 @@ use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderV2State;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -119,6 +120,11 @@ class OnlineOrder extends Model
     public function isV2(): bool
     {
         return $this->state_model === self::STATE_V2;
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function issues(): HasMany

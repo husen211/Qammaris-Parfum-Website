@@ -121,16 +121,7 @@ final class InquiryWhatsApp
 
     private function normalizeNumber(?string $number): ?string
     {
-        $normalized = preg_replace('/\D+/', '', (string) $number);
-        if ($normalized === '') {
-            return null;
-        }
-
-        if (str_starts_with($normalized, '0')) {
-            $normalized = '62'.substr($normalized, 1);
-        }
-
-        return strlen($normalized) >= 8 && strlen($normalized) <= 15 ? $normalized : null;
+        return PhoneNumber::normalize($number);
     }
 
     public function plainText(string $value): string
