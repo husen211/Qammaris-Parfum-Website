@@ -1,6 +1,6 @@
 # UI-21ST-01 — FAQ, SVG icons, About gallery and timeline
 
-2026-10-08. Owner requested the exact 21st FAQ Chat Accordion and proper icons, then added Fluid Expanding Grid and Growth Story Timeline. Implementation complete; production release requires separate approval. Order work excluded.
+2026-10-08. Owner requested the exact 21st FAQ Chat Accordion and proper icons, then added Fluid Expanding Grid and Growth Story Timeline. Implementation complete; Owner approved PR39 release and live production verification passed. [Release proof](RELEASE.md) supersedes pending-release remarks below. Order work excluded.
 
 ## Source and adaptation
 
@@ -31,4 +31,4 @@ No migrations, production data/API write, credential change, new dependencies, n
 
 Screenshots: [FAQ before mobile](screenshots/before-about-390.png), [FAQ after mobile](screenshots/after-about-390.png), [Journal after mobile](screenshots/after-journal-390.png), [timeline mobile](screenshots/after-timeline-390.png), [timeline desktop](screenshots/after-timeline-1440.png), [gallery mobile](screenshots/after-gallery-390.png), [expanded gallery desktop](screenshots/after-gallery-expanded-1440.png), [SVG rating mobile](screenshots/after-icons-390.png). Complete before/after390/1440 pairs are in `screenshots/`.
 
-Physical iPhone Safari not exercised. Older browsers without exclusive `details name` may allow multiple FAQs open; each native answer remains usable. New code is not deployed by this verification; CI and Owner release review are next. Historical P9/BLOG acceptance limits unchanged.
+Physical iPhone Safari not exercised. Older browsers without exclusive `details name` may allow multiple FAQs open; each native answer remains usable. This section records local implementation checks; subsequent Owner-approved deployment/live evidence is in [release proof](RELEASE.md). Historical P9/BLOG acceptance limits unchanged.
