@@ -57,6 +57,34 @@
         <p class="rounded-lg border-l-4 border-black bg-white px-4 py-3 text-sm font-medium text-gray-900 shadow-sm" data-next-step>Berikutnya: {{ $next }}</p>
     @endif
 
+    {{-- ORD-02e: tasks held in Qammaris App. Only shown while someone holds one; Super Admin can free a stuck task. --}}
+    @if ($order->claims->isNotEmpty() || session('order_notice.section') === 'klaim')
+        <section id="klaim" class="{{ $card }}" aria-labelledby="klaim-title" data-claims>
+            <h2 id="klaim-title" class="text-base font-semibold text-gray-900">Dipegang di Qammaris App</h2>
+            @include('admin.orders.v2._notice', ['section' => 'klaim'])
+            <ul class="mt-2 space-y-2 text-sm">
+                @foreach ($order->claims as $claim)
+                    <li class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="min-w-0"><span class="font-semibold">{{ ['preparation' => 'Packing', 'courier_booking' => 'Pesan kurir/J&T', 'handover' => 'Serah ke kurir'][$claim->task] }}</span>
+                            · {{ $claim->holder_display_name }} <span class="text-gray-500">sejak {{ $time($claim->claimed_at) }}</span></span>
+                        @can('orders.refund')
+                            <details class="w-full sm:w-auto" @if (old('_section') === 'klaim' && old('task') === $claim->task) open @endif>
+                                <summary class="{{ $quiet }} cursor-pointer">Lepas klaim</summary>
+                                <form method="POST" action="{{ route('admin.orders.v2.claims.release', [$order, $claim->task]) }}" class="mt-2 flex flex-wrap items-end gap-2">
+                                    @csrf {!! $hidden('klaim') !!}<input type="hidden" name="task" value="{{ $claim->task }}">
+                                    <label class="min-w-0 flex-1 text-xs font-medium text-gray-700">Alasan<input name="reason" required minlength="3" maxlength="200" value="{{ old('task') === $claim->task ? old('reason') : '' }}" class="{{ $input }}"></label>
+                                    <button class="{{ $secondary }}" data-busy-label="Melepas…">Lepas</button>
+                                </form>
+                                @error('reason')<p class="mt-1 text-xs text-red-700">{{ $message }}</p>@enderror
+                            </details>
+                        @endcan
+                    </li>
+                @endforeach
+            </ul>
+            @if ($order->claims->isEmpty())<p class="mt-2 text-sm text-gray-600">Tidak ada tugas yang dipegang.</p>@endif
+        </section>
+    @endif
+
     {{-- contain: its scrolling chips never widen the page. --}}
     <nav aria-label="Bagian pesanan" class="-mx-4 overflow-x-auto px-4 [contain:inline-size] xl:hidden">
         <ul class="flex gap-2 whitespace-nowrap text-sm font-semibold">
@@ -354,7 +382,9 @@
                         @endforeach
                     </ul>
                 @endif
-                @if ($order->lifecycle !== 'cancelled')
+                @if ($order->lifecycle !== 'cancelled' && config('orders_api.enabled'))
+                    <p class="mt-3 text-sm text-gray-600" data-issue-app-only>Selama integrasi Qammaris App aktif, kendala baru dicatat dari Qammaris App. Kendala yang ada tetap bisa ditandai selesai di sini.</p>
+                @elseif ($order->lifecycle !== 'cancelled')
                     <details class="mt-3" @if (old('_section') === 'kendala') open @endif>
                         <summary class="{{ $quiet }} cursor-pointer">+ Catat kendala</summary>
                         <form method="POST" action="{{ route('admin.orders.v2.issues', $order) }}" class="mt-2 grid gap-3 sm:grid-cols-2">

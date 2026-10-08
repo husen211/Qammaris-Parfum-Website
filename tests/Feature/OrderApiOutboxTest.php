@@ -142,6 +142,51 @@ class OrderApiOutboxTest extends TestCase
         $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee($link, false)->assertDontSee('/tugas-pesanan/', false);
     }
 
+    public function test_super_admin_sees_app_claims_and_releases_a_stuck_one_with_a_reason(): void
+    {
+        Http::fake();
+        $order = $this->v2Order();
+        $order->claims()->create(['task' => 'preparation', 'holder_app_user_id' => '665f0c2a9b1e4a0012ab34cd', 'holder_display_name' => 'Andi', 'claimed_at' => now()]);
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh();
+        $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
+        $release = route('admin.orders.v2.claims.release', [$order, 'preparation']);
+
+        $this->actingAs($staff)->get(route('admin.orders.show', $order))->assertSee('Dipegang di Qammaris App')->assertSee('Andi')->assertDontSee($release, false);
+        $this->actingAs($staff)->post($release, ['revision' => $order->revision, 'reason' => 'Andi pulang'])->assertForbidden();
+
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee($release, false);
+        $this->actingAs($owner)->post($release, ['revision' => $order->revision])->assertSessionHasErrors('reason');
+        $this->actingAs($owner)->post($release, ['revision' => $order->revision - 1, 'reason' => 'Andi pulang'])->assertSessionHas('order_notice.type', 'conflict');
+        $this->assertSame(1, $order->claims()->count());
+
+        $this->actingAs($owner)->post($release, ['revision' => $order->revision, 'reason' => 'Andi pulang'])->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame(0, $order->claims()->count());
+        $event = $order->events()->reorder('id', 'desc')->first();
+        $this->assertSame(['claim_released', $owner->id], [$event->kind, $event->actor_user_id]);
+        $this->assertStringContainsString('Andi pulang', $event->note);
+        // Once more to show the success notice in place, then the section disappears.
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('Klaim dilepas.')->assertSee('Tidak ada tugas yang dipegang.');
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertDontSee('Dipegang di Qammaris App');
+    }
+
+    public function test_website_issues_wait_for_r42_while_the_api_is_enabled_so_every_order_stays_readable(): void
+    {
+        Http::fake();
+        $order = $this->v2Order();
+        $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
+        $issue = ['revision' => $order->revision, '_section' => 'kendala', 'type' => 'stock_problem', 'note' => 'Stok kurang'];
+
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('kendala baru dicatat dari Qammaris App')->assertDontSee('+ Catat kendala');
+        $this->actingAs($owner)->post(route('admin.orders.v2.issues', $order), $issue)->assertSessionHas('order_notice.type', 'error');
+        $this->assertSame(0, $order->issues()->count());
+        $this->assertMatchesApiSchema($this->orderApi('GET', '/orders')->assertOk(), 'OrderListPage');
+
+        config(['orders_api.enabled' => false]);
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('+ Catat kendala');
+        $this->actingAs($owner)->post(route('admin.orders.v2.issues', $order), $issue)->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame(1, $order->issues()->count());
+    }
+
     public function test_fixtures_refuse_production_and_create_six_clean_rerunnable_orders(): void
     {
         Http::fake();
@@ -156,25 +201,26 @@ class OrderApiOutboxTest extends TestCase
         $this->assertSame(1, Artisan::call('qammaris:order-api:fixtures', ['--actor' => 'nobody']));
         $this->assertSame(0, Artisan::call('qammaris:order-api:fixtures', ['--actor' => 'pemilik-uji']));
         $first = json_decode(Artisan::output(), true)['fixtures'];
-        $this->assertSame(['local', 'intercity', 'customerCourier', 'pickup', 'issue', 'costs'], array_column($first, 'scenario'));
+        $this->assertSame(['local', 'intercity', 'customerCourier', 'pickup', 'issue', 'costs'], array_keys($first));
 
         foreach ($first as $fixture) {
             $response = $this->orderApi('GET', '/orders/'.$fixture['id'])->assertOk();
             $order = $this->assertMatchesApiSchema($response, 'Order');
             $this->assertStringStartsWith('E2E ', $order->fulfillment->recipient->name);
+            $this->assertSame('not_started', OnlineOrder::where('public_id', $fixture['id'])->value('preparation_status'), 'App preflight');
             $this->assertSame(['active', null, null, null, [], []], [$order->lifecycle, $order->claims->preparation, $order->claims->courier_booking, $order->claims->handover, $order->costs, $order->issues]);
         }
-        $local = $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$first[0]['id']), 'Order');
+        $local = $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$first['local']['id']), 'Order');
         $this->assertCount(2, $local->items);
-        $this->assertSame('customer', $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$first[2]['id']), 'Order')->fulfillment->courier->booking_responsibility);
-        $this->assertSame('jnt', $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$first[1]['id']), 'Order')->fulfillment->jnt ? 'jnt' : 'none');
+        $this->assertSame('customer', $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$first['customerCourier']['id']), 'Order')->fulfillment->courier->booking_responsibility);
+        $this->assertSame('jnt', $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$first['intercity']['id']), 'Order')->fulfillment->jnt ? 'jnt' : 'none');
         $this->get('/products')->assertDontSee('E2E Parfum');
 
         // Rerun: clean fixtures are reused. A used one (claimed) is replaced.
-        $this->orderApi('POST', '/orders/'.$first[0]['id'].'/claims', ['task' => 'preparation', 'actor' => $this->actor()], ['Idempotency-Key' => Str::random(24)])->assertOk();
+        $this->orderApi('POST', '/orders/'.$first['local']['id'].'/claims', ['task' => 'preparation', 'actor' => $this->actor()], ['Idempotency-Key' => Str::random(24)])->assertOk();
         Artisan::call('qammaris:order-api:fixtures', ['--actor' => 'pemilik-uji']);
         $second = json_decode(Artisan::output(), true)['fixtures'];
-        $this->assertNotSame($first[0]['id'], $second[0]['id']);
+        $this->assertNotSame($first['local']['id'], $second['local']['id']);
         $this->assertSame(array_slice(array_column($first, 'id'), 1), array_slice(array_column($second, 'id'), 1));
 
         // Reset: earlier fixtures are cancelled (not deleted), six new ones are created.
@@ -183,7 +229,7 @@ class OrderApiOutboxTest extends TestCase
         $third = json_decode(Artisan::output(), true)['fixtures'];
         $this->assertSame($before + 6, OnlineOrder::count());
         $this->assertSame([], array_intersect(array_column($second, 'id'), array_column($third, 'id')));
-        $this->assertSame('cancelled', OnlineOrder::where('public_id', $second[1]['id'])->value('lifecycle'));
-        $this->assertSame('E2E reset', OnlineOrder::where('public_id', $second[1]['id'])->value('cancel_reason'));
+        $this->assertSame('cancelled', OnlineOrder::where('public_id', $second['intercity']['id'])->value('lifecycle'));
+        $this->assertSame('E2E reset', OnlineOrder::where('public_id', $second['intercity']['id'])->value('cancel_reason'));
     }
 }

@@ -60,7 +60,8 @@ class OrderApiFixtures extends Command
                 $existing = collect();
             }
             $order = $existing->first(fn (OnlineOrder $order) => $this->clean($order)) ?? $this->createFixture($create, $orders, $actor, $variants, $scenario, $spec);
-            $result[] = ['scenario' => $scenario, 'id' => $order->public_id, 'number' => $order->code, 'revision' => $order->fresh()->revision, 'fulfillment' => $order->fulfillment];
+            // Keyed like the App's E2E env (local, intercity, customerCourier, pickup, issue, costs).
+            $result[$scenario] = ['id' => $order->public_id, 'number' => $order->code, 'revision' => $order->fresh()->revision, 'fulfillment' => $order->fulfillment];
         }
         $this->line(json_encode(['fixtures' => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 

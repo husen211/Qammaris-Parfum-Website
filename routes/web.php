@@ -161,6 +161,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('delivery', 'delivery')->name('delivery');
             Route::post('issues', 'openIssue')->name('issues');
             Route::post('issues/{issue}/resolve', 'resolveIssue')->name('issues.resolve');
+            Route::post('claims/{task}/release', 'releaseClaim')->whereIn('task', ['preparation', 'courier_booking', 'handover'])
+                ->middleware('can:orders.refund')->name('claims.release');
             Route::post('keep/{action}', 'keep')->whereIn('action', ['start', 'stock', 'extend', 'release'])->name('keep');
             Route::post('cancel', 'cancel')->name('cancel');
             Route::post('customer', 'linkCustomer')->name('customer');

@@ -96,7 +96,8 @@ class OrderApiWriteTest extends TestCase
     public function test_courier_request_needs_courier_booking_claim_and_handover_needs_the_handover_claim(): void
     {
         $order = $this->packedOrder('local_delivery');
-        $this->assertApiError($this->mutate('POST', $order, '/courier-requests', ['provider' => 'maxim', 'status' => 'requested', 'expected_revision' => $order->fresh()->revision, 'actor' => $this->actor()]), 403, 'action_not_allowed');
+        $unclaimed = $this->assertApiError($this->mutate('POST', $order, '/courier-requests', ['provider' => 'maxim', 'status' => 'requested', 'expected_revision' => $order->fresh()->revision, 'actor' => $this->actor()]), 403, 'action_not_allowed');
+        $this->assertEquals((object) ['task' => 'courier_booking'], $unclaimed->error->details, 'Names the claim to take; no holder when unclaimed');
         $revision = $this->claim($order, 'courier_booking');
         $requested = $this->assertMutation($this->mutate('POST', $order, '/courier-requests', ['provider' => 'other', 'provider_label' => 'Ojek pangkalan', 'reference' => 'OP-1', 'status' => 'requested', 'expected_revision' => $revision, 'actor' => $this->actor()]));
         $this->assertSame(['requested', 'other', 'Ojek pangkalan OP-1', 'awaiting_pickup'], [$requested->order->fulfillment->courier->status, $requested->order->fulfillment->courier->provider, $requested->order->fulfillment->courier->reference, $requested->order->queue]);
@@ -126,7 +127,8 @@ class OrderApiWriteTest extends TestCase
         $this->assertCount(1, Storage::disk('local')->allFiles('order-qr'));
 
         $this->assertApiError($this->qrUpload($order, 'not an image', $qr->order->revision), 422, 'validation_failed');
-        $this->assertApiError($this->qrUpload($order, $png, $qr->order->revision, $this->actor(self::IKRAR, 'Ikrar')), 403, 'action_not_allowed');
+        $foreign = $this->assertApiError($this->qrUpload($order, $png, $qr->order->revision, $this->actor(self::IKRAR, 'Ikrar')), 403, 'action_not_allowed');
+        $this->assertSame(['courier_booking', 'Andi'], [$foreign->error->details->task, $foreign->error->details->holder->display_name]);
         $this->assertCount(1, Storage::disk('local')->allFiles('order-qr'), 'A refused upload leaves no file behind');
 
         // Picking up is the handover: needs the handover claim, one revision, one event.

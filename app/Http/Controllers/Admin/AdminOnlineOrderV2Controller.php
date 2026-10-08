@@ -47,7 +47,7 @@ class AdminOnlineOrderV2Controller extends Controller
 
     public function show(OnlineOrder $order, OnlineOrderMessages $messages, InquiryWhatsApp $whatsApp)
     {
-        $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses']);
+        $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses', 'claims']);
         $customerUrl = route('orders.customer.show', $order->customer_token_encrypted);
         $groupMessage = $messages->staffGroupV2($order, route('admin.orders.task', $order->public_id));
         $inviteMessage = $messages->customerInvite($order, $customerUrl);
@@ -189,6 +189,15 @@ class AdminOnlineOrderV2Controller extends Controller
         $data = $request->validate(['note' => ['nullable', 'string', 'max:500']]);
 
         return $this->attempt($order, 'kendala', fn () => $this->fulfillment->resolveIssue($order, $issue, null, $this->actor($request), $data['note'] ?? null), 'Kendala ditandai selesai.');
+    }
+
+    /** Super Admin frees a task held in Qammaris App (holder away, App down); the reason is kept on the event. */
+    public function releaseClaim(Request $request, OnlineOrder $order, string $task): RedirectResponse
+    {
+        $data = $request->validate(['revision' => ['required', 'integer'], 'reason' => ['required', 'string', 'min:3', 'max:200']],
+            ['reason.required' => 'Tulis alasan melepas klaim.'], ['reason' => 'alasan']);
+
+        return $this->attempt($order, 'klaim', fn () => $this->fulfillment->releaseClaim($order, (int) $data['revision'], $this->actor($request), $task, $data['reason']), 'Klaim dilepas.');
     }
 
     public function keep(Request $request, OnlineOrder $order, string $action): RedirectResponse

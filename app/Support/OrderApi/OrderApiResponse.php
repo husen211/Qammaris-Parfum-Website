@@ -62,7 +62,7 @@ final class OrderApiResponse
             $error instanceof ExpenseAlreadyLinked => self::error($request, 409, 'expense_already_linked', $error->getMessage()),
             $error instanceof ProofRequired => self::error($request, 422, 'proof_required', $error->getMessage()),
             $error instanceof OrderValidationFailed => self::error($request, 422, 'validation_failed', $error->getMessage(), ['fields' => (object) $error->fields]),
-            $error instanceof OrderActionNotAllowed => self::error($request, 403, 'action_not_allowed', $error->getMessage()),
+            $error instanceof OrderActionNotAllowed => self::error($request, 403, 'action_not_allowed', $error->getMessage(), $error->details),
             $error instanceof InvalidOrderTransition, $error instanceof OnlineOrderRejected => self::error($request, 409, 'invalid_transition', $error->getMessage()),
             $error instanceof ModelNotFoundException, $error instanceof NotFoundHttpException => self::error($request, 404, 'order_not_found', 'Order tidak ditemukan.'),
             $error instanceof MethodNotAllowedHttpException => self::error($request, 400, 'bad_request', 'Metode tidak didukung untuk path ini.'),

@@ -472,6 +472,12 @@ class OnlineOrderFulfillment
 
     public function openIssue(OnlineOrder $order, ?int $revision, OrderActor $actor, string $type, string $note, ?string $lineId = null, ?int $reportedQuantity = null): OnlineOrder
     {
+        // API v1 (r4.1) requires Issue.opened_by to be an App user, so a Website-opened issue would make the order
+        // unreadable for the App. Until r4.2 (nullable opened_by) is approved, issues come from the App while it is on.
+        if (! $actor->isApp() && config('orders_api.enabled')) {
+            throw new OrderActionNotAllowed('Selama integrasi Qammaris App aktif, kendala dicatat dari Qammaris App.');
+        }
+
         return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $type, $note, $lineId, $reportedQuantity): void {
             if ($order->lifecycle === 'cancelled') {
                 throw new InvalidOrderTransition('Pesanan sudah dibatalkan.');
@@ -662,7 +668,11 @@ class OnlineOrderFulfillment
         }
         $claim = $order->claims()->where('task', $task)->lockForUpdate()->first();
         if (! $claim || $claim->holder_app_user_id !== $actor->appUserId) {
-            throw new OrderActionNotAllowed($claim ? "Tugas {$task} sedang dipegang {$claim->holder_display_name}." : "Klaim tugas {$task} dulu sebelum aksi ini.");
+            // Details agreed with the App (r4.1 clarification): the task needed and, if someone else holds it, who.
+            throw new OrderActionNotAllowed(
+                $claim ? "Tugas {$task} sedang dipegang {$claim->holder_display_name}." : "Klaim tugas {$task} dulu sebelum aksi ini.",
+                ['task' => $task] + ($claim ? ['holder' => ['app_user_id' => $claim->holder_app_user_id, 'display_name' => $claim->holder_display_name]] : []),
+            );
         }
     }
 

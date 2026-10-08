@@ -18,6 +18,8 @@ Riwayat versi:
   - **K-A:** `path_with_query` webhook dan vektor uji webhook (§3, §12);
   - **K-B:** setiap retry webhook memakai timestamp dan signature baru (§12).
   Tidak ada perubahan skema payload.
+- **Klarifikasi r4.1 (2026-10-09):** aturan klaim per aksi dan `details` pada `403 action_not_allowed` (§8.1). Tidak mengubah skema; OpenAPI tetap `1.0.0-rc.4.1`.
+- **Usulan r4.2 (menunggu persetujuan Owner):** `Issue.opened_by` menjadi `ActorRef | null`, ditambah `opened_by_source: "app" | "website"`, agar kendala yang dibuka di Website bisa diserialisasi. Agen App setuju secara teknis. Sampai r4.2 terbit, kendala pesanan V2 hanya dibuka dari App selama integrasi aktif.
 
 Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml). Markdown dan OpenAPI harus sama. Test `tests/Unit/OrderApiContractTest.php` memvalidasi:
 - setiap `$ref` OpenAPI;
@@ -250,6 +252,19 @@ Semua mutasi sukses mengembalikan `MutationResponse` `{ order, event_id }`. Repl
 - Bila tugas sudah dipegang orang lain → **`409 task_already_claimed`** dengan `details.holder`. Kode ini **diprioritaskan di atas** `revision_conflict`, walaupun `expected_revision` juga berbeda.
 - Klaim ulang oleh pemegang sama → no-op 200. Klaim tidak kedaluwarsa otomatis.
 - Melepas klaim orang lain hanya oleh `app_role=owner` dengan `reason`, atau Super Admin di Website.
+- **Klarifikasi r4.1 (2026-10-09, tanpa perubahan skema; disepakati agen Website dan App):** aksi App membutuhkan klaim yang dipegang aktor itu sendiri.
+
+  | Aksi | Klaim yang harus dipegang |
+  |---|---|
+  | `POST /preparation` | `preparation` |
+  | `POST /courier-requests`; `POST /jnt` dengan status `pickup_requested`, `qr_available`, atau hanya `tracking`; `PUT /jnt/qr` | `courier_booking` |
+  | `POST /handover`; `POST /jnt` dengan status `picked_up` | `handover` |
+  | `/delivery`, `/issues`, `/issues/{issue_id}/resolve`, `PUT /costs/{expense_ref}` | tanpa klaim |
+
+  - Aturan ini juga berlaku untuk `app_role=owner`.
+  - Bila klaim belum ada atau dipegang orang lain, Website menjawab `403 action_not_allowed` dengan `details.task`. Bila klaim dipegang orang lain, `details.holder` (`app_user_id`, `display_name`) ikut disertakan.
+  - Pengguna Website (Admin PWA) tidak dibatasi klaim, karena Admin PWA adalah jalur cadangan.
+  - App mengklaim lebih dulu, lalu memakai `revision` hasil klaim sebagai `expected_revision`.
 
 <!-- validate: ClaimRequest -->
 ```json
