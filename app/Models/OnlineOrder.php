@@ -2,9 +2,15 @@
 
 namespace App\Models;
 
+use App\Support\OnlineOrderLegacyState;
+use App\Support\OnlineOrderMoney;
+use App\Support\OnlineOrderV2State;
+use App\Support\OrderApi\OrderWebhookOutbox;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class OnlineOrder extends Model
 {
@@ -66,7 +72,115 @@ class OnlineOrder extends Model
         'recorded_in_majoo' => 'boolean',
         'revision' => 'integer',
         'closed_at' => 'datetime',
+        'payment_confirmed_at' => 'datetime',
+        'jnt_pickup_requested_at' => 'datetime',
+        'jnt_picked_up_at' => 'datetime',
+        'handed_over_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'refund_due_amount' => 'decimal:2',
+        'refund_decided_at' => 'datetime',
+        'packed_items' => 'array',
+        'courier_requested_at' => 'datetime',
+        'keep_until' => 'datetime',
+        'keep_stock_confirmed_at' => 'datetime',
     ];
+
+    public const STATE_LEGACY = 'legacy';
+
+    public const STATE_V2 = 'v2';
+
+    protected static function booted(): void
+    {
+        static::creating(function (OnlineOrder $order): void {
+            $order->public_id ??= (string) Str::ulid();
+            $order->source ??= 'whatsapp';
+            $order->state_model ??= self::STATE_LEGACY;
+        });
+
+        // V2 order changed (new or new revision): tell the App through the outbox (ORD-02e, contract §12).
+        static::created(function (OnlineOrder $order): void {
+            if ($order->isV2()) {
+                OrderWebhookOutbox::record($order);
+            }
+        });
+        static::updated(function (OnlineOrder $order): void {
+            if ($order->isV2() && $order->wasChanged('revision')) {
+                OrderWebhookOutbox::record($order);
+            }
+        });
+
+        // Legacy rows: ORD-01 screens drive `stage` and the ORD-02 dimensions follow it one way.
+        // V2 rows: the V2 operations drive the dimensions and `stage` is derived from them.
+        static::saving(function (OnlineOrder $order): void {
+            if ($order->state_model === self::STATE_V2) {
+                OnlineOrderV2State::normalize($order);
+
+                return;
+            }
+            $order->forceFill(OnlineOrderLegacyState::dimensions($order->getAttributes(), fn () => now()));
+            $basePayment = $order->payment_status;
+
+            if ($order->isDirty('stage') && $order->refund_due_amount === null) {
+                // ORD-01 has no refund records, so a cancel after payment is flagged for reconciliation, never assumed.
+                if ($order->stage === self::STAGE_CANCELLED && $basePayment === 'paid') {
+                    $order->refund_status = 'needs_reconciliation';
+                } elseif ($order->getOriginal('stage') === self::STAGE_CANCELLED && $order->refund_status === 'needs_reconciliation') {
+                    $order->refund_status = null;
+                }
+            }
+            OnlineOrderMoney::apply($order, $basePayment);
+        });
+    }
+
+    public function isV2(): bool
+    {
+        return $this->state_model === self::STATE_V2;
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function claims(): HasMany
+    {
+        return $this->hasMany(OnlineOrderClaim::class);
+    }
+
+    public function costs(): HasMany
+    {
+        return $this->hasMany(OnlineOrderCost::class)->orderBy('id');
+    }
+
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(OnlineOrderAdjustment::class)->orderBy('id');
+    }
+
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(OnlineOrderChangeRequest::class)->orderBy('id');
+    }
+
+    /** Contract keep status: an active keep past its deadline is `expired` (needs action, never auto-cancelled). */
+    public function keepState(): ?string
+    {
+        if ($this->keep_status === 'active' && $this->keep_until !== null && $this->keep_until->isPast()) {
+            return 'expired';
+        }
+
+        return $this->keep_status;
+    }
+
+    public function issues(): HasMany
+    {
+        return $this->hasMany(OnlineOrderIssue::class)->orderBy('id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OnlineOrderPayment::class)->orderBy('id');
+    }
 
     public function items(): HasMany
     {
@@ -153,6 +267,11 @@ class OnlineOrder extends Model
 
     public function staffLinkUsable(): bool
     {
+        // D6: V2 orders are handled by signed-in staff in the Admin PWA (and later the App), never by a bearer link.
+        if ($this->isV2()) {
+            return false;
+        }
+
         return $this->closed_at === null || $this->closed_at->gt(now()->subDays(7));
     }
 
@@ -181,12 +300,24 @@ class OnlineOrder extends Model
     /** Shipping is only part of the customer's payment when it was added to the transfer. */
     public function customerTotal(): string
     {
-        $amounts = [$this->subtotal()];
+        $cents = Rupiah::minorUnits($this->subtotal());
         if ($this->shipping_payer === 'added_to_transfer' && $this->shipping_fee !== null) {
-            $amounts[] = $this->shipping_fee;
+            $cents += Rupiah::minorUnits($this->shipping_fee);
+        }
+        $cents += $this->approvedAdjustmentCents();
+
+        return Rupiah::decimal($cents);
+    }
+
+    /** Sum of Super Admin approved price adjustments (signed, whole cents). */
+    public function approvedAdjustmentCents(): int
+    {
+        if (! $this->exists) {
+            return 0;
         }
 
-        return Rupiah::sum($amounts);
+        return (int) $this->adjustments()->where('status', 'approved')->get(['amount'])
+            ->sum(fn (OnlineOrderAdjustment $adjustment) => Rupiah::minorUnits($adjustment->amount));
     }
 
     public function needsReimbursement(): bool

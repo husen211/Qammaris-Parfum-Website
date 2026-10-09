@@ -11,7 +11,7 @@ class ShopeeContentWriteRequest extends FormRequest
     {
         $batch = $this->route('productImportBatch');
 
-        return $this->user()?->role === 'admin' && $batch?->contract_version === ShopeeContentPreviewer::VERSION
+        return (bool) $this->user()?->can('catalog.manage') && $batch?->contract_version === ShopeeContentPreviewer::VERSION
             && $batch->actor_id === $this->user()->id;
     }
 

@@ -46,7 +46,7 @@ class AdminProductImportImageAcquisitionTest extends TestCase
         [$batch, $row] = $this->appliedRow(['foto_utama_url' => 'https://images.example.test/primary.png']);
 
         $this->post(route('admin.product-imports.images', $batch), ['confirm_image_acquisition' => '1'])
-            ->assertRedirect(route('login'));
+            ->assertRedirect(route('admin.login'));
 
         $customer = User::factory()->create();
         $this->actingAs($customer)

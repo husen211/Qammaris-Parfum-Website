@@ -30,7 +30,7 @@ class AdminProductCatalogSnapshotTest extends TestCase
     {
         $route = route('admin.product-imports.catalog-snapshot');
 
-        $this->get($route)->assertRedirect(route('login'));
+        $this->get($route)->assertRedirect(route('admin.login'));
         $this->actingAs(User::factory()->create())->get($route)->assertForbidden();
 
         $this->actingAs($this->admin)

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\Rupiah;
 use Closure;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
@@ -20,11 +21,16 @@ class OnlineOrderWorkflow
 
     private const STAFF_STAGES = [OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED];
 
+    private const FINANCIAL_FIELDS = ['shipping_fee', 'shipping_payer', 'driver_funding', 'staff_advance_amount', 'staff_advance_by'];
+
+    private const RECIPIENT_FIELDS = ['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'location_url', 'packaging', 'customer_note'];
+
     private const STALE = 'Status pesanan sudah berubah. Muat ulang halaman untuk melihat data terbaru.';
 
     public function submitCustomerDetails(OnlineOrder $order, array $details): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($details): void {
+            $this->assertLegacy($order);
             if (! $order->customerLinkUsable() || ! $order->customerCanEdit()) {
                 throw new OnlineOrderRejected('Data pesanan ini sudah dikunci karena pembayaran telah dikonfirmasi. Hubungi kami lewat WhatsApp untuk perubahan.');
             }
@@ -41,6 +47,7 @@ class OnlineOrderWorkflow
     public function update(OnlineOrder $order, int $revision, array $data, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($revision, $data, $actor): void {
+            $this->assertLegacy($order);
             $this->assertAdmin($actor);
             if ($order->revision !== $revision) {
                 throw new OnlineOrderRejected('Pesanan ini baru saja diubah (oleh customer, staf, atau tab lain). Muat ulang lalu ulangi perubahan Anda.');
@@ -49,6 +56,15 @@ class OnlineOrderWorkflow
             if ($order->driver_funding !== 'staff_advance' && $order->staff_reimbursed_at === null) {
                 $order->staff_advance_amount = null;
                 $order->staff_advance_by = null;
+            }
+            if (! Gate::forUser($actor)->allows('orders.finance')) {
+                // Owner D5: Staff Order may correct recipient/address details until handover, never money.
+                if ($order->isDirty(self::FINANCIAL_FIELDS)) {
+                    throw new OnlineOrderRejected('Perubahan ongkir atau pendanaan driver hanya dapat dilakukan Super Admin.');
+                }
+                if ($order->isDirty(self::RECIPIENT_FIELDS) && in_array($order->stage, [OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED, OnlineOrder::STAGE_CANCELLED], true)) {
+                    throw new OnlineOrderRejected('Data penerima tidak dapat diubah setelah pesanan diserahkan atau ditutup. Hubungi Super Admin.');
+                }
             }
             if (! $order->isDirty()) {
                 return;
@@ -69,6 +85,7 @@ class OnlineOrderWorkflow
     public function advance(OnlineOrder $order, string $from, string $to, string $actorType, ?User $actor = null, ?string $staffName = null, array $extra = []): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($from, $to, $actorType, $actor, $staffName, $extra): void {
+            $this->assertLegacy($order);
             if ($actorType === 'admin') {
                 $this->assertAdmin($actor);
             } elseif ($actorType === 'customer') {
@@ -119,7 +136,8 @@ class OnlineOrderWorkflow
     public function revert(OnlineOrder $order, string $from, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($from, $actor): void {
-            $this->assertAdmin($actor);
+            $this->assertLegacy($order);
+            $this->assertAllowed($actor, 'orders.finance');
             if ($order->stage !== $from) {
                 throw new OnlineOrderRejected(self::STALE);
             }
@@ -140,7 +158,11 @@ class OnlineOrderWorkflow
     public function cancel(OnlineOrder $order, string $reason, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($reason, $actor): void {
-            $this->assertAdmin($actor);
+            $this->assertLegacy($order);
+            $this->assertAllowed($actor, 'orders.manage');
+            if ($order->stage !== OnlineOrder::STAGE_CANCELLED && ! Gate::forUser($actor)->allows('orders.cancel', $order)) {
+                throw new OnlineOrderRejected('Pesanan yang sudah dibayar atau diserahkan hanya dapat dibatalkan oleh Super Admin.');
+            }
             if ($order->stage === OnlineOrder::STAGE_CANCELLED) {
                 return;
             }
@@ -158,6 +180,7 @@ class OnlineOrderWorkflow
     public function recordStaffAdvance(OnlineOrder $order, string $amount, string $staffName): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($amount, $staffName): void {
+            $this->assertLegacy($order);
             if ($order->stage === OnlineOrder::STAGE_CANCELLED || $order->staff_reimbursed_at !== null) {
                 throw new OnlineOrderRejected('Talangan untuk pesanan ini sudah ditutup. Hubungi admin bila perlu koreksi.');
             }
@@ -173,7 +196,8 @@ class OnlineOrderWorkflow
     public function markReimbursed(OnlineOrder $order, User $actor): OnlineOrder
     {
         return $this->mutate($order, function (OnlineOrder $order) use ($actor): void {
-            $this->assertAdmin($actor);
+            $this->assertLegacy($order);
+            $this->assertAllowed($actor, 'orders.finance');
             if (! $order->needsReimbursement()) {
                 return;
             }
@@ -187,6 +211,7 @@ class OnlineOrderWorkflow
     {
         $token = Str::random(40);
         $this->mutate($order, function (OnlineOrder $order) use ($audience, $actor, $token): void {
+            $this->assertLegacy($order);
             $this->assertAdmin($actor);
             $prefix = $audience === 'staff' ? 'staff' : 'customer';
             $order->{$prefix.'_token_hash'} = OnlineOrder::tokenHash($token);
@@ -226,8 +251,21 @@ class OnlineOrderWorkflow
         ]);
     }
 
+    /** ORD-01 step operations never touch V2 orders; V2 state has its own operations (cutover per order at creation). */
+    private function assertLegacy(OnlineOrder $order): void
+    {
+        if ($order->isV2()) {
+            throw new OnlineOrderRejected('Pesanan ini memakai alur status baru. Gunakan tombol di halaman pesanan yang baru.');
+        }
+    }
+
     private function assertAdmin(?User $actor): void
     {
-        abort_unless($actor?->exists && $actor->role === 'admin', 403);
+        $this->assertAllowed($actor, 'orders.manage');
+    }
+
+    private function assertAllowed(?User $actor, string $ability): void
+    {
+        abort_unless($actor?->exists && Gate::forUser($actor)->allows($ability), 403);
     }
 }

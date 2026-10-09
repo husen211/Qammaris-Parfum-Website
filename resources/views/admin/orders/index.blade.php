@@ -8,8 +8,14 @@
             <h1 class="mt-1 text-3xl font-bold tracking-tight text-gray-900">Pesanan Online</h1>
             <p class="mt-1 text-sm text-gray-500">Pesanan dari WhatsApp: link data customer, pembayaran, pengiriman, dan tugas staf.</p>
         </div>
-        <a href="{{ route('admin.orders.create') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">+ Buat pesanan</a>
+        <a href="{{ route('admin.orders.create') }}" class="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 sm:w-auto">+ Buat pesanan</a>
     </div>
+
+    @foreach (['reconcile' => 'pesanan perlu rekonsiliasi pembayaran', 'refund' => 'refund belum selesai', 'issues' => 'pesanan dengan kendala terbuka'] as $key => $label)
+        @if ($attention[$key] > 0 && $filter !== $key)
+            <a href="{{ route('admin.orders.index', ['status' => $key]) }}" class="flex min-h-11 items-center rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-900 hover:bg-red-100">{{ $attention[$key] }} {{ $label }} →</a>
+        @endif
+    @endforeach
 
     @if ($reimburseCount > 0 && $filter !== 'reimburse')
         <a href="{{ route('admin.orders.index', ['status' => 'reimburse']) }}" class="flex min-h-11 items-center rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 hover:bg-amber-100">
@@ -43,7 +49,15 @@
                     </span>
                     <span class="min-w-0 text-sm text-gray-700"><span class="line-clamp-2">{{ $order->itemSummary() }}</span></span>
                     <span class="flex flex-wrap gap-1">
-                        @include('admin.orders._stage-badge', ['order' => $order])
+                        @if ($order->isV2())
+                            @php($queue = \App\Support\OnlineOrderState::queue($order, $order->open_issues_count))
+                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $order->lifecycle === 'cancelled' ? 'bg-red-50 text-red-800' : ($order->lifecycle === 'completed' ? 'bg-green-50 text-green-800' : 'bg-gray-100 text-gray-800') }}">{{ $queue ? \App\Support\OnlineOrderLabels::QUEUE[$queue] : \App\Support\OnlineOrderLabels::LIFECYCLE[$order->lifecycle] }}</span>
+                            @if ($order->payment_status !== 'paid' && $order->lifecycle === 'active')<span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">{{ \App\Support\OnlineOrderLabels::PAYMENT[$order->payment_status] }}</span>@endif
+                            @if ($order->keep_status === 'active')<span class="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-900">Keep</span>@endif
+                        @else
+                            @include('admin.orders._stage-badge', ['order' => $order])
+                        @endif
+                        @if ($order->refund_status === 'needs_reconciliation')<span class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-800">Rekonsiliasi</span>@endif
                         @if ($order->needsReimbursement())<span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Talangan</span>@endif
                     </span>
                     <span class="text-xs text-gray-500 lg:text-right">{{ $order->created_at->timezone('Asia/Makassar')->locale('id')->translatedFormat('j M Y, H.i') }}</span>

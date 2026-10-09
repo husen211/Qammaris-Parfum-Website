@@ -38,7 +38,7 @@ class AdminProductMaintenanceApplyTest extends TestCase
 
         auth()->logout();
         $this->post(route('admin.product-maintenance.apply', $batch), ['confirm_apply' => '1'])
-            ->assertRedirect(route('login'));
+            ->assertRedirect(route('admin.login'));
 
         $user = User::factory()->create();
         $this->actingAs($user)

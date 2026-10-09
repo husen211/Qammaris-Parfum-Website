@@ -63,8 +63,8 @@ final class OnlineOrderTimeline
     private static function description(OnlineOrder $order, string $stage, string $status, string $audience): ?string
     {
         $pickup = $order->fulfillment === 'pickup';
-        $jnt = $order->courier === 'jnt';
-        $courier = OnlineOrder::COURIERS[$order->courier] ?? 'kurir';
+        $jnt = $order->isV2() ? $order->fulfillment === 'intercity' : $order->courier === 'jnt';
+        $courier = OnlineOrder::COURIERS[$order->isV2() ? $order->courier_provider : $order->courier] ?? 'kurir';
 
         if ($status === 'completed') {
             return match ($stage) {

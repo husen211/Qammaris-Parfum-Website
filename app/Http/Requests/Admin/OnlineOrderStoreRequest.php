@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Actions\Orders\CreateOnlineOrder;
 use App\Http\Requests\Orders\OnlineOrderDetailRules;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class OnlineOrderStoreRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class OnlineOrderStoreRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return $this->user()?->role === 'admin';
+        return (bool) $this->user()?->can('orders.manage');
     }
 
     public function rules(): array
@@ -23,7 +25,26 @@ class OnlineOrderStoreRequest extends FormRequest
             'items.*.variant_id' => ['required', 'integer', 'min:1', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
             'fill_customer' => ['boolean'],
+            'submission_token' => ['nullable', 'uuid'],
+            // ORD-02d: where the chat came from, and an explicitly chosen repeat customer / saved address.
+            'source' => ['nullable', Rule::in(array_keys(CreateOnlineOrder::SOURCES))],
+            'customer_id' => ['nullable', 'integer', 'min:1'],
+            'new_customer' => ['boolean'],
+            'customer_address_id' => ['nullable', 'integer', 'min:1'],
         ] + $customer;
+    }
+
+    /** @return array{source: string, customer_id: ?int, new_customer: bool, customer_address_id: ?int} */
+    public function options(): array
+    {
+        $customerId = $this->validated('customer_id');
+
+        return [
+            'source' => $this->validated('source') ?? 'whatsapp',
+            'customer_id' => $customerId === null ? null : (int) $customerId,
+            'new_customer' => $customerId === null && $this->boolean('new_customer') && $this->boolean('fill_customer'),
+            'customer_address_id' => $customerId === null || $this->validated('customer_address_id') === null ? null : (int) $this->validated('customer_address_id'),
+        ];
     }
 
     protected function prepareForValidation(): void
@@ -37,6 +58,11 @@ class OnlineOrderStoreRequest extends FormRequest
     public function lines(): array
     {
         return collect($this->validated('items'))->mapWithKeys(fn ($item) => [(int) $item['variant_id'] => (int) $item['quantity']])->all();
+    }
+
+    public function submissionToken(): ?string
+    {
+        return $this->validated('submission_token');
     }
 
     public function customer(): ?array

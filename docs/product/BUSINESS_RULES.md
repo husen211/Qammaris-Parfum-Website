@@ -112,7 +112,7 @@ Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-ch
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 
-Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
+Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
 
 - Admin membuat pesanan dari produk published dengan offer aktif berharga positif. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok, diskon, atau edit item setelah dibuat (batalkan lalu buat ulang).
 - **Data customer (nama, HP, alamat, catatan) disimpan di DB tanpa hapus otomatis**, hanya terlihat oleh admin dan link tugas staf pesanan itu. Ini pengecualian terarah dari aturan checkout keranjang.
@@ -122,6 +122,83 @@ Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-034](../architectur
 - Link tugas staf: tanpa login; pemegang link dapat menandai langkah pengiriman dan mencatat talangan ongkir, tetapi tidak dapat mengubah pembayaran, harga, atau data customer. Nama staf diketik dan tidak terautentikasi.
 - Ongkir memisahkan sisi customer (ditambahkan ke transfer / bayar ke driver / gratis) dari dana toko ke driver (cash kasir / GoPay staf dari admin / talangan staf → diganti admin).
 - Majoo tetap untuk QRIS, member, struk, dan poin; website hanya menandai "Sudah dicatat di Majoo". Pesan grup disalin manual, tidak dikirim otomatis. Customer tidak melihat nama staf, talangan, atau catatan internal.
+
+## Akses admin dan data pelanggan (ORD-02a, branch review)
+
+Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/ADR-038-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
+
+- Role admin: **Super Admin** (akses penuh, mengelola pengguna, menyetujui perubahan finansial), **Staff Order** (hanya Pesanan Online), dan **Admin (lama)** untuk akun sebelum ORD-02. Akun lama tetap bekerja seperti sebelumnya tanpa menu pengguna sampai dikonversi. Role lama tidak bisa diberikan ke akun baru.
+- Super Admin pertama hanya lewat bootstrap eksplisit di server setelah Owner memverifikasi identitas. Tidak ada promosi otomatis.
+- Login dengan email atau username, tanpa remember-me; sesi admin berakhir setelah 12 jam tidak aktif. Akun nonaktif tidak bisa masuk; nonaktif, ganti role, dan reset password mengakhiri semua sesi akun tersebut.
+- Super Admin aktif terakhir tidak dapat dinonaktifkan atau diturunkan.
+- Staff Order: membuat/mengubah pesanan, menandai Lunas, membatalkan pesanan yang belum Lunas dan belum diserahkan dengan alasan, dan mengubah alamat tanpa biaya sampai diserahkan. Perubahan ongkir/pendanaan, koreksi langkah, penggantian talangan, dan pembatalan setelah Lunas hanya Super Admin.
+- Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
+- **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
+
+### Layar pesanan V2 (ORD-02d, branch review)
+
+- Staff Order membuat pesanan dari chat WhatsApp/Instagram: pilih produk, pilih pelanggan lama (dan alamat tersimpan) atau pelanggan baru, lalu pilih **data sudah lengkap** atau **kirim link ke customer**.
+- Bila data sudah lengkap dari chat, customer **tidak perlu** membuka form. Link tetap bisa dipakai customer untuk melihat status.
+- Form customer tetap sederhana: produk sudah terisi, tiga cara menerima, dua pilihan paperbag. Setelah Lunas atau packing dimulai, perubahan dari customer menjadi permintaan yang ditinjau toko.
+- Staff Order boleh menandai Lunas dengan sumber konfirmasi (bukti di chat, bukti diunggah, Majoo).
+- Keputusan refund, pembayaran refund, pembatalan entri, rekonsiliasi, dan persetujuan penyesuaian harga hanya untuk Super Admin.
+- Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
+
+### Integrasi pesanan dengan Qammaris App (ORD-02e, branch review)
+
+- Website tetap menjadi sumber data pesanan. App mengerjakan pesanan V2 lewat API v1 privat (kontrak r4.1); setiap perubahan dari App tercatat dengan nama staf App dan ID request.
+- Di App, staf harus **mengklaim** tugasnya lebih dulu (packing, pesan kurir/J&T, serah ke kurir). Satu tugas hanya dipegang satu orang.
+  - Admin PWA adalah jalur cadangan dan tidak dibatasi klaim.
+  - Super Admin bisa melepas klaim yang macet dengan alasan, dan alasan itu tercatat.
+- Link pesanan di grup WhatsApp membuka Admin PWA. Link baru membuka halaman pesanan di App setelah saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dinyalakan atas persetujuan Owner. Link ini tidak pernah berisi token akses.
+- Selama integrasi aktif, **kendala baru dicatat dari App**. Kendala yang sudah ada tetap bisa diselesaikan di Website. Aturan ini berlaku sampai kontrak r4.2 berlaku dan App mendukungnya (draf r4.2: kendala dari Website dikirim dengan `opened_by_source=website`).
+- **Pengecualian bukti reimburse (keputusan Owner 2026-10-09, draf r4.2):** hanya Owner App yang boleh membuat atau menyetujui pengecualian bukti. Backend App boleh mengirim ulang keputusan yang sudah sah tanpa Owner sedang melakukan request itu. Website memisahkan pemberi persetujuan, aktor request, dan jalur sinkronisasi. Keputusan baru tidak diterima hanya karena payload memuat nama atau ID Owner: Owner itu sendiri yang harus mengirim, dan ID-nya harus terdaftar di allowlist Website.
+- Bila App bermasalah, pesanan tetap dikerjakan di Admin PWA. Pemberitahuan ke App menunggu dan dicoba ulang. Setelah 24 jam, event yang gagal tampil di **Integrasi App** untuk dikirim ulang oleh Super Admin.
+
+### Status pesanan terpisah (ORD-02c, branch review)
+
+- Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.
+- Pesanan **selesai** bila sudah diserahkan, Lunas, tanpa kendala terbuka, dan tanpa refund terbuka.
+- Talangan/reimburse staf yang belum diganti **tidak** menahan status selesai, tetapi tetap tampil sebagai kewajiban terbuka (keputusan Owner R8).
+- **Refund tidak pernah diasumsikan** (koreksi Owner 2026-10-09):
+  - Pembatalan setelah Lunas tidak otomatis berarti ada utang refund.
+  - Super Admin menetapkan nominal yang harus dikembalikan (boleh 0, wajib alasan).
+  - Setiap pengembalian dicatat. Refund sebagian maupun penuh didukung.
+  - Pesanan tampil sebagai **refund belum selesai** hanya selama masih ada sisa yang benar-benar terutang.
+- **Pesanan ORD-01 yang dibatalkan setelah Lunas** ditandai **perlu rekonsiliasi**, karena riwayat refund-nya tidak tercatat. Super Admin mengisi nominal diterima, nominal yang harus dikembalikan, dan yang sudah dikembalikan. Bila belum diketahui, tanda tetap ada.
+- Catatan pembayaran/refund tidak pernah diubah atau dihapus. Salah catat dibatalkan dengan entri pembatalan beralasan.
+- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya oleh **Super Admin**, dan semuanya tercatat di riwayat pesanan. Staff Order boleh mencatat pembayaran masuk.
+- Packing baru dianggap selesai bila **setiap barang dikonfirmasi dengan jumlah persis sesuai pesanan**. Barang kurang dicatat sebagai **kendala stok**, bukan packing.
+- J&T: minta pickup, QR tersedia, dan dipickup adalah langkah terpisah. Saat dipickup, pesanan otomatis tercatat diserahkan ke J&T. Resi boleh ditambahkan kapan saja.
+- Kendala terbuka menahan status selesai. Kendala hanya bisa ditutup oleh pembukanya atau Owner/Super Admin.
+- Pesanan yang **sudah ada pembayaran** (walau sebagian) hanya bisa dibatalkan Super Admin. Saat membatalkan, ia wajib menetapkan nominal yang dikembalikan (boleh 0).
+- **Pelanggan langganan:**
+  - Admin menghubungkan pesanan ke pelanggan secara sadar. Pesanan tidak pernah otomatis digabung berdasarkan nomor, dan satu nomor boleh dimiliki beberapa pelanggan (misalnya keluarga).
+  - Alamat disimpan setelah dikonfirmasi admin dan dipakai ulang dengan memilihnya. Alamat itu disalin ke pesanan; mengubah pesanan tidak mengubah alamat tersimpan.
+  - Alamat diarsipkan, tidak dihapus, dan tidak bisa diganti setelah pesanan diserahkan.
+- **Keep (D9):**
+  - Default 24 jam (1–168 jam), boleh belum dibayar.
+  - Staf mengonfirmasi manual bahwa stok sudah dipisahkan.
+  - Lewat batas waktu, keep ditandai **perlu tindakan** dan tidak pernah dibatalkan otomatis.
+  - Keep berakhir sendiri saat pesanan Lunas atau diserahkan, dan dilepas bila pesanan dibatalkan.
+- **Penyesuaian harga:**
+  - Siapa pun dengan akses pesanan boleh mengajukan, dengan alasan; hanya Super Admin yang menyetujui. Total berubah setelah disetujui.
+  - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Pengembaliannya tetap butuh keputusan refund Super Admin.
+- **Permintaan perubahan customer:**
+  - Customer mengubah data langsung hanya selama belum Lunas dan packing belum dimulai. Setelah itu perubahan menjadi permintaan yang ditinjau admin.
+  - Staff Order menyetujui perubahan penerima/alamat sampai diserahkan. Perubahan cara pengiriman (bisa mengubah biaya) hanya oleh Super Admin, dan tidak bisa bila kurir/J&T sudah diminta.
+- Peralihan ke model status baru terjadi per pesanan saat dibuat. Pesanan lama menyelesaikan alurnya sendiri; dua alur tidak pernah mengubah satu pesanan yang sama.
+
+### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)
+
+- Admin bisa dipasang sebagai aplikasi "Qammaris Admin" dan dibuka dari `/admin/login`. Website publik tidak berubah dan tidak dipasang sebagai aplikasi.
+- Data pesanan dan customer **tidak disimpan di HP**. Setiap halaman admin diambil langsung dari server; tanpa internet hanya muncul halaman "Tidak ada koneksi".
+- Perubahan hanya bisa dikirim saat online. Satu formulir Buat pesanan menghasilkan paling banyak satu pesanan, walaupun tombol ditekan dua kali atau dikirim ulang.
+- HP toko dipakai bersama:
+  - nama akun yang sedang masuk selalu terlihat;
+  - **Keluar** selalu tersedia;
+  - setelah keluar, tombol Kembali tidak menampilkan halaman admin lagi.
+- [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md).
 
 ## UI, akses, dan batas program
 

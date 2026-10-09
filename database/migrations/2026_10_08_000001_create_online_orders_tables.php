@@ -16,16 +16,16 @@ return new class extends Migration
             $table->text('customer_token_encrypted');
             $table->char('staff_token_hash', 64)->unique();
             $table->text('staff_token_encrypted');
-            $table->timestamp('customer_link_expires_at');
+            $table->timestamp('customer_link_expires_at')->useCurrent();
             $table->string('stage', 24)->index();
             $table->string('customer_name', 100)->nullable();
             $table->string('customer_phone', 20)->nullable();
             $table->string('fulfillment', 20)->nullable();
-            $table->string('address', 500)->nullable();
+            $table->text('address')->nullable();
             $table->string('postcode', 5)->nullable();
-            $table->string('location_url', 500)->nullable();
+            $table->text('location_url')->nullable();
             $table->string('packaging', 20)->nullable();
-            $table->string('customer_note', 300)->nullable();
+            $table->text('customer_note')->nullable();
             $table->string('courier', 20)->nullable();
             $table->string('courier_booked_by', 10)->default('admin');
             $table->string('tracking_number', 40)->nullable();
@@ -37,7 +37,7 @@ return new class extends Migration
             $table->timestamp('staff_reimbursed_at')->nullable();
             $table->string('payment_method', 20)->nullable();
             $table->boolean('recorded_in_majoo')->default(false);
-            $table->string('staff_note', 300)->nullable();
+            $table->text('staff_note')->nullable();
             $table->string('cancel_reason', 200)->nullable();
             $table->unsignedInteger('revision')->default(1);
             // Historical IDs survive any separately approved deletion of a user.
@@ -69,7 +69,7 @@ return new class extends Migration
             $table->unsignedBigInteger('actor_user_id')->nullable();
             $table->string('staff_name', 40)->nullable();
             $table->string('note', 200)->nullable();
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->useCurrent();
             $table->index(['online_order_id', 'created_at']);
         });
     }

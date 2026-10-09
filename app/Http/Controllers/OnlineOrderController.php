@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Orders\OnlineOrderChangeRequests;
+use App\Actions\Orders\OnlineOrderDetails;
+use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\OnlineOrderWorkflow;
 use App\Exceptions\OnlineOrderRejected;
 use App\Http\Requests\Orders\CustomerOrderDetailsRequest;
@@ -11,6 +14,7 @@ use App\Models\StoreInfo;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderMessages;
 use App\Support\OnlineOrderTimeline;
+use App\Support\OrderActor;
 use Illuminate\Http\Request;
 
 /** Customer link: complete or correct recipient details, then follow the order status. */
@@ -23,7 +27,11 @@ class OnlineOrderController extends Controller
             return $this->private(response()->view('orders.unavailable', ['whatsappUrl' => $this->storeChatUrl($whatsApp)], 404));
         }
         $order->load(['items', 'events']);
-        $editing = $order->customerCanEdit() && ($order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER
+        // V2: after payment or once packing started, the same form sends a change request for review.
+        $requestsChange = $order->isV2() && $order->lifecycle === 'active' && $order->handover_status === 'pending'
+            && OnlineOrderChangeRequests::customerMustRequest($order);
+        $canEdit = $order->customerCanEdit() || $requestsChange;
+        $editing = $canEdit && ($order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER
             || $request->boolean('ubah') || session()->has('errors'));
         $locationUrl = $order->fulfillment === 'local_delivery'
             ? $whatsApp->textUrl($this->storeNumber(), $messages->customerLocation($order))
@@ -37,35 +45,50 @@ class OnlineOrderController extends Controller
             'images' => $images,
             'token' => $token,
             'editing' => $editing,
+            'canEdit' => $canEdit,
+            'requestsChange' => $requestsChange,
+            'pendingChange' => $order->isV2() && $order->changeRequests()->where('status', 'pending')->exists(),
             'timeline' => OnlineOrderTimeline::items($order, 'customer'),
             'locationUrl' => $locationUrl,
             'whatsappUrl' => $this->storeChatUrl($whatsApp, $order),
         ]));
     }
 
-    public function submit(CustomerOrderDetailsRequest $request, string $token, OnlineOrderWorkflow $workflow)
+    public function submit(CustomerOrderDetailsRequest $request, string $token, OnlineOrderWorkflow $workflow, OnlineOrderDetails $details)
     {
         $order = $this->usableOrder($token);
         abort_unless($order, 404);
         $firstSubmit = $order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER;
 
         try {
-            $workflow->submitCustomerDetails($order, $request->validated());
+            $review = false;
+            if ($order->isV2()) {
+                $review = $details->submitByCustomer($order, $request->validated());
+            } else {
+                $workflow->submitCustomerDetails($order, $request->validated());
+            }
         } catch (OnlineOrderRejected $error) {
             return $this->private(redirect()->route('orders.customer.show', $token)->with('error', $error->getMessage()));
         }
 
-        return $this->private(redirect()->route('orders.customer.show', $token)
-            ->with('success', $firstSubmit ? 'Terima kasih, data pesanan sudah kami terima.' : 'Perubahan data sudah disimpan.'));
+        return $this->private(redirect()->route('orders.customer.show', $token)->with('success', match (true) {
+            $review => 'Permintaan perubahan terkirim. Kami akan memeriksanya dan mengabari lewat WhatsApp.',
+            $firstSubmit => 'Terima kasih, data pesanan sudah kami terima.',
+            default => 'Perubahan data sudah disimpan.',
+        }));
     }
 
-    public function confirmReceived(string $token, OnlineOrderWorkflow $workflow)
+    public function confirmReceived(string $token, OnlineOrderWorkflow $workflow, OnlineOrderFulfillment $fulfillment)
     {
         $order = $this->usableOrder($token);
         abort_unless($order, 404);
 
         try {
-            $workflow->advance($order, OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED, 'customer');
+            if ($order->isV2()) {
+                $fulfillment->confirmDelivery($order, $order->revision, OrderActor::customer());
+            } else {
+                $workflow->advance($order, OnlineOrder::STAGE_SHIPPED, OnlineOrder::STAGE_COMPLETED, 'customer');
+            }
         } catch (OnlineOrderRejected $error) {
             return $this->private(redirect()->route('orders.customer.show', $token)->with('error', $error->getMessage()));
         }

@@ -34,7 +34,8 @@ class OnlineOrderTest extends TestCase
 
         $order = OnlineOrder::sole();
         $response->assertRedirect(route('admin.orders.show', $order));
-        $this->assertSame('QAM-0001', $order->code);
+        // Code follows the row ID (MySQL does not reuse IDs after a rolled-back test transaction).
+        $this->assertSame('QAM-'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT), $order->code);
         $this->assertSame(OnlineOrder::STAGE_AWAITING_CUSTOMER, $order->stage);
         $this->assertSame('620000.00', $order->subtotal());
         $token = $order->customer_token_encrypted;
@@ -257,7 +258,7 @@ class OnlineOrderTest extends TestCase
 
         $show = $this->actingAs($this->admin)->get(route('admin.orders.show', $order));
         $message = $show->viewData('groupMessage');
-        foreach (['*MOHON DIPESANKAN MAXIM — QAM-0001*', 'Nama: Test Customer', 'Pesanan: Mykonos Reflection 100 ml 1x', 'Kemasan: Tanpa paperbag',
+        foreach (['*MOHON DIPESANKAN MAXIM — '.$order->fresh()->code.'*', 'Nama: Test Customer', 'Pesanan: Mykonos Reflection 100 ml 1x', 'Kemasan: Tanpa paperbag',
             'HP penerima: 081234567890', 'Lokasi: https://maps.app.goo.gl/abc123', 'sudah dibayar (qris)', 'bayar driver pakai uang kasir',
             route('orders.staff.show', $order->fresh()->staff_token_encrypted)] as $text) {
             $this->assertStringContainsString($text, $message);

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class OnlineOrderItem extends Model
 {
@@ -14,6 +15,12 @@ class OnlineOrderItem extends Model
         'unit_price' => 'decimal:2',
         'quantity' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        // Stable public line ID (contract `line_id`); packing and issues refer to it.
+        static::creating(fn (OnlineOrderItem $item) => $item->line_id ??= (string) Str::ulid());
+    }
 
     public function lineTotal(): string
     {

@@ -1,6 +1,6 @@
 # Pesanan Online — program
 
-Owner meminta fitur ini pada 2026-10-07 dan menyetujui rencana ORD-01 di sesi yang sama. Fitur dikerjakan paralel dengan Qammaris Journal (Codex mengerjakan BLOG-02 di worktree terpisah). Program ini terpisah dari P9 dan Journal. Status current ada di [BACKLOG](BACKLOG.md), aturan di [BUSINESS_RULES](../product/BUSINESS_RULES.md), keputusan di [ADR-034](../architecture/decisions/ADR-034-online-order-links-and-tracking.md).
+Owner meminta fitur ini pada 2026-10-07 dan menyetujui rencana ORD-01 di sesi yang sama. Fitur dikerjakan paralel dengan Qammaris Journal (Codex mengerjakan BLOG-02 di worktree terpisah). Program ini terpisah dari P9 dan Journal. Status current ada di [BACKLOG](BACKLOG.md), aturan di [BUSINESS_RULES](../product/BUSINESS_RULES.md), keputusan di [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md).
 
 ## Masalah
 
@@ -11,9 +11,10 @@ Order lewat WhatsApp (dari Instagram/katalog) membuat Owner mengumpulkan produk,
 | ID | Scope | Status |
 |---|---|---|
 | ORD-01 | Link "lengkapi pesanan" untuk customer, catatan admin, status/timeline, pesan grup staf, link tugas staf, talangan ongkir | IN_REVIEW — branch `modernization/ord-01-online-orders`, belum deploy |
-| ORD-02 | Checkout keranjang website membuat Pesanan Online yang sama (ADR-028 diganti terarah) | BACKLOG — perlu persetujuan Owner |
-| ORD-03 | Keep/titip barang (aturan durasi, pembayaran, stok) | BACKLOG — aturan belum ditentukan Owner |
-| ORD-04 | Akun staf terautentikasi menggantikan link rahasia, bila diperlukan | BACKLOG — perubahan permission, perlu persetujuan |
+| ORD-02 | Redesign: role Super Admin/Staff Order + manajemen pengguna, Admin PWA, status terpisah (bayar/persiapan/kurir/J&T/handover), pelanggan langganan, keep, API v1 untuk Qammaris App | IN_PROGRESS — Tahap 0 selesai; ORD-02a (role + pengguna) dan ORD-02b (Admin PWA) IN_REVIEW; kontrak API r4.1 (kandidat final setelah conditional sign-off App); ORD-02c/02d boleh dimulai. [Rencana](ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md), [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md) |
+| ORD-03 | Keep/titip barang | Diserap ke ORD-02 |
+| ORD-04 | Akun staf terautentikasi | Diserap ke ORD-02 (role Staff Order + link tugas App) |
+| ORD-06 | Checkout keranjang website membuat Pesanan Online yang sama (ADR-028 diganti terarah) | BACKLOG — perlu persetujuan Owner |
 | ORD-05 | Kebijakan retensi/anonimisasi data customer | BACKLOG — saat ini tanpa hapus otomatis (keputusan Owner) |
 
 Tidak ada tahap yang dimulai otomatis. Payment gateway, integrasi Majoo, dan pengiriman WhatsApp otomatis bukan bagian program ini.
