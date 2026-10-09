@@ -3,6 +3,7 @@
 use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderApi\OrderApiException;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\NoIndexOutsideProduction;
 use App\Support\AdminHome;
 use App\Support\OrderApi\OrderApiResponse;
 use Illuminate\Foundation\Application;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class,
         ]);
+        $middleware->append(NoIndexOutsideProduction::class);
         // Keep the installed admin app inside its scope: admin pages send guests to /admin/login (ORD-02b).
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*') ? route('admin.login') : route('login'));
         $middleware->redirectUsersTo(fn (Request $request) => $request->is('admin', 'admin/*') ? AdminHome::url($request->user()) : route('home'));

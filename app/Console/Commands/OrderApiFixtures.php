@@ -25,7 +25,7 @@ class OrderApiFixtures extends Command
 
     protected $description = 'Create six synthetic, unclaimed V2 orders for Qammaris App staging tests (never production)';
 
-    private const SCENARIOS = [
+    public const SCENARIOS = [
         'local' => ['fulfillment' => 'local_delivery', 'lines' => [1, 1], 'phone' => '080000000001'],
         'intercity' => ['fulfillment' => 'intercity', 'lines' => [1, 0], 'phone' => '080000000002'],
         'customerCourier' => ['fulfillment' => 'local_delivery', 'lines' => [1, 0], 'phone' => '080000000003', 'customer_courier' => true],
