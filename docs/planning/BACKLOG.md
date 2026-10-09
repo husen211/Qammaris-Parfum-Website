@@ -8,9 +8,15 @@ Updated 2026-10-08, approved Journal production release; audit scope retained. T
 
 BACKLOG = proposed/not approved for execution; READY = accepted bounded scope ready; IN_PROGRESS = active work; IN_REVIEW = complete within stated scope, review/limits still open; BLOCKED = named external prerequisite; DONE = accepted criteria and stated verification completed. One approved implementation item at a time. A released feature may have separate IN_REVIEW device/runtime acceptance; do not infer either code unreleased or all tests passed from the label alone.
 
-## ABOUT-03 — Hero 10 with one supplied storefront photo — IN_REVIEW
+## ABOUT-04 — Source-faithful split hero — IN_REVIEW
 
-Owner requested exact21stHero10 and one supplied storefront photo. Paid MCP source demo19079/component9670 ported to Blade/native500ms optional reveal, centered serif title/highlight, two CTAs and uncropped single image. Old cinematic motion/pin removed; other About sections retained. Original copied/verified, three responsive derivatives no upscale; old media/DB/orders/credentials/packages untouched. Existing3Abouttests/95assertions, Pint/Blade/Vite and realChrome320/390touch/768/1440 plus no-JS/reduced-motion passed. [Source/verification/screenshots/limits](../verification/about-hero10/README.md). Bounded ongoing About correction follows Owner's prior publication authorization; merge/deployment/live proof pending normal gates. Next Owner visual review; no other phase started.
+Owner requested actual hero-section-2 animation and flow. Paid source demo5260/component3839 ported to Blade/native motion: split logo/title/divider/subtitle/text CTA/contact row and diagonal photo, 500ms/20px item reveals with exact nested 150ms stagger/200ms child delay, independent 1200ms circOut polygon reveal. One existing supplied store photo, actual source contact SVGs, native responsive/touch/reduced-motion/no-JS. Existing3 About tests/96 assertions, Blade/Pint/Vite and Chrome320/390touch/768/1440 passed; actual motion recording and sampled frames saved. [Sources/evidence/limitations](../verification/about-split-hero/README.md). No new package/data/media/order change. Ongoing correction follows existing Owner publication authorization and normal GitHub release gates; Owner visual review stays open. No other phase started.
+
+## ABOUT-03 — Hero 10 with one supplied storefront photo — DONE
+
+Released PR45 at7e5ac42; live390touch/1440 hero/image/CTA and runtime passed. Owner subsequently requested the replacement in ABOUT-04; previous rendering/evidence below retained as history.
+
+Owner requested exact21stHero10 and one supplied storefront photo. Paid MCP source demo19079/component9670 ported to Blade/native500ms optional reveal, centered serif title/highlight, two CTAs and uncropped single image. Old cinematic motion/pin removed; other About sections retained. Original copied/verified, three responsive derivatives no upscale; old media/DB/orders/credentials/packages untouched. Existing3Abouttests/95assertions, Pint/Blade/Vite and realChrome320/390touch/768/1440 plus no-JS/reduced-motion passed. [Source/verification/screenshots/limits](../verification/about-hero10/README.md). Bounded correction released through Owner-authorized normal gates; earlier pending verification snapshot is superseded by the release note above. Next Owner visual review; no other phase started.
 
 ## ABOUT-02 — Cinematic About and unique store photography — DONE
 

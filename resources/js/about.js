@@ -1,23 +1,5 @@
 import './about-navigation.js';
-// Hero10's optional 500ms once-in-view media reveal; content is visible without JS.
-const heroPhoto = document.querySelector('[data-hero10-photo]');
-const reduceHeroMotion = matchMedia('(prefers-reduced-motion: reduce)');
-if (heroPhoto && !reduceHeroMotion.matches && 'IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        observer.disconnect();
-        if (reduceHeroMotion.matches) return;
-        const reveal = heroPhoto.animate(
-            [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }],
-            { duration: 500, easing: 'cubic-bezier(.22,1,.36,1)' },
-        );
-        const cancelReveal = () => reveal.cancel();
-        reduceHeroMotion.addEventListener('change', cancelReveal, { once: true });
-        reveal.addEventListener('finish', () => reduceHeroMotion.removeEventListener('change', cancelReveal), { once: true });
-    }, { threshold: 0.1 });
-    observer.observe(heroPhoto);
-    window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
-}
+import './about-hero.js';
 
 // 0xUrvish/FluidExpandingGrid: expand by click, never crop/zoom the image.
 const fluidGallery = document.querySelector('[data-fluid-gallery]');
