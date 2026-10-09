@@ -1,0 +1,3249 @@
+{
+  "schema": "qammaris-agent-catalog-reference-v1",
+  "version": "pref-01-agent-reference.1",
+  "prepared_at": "2026-10-09T10:42:42.437893+00:00",
+  "reviewer": "Codex",
+  "reviewer_role": "agent_catalog_analyst",
+  "authorization": "Owner delegated filling the worksheet to Codex because of limited time; no human tasting or acceptance is asserted.",
+  "source_capture": {
+    "captured_at": "2026-10-09T09:54:52+00:00",
+    "source_revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+    "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d",
+    "dictionary_version": "pref-01.1",
+    "dictionary_sha256": "7ffb2432421d7cb828add6db9fd12269b2669b1d1af1c4e288a390feda905117"
+  },
+  "status": "draft_catalog_reference",
+  "quality_gate": "Owner/staff independent relevance acceptance remains unfulfilled; this proxy is not evidence for 18/20 or16/20 release targets.",
+  "method": "Manually reviewed catalog notes/descriptions, exact IDs/prices and source fingerprints. Search helper only shortlisted metadata; selections do not reuse legacy quiz results or run a new engine.",
+  "holdout_policy": "N16–N20 reserved from tuning. Analyst prepared all proposals; this is not an independent sensory hold-out benchmark.",
+  "limits": [
+    "No actual smelling/tasting/customer feedback.",
+    "Price/status belongs to the dated capture, not a fresh checkout quote.",
+    "Unknown performance/sweetness earns no validated match.",
+    "Missing/partial notes cannot support free-from or allergy claims.",
+    "Candidate lists are aroma/reference proposals, not final ranking or all-constraints acceptance.",
+    "Do not calibrate and claim accuracy using these same source-derived proposals as independent human truth."
+  ],
+  "normal_cases": [
+    {
+      "case_id": "N01",
+      "label": "Kantor, citrus ringan",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        472,
+        702
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        460
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Cache memiliki citrus/fruit dan deskripsi sedikit manis; Jeruk Kintamani adalah opsi citrus dengan musk. Sebaran dekat badan dan ketahanan belum terbukti; middle notes Jeruk Kintamani tidak dirinci.",
+      "candidates": [
+        {
+          "product_id": 472,
+          "name": "Qammaris Signature Cache Extrait De Parfum 50ml",
+          "slot": "primary",
+          "snapshot_price": "229000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "9fc6abaa1c0d2a8f9dbab5b6c03510ce1e4eacd5cff072535ee46ce345e2b957",
+          "description_sha256": "014f8571481894e3b651fc2735a79737991115c619f2fa99c9be865407c3aaa3",
+          "source_note_evidence": {
+            "top": [
+              "Sicilian Orange",
+              "Calabrian Bergamot",
+              "Sicilian Lemon"
+            ],
+            "middle": [
+              "Mediterranean Fruits"
+            ],
+            "base": [
+              "White Musk",
+              "Madagascar Vanilla",
+              "Amber"
+            ]
+          },
+          "source_description_excerpts": [
+            "Karakter fruity yang lembut dan sedikit manis mulai terasa",
+            "Soft Sweet"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/qammaris-signature-cache-extrait-de-parfum-50ml"
+        },
+        {
+          "product_id": 702,
+          "name": "BSP Jeruk Kintamani 37 ml",
+          "slot": "primary",
+          "snapshot_price": "171000.00",
+          "snapshot_size_ml": 37,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "9bd11bc60cd0ff247bec3ca09b9d4783827979eaf10e81e96976c507d8b42071",
+          "description_sha256": "a3740bc807093a5fb6da9367c17a5e443a00b29082011da2cc04131388784e06",
+          "source_note_evidence": {
+            "top": [
+              "Orange",
+              "Bergamot",
+              "Grapefruit"
+            ],
+            "middle": [
+              "Tidak dirinci oleh brand"
+            ],
+            "base": [
+              "Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "aroma citrus yang lembut dan feminin"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity",
+            "middle_notes"
+          ],
+          "existing_review_flags": [
+            "placeholder_notes",
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/bsp-jeruk-kintamani-37-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 460,
+          "name": "Des Tentations flame Extrait",
+          "reason": "Bagian faktual Kekuatan Aroma: Strong, sehingga bukan referensi utama untuk kebutuhan dekat badan (preferensi lunak, bukan larangan global).",
+          "source_sha256": "f2a9aa81ea2660e83a781bfce4073db3031c5303912ec114d4c2d27ca005eaba",
+          "source_note_evidence": {
+            "top": [
+              "Rosemary",
+              "Black Pepper",
+              "Mandarin Orange",
+              "Lemon",
+              "Chinotto"
+            ],
+            "middle": [
+              "Pepper",
+              "Geranium",
+              "Rose"
+            ],
+            "base": [
+              "Oakmoss",
+              "Texas Cedar",
+              "Vanilla",
+              "Sandalwood",
+              "Patchouli",
+              "Tonka Bean"
+            ]
+          },
+          "source_description_excerpts": [
+            "Kekuatan Aroma : Strong",
+            "Ketahanan Aroma : 8 - 10 Jam"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N02",
+      "label": "Outdoor Palu, aquatic",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        866,
+        505
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        462
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Reflection dan Sorrento mencantumkan citrus bersama marine/water notes tanpa karakter dessert eksplisit. Data belum memastikan sebaran sedang atau ketahanan seharian; keduanya baru kandidat aroma.",
+      "candidates": [
+        {
+          "product_id": 866,
+          "name": "Reflection 50 ml",
+          "slot": "primary",
+          "snapshot_price": "299000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "a793e31191ead510f9e527b4eda23fe90e6236d7c931cc0e27d9d0a91baf6875",
+          "description_sha256": "69fbdd72508ef6c9827a056de9510814205d7f3011505f4e4f6603b86fe737f8",
+          "source_note_evidence": {
+            "top": [
+              "Grapefruit",
+              "Ginger",
+              "Bergamot"
+            ],
+            "middle": [
+              "Marine Notes",
+              "Cardamon",
+              "Lily of the Valley"
+            ],
+            "base": [
+              "Musk",
+              "Patchouli",
+              "Amber",
+              "Ambroxan"
+            ]
+          },
+          "source_description_excerpts": [
+            "Marine Notes, Cardamon, Lily of the Valley"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/reflection-50-ml"
+        },
+        {
+          "product_id": 505,
+          "name": "Sorrento 50 ml",
+          "slot": "primary",
+          "snapshot_price": "259000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "8ec9d7637d5ecfe7ed37b64f8b043babaf04aa7ecfd833fa1a047e2895b465e5",
+          "description_sha256": "7ca325ab1e9f6b6abcd6315705e1e2e5ec1832429b2bd73ecef8506ecdbbdd0b",
+          "source_note_evidence": {
+            "top": [
+              "Fizzy Grapefruit",
+              "Bergamot",
+              "Mandarin Orange",
+              "Magnolia",
+              "Ginger"
+            ],
+            "middle": [
+              "Fizzy Grapefruit",
+              "Neroli",
+              "Ginger",
+              "Powdery Notes",
+              "Water Notes"
+            ],
+            "base": [
+              "Fizzy Grapefruit",
+              "Amber",
+              "Musk",
+              "Cedar",
+              "Patchouli",
+              "Orris Root"
+            ]
+          },
+          "source_description_excerpts": [
+            "Powdery Notes, Water Notes"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/sorrento-50-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "reason": "Notes coffee/milk/ice cream/caramel dan deskripsi gourmand bertentangan dengan hindari gourmand.",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N03",
+      "label": "Buah segar, harian",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        472,
+        584
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        465
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Cache mencantumkan citrus serta Mediterranean Fruits; Aura Crisp Flower mencantumkan pear/peach dan bergamot. Keduanya masuk budget, tetapi tingkat manis sedang dan sebaran sedang belum dapat dipastikan.",
+      "candidates": [
+        {
+          "product_id": 472,
+          "name": "Qammaris Signature Cache Extrait De Parfum 50ml",
+          "slot": "primary",
+          "snapshot_price": "229000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "9fc6abaa1c0d2a8f9dbab5b6c03510ce1e4eacd5cff072535ee46ce345e2b957",
+          "description_sha256": "014f8571481894e3b651fc2735a79737991115c619f2fa99c9be865407c3aaa3",
+          "source_note_evidence": {
+            "top": [
+              "Sicilian Orange",
+              "Calabrian Bergamot",
+              "Sicilian Lemon"
+            ],
+            "middle": [
+              "Mediterranean Fruits"
+            ],
+            "base": [
+              "White Musk",
+              "Madagascar Vanilla",
+              "Amber"
+            ]
+          },
+          "source_description_excerpts": [
+            "Karakter fruity yang lembut dan sedikit manis mulai terasa",
+            "Soft Sweet"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/qammaris-signature-cache-extrait-de-parfum-50ml"
+        },
+        {
+          "product_id": 584,
+          "name": "Aura Crisp Flower Edp 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "298000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Wanita",
+          "source_sha256": "164e0ae16cbb5c9749012e80823d8818b1a83f249cb64d7e122f80c703fc01cd",
+          "description_sha256": "0fa5439f426f42ee7a6794d837534616e458c68f0b527394c99e07e239e41f69",
+          "source_note_evidence": {
+            "top": [
+              "Pear",
+              "Bergamot",
+              "Peach"
+            ],
+            "middle": [
+              "Jasmine",
+              "Peony"
+            ],
+            "base": [
+              "Musk",
+              "Vanilla",
+              "Vetiver"
+            ]
+          },
+          "source_description_excerpts": [
+            "memberi kesan awal yang manis dan menyegarkan"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/aura-crisp-flower-edp-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 465,
+          "name": "Ahmed Al Maghribi Blush Noire Extrait de Parfum",
+          "reason": "Notes mencantumkan Oud; pada profil terkait juga melebihi budget utama. Tidak mengambilnya hanya karena deskripsi Fruity/Floral.",
+          "source_sha256": "88fe2cce1d879e33f865521ab8e414f69d75ea3c346c47a1f5a1daa60cd927e6",
+          "source_note_evidence": {
+            "top": [
+              "Apple",
+              "Pink Grapefruit",
+              "Blackberry",
+              "Blackcurrant",
+              "Rhubarb",
+              "Cassis",
+              "Peony",
+              "Peach",
+              "Red Apple",
+              "Pear",
+              "Litchi",
+              "Clary Sage"
+            ],
+            "middle": [
+              "Marine Notes",
+              "Lily of the Valley",
+              "Raspberry",
+              "Egyptian Jasmine",
+              "May Rose",
+              "Saffron",
+              "Damask Rose",
+              "Violet",
+              "Praline",
+              "Wild Berries",
+              "Tonka Bean"
+            ],
+            "base": [
+              "Musk",
+              "Vanilla",
+              "Incense",
+              "Sandalwood",
+              "Ambergris",
+              "Ambroxan",
+              "Caramel",
+              "Oud",
+              "Mineral Notes",
+              "Moss"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N04",
+      "label": "Bunga lembut untuk kerja",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        817,
+        546
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        487
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Raindrops memiliki keluarga Floral Fruity dan rose/jasmine; Valerie mencantumkan floral serta deskripsi ringan. Label ringan pada narasi bukan ukuran sebaran dekat badan atau kadar manis.",
+      "candidates": [
+        {
+          "product_id": 817,
+          "name": "Ajmal Raindrops L Eau De Parfum 50 Ml",
+          "slot": "primary",
+          "snapshot_price": "175000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Wanita",
+          "source_sha256": "05d47bde8eb5db8d7081da1a3f3f9ce460716104b537a7548dd4c74c956337b0",
+          "description_sha256": "8913ae0a2b481845d896e739a52078aef7c18434fd09b64ccd8054bf051f909f",
+          "source_note_evidence": {
+            "top": [
+              "Jasmine",
+              "Ylang Ylang",
+              "Rose"
+            ],
+            "middle": [
+              "Musk",
+              "Patchouli",
+              "Vanilla"
+            ],
+            "base": [
+              "Jasmine",
+              "Rose"
+            ]
+          },
+          "source_description_excerpts": [
+            "Fragrance Family: Floral Fruity"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/ajmal-raindrops-l-eau-de-parfum-50-ml"
+        },
+        {
+          "product_id": 546,
+          "name": "Burgundy Valerie Extrait de Parfum 100 ml",
+          "slot": "primary",
+          "snapshot_price": "259000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "00ed5089c2b4edafc34f644721074c6c7ce286d9ff773af9cab7fe5aee4e2ea1",
+          "description_sha256": "65484e02c4833de87188abbeb2510758a3d07484ad30ebacfd7f279ae9379234",
+          "source_note_evidence": {
+            "top": [
+              "Aldehydes",
+              "White Peach",
+              "Bergamot",
+              "Mandarin Orange"
+            ],
+            "middle": [
+              "Orange Blossom",
+              "Lily Of The Valley",
+              "Petalia",
+              "Nympheal",
+              "Vetiver",
+              "Mahonia"
+            ],
+            "base": [
+              "Musk",
+              "Ambroxan",
+              "Akigalawood",
+              "Vanilla"
+            ]
+          },
+          "source_description_excerpts": [
+            "tetap ringan dan nyaman digunakan sepanjang hari"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/burgundy-valerie-extrait-de-parfum-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 487,
+          "name": "Matador Penthon",
+          "reason": "Notes mencantumkan Leather; bertentangan dengan hindari leather/asap.",
+          "source_sha256": "458537a5ddaa016c72531d614524824c36095bcf9fa20f70b6bed3fd862f316b",
+          "source_note_evidence": {
+            "top": [
+              "Pink Grapefruit",
+              "Mint",
+              "Pineapple",
+              "Pink Pepper"
+            ],
+            "middle": [
+              "Cinnamon",
+              "Cardamom",
+              "Cedarwood",
+              "Geranium"
+            ],
+            "base": [
+              "Guaiac Wood",
+              "Sandalwood",
+              "Leather",
+              "Musk",
+              "Vanilla",
+              "Rosewood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N05",
+      "label": "Kayu bersih, kantor",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        494,
+        491
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        462,
+        478
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Shiyaaka Shadow menyebut Woody, Musky dan penggunaan indoor; Al Barari Coral memiliki woody/musk dengan bukaan fresh. Sebaran dekat badan belum terukur; klaim 7 Jam+ Shadow bukan jaminan seharian.",
+      "candidates": [
+        {
+          "product_id": 494,
+          "name": "Shiyaaka Shadow",
+          "slot": "primary",
+          "snapshot_price": "415000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Pria",
+          "source_sha256": "fa487679891bbbb405b2b8c000dc6d1493c41f62e3288f4e6ad8693df5e7c89a",
+          "description_sha256": "2fe197d362058418d565aee96f80a0199714bc78091d8699defddb69bf58b442",
+          "source_note_evidence": {
+            "top": [
+              "Grapefruit",
+              "Pink Pepper and Lavender"
+            ],
+            "middle": [
+              "Cashmere Wood",
+              "Amber and Cedarwood"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss and Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "Klarifikasi Aroma : Woody, Musky, Citrus, Earthy",
+            "Ketahanan Aroma : 7 Jam+",
+            "Waktu Pemakian : Siang - Sore Indoor"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/shiyaaka-shadow"
+        },
+        {
+          "product_id": 491,
+          "name": "Al Barari Coral edp 100ml",
+          "slot": "primary",
+          "snapshot_price": "439000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "6f8a2dab04b1068f6eaa17bf6942a10afeb55ed83ee4108ffcae95c720a42124",
+          "description_sha256": "2e9a4496734c096ab3b8b81388a97f5be4c7a1c2f6bd457337b459f474bfd0ea",
+          "source_note_evidence": {
+            "top": [
+              "Pear",
+              "Bergamot",
+              "Mandarin Orange",
+              "Ginger"
+            ],
+            "middle": [
+              "Orange Blossom",
+              "Georgywood"
+            ],
+            "base": [
+              "Musk",
+              "Ambrofix",
+              "Akigalawood",
+              "Cedar"
+            ]
+          },
+          "source_description_excerpts": [],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/al-barari-coral-edp-100ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "reason": "Notes coffee/milk/ice cream/caramel dan deskripsi gourmand bertentangan dengan hindari gourmand.",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 478,
+          "name": "Armaf Odyssey Toffee Coffee 100ml",
+          "reason": "Coffee/toffee/dulce de leche/sugar cane mendukung karakter makanan manis yang ingin dihindari.",
+          "source_sha256": "993c9b1739d6db141f8f50630fc602d46743bd4524a931226a13a8b9bd35616f",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Dulce de leche",
+              "Honey",
+              "Saffron and Bergamot;"
+            ],
+            "middle": [
+              "Toffee",
+              "Lactones",
+              "Oakmoss",
+              "White Blossom and Bulgarian Rose;"
+            ],
+            "base": [
+              "Vanilla",
+              "Sugar Cane",
+              "Amber",
+              "White Musk and Woody Notes."
+            ]
+          },
+          "source_description_excerpts": [
+            "Warm. Sweet. Unapologetically you."
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N06",
+      "label": "Gourmand untuk santai",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        531,
+        462
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        732
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Chai Crema Latte dan Caffe Latte mengarah ke gourmand dari coffee/milk/caramel serta deskripsi creamy. Sebaran dekat badan tetap belum diketahui; bahasa comforting/skin warmth tidak menggantikannya.",
+      "candidates": [
+        {
+          "product_id": 531,
+          "name": "Chai Crema Latte 50ml",
+          "slot": "primary",
+          "snapshot_price": "189000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "01fa9d872615a3979b7eed71fa7a1470732be01e4121f44e3c70fcd062ac2f2d",
+          "description_sha256": "30502e409dfa95611695919467911bca32d68c090dbfb7194d3e9a857d4877a8",
+          "source_note_evidence": {
+            "top": [
+              "Cinnamon",
+              "Gingerbread",
+              "Coffee",
+              "Cardamom"
+            ],
+            "middle": [
+              "Tea Leaves",
+              "Caramel",
+              "Milk",
+              "Hazelnut"
+            ],
+            "base": [
+              "Vanilla",
+              "Tonka Bean",
+              "Musk",
+              "Milk"
+            ]
+          },
+          "source_description_excerpts": [
+            "Top Notes : Cinnamon, Gingerbread, Coffee, Cardamom"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [
+            "unmapped_note"
+          ],
+          "product_url": "https://qammarisparfum.id/products/chai-crema-latte-50ml"
+        },
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "269000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Unisex",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "description_sha256": "e507e5d1053a59e6c6e679633143488663fe1787511b72ad95d4d72ef821ddb3",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/khadlaj-caffe-latte-extrait-de-parfum-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 732,
+          "name": "Des Tentations Star Extrait 100ml",
+          "reason": "Notes mencantumkan Oud; bertentangan dengan hindari oud.",
+          "source_sha256": "1ad94194c4a784681e835ad3fa315e2f16a96836541dfca8fc16a46dfb78c320",
+          "source_note_evidence": {
+            "top": [
+              "Caramel and Italian Mandarin"
+            ],
+            "middle": [
+              "Cardamom and Oud"
+            ],
+            "base": [
+              "Incense",
+              "Patchouli and Vetiver."
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N07",
+      "label": "Oud untuk acara malam",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        650,
+        744
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        714,
+        505
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Shuhrah dan Blu Oud mencantumkan oud bersama kayu; bagian faktual katalog menyebut kuat dan 8–10 jam. Angka tersebut adalah klaim katalog, belum pengujian performa; ada tambahan leather yang tidak dilarang profil.",
+      "candidates": [
+        {
+          "product_id": 650,
+          "name": "Shuhra Pour Homme",
+          "slot": "primary",
+          "snapshot_price": "390000.00",
+          "snapshot_size_ml": 90,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Pria",
+          "source_sha256": "2bcc6b3895824fd3a954cea3afebbb8696c76a6a755599aa723f0bf216627349",
+          "description_sha256": "7a51e74147c911e1cf03efc9fc7e83c1d7620c166ee8e29c1c3d3b659666dd8a",
+          "source_note_evidence": {
+            "top": [
+              "Tomato Leaf",
+              "Freesia and Rose"
+            ],
+            "middle": [
+              "Rose",
+              "Sandalwood",
+              "Jasmine and Cedar"
+            ],
+            "base": [
+              "Leather",
+              "Agarwood (Oud)",
+              "Oakmoss",
+              "Musk and Amber."
+            ]
+          },
+          "source_description_excerpts": [
+            "Kekuatan Aroma: Sangat Kuat",
+            "Ketahanan Aroma: 8-10 Jam"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/shuhra-pour-homme"
+        },
+        {
+          "product_id": 744,
+          "name": "Ahmed Al Maghribi Blu Oud Extrait de Parfum",
+          "slot": "primary",
+          "snapshot_price": "459000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "ed7ea65baee207ce2541fe6b5cb0dd8c29985751069425868968ee807d623d44",
+          "description_sha256": "4183ccbf5f663af636d12522b9f5d4ed1265a871b453d6609026bb153b7690f8",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Cypress",
+              "Leather."
+            ],
+            "middle": [
+              "Incense",
+              "Violet leaves",
+              "Geranium"
+            ],
+            "base": [
+              "Patchouli",
+              "Musk",
+              "Agarwood",
+              "Guaic wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/ahmed-al-maghribi-blu-oud-extrait-de-parfum"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 714,
+          "name": "Frag World Aqua Pura edp 70ml",
+          "reason": "Seaweed/Calone tidak cocok untuk profil yang menghindari aquatic; pada N17 arah aquatic ini bukan referensi gourmand/amber.",
+          "source_sha256": "a5b25d32e9d442a863bb42890b5533fd16af3ec292e2b8658fef4ac0597b90f7",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot and Lemon"
+            ],
+            "middle": [
+              "Seaweed",
+              "Calone and Hedione"
+            ],
+            "base": [
+              "Musk",
+              "Ambroxan and Cedar"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 505,
+          "name": "Sorrento 50 ml",
+          "reason": "Water Notes bertentangan dengan hindari aquatic pada N07/N08.",
+          "source_sha256": "8ec9d7637d5ecfe7ed37b64f8b043babaf04aa7ecfd833fa1a047e2895b465e5",
+          "source_note_evidence": {
+            "top": [
+              "Fizzy Grapefruit",
+              "Bergamot",
+              "Mandarin Orange",
+              "Magnolia",
+              "Ginger"
+            ],
+            "middle": [
+              "Fizzy Grapefruit",
+              "Neroli",
+              "Ginger",
+              "Powdery Notes",
+              "Water Notes"
+            ],
+            "base": [
+              "Fizzy Grapefruit",
+              "Amber",
+              "Musk",
+              "Cedar",
+              "Patchouli",
+              "Orris Root"
+            ]
+          },
+          "source_description_excerpts": [
+            "Powdery Notes, Water Notes"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N08",
+      "label": "Amber hangat, acara",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        621,
+        456
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        714,
+        505
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Fattan Pour Femme mencantumkan Amber/Soft Spicy/Woody; Just Aswad memiliki amber dan kayu, penggunaan malam, sebaran Sedang. Ketahanan Just Aswad hanya 6 jam menurut katalog: kompromi terhadap kebutuhan seharian.",
+      "candidates": [
+        {
+          "product_id": 621,
+          "name": "Rasasi Fattan Pour Femme EDP 50ml",
+          "slot": "primary",
+          "snapshot_price": "269000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Wanita",
+          "source_sha256": "22ff474ec89cc6e46304977c8c60b04a62145de6e5d6955f67e7d9b063fb8f06",
+          "description_sha256": "54cb73f5068c18a43754c962dbe132ff5feb91aca109a95daa6b365de4b0a49c",
+          "source_note_evidence": {
+            "top": [
+              "Pink Pepper",
+              "Lemon and Bergamot"
+            ],
+            "middle": [
+              "Patchouli",
+              "Vetiver",
+              "Cedar and Lily-of-the-Valley"
+            ],
+            "base": [
+              "Amber",
+              "Benzoin and Oakmoss."
+            ]
+          },
+          "source_description_excerpts": [
+            "Klarifikasi Aroma : Amber, Soft Spicy, Woody",
+            "Ketahanan : 7 Jam+"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/rasasi-fattan-pour-femme-edp-50ml"
+        },
+        {
+          "product_id": 456,
+          "name": "Just Aswad Edp 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "299000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Pria",
+          "source_sha256": "b219d527624f84949679b5b51e03322b0ec5bf1f2c85f84fbca01fea53cb0ba6",
+          "description_sha256": "ba101b8a3d691e0f69f275cd2221c8122833c05699b579be6478083893d02994",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Cardamom",
+              "Cinnamon",
+              "Grapefruit"
+            ],
+            "middle": [
+              "Lavender"
+            ],
+            "base": [
+              "Sandalwood",
+              "Licorice",
+              "Amber",
+              "Patchouli",
+              "Vetiver"
+            ]
+          },
+          "source_description_excerpts": [
+            "Kekuatan Aroma: Sedang",
+            "Ketahanan Aroma: 6 jam",
+            "Waktu Pemakaian Terbaik: Malam hari"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/just-aswad-edp-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 714,
+          "name": "Frag World Aqua Pura edp 70ml",
+          "reason": "Seaweed/Calone tidak cocok untuk profil yang menghindari aquatic; pada N17 arah aquatic ini bukan referensi gourmand/amber.",
+          "source_sha256": "a5b25d32e9d442a863bb42890b5533fd16af3ec292e2b8658fef4ac0597b90f7",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot and Lemon"
+            ],
+            "middle": [
+              "Seaweed",
+              "Calone and Hedione"
+            ],
+            "base": [
+              "Musk",
+              "Ambroxan and Cedar"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 505,
+          "name": "Sorrento 50 ml",
+          "reason": "Water Notes bertentangan dengan hindari aquatic pada N07/N08.",
+          "source_sha256": "8ec9d7637d5ecfe7ed37b64f8b043babaf04aa7ecfd833fa1a047e2895b465e5",
+          "source_note_evidence": {
+            "top": [
+              "Fizzy Grapefruit",
+              "Bergamot",
+              "Mandarin Orange",
+              "Magnolia",
+              "Ginger"
+            ],
+            "middle": [
+              "Fizzy Grapefruit",
+              "Neroli",
+              "Ginger",
+              "Powdery Notes",
+              "Water Notes"
+            ],
+            "base": [
+              "Fizzy Grapefruit",
+              "Amber",
+              "Musk",
+              "Cedar",
+              "Patchouli",
+              "Orris Root"
+            ]
+          },
+          "source_description_excerpts": [
+            "Powdery Notes, Water Notes"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N09",
+      "label": "Powdery dekat badan",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        505,
+        787
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        744
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Sorrento secara eksplisit memiliki Powdery Notes dan Musk. Omnia memiliki profile Powdery/Sweet/Musk; intensitas Sweet tidak dirinci sehingga kandidat kedua bersyarat, bukan kepastian kemanisan ringan.",
+      "candidates": [
+        {
+          "product_id": 505,
+          "name": "Sorrento 50 ml",
+          "slot": "primary",
+          "snapshot_price": "259000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "8ec9d7637d5ecfe7ed37b64f8b043babaf04aa7ecfd833fa1a047e2895b465e5",
+          "description_sha256": "7ca325ab1e9f6b6abcd6315705e1e2e5ec1832429b2bd73ecef8506ecdbbdd0b",
+          "source_note_evidence": {
+            "top": [
+              "Fizzy Grapefruit",
+              "Bergamot",
+              "Mandarin Orange",
+              "Magnolia",
+              "Ginger"
+            ],
+            "middle": [
+              "Fizzy Grapefruit",
+              "Neroli",
+              "Ginger",
+              "Powdery Notes",
+              "Water Notes"
+            ],
+            "base": [
+              "Fizzy Grapefruit",
+              "Amber",
+              "Musk",
+              "Cedar",
+              "Patchouli",
+              "Orris Root"
+            ]
+          },
+          "source_description_excerpts": [
+            "Powdery Notes, Water Notes"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/sorrento-50-ml"
+        },
+        {
+          "product_id": 787,
+          "name": "SAFF & CO. EXTRAIT DE PARFUM - OMNIA",
+          "slot": "primary",
+          "snapshot_price": "208000.00",
+          "snapshot_size_ml": 30,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "2090a4ce6294f90b720c4882708f2873215ac7ede8e6a3c41c1bcef2194ce97f",
+          "description_sha256": "40c67ae52a7e9cc89224a0207c82737a8a46fa3a4e209da4e0022ce77ee5a4b2",
+          "source_note_evidence": {
+            "top": [
+              "Grapefruit",
+              "Violet leaf"
+            ],
+            "middle": [
+              "Rose",
+              "Hyacinth",
+              "Iris"
+            ],
+            "base": [
+              "Cashmere Wood",
+              "Heliotrope",
+              "Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "OMNIA - Powdery, Sweet, Musk (Women)"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/saff-co-extrait-de-parfum-omnia"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 744,
+          "name": "Ahmed Al Maghribi Blu Oud Extrait de Parfum",
+          "reason": "Notes mencantumkan Leather dan Agarwood; bertentangan dengan hindari oud/leather pada profil terkait.",
+          "source_sha256": "ed7ea65baee207ce2541fe6b5cb0dd8c29985751069425868968ee807d623d44",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Cypress",
+              "Leather."
+            ],
+            "middle": [
+              "Incense",
+              "Violet leaves",
+              "Geranium"
+            ],
+            "base": [
+              "Patchouli",
+              "Musk",
+              "Agarwood",
+              "Guaic wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N10",
+      "label": "Herbal hijau, outdoor",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        770,
+        634
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        462,
+        478
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Coveted Diamond memiliki mint/basil/white tea bersama citrus; Imaginari memiliki citrus dan black tea. Katalog mendukung karakter fresh, tetapi aroma ringan/manis rendah dan sebaran sedang belum ditetapkan.",
+      "candidates": [
+        {
+          "product_id": 770,
+          "name": "La Fede Coveted Diamond Edp 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "298000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "fd1a39b5eabe74f8a749d3de0547b517c24922c32d56f2e9acbac469f04d3fb0",
+          "description_sha256": "b3affbf91b73ea6155af4980024b4f909fce24632bfe782b18faecf024c16163",
+          "source_note_evidence": {
+            "top": [
+              "Orange",
+              "Green Lemon",
+              "Mint",
+              "Blackcurrant"
+            ],
+            "middle": [
+              "Basil",
+              "Coriander",
+              "White Tea Leaves"
+            ],
+            "base": [
+              "Musk",
+              "Moss"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 7 -8 Jam"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/la-fede-coveted-diamond-edp-100-ml"
+        },
+        {
+          "product_id": 634,
+          "name": "frag world Jacques Yves imaginari extrait de parfum 100ml",
+          "slot": "primary",
+          "snapshot_price": "319000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Pria",
+          "source_sha256": "af0842161dc62ad7aea328dea52998fa8954f2415e70eaf741dcc677579ac58c",
+          "description_sha256": "0abeb251991eca51141347c689ebabf9c1ff63a956b91e626e1c7fc5004f2e90",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Citron and Orange"
+            ],
+            "middle": [
+              "Ginger",
+              "Cinnamon and Neroli"
+            ],
+            "base": [
+              "Black Tea and Guaiac Wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Klasifikasi Aroma : Citrus, Fresh Spicy, Fresh",
+            "Ketahanan : 8 Jam+"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/frag-world-jacques-yves-imaginari-extrait-de-parfum-100ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "reason": "Notes coffee/milk/ice cream/caramel dan deskripsi gourmand bertentangan dengan hindari gourmand.",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 478,
+          "name": "Armaf Odyssey Toffee Coffee 100ml",
+          "reason": "Coffee/toffee/dulce de leche/sugar cane mendukung karakter makanan manis yang ingin dihindari.",
+          "source_sha256": "993c9b1739d6db141f8f50630fc602d46743bd4524a931226a13a8b9bd35616f",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Dulce de leche",
+              "Honey",
+              "Saffron and Bergamot;"
+            ],
+            "middle": [
+              "Toffee",
+              "Lactones",
+              "Oakmoss",
+              "White Blossom and Bulgarian Rose;"
+            ],
+            "base": [
+              "Vanilla",
+              "Sugar Cane",
+              "Amber",
+              "White Musk and Woody Notes."
+            ]
+          },
+          "source_description_excerpts": [
+            "Warm. Sweet. Unapologetically you."
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N11",
+      "label": "Leather/asap, statement",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        650,
+        744
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        462,
+        478
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Shuhrah dan Blu Oud memiliki leather/kayu serta klaim sebaran kuat. Tidak ada gourmand eksplisit dalam notes yang dibaca; ini tidak membuktikan bebas karakter gourmand secara sensoris atau kadar manis rendah.",
+      "candidates": [
+        {
+          "product_id": 650,
+          "name": "Shuhra Pour Homme",
+          "slot": "primary",
+          "snapshot_price": "390000.00",
+          "snapshot_size_ml": 90,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Pria",
+          "source_sha256": "2bcc6b3895824fd3a954cea3afebbb8696c76a6a755599aa723f0bf216627349",
+          "description_sha256": "7a51e74147c911e1cf03efc9fc7e83c1d7620c166ee8e29c1c3d3b659666dd8a",
+          "source_note_evidence": {
+            "top": [
+              "Tomato Leaf",
+              "Freesia and Rose"
+            ],
+            "middle": [
+              "Rose",
+              "Sandalwood",
+              "Jasmine and Cedar"
+            ],
+            "base": [
+              "Leather",
+              "Agarwood (Oud)",
+              "Oakmoss",
+              "Musk and Amber."
+            ]
+          },
+          "source_description_excerpts": [
+            "Kekuatan Aroma: Sangat Kuat",
+            "Ketahanan Aroma: 8-10 Jam"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/shuhra-pour-homme"
+        },
+        {
+          "product_id": 744,
+          "name": "Ahmed Al Maghribi Blu Oud Extrait de Parfum",
+          "slot": "primary",
+          "snapshot_price": "459000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "ed7ea65baee207ce2541fe6b5cb0dd8c29985751069425868968ee807d623d44",
+          "description_sha256": "4183ccbf5f663af636d12522b9f5d4ed1265a871b453d6609026bb153b7690f8",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Cypress",
+              "Leather."
+            ],
+            "middle": [
+              "Incense",
+              "Violet leaves",
+              "Geranium"
+            ],
+            "base": [
+              "Patchouli",
+              "Musk",
+              "Agarwood",
+              "Guaic wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/ahmed-al-maghribi-blu-oud-extrait-de-parfum"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "reason": "Notes coffee/milk/ice cream/caramel dan deskripsi gourmand bertentangan dengan hindari gourmand.",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 478,
+          "name": "Armaf Odyssey Toffee Coffee 100ml",
+          "reason": "Coffee/toffee/dulce de leche/sugar cane mendukung karakter makanan manis yang ingin dihindari.",
+          "source_sha256": "993c9b1739d6db141f8f50630fc602d46743bd4524a931226a13a8b9bd35616f",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Dulce de leche",
+              "Honey",
+              "Saffron and Bergamot;"
+            ],
+            "middle": [
+              "Toffee",
+              "Lactones",
+              "Oakmoss",
+              "White Blossom and Bulgarian Rose;"
+            ],
+            "base": [
+              "Vanilla",
+              "Sugar Cane",
+              "Amber",
+              "White Musk and Woody Notes."
+            ]
+          },
+          "source_description_excerpts": [
+            "Warm. Sweet. Unapologetically you."
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N12",
+      "label": "Musk untuk keseharian",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        566,
+        474
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        454
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Musk Aura menonjolkan musks dengan citrus/floral; Cute Woman secara eksplisit floral musky. Budget sesuai, tetapi sebaran dekat badan dan ketahanan beberapa jam belum terkonfirmasi.",
+      "candidates": [
+        {
+          "product_id": 566,
+          "name": "Musk aura 15ml",
+          "slot": "primary",
+          "snapshot_price": "85000.00",
+          "snapshot_size_ml": 15,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "2031e0f22db51bd2f29d0df2a3822a33b7e38d96accd1682bff72a8b29ee0d7f",
+          "description_sha256": "59a6892a0405a641512cd04b8b54eb4c5e0a5b6ba235faecda8f0c37d290c9f7",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Yuzu",
+              "Apple"
+            ],
+            "middle": [
+              "Lily of the Valley",
+              "Sambac Jasmine",
+              "Ylang-ylang"
+            ],
+            "base": [
+              "Amber",
+              "Musk",
+              "Citrus",
+              "Nectarine"
+            ]
+          },
+          "source_description_excerpts": [
+            "an ode to the beauty & sensuality of \"Musks\""
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/musk-aura-15ml"
+        },
+        {
+          "product_id": 474,
+          "name": "La Rive Cute Woman EDP 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "189000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Wanita",
+          "source_sha256": "a69c5c81b2317fd49d7e55169f79f86c37e0c7822b346235de20416895778348",
+          "description_sha256": "e9353d535a1decae3d3d5e6beccea53bc005b290de991f858ef774cf8c15091b",
+          "source_note_evidence": {
+            "top": [
+              "Peach",
+              "Tangerine"
+            ],
+            "middle": [
+              "Rose",
+              "Cedarwood",
+              "Lily of the Valley"
+            ],
+            "base": [
+              "Musk",
+              "Amber"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum floral musky untuk wanita"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/cube-woman-edp-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 454,
+          "name": "Ahmed Rawdha By Ahmed Extrait de Parfum 50ML",
+          "reason": "Notes mencantumkan Hindi Agarwood; bertentangan dengan hindari oud.",
+          "source_sha256": "ba7c80d6e393c77a12a56f92fbb08db63058754ff52319b70c7501a7e0d2f553",
+          "source_note_evidence": {
+            "top": [
+              "HINDI AGARWOOD & SAFFRON"
+            ],
+            "middle": [
+              "ROSE HINDI",
+              "SANDAL WOOD",
+              "VETIVER",
+              "HERBS"
+            ],
+            "base": [
+              "AMBER",
+              "MUSK",
+              "HINDI AGARWOOD",
+              "CYPRIOL."
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat",
+            "Waktu Pemakian : Malam Hari"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N13",
+      "label": "Buah dan bunga, date",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        584,
+        764
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        744
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Aura Crisp Flower memiliki pear/peach/jasmine/peony; Selina memiliki lychee dan rose/peony. Keduanya punya fruit dan floral, tetapi tingkat manis/sebaran sedang belum diketahui.",
+      "candidates": [
+        {
+          "product_id": 584,
+          "name": "Aura Crisp Flower Edp 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "298000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Wanita",
+          "source_sha256": "164e0ae16cbb5c9749012e80823d8818b1a83f249cb64d7e122f80c703fc01cd",
+          "description_sha256": "0fa5439f426f42ee7a6794d837534616e458c68f0b527394c99e07e239e41f69",
+          "source_note_evidence": {
+            "top": [
+              "Pear",
+              "Bergamot",
+              "Peach"
+            ],
+            "middle": [
+              "Jasmine",
+              "Peony"
+            ],
+            "base": [
+              "Musk",
+              "Vanilla",
+              "Vetiver"
+            ]
+          },
+          "source_description_excerpts": [
+            "memberi kesan awal yang manis dan menyegarkan"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/aura-crisp-flower-edp-100-ml"
+        },
+        {
+          "product_id": 764,
+          "name": "emper Selina Pour Femme",
+          "slot": "primary",
+          "snapshot_price": "369000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Wanita",
+          "source_sha256": "dbc2e4f09d61a516c8667b8c46c6654079b33461cd4e057d4523de619908b064",
+          "description_sha256": "9057af0d4eb69ccb6a8133ba8cd343bb83a936affc450070e403a224fef85645",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Lychee",
+              "Rhubarb",
+              "Bergamot"
+            ],
+            "middle": [
+              "Rose",
+              "Peony",
+              "Lily of the Valley"
+            ],
+            "base": [
+              "Vanilla",
+              "Frankincense",
+              "Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "rose, peony, and lily of the valley"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/emper-selina-pour-femme"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 744,
+          "name": "Ahmed Al Maghribi Blu Oud Extrait de Parfum",
+          "reason": "Notes mencantumkan Leather dan Agarwood; bertentangan dengan hindari oud/leather pada profil terkait.",
+          "source_sha256": "ed7ea65baee207ce2541fe6b5cb0dd8c29985751069425868968ee807d623d44",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Cypress",
+              "Leather."
+            ],
+            "middle": [
+              "Incense",
+              "Violet leaves",
+              "Geranium"
+            ],
+            "base": [
+              "Patchouli",
+              "Musk",
+              "Agarwood",
+              "Guaic wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N14",
+      "label": "Citrus tanpa aroma manis",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        702,
+        575
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        462,
+        875
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Jeruk Kintamani memiliki citrus/musk; Blue Point Her mendeskripsikan fresh citrus flowery yang ringan. Middle notes Jeruk tidak dirinci; tidak mengklaim keduanya bebas gourmand atau tanpa rasa manis.",
+      "candidates": [
+        {
+          "product_id": 702,
+          "name": "BSP Jeruk Kintamani 37 ml",
+          "slot": "primary",
+          "snapshot_price": "171000.00",
+          "snapshot_size_ml": 37,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "9bd11bc60cd0ff247bec3ca09b9d4783827979eaf10e81e96976c507d8b42071",
+          "description_sha256": "a3740bc807093a5fb6da9367c17a5e443a00b29082011da2cc04131388784e06",
+          "source_note_evidence": {
+            "top": [
+              "Orange",
+              "Bergamot",
+              "Grapefruit"
+            ],
+            "middle": [
+              "Tidak dirinci oleh brand"
+            ],
+            "base": [
+              "Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "aroma citrus yang lembut dan feminin"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity",
+            "middle_notes"
+          ],
+          "existing_review_flags": [
+            "placeholder_notes",
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/bsp-jeruk-kintamani-37-ml"
+        },
+        {
+          "product_id": 575,
+          "name": "Blue Point 37ML Her",
+          "slot": "primary",
+          "snapshot_price": "129000.00",
+          "snapshot_size_ml": 37,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Wanita",
+          "source_sha256": "572e80e0c8bb35f10743d1e7d58d059842b1b4dc7d85fc6f78970388c98a025d",
+          "description_sha256": "438dd37a0ed716d8e742f8635100d0f5644884430b65be65d4233477fa8e50cb",
+          "source_note_evidence": {
+            "top": [
+              "Citrus",
+              "Bergamot"
+            ],
+            "middle": [
+              "Rose",
+              "Jasmine"
+            ],
+            "base": [
+              "Musk",
+              "Amber"
+            ]
+          },
+          "source_description_excerpts": [
+            "fresh citrus flowery yang playful dan ringan"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/blue-point-37ml-her"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "reason": "Notes coffee/milk/ice cream/caramel dan deskripsi gourmand bertentangan dengan hindari gourmand.",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 875,
+          "name": "Caramel Fudge Cookie 50ml",
+          "reason": "Cookie Dough/Caramel/Condensed Milk/Praline mendukung gourmand yang ingin dihindari.",
+          "source_sha256": "b27cd962f7bc0e70e5d18ecfdc061f11d0271f94a283d41563fc70c85dac0072",
+          "source_note_evidence": {
+            "top": [
+              "Cookie Dough",
+              "Caramel",
+              "Vanilla"
+            ],
+            "middle": [
+              "Caramel",
+              "Condensed Milk",
+              "Sea Salt"
+            ],
+            "base": [
+              "White Musk",
+              "Vanilla",
+              "Caramel",
+              "Praline"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N15",
+      "label": "Kayu dan oud, bebas budget",
+      "held_out": false,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        454,
+        744
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Rawdha dan Blu Oud mencantumkan oud dan kayu; masing-masing punya bagian faktual Kuat/8–10 jam. Budget bebas; Rawdha Habis tetap layak sebagai kandidat dengan status terlihat.",
+      "candidates": [
+        {
+          "product_id": 454,
+          "name": "Ahmed Rawdha By Ahmed Extrait de Parfum 50ML",
+          "slot": "primary",
+          "snapshot_price": "819000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Unisex",
+          "source_sha256": "ba7c80d6e393c77a12a56f92fbb08db63058754ff52319b70c7501a7e0d2f553",
+          "description_sha256": "ed9dfd23b1e8ed36ed188dad83bb64208229baad13cf18fa44125445e60a858f",
+          "source_note_evidence": {
+            "top": [
+              "HINDI AGARWOOD & SAFFRON"
+            ],
+            "middle": [
+              "ROSE HINDI",
+              "SANDAL WOOD",
+              "VETIVER",
+              "HERBS"
+            ],
+            "base": [
+              "AMBER",
+              "MUSK",
+              "HINDI AGARWOOD",
+              "CYPRIOL."
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat",
+            "Waktu Pemakian : Malam Hari"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/ahmed-rawdha-by-ahmed-extrait-de-parfum-50ml"
+        },
+        {
+          "product_id": 744,
+          "name": "Ahmed Al Maghribi Blu Oud Extrait de Parfum",
+          "slot": "primary",
+          "snapshot_price": "459000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "ed7ea65baee207ce2541fe6b5cb0dd8c29985751069425868968ee807d623d44",
+          "description_sha256": "4183ccbf5f663af636d12522b9f5d4ed1265a871b453d6609026bb153b7690f8",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Cypress",
+              "Leather."
+            ],
+            "middle": [
+              "Incense",
+              "Violet leaves",
+              "Geranium"
+            ],
+            "base": [
+              "Patchouli",
+              "Musk",
+              "Agarwood",
+              "Guaic wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/ahmed-al-maghribi-blu-oud-extrait-de-parfum"
+        }
+      ],
+      "rejections": []
+    },
+    {
+      "case_id": "N16",
+      "label": "Kantor, bebas peruntukan",
+      "held_out": true,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        496,
+        546
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        606
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Alvina Pamela memiliki citrus, jasmine dan white flowers; Valerie memiliki citrus serta floral dan narasi ringan. Sebaran/ketahanan seharian belum diketahui. Hold-out disimpan tanpa menyetel bobot.",
+      "candidates": [
+        {
+          "product_id": 496,
+          "name": "Milestone Alvina Pamela",
+          "slot": "primary",
+          "snapshot_price": "298000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "c44b7fbb4e3acbfd89caf1611022af63ff8a0b535066129d8166a1f4581da521",
+          "description_sha256": "8b548b3844a691da9d398d56141d5ea5b564fed54761ac8b261eb61f5c903faa",
+          "source_note_evidence": {
+            "top": [
+              "Citruses Mandarin Orange and African Orange Flower"
+            ],
+            "middle": [
+              "Moroccan Jasmine and White Flowers"
+            ],
+            "base": [
+              "White Amber and Cashmeran."
+            ]
+          },
+          "source_description_excerpts": [
+            "fresh citrus-floral fragrances"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/milestone-alvina-pamela"
+        },
+        {
+          "product_id": 546,
+          "name": "Burgundy Valerie Extrait de Parfum 100 ml",
+          "slot": "primary",
+          "snapshot_price": "259000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "00ed5089c2b4edafc34f644721074c6c7ce286d9ff773af9cab7fe5aee4e2ea1",
+          "description_sha256": "65484e02c4833de87188abbeb2510758a3d07484ad30ebacfd7f279ae9379234",
+          "source_note_evidence": {
+            "top": [
+              "Aldehydes",
+              "White Peach",
+              "Bergamot",
+              "Mandarin Orange"
+            ],
+            "middle": [
+              "Orange Blossom",
+              "Lily Of The Valley",
+              "Petalia",
+              "Nympheal",
+              "Vetiver",
+              "Mahonia"
+            ],
+            "base": [
+              "Musk",
+              "Ambroxan",
+              "Akigalawood",
+              "Vanilla"
+            ]
+          },
+          "source_description_excerpts": [
+            "tetap ringan dan nyaman digunakan sepanjang hari"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/burgundy-valerie-extrait-de-parfum-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 606,
+          "name": "Dicium Enigma",
+          "reason": "Sillage Strong / Projections 1–2 meter bertentangan dengan kebutuhan dekat badan; ini penolakan referensi lunak, bukan hard filter global.",
+          "source_sha256": "44447ce5d9389c856f3b2bd5853ee1aa22cef74b6ae569d4ef08892cb35760c5",
+          "source_note_evidence": {
+            "top": [
+              "Orange",
+              "White Floral",
+              "Bergamot"
+            ],
+            "middle": [
+              "Rose",
+              "Freesia",
+              "Jasmine"
+            ],
+            "base": [
+              "Musk",
+              "Woody",
+              "Vanilla"
+            ]
+          },
+          "source_description_excerpts": [
+            "Sillage | Strong",
+            "Projections | 1-2 meter"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N17",
+      "label": "Gourmand kuat, malam",
+      "held_out": true,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        697,
+        478
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        714
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Historic Sahara memiliki inti gourmand eksplisit dan klaim Kuat; Toffee Coffee memiliki coffee/toffee/sugar cane/amber. Ketahanan Sahara 6–10 jam adalah rentang, bukan janji seharian; performa Toffee Coffee belum dirinci.",
+      "candidates": [
+        {
+          "product_id": 697,
+          "name": "Historic Sahara Extrait de Parfum 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "489000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "5a3893d1af76fde831314c67b47536f1c4465dd438a33695f5d72874ef032e62",
+          "description_sha256": "c324e018ce379f96f2b23057e6fca176e386b1f054df851ee63d915034c7dd8b",
+          "source_note_evidence": {
+            "top": [
+              "Cardamom",
+              "Cinnamon and Bergamot"
+            ],
+            "middle": [
+              "Vanilla",
+              "elemi and Sugar"
+            ],
+            "base": [
+              "Praline",
+              "Almond",
+              "Tonka",
+              "Musk and Ambroxan"
+            ]
+          },
+          "source_description_excerpts": [
+            "inti gourmand yang lembut",
+            "Kekuatan Aroma: Kuat",
+            "Ketahanan Aroma: 6 - 10 Jam",
+            "Waktu Pemakaian: Malam hari"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/historic-sahara-extrait-de-parfum-100-ml"
+        },
+        {
+          "product_id": 478,
+          "name": "Armaf Odyssey Toffee Coffee 100ml",
+          "slot": "primary",
+          "snapshot_price": "469000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "993c9b1739d6db141f8f50630fc602d46743bd4524a931226a13a8b9bd35616f",
+          "description_sha256": "ecd8f43d0406b04d71393a9517d070010efa5f2e75d21b64bf11f40b287c4e2b",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Dulce de leche",
+              "Honey",
+              "Saffron and Bergamot;"
+            ],
+            "middle": [
+              "Toffee",
+              "Lactones",
+              "Oakmoss",
+              "White Blossom and Bulgarian Rose;"
+            ],
+            "base": [
+              "Vanilla",
+              "Sugar Cane",
+              "Amber",
+              "White Musk and Woody Notes."
+            ]
+          },
+          "source_description_excerpts": [
+            "Warm. Sweet. Unapologetically you."
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/armaf-odyssey-toffee-coffee-100ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 714,
+          "name": "Frag World Aqua Pura edp 70ml",
+          "reason": "Seaweed/Calone tidak cocok untuk profil yang menghindari aquatic; pada N17 arah aquatic ini bukan referensi gourmand/amber.",
+          "source_sha256": "a5b25d32e9d442a863bb42890b5533fd16af3ec292e2b8658fef4ac0597b90f7",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot and Lemon"
+            ],
+            "middle": [
+              "Seaweed",
+              "Calone and Hedione"
+            ],
+            "base": [
+              "Musk",
+              "Ambroxan and Cedar"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N18",
+      "label": "Aquatic tanpa oud",
+      "held_out": true,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        505,
+        574
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        744
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Sorrento memiliki Water Notes; Look of Woman memiliki Water Notes serta peruntukan Wanita. Yang pertama Unisex tetap kandidat. Look of Woman lebih fruity/floral; bukan aquatic laut yang dominan terverifikasi.",
+      "candidates": [
+        {
+          "product_id": 505,
+          "name": "Sorrento 50 ml",
+          "slot": "primary",
+          "snapshot_price": "259000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "8ec9d7637d5ecfe7ed37b64f8b043babaf04aa7ecfd833fa1a047e2895b465e5",
+          "description_sha256": "7ca325ab1e9f6b6abcd6315705e1e2e5ec1832429b2bd73ecef8506ecdbbdd0b",
+          "source_note_evidence": {
+            "top": [
+              "Fizzy Grapefruit",
+              "Bergamot",
+              "Mandarin Orange",
+              "Magnolia",
+              "Ginger"
+            ],
+            "middle": [
+              "Fizzy Grapefruit",
+              "Neroli",
+              "Ginger",
+              "Powdery Notes",
+              "Water Notes"
+            ],
+            "base": [
+              "Fizzy Grapefruit",
+              "Amber",
+              "Musk",
+              "Cedar",
+              "Patchouli",
+              "Orris Root"
+            ]
+          },
+          "source_description_excerpts": [
+            "Powdery Notes, Water Notes"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/sorrento-50-ml"
+        },
+        {
+          "product_id": 574,
+          "name": "Look Of Woman Edp 75 Ml",
+          "slot": "primary",
+          "snapshot_price": "169000.00",
+          "snapshot_size_ml": 75,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Wanita",
+          "source_sha256": "874b30e737e5715f266b73535ec467f9b9effcc1b3449a2f3f45ffbeb6e47a5e",
+          "description_sha256": "2f8c5255a815bafb13ff7b1d1be4b877ec68c4cabf3beae1e7b3d2f5c91060d8",
+          "source_note_evidence": {
+            "top": [
+              "Pear",
+              "Ambrette (Musk Mallow)"
+            ],
+            "middle": [
+              "Ylang-Ylang",
+              "Rose",
+              "Water Notes"
+            ],
+            "base": [
+              "Nutmeg"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ylang-Ylang, Rose, Water Notes"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/look-of-woman-edp-75-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 744,
+          "name": "Ahmed Al Maghribi Blu Oud Extrait de Parfum",
+          "reason": "Notes mencantumkan Leather dan Agarwood; bertentangan dengan hindari oud/leather pada profil terkait.",
+          "source_sha256": "ed7ea65baee207ce2541fe6b5cb0dd8c29985751069425868968ee807d623d44",
+          "source_note_evidence": {
+            "top": [
+              "Bergamot",
+              "Cypress",
+              "Leather."
+            ],
+            "middle": [
+              "Incense",
+              "Violet leaves",
+              "Geranium"
+            ],
+            "base": [
+              "Patchouli",
+              "Musk",
+              "Agarwood",
+              "Guaic wood"
+            ]
+          },
+          "source_description_excerpts": [
+            "Ketahanan Aroma : 8-10 Jam",
+            "Kekuatan Aroma : Kuat"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N19",
+      "label": "Bunga dan powdery",
+      "held_out": true,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        787,
+        605
+      ],
+      "alternative_candidate_ids": [],
+      "rejected_reference_ids": [
+        512,
+        465
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Omnia memiliki profile Powdery/Sweet/Musk; Ode to Rose Royale secara eksplisit Powdery/Fruity/Floral. Keduanya mendukung arah aroma; kadar manis sedang dan sebaran dekat badan belum terukur.",
+      "candidates": [
+        {
+          "product_id": 787,
+          "name": "SAFF & CO. EXTRAIT DE PARFUM - OMNIA",
+          "slot": "primary",
+          "snapshot_price": "208000.00",
+          "snapshot_size_ml": 30,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "2090a4ce6294f90b720c4882708f2873215ac7ede8e6a3c41c1bcef2194ce97f",
+          "description_sha256": "40c67ae52a7e9cc89224a0207c82737a8a46fa3a4e209da4e0022ce77ee5a4b2",
+          "source_note_evidence": {
+            "top": [
+              "Grapefruit",
+              "Violet leaf"
+            ],
+            "middle": [
+              "Rose",
+              "Hyacinth",
+              "Iris"
+            ],
+            "base": [
+              "Cashmere Wood",
+              "Heliotrope",
+              "Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "OMNIA - Powdery, Sweet, Musk (Women)"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/saff-co-extrait-de-parfum-omnia"
+        },
+        {
+          "product_id": 605,
+          "name": "Zimaya By Afnan Ode To Rose Royale Edp 100 Ml",
+          "slot": "primary",
+          "snapshot_price": "498000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "available",
+          "catalog_gender": "Wanita",
+          "source_sha256": "98cbbd1373e06b36fefe3ba10e5b4dcdb46909840b2beb124e8ffd052e108c92",
+          "description_sha256": "1ec91a645633b1d318557314a6fc6375caaf10253a5228646a3ef4301ad169da",
+          "source_note_evidence": {
+            "top": [
+              "Orange",
+              "Peach",
+              "Pear"
+            ],
+            "middle": [
+              "Violet",
+              "Peony",
+              "Musk"
+            ],
+            "base": [
+              "Vanilla",
+              "Vetiver",
+              "Amber"
+            ]
+          },
+          "source_description_excerpts": [
+            "Karakter Aroma: Powdery, Fruity, Floral"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/zimaya-by-afnan-ode-to-rose-royale-edp-100-ml"
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 512,
+          "name": "AOERA SIGNATURE 50 ML",
+          "reason": "Notes mencantumkan Oud dan Leather; bertentangan dengan karakter yang dihindari pada profil terkait.",
+          "source_sha256": "03692d0fe5306a07b4a27ffc85ee8ddbf2635a4b341a32c77e34ebe6a55549e0",
+          "source_note_evidence": {
+            "top": [
+              "Nutmeg",
+              "Saffron",
+              "Lavender"
+            ],
+            "middle": [
+              "Leather",
+              "Tabacco",
+              "Maderal",
+              "Oud"
+            ],
+            "base": [
+              "Patchouli",
+              "Moss",
+              "Musk",
+              "Driftwood"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 465,
+          "name": "Ahmed Al Maghribi Blush Noire Extrait de Parfum",
+          "reason": "Notes mencantumkan Oud; pada profil terkait juga melebihi budget utama. Tidak mengambilnya hanya karena deskripsi Fruity/Floral.",
+          "source_sha256": "88fe2cce1d879e33f865521ab8e414f69d75ea3c346c47a1f5a1daa60cd927e6",
+          "source_note_evidence": {
+            "top": [
+              "Apple",
+              "Pink Grapefruit",
+              "Blackberry",
+              "Blackcurrant",
+              "Rhubarb",
+              "Cassis",
+              "Peony",
+              "Peach",
+              "Red Apple",
+              "Pear",
+              "Litchi",
+              "Clary Sage"
+            ],
+            "middle": [
+              "Marine Notes",
+              "Lily of the Valley",
+              "Raspberry",
+              "Egyptian Jasmine",
+              "May Rose",
+              "Saffron",
+              "Damask Rose",
+              "Violet",
+              "Praline",
+              "Wild Berries",
+              "Tonka Bean"
+            ],
+            "base": [
+              "Musk",
+              "Vanilla",
+              "Incense",
+              "Sandalwood",
+              "Ambergris",
+              "Ambroxan",
+              "Caramel",
+              "Oud",
+              "Mineral Notes",
+              "Moss"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    },
+    {
+      "case_id": "N20",
+      "label": "Citrus dan musk, kampus",
+      "held_out": true,
+      "status": "catalog_assisted_draft",
+      "primary_candidate_ids": [
+        653,
+        702
+      ],
+      "alternative_candidate_ids": [
+        505
+      ],
+      "rejected_reference_ids": [
+        462,
+        875
+      ],
+      "empty_assessment": "Aroma-supported candidates exist in snapshot; whether a fully supported personal match exists is not established.",
+      "acceptable_empty_proposal": false,
+      "acceptable_empty_for_full_constraints": null,
+      "assessment_note": "Forever Blue memiliki lemon/blood orange dan white musk; Jeruk Kintamani citrus/musk. Sorrento 50ml adalah proposal alternatif Rp259.000 (+3,6%), terpisah dan bersyarat aturan hasil; bukan pengisi kartu wajib.",
+      "candidates": [
+        {
+          "product_id": 653,
+          "name": "FW La Uno Forever Blue Edp 100 MI",
+          "slot": "primary",
+          "snapshot_price": "239000.00",
+          "snapshot_size_ml": 100,
+          "snapshot_availability": "sold_out",
+          "catalog_gender": "Pria",
+          "source_sha256": "aff275f31fd7ac2f13800fac046b55a8584d65bae83b4392be4f98fd16ef7ee9",
+          "description_sha256": "e788a685c8f37140f3f93e02a52566895258de77009e6a20e694cbf2b1c8ad7f",
+          "source_note_evidence": {
+            "top": [
+              "Lemon",
+              "Blood Orange and Green Apple."
+            ],
+            "middle": [
+              "Orange Blossom and White Flowers."
+            ],
+            "base": [
+              "White Musk",
+              "Cedar and Cashmeran."
+            ]
+          },
+          "source_description_excerpts": [
+            "aroma aquatic woody yang maskulin dan segar"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [],
+          "product_url": "https://qammarisparfum.id/products/fw-la-uno-forever-blue-edp-100-mi"
+        },
+        {
+          "product_id": 702,
+          "name": "BSP Jeruk Kintamani 37 ml",
+          "slot": "primary",
+          "snapshot_price": "171000.00",
+          "snapshot_size_ml": 37,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "9bd11bc60cd0ff247bec3ca09b9d4783827979eaf10e81e96976c507d8b42071",
+          "description_sha256": "a3740bc807093a5fb6da9367c17a5e443a00b29082011da2cc04131388784e06",
+          "source_note_evidence": {
+            "top": [
+              "Orange",
+              "Bergamot",
+              "Grapefruit"
+            ],
+            "middle": [
+              "Tidak dirinci oleh brand"
+            ],
+            "base": [
+              "Musk"
+            ]
+          },
+          "source_description_excerpts": [
+            "aroma citrus yang lembut dan feminin"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity",
+            "middle_notes"
+          ],
+          "existing_review_flags": [
+            "placeholder_notes",
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/bsp-jeruk-kintamani-37-ml"
+        },
+        {
+          "product_id": 505,
+          "name": "Sorrento 50 ml",
+          "slot": "alternative",
+          "snapshot_price": "259000.00",
+          "snapshot_size_ml": 50,
+          "snapshot_availability": "available",
+          "catalog_gender": "Unisex",
+          "source_sha256": "8ec9d7637d5ecfe7ed37b64f8b043babaf04aa7ecfd833fa1a047e2895b465e5",
+          "description_sha256": "7ca325ab1e9f6b6abcd6315705e1e2e5ec1832429b2bd73ecef8506ecdbbdd0b",
+          "source_note_evidence": {
+            "top": [
+              "Fizzy Grapefruit",
+              "Bergamot",
+              "Mandarin Orange",
+              "Magnolia",
+              "Ginger"
+            ],
+            "middle": [
+              "Fizzy Grapefruit",
+              "Neroli",
+              "Ginger",
+              "Powdery Notes",
+              "Water Notes"
+            ],
+            "base": [
+              "Fizzy Grapefruit",
+              "Amber",
+              "Musk",
+              "Cedar",
+              "Patchouli",
+              "Orris Root"
+            ]
+          },
+          "source_description_excerpts": [
+            "Powdery Notes, Water Notes"
+          ],
+          "attribute_evidence_status": "catalog_text_only_not_sensory_validation",
+          "unknown_or_unresolved_attributes": [
+            "sweetness_level",
+            "projection",
+            "longevity"
+          ],
+          "existing_review_flags": [
+            "identical_notes_not_verified_identity"
+          ],
+          "product_url": "https://qammarisparfum.id/products/sorrento-50-ml",
+          "above_budget_percent": "3.6",
+          "display_condition": "Main choices fewer than3 or alternative better than last main; engine has not evaluated this condition."
+        }
+      ],
+      "rejections": [
+        {
+          "product_id": 462,
+          "name": "Khadlaj Caffe Latte Extrait de Parfum 100 Ml",
+          "reason": "Notes coffee/milk/ice cream/caramel dan deskripsi gourmand bertentangan dengan hindari gourmand.",
+          "source_sha256": "8681fce53fea393a74e96805b6c091936fc74bafdd77f3732f8dce763f4efd38",
+          "source_note_evidence": {
+            "top": [
+              "Coffee",
+              "Sweet Almond",
+              "Milk"
+            ],
+            "middle": [
+              "Vanilla",
+              "Ice cream",
+              "Amber"
+            ],
+            "base": [
+              "Vanilla",
+              "Almond Cream",
+              "Caramel"
+            ]
+          },
+          "source_description_excerpts": [
+            "parfum gourmand"
+          ],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        },
+        {
+          "product_id": 875,
+          "name": "Caramel Fudge Cookie 50ml",
+          "reason": "Cookie Dough/Caramel/Condensed Milk/Praline mendukung gourmand yang ingin dihindari.",
+          "source_sha256": "b27cd962f7bc0e70e5d18ecfdc061f11d0271f94a283d41563fc70c85dac0072",
+          "source_note_evidence": {
+            "top": [
+              "Cookie Dough",
+              "Caramel",
+              "Vanilla"
+            ],
+            "middle": [
+              "Caramel",
+              "Condensed Milk",
+              "Sea Salt"
+            ],
+            "base": [
+              "White Musk",
+              "Vanilla",
+              "Caramel",
+              "Praline"
+            ]
+          },
+          "source_description_excerpts": [],
+          "decision_scope": "scenario_reference_only_not_an_implemented_filter"
+        }
+      ]
+    }
+  ],
+  "edge_cases": [
+    {
+      "case_id": "E01",
+      "label": "Aroma suka dan hindari bertentangan",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Reject the contradictory answer at validation; never silently delete either choice.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E02",
+      "label": "Karakter yang dihindari terdeteksi",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Exclude products with detected avoided character; unknown evidence never becomes a free-from claim.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E03",
+      "label": "Batas budget dan alternatif +10%",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Exact budget is primary; exact 110% is allowed only in the labelled alternative; greater than 110% is excluded.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E04",
+      "label": "Ready dan Habis",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Both can appear with correct status; Ready-only filter must apply before choosing the displayed three.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E05",
+      "label": "Peruntukan dan Unisex",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "A Pria/Wanita preference never removes all matching Unisex products as the legacy exact filter does.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E06",
+      "label": "Placeholder, negasi, performa ambigu",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "TBC/not-disclosed is unknown; vanilla and EDP do not invent sweetness level or longevity; contradictory claims require review.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E07",
+      "label": "Parfum sama, ukuran berbeda",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Use verified identity groups only; equal notes in different fragrances must not create a group.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E08",
+      "label": "Kandidat sedikit dan nol",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Do not pad with score-zero or bestseller products; show fewer/empty with explicit editable constraints.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E09",
+      "label": "Katalog berubah setelah hasil",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Hide draft/hidden/archive; show current offer/status; invalidate changed notes; recompute creates a new result version.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    },
+    {
+      "case_id": "E10",
+      "label": "Belum mengenali preferensi",
+      "reviewer": "Codex",
+      "status": "plan_contract_checked_by_agent",
+      "expected_behavior": "Offer an exploration result only when contextual evidence exists; never claim strong personalization or an accuracy percentage.",
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "judgment": "Fixture describes the approved plan contract. This is specification review only; no new engine test was executed.",
+      "implementation_test_status": "not_started",
+      "human_acceptance": null
+    }
+  ]
+}

@@ -48,6 +48,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          472,
+          702
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          460
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -89,6 +105,21 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          866,
+          505
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          462
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -130,6 +161,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          472,
+          584
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          465
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -171,6 +218,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          817,
+          546
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          487
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -212,6 +275,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          494,
+          491
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          462,
+          478
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -253,6 +332,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          531,
+          462
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          732
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -294,6 +389,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          650,
+          744
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          714,
+          505
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -335,6 +446,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          621,
+          456
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          714,
+          505
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -377,6 +504,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          505,
+          787
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          744
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -418,6 +561,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          770,
+          634
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          462,
+          478
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -459,6 +618,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          650,
+          744
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          462,
+          478
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -499,6 +674,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          566,
+          474
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          454
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -540,6 +731,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          584,
+          764
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          744
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -580,6 +787,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          702,
+          575
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          462,
+          875
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -619,6 +842,19 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          454,
+          744
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -660,6 +896,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          496,
+          546
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          606
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -699,6 +951,21 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          697,
+          478
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          714
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -740,6 +1007,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          505,
+          574
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          744
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -781,6 +1064,22 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          787,
+          605
+        ],
+        "alternative_candidate_ids": [],
+        "rejected_reference_ids": [
+          512,
+          465
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -822,6 +1121,24 @@
         "rejected_product_ids": null,
         "acceptable_empty": null,
         "note": null
+      },
+      "agent_reference": {
+        "status": "catalog_assisted_draft",
+        "primary_candidate_ids": [
+          653,
+          702
+        ],
+        "alternative_candidate_ids": [
+          505
+        ],
+        "rejected_reference_ids": [
+          462,
+          875
+        ],
+        "acceptable_empty_proposal": false,
+        "acceptable_empty_for_full_constraints": null,
+        "reviewer": "Codex",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
       }
     },
     {
@@ -852,7 +1169,13 @@
           "recommendation_created": false
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E02",
@@ -907,7 +1230,13 @@
           "free_from_claim": false
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E03",
@@ -955,7 +1284,13 @@
           "alternative_condition": "primary count <3 OR more relevant than last primary"
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E04",
@@ -1008,7 +1343,13 @@
           "filter_without_reanswering": true
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E05",
@@ -1045,7 +1386,13 @@
           "gender_weight": 5
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E06",
@@ -1080,7 +1427,13 @@
           "missing_fields_no_points": true
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E07",
@@ -1120,7 +1473,13 @@
           "unverified_identical_notes_do_not_form_group": true
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E08",
@@ -1153,7 +1512,13 @@
           "explicit_budget_or_preference_edit": true
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E09",
@@ -1187,7 +1552,13 @@
           "old_feedback_not_reassigned": true
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     },
     {
       "id": "E10",
@@ -1220,7 +1591,14 @@
           "no_context_and_no_evidence_not_padded": true
         }
       },
-      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test.",
+      "agent_reference": {
+        "status": "plan_contract_checked_by_agent",
+        "reviewer": "Codex",
+        "implementation_test_status": "not_started",
+        "evidence_file": "../../verification/pref-01/agent-reference.json"
+      }
     }
-  ]
+  ],
+  "agent_reference_version": "pref-01-agent-reference.1"
 }

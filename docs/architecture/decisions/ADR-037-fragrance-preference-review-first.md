@@ -14,6 +14,10 @@ Establish30 Owner/staff-labelled cases before calibration, five held out; rules/
 
 PREF-01 provides operator read-only capture, offline audit/dictionary proposal, ambiguity evidence, legacy comparison observations and pending human worksheet. PREF-02/03/04 remain separate items. Feature flag and additive tables preserve legacy fallback; deploy requires distinct post-acceptance permission.
 
+## Delegated reference preparation
+
+Owner later asked Codex to fill the worksheet because of limited time. Store catalog-assisted proposals separately with agent attribution, source evidence, unknowns and dated prices/status. Preserve pending `owner_review`; these are not independent human gold labels, empirical sensory judgments or passed ranking tests. Keep hold-out reserved and do not claim the release thresholds from a source-derived self-comparison. Phase/deploy boundaries remain unchanged.
+
 ## Alternatives and consequences
 
 Reject rewriting all product forms (Owner workload), external AI/free typo inference (untraceable conclusions), personality/age proxies, note-equals-performance rules, and recommendations padded by popularity. Exact audit search groups may group modifiers for discovery but do not assert physical ingredients are interchangeable. More source text does not imply more verified facts. Human review remains a real prerequisite; tools cannot prove perfume preference relevance without labels. Future corrections change only profile tables, not catalogs. Retained anonymous feedback is relevance-only and requires explicit future version evaluation before changing ranking.

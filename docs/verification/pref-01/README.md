@@ -1,6 +1,6 @@
 # PREF-01 — Audit katalog dan paket acuan kualitas
 
-2026-10-09. **IN_REVIEW**: audit/tools/tests/paket review tersedia; penilaian Owner/staf belum diisi. PREF-02–04 belum dimulai. Website dan mesin lama tidak berubah.
+2026-10-09. **IN_REVIEW**: atas permintaan Owner yang tidak punya waktu, Codex sudah mengisi30 proposal review berbasis katalog. Isian tersedia; penerimaan independen Owner/staf tetap belum dilakukan. PREF-02–04 belum dimulai. Website dan mesin lama tidak berubah.
 
 ## Bukti baca saja
 
@@ -19,6 +19,16 @@ Capture `2026-10-09T09:54:52+00:00` pada release `71a4c2e66c7405b48fd8afe3a77bfc
 | Kelompok notes identik, identitas belum diverifikasi | 19 |
 
 “Dikenali” hanya kecocokan grup pencarian eksplisit, bukan validasi bahan, keluarga aroma, kemanisan atau performa. Modifier/jenis bahan yang dikelompokkan tidak dianggap bahan identik. Placeholder/istilah asing tidak ditebak. Petunjuk performa hanya pencarian teks; kutipan tetap menunggu pemisahan fakta/promosi/negasi/konflik. EDP/Extrait tidak membuktikan ketahanan dan vanilla tidak otomatis berarti sangat manis.
+
+## Pengisian yang didelegasikan ke Codex
+
+[Agent reference](agent-reference.json) mengisi20 profil normal dengan40 kandidat utama, satu alternatif di N20 (Sorrento50ml, Rp259.000; +3,6% pada budgetRp250.000), pilihan penolakan, raw-note/description evidence dan source fingerprint. Sepuluh fixture batas sudah diperiksa terhadap kontrak plan, **bukan dijalankan pada mesin baru**. Reviewer selalu Codex; `owner_review` tidak dipalsukan menjadi reviewed.
+
+Harga/status mengikuti capture bertanggal; source/catalog hash tetap. `acceptable_empty_proposal=false` berarti ada kandidat aroma dalam snapshot, bukan bukti setiap kebutuhan performa terpenuhi. Field penilaian kosong untuk seluruh preferensi tetap unknown. Sebaran/ketahanan/tingkat manis yang belum punya bukti tetap disebutkan sebagai keterbatasan. Penolakan preferensi lunak tidak dijadikan hard filter global. N16–N20 tetap reserved from tuning; proposal dari analyst/catalog yang sama tidak menjadi benchmark sensoris independen.
+
+[Empat potensi konflik sumber](agent-semantic-review.json): Shiyaaka Silver455 (narasi versus notes), Royal Blend887 (rentang ketahanan dan komposisi), Blue Point Him668 (peruntukan narasi versus field), Rhea834 (bukaan narasi versus notes). Ini temuan yang perlu review, bukan pembetulan fakta atau izin rewrite katalog.
+
+Verifikasi pengisian:20+10 kasus lengkap,41 kandidat punya ID/source fingerprint/budget yang valid, seluruh kutipan benar-benar ada dalam sumber, receipt hashes konsisten, reviewer/hold-out/pending-human dan not-started engine status dipertahankan. Tidak ada skor/persentase akurasi atau tes sensory yang dikarang. Batas kualitas penerimaan awal belum dipenuhi oleh proposal ini.
 
 ## Paket yang dapat diperiksa
 
