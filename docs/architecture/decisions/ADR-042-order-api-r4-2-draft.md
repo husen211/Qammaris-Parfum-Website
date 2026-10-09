@@ -1,6 +1,6 @@
-# ADR-042 — Order API contract r4.2 (draft)
+# ADR-042 — Order API contract r4.2
 
-Status: **draft** on branch `modernization/ord-02-r4.2-draft`, awaiting sign-off from the App agent. The ORD-02 branch keeps the r4.1 baseline. Not deployed.
+Status: **accepted** (2026-10-09). The App agent signed off on draft `ff3532c` after corrections K-1–K-4, and r4.2 is now the API v1 baseline on the ORD-02 branch. Not deployed. The file name keeps `-draft` so existing links still work.
 
 Owner decisions of 2026-10-09 followed the r4.1 local smoke test ([SMOKE_LOCAL](../../verification/ord-02e/SMOKE_LOCAL.md)). Contract: [API v1](../../integrations/QAMMARIS_ORDER_API_V1.md) §8.5, §8.6, §6.3 and §10.
 

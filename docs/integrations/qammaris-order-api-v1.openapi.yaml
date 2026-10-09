@@ -3,8 +3,8 @@ info:
   title: Qammaris Order API (Website ↔ Qammaris App)
   version: 1.0.0-rc.4.2
   description: |
-    r4.2 DRAFT matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2; replaces the r4.1 baseline only after the
-    App agent signs off. r4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver
+    r4.2 baseline matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2, signed off by the App agent (draft ff3532c).
+    r4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver
     decision_id with Owner authorization vs relayed resends (X-Qammaris-Delivery); error codes aligned
     (structure -> validation_failed, approval requirement -> proof_required, unauthorized waiver -> 403);
     OrderListPage.unavailable and serialization_failed so one unreadable order cannot fail the list.

@@ -1,6 +1,6 @@
 # Qammaris Order API v1 — kontrak Website ↔ Qammaris App
 
-Status: **DRAF r4.2 (OpenAPI `1.0.0-rc.4.2`, 2026-10-09) — menunggu sign-off agen App.** Baseline yang berlaku tetap **r4.1** (OpenAPI `1.0.0-rc.4.1`, branch ORD-02) sampai agen App menyetujui draf ini.
+Status: **BASELINE API v1 — r4.2 (OpenAPI `1.0.0-rc.4.2`, 2026-10-09).** Agen App memberi sign-off atas draf `ff3532c` (skema identik dengan `5690e32`, 20/20 contoh valid). Baseline sebelumnya: r4.1 (OpenAPI `1.0.0-rc.4.1`).
 - Agen Qammaris App memberi *conditional sign-off* atas r4 setelah memverifikasi HMAC, 16 contoh JSON, OpenAPI, enum, dan R1–R10. Syaratnya koreksi K-A dan K-B, yang diterapkan di r4.1 (§3, §12).
 - Agen App **mengonfirmasi r4.1** tanpa koreksi. Vektor webhook diverifikasi dengan kode signing App sendiri (`order-signing.ts`, branch App `dev/september-2026`).
   - `sha256` raw body dan kedua signature cocok byte demi byte.
@@ -20,7 +20,7 @@ Riwayat versi:
   Tidak ada perubahan skema payload.
 - **Klarifikasi r4.1 (2026-10-09):** aturan klaim per aksi dan `details` pada `403 action_not_allowed` (§8.1). Tidak mengubah skema; OpenAPI tetap `1.0.0-rc.4.1`.
 - **Smoke test lokal r4.1 (2026-10-09):** putaran 3 lulus 23/0/1, 135/135 webhook ([bukti](../verification/ord-02e/SMOKE_LOCAL.md)). Hasil ini adalah baseline pembanding r4.2.
-- **r4.2 (DRAF, 2026-10-09; keputusan Owner, menunggu sign-off agen App)**:
+- **r4.2 (2026-10-09, BASELINE v1; keputusan Owner, sign-off agen App atas `ff3532c` setelah koreksi K-1–K-4)**:
   1. **Issue:** `opened_by` menjadi `ActorRef | null`, ditambah `opened_by_source` (`app` | `website`). Kendala dari Website: `opened_by=null`. Identitas admin Website tetap lengkap di audit internal Website (§8.6).
   2. **Waiver:** ditambah `decision_id` (ID catatan persetujuan App yang tidak berubah). Pemberi persetujuan (`waiver.by`) dipisah dari aktor request dan dari jalur sinkronisasi (header `X-Qammaris-Delivery`). Keputusan baru atau berubah hanya diterima dari Owner App yang ada di allowlist Website. Kirim ulang keputusan yang identik boleh dari aktor App mana pun (§8.5).
   3. **Kode error diselaraskan:** struktur waiver salah/hilang → `422 validation_failed`; payload valid tetapi bukti tidak memenuhi syarat approval → `422 proof_required`; membuat/mengubah waiver tanpa otorisasi → `403 action_not_allowed` (§10).
@@ -432,13 +432,13 @@ Owner lain membayar reimburse itu kemudian. App mengirim ulang keputusan yang sa
   "actor": { "app_user_id": "6650bbbbccccddddeeeeffff", "display_name": "Owner Dua", "app_role": "owner" } }
 ```
 
-Karyawan mengunggah bukti setelah pengecualian: waiver dihapus (`waiver=null`, `proof=attached`). Ini bukan keputusan baru, jadi tidak memerlukan Owner:
+Karyawan mengunggah bukti setelah pengecualian, selama reimburse masih `submitted` (di App, bukti tidak bisa diubah setelah `approved`): waiver dihapus (`waiver=null`, `proof=attached`). Ini bukan keputusan baru, jadi tidak memerlukan Owner:
 
 <!-- validate: CostRequest -->
 ```json
 { "kind": "actual_shipping", "status": "active", "amount": 20000,
   "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
-  "reimbursement": { "status": "approved", "amount": 5000, "proof": "attached", "waiver": null, "updated_at": "2026-10-09T05:00:00Z" },
+  "reimbursement": { "status": "submitted", "amount": 5000, "proof": "attached", "waiver": null, "updated_at": "2026-10-09T05:00:00Z" },
   "source_version": 5,
   "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
 ```

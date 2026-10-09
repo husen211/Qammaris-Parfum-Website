@@ -19,7 +19,7 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
-    private const BASELINE_OPENAPI_SHA256 = '8dbc8221ac90451a9d0ed97c129312377b11ff11ab6a466739fe868b687aa247';
+    private const BASELINE_OPENAPI_SHA256 = 'b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88';
 
     private array $spec;
 
@@ -34,12 +34,11 @@ class OrderApiContractTest extends TestCase
 
     public function test_openapi_baseline_is_frozen(): void
     {
-        // r4.2 DRAFT (branch modernization/ord-02-r4.2-draft). The r4.1 baseline (ee896e7e…) stays on the ORD-02 branch
-        // until the App agent signs off; this hash locks the draft so every further change is deliberate.
+        // API v1 baseline r4.2, signed off by the App agent (draft ff3532c; r4.1 was ee896e7e…). Changing the OpenAPI
+        // file needs a new revision note, the other agent's approval for breaking changes, and a deliberate hash update.
         $source = str_replace("\r\n", "\n", file_get_contents(dirname(__DIR__, 2).'/docs/integrations/qammaris-order-api-v1.openapi.yaml'));
         $this->assertSame(self::BASELINE_OPENAPI_SHA256, hash('sha256', $source), 'OpenAPI v1 baseline changed: follow contract §14 change control');
-        $this->assertStringContainsString('**DRAF r4.2 (OpenAPI `1.0.0-rc.4.2`', $this->markdown);
-        $this->assertStringContainsString('Baseline yang berlaku tetap **r4.1**', $this->markdown);
+        $this->assertStringContainsString('**BASELINE API v1 — r4.2 (OpenAPI `1.0.0-rc.4.2`', $this->markdown);
     }
 
     public function test_runtime_schema_is_the_compiled_baseline(): void
@@ -49,10 +48,10 @@ class OrderApiContractTest extends TestCase
         $this->assertSame($this->spec, $compiled);
     }
 
-    public function test_versions_match_and_contract_is_the_r4_2_draft(): void
+    public function test_versions_match_and_contract_is_the_r4_2_baseline(): void
     {
         $this->assertSame('1.0.0-rc.4.2', $this->spec['info']['version']);
-        $this->assertStringContainsString('r4.2 DRAFT', $this->spec['info']['description']);
+        $this->assertStringContainsString('r4.2 baseline', $this->spec['info']['description']);
         // The App review commit is still local to the App machine; it must not be presented as a GitHub link.
         $this->assertStringNotContainsString('github.com/husen211/qammaris-reimbursement-management-system', $this->markdown);
     }
