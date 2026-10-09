@@ -18,6 +18,8 @@ Semua data **sintetis**. Lingkungan ini terpisah dari production: database, akun
 
 **Gerbang akses UAT.** Sebelum halaman apa pun terbuka, browser meminta **kunci akses UAT** sekali (ada di `LOGIN-UAT.txt`). Ini mencegah orang lain yang menemukan alamat tunnel membuka admin atau link customer. API internal tidak bisa dibuka lewat tunnel sama sekali.
 
+Satu-satunya pengecualian adalah **link tugas WhatsApp** (`/admin/orders/task/<id>`). Link ini hanya meneruskan ke halaman pesanan di Qammaris App UAT dan tidak menampilkan data.
+
 ## Menjalankan dan menghentikan
 
 Buka PowerShell di `C:\projects\Qammaris App\Qammaris-UAT-Local\scripts`:
@@ -121,7 +123,7 @@ Tandai ✓ / ✗ dan catat kendalanya. Uji di **laptop** (Chrome) dan **HP**.
 - [ ] Menu **Integrasi App**: semua saklar aktif, konfigurasi "Terisi" (nilai secret tidak tampil), dan hitungan webhook terkirim/menunggu/gagal.
 - [ ] Ubah pesanan di Website → di App UAT perubahan muncul. Ubah dari App → muncul di Website (riwayat menunjukkan nama staf App).
 - [ ] Bila App dimatikan sebentar: perubahan di Website tetap tersimpan, webhook menunggu lalu terkirim setelah App hidup lagi. Bila gagal 24 jam, event muncul di daftar gagal dengan tombol **Kirim ulang**.
-- [ ] **Link tugas WhatsApp** (pesan grup dari **Link & WA**) membuka **Qammaris App UAT** (alamat dari agen App, bukan `qammarisapp.com`). Bila App UAT belum diisi, link membuka Admin PWA Website.
+- [ ] **Link tugas WhatsApp** (pesan grup dari **Link & WA**) membuka **Qammaris App UAT** (`https://….trycloudflare.com/orders/<id>`, alamat dari agen App, bukan `qammarisapp.com`). Login App UAT memakai akun App dari agen App. Bila alamat App UAT belum diisi, link membuka Admin PWA Website.
 
 ### J. Lain-lain
 - [ ] Mode pesawat di HP: halaman offline Admin tampil; tidak ada data pesanan lama yang tampil dari cache.
