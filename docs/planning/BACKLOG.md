@@ -8,6 +8,18 @@ Updated 2026-10-08, approved Journal production release; audit scope retained. T
 
 BACKLOG = proposed/not approved for execution; READY = accepted bounded scope ready; IN_PROGRESS = active work; IN_REVIEW = complete within stated scope, review/limits still open; BLOCKED = named external prerequisite; DONE = accepted criteria and stated verification completed. One approved implementation item at a time. A released feature may have separate IN_REVIEW device/runtime acceptance; do not infer either code unreleased or all tests passed from the label alone.
 
+## PREF-01 — Preference audit and human quality reference — IN_REVIEW
+
+Owner approved implementation of [V1 plan](QAMMARIS_FRAGRANCE_PREFERENCE.md), one item at a time. Read-only public378-product capture, explicit audit dictionary/normalizer, fingerprints, 750 written note forms, 25 placeholder products, 29 residual terms, 19 unverified identical-note groups and20 legacy baselines packaged. [Audit/checks/limits](../verification/pref-01/README.md); [30-case Owner worksheet](fragrance-preference/REVIEW.md). Tools/tests/docs prepared; Owner/staff labels, semantic decisions and reference freeze **pending**, not accepted or calibrated. No public quiz/UI/DB/media/package/credential change, no V1 accuracy claim. Current active item only PREF-01; previous About review is a separate visual acceptance.
+
+| ID | Status | Next prerequisite |
+|---|---|---|
+| PREF-02 | READY, not started | PREF-01 human labels/data review accepted and explicit phase continuation; derived profiles/ranking/quality gates |
+| PREF-03 | READY, not started | PREF-02 accepted plus explicit continuation; wizard/secure results/relevance feedback/admin |
+| PREF-04 | READY, not started | PREF-03 accepted plus final Owner/staff review and separate staging/migration/release permission |
+
+Do not merge/deploy this draft audit as V1 or use past About release permission for quiz release. PREF-01 cannot become DONE while human reference is pending.
+
 ## ABOUT-04 — Source-faithful split hero — IN_REVIEW
 
 Owner requested actual hero-section-2 animation and flow. Paid source demo5260/component3839 ported to Blade/native motion: split logo/title/divider/subtitle/text CTA/contact row and diagonal photo, 500ms/20px item reveals with exact nested 150ms stagger/200ms child delay, independent 1200ms circOut polygon reveal. One existing supplied store photo, actual source contact SVGs, native responsive/touch/reduced-motion/no-JS. Existing3 About tests/96 assertions, Blade/Pint/Vite and Chrome320/390touch/768/1440 passed; actual motion recording and sampled frames saved. [Sources/evidence/limitations](../verification/about-split-hero/README.md). No new package/data/media/order change. Ongoing correction follows existing Owner publication authorization and normal GitHub release gates; Owner visual review stays open. No other phase started.

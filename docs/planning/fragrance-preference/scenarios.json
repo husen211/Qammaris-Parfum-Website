@@ -1,0 +1,1226 @@
+{
+  "schema": "qammaris-preference-scenarios-v1",
+  "version": "pref-01.1",
+  "purpose": "Owner reference review before calibration; pending is not approval.",
+  "thresholds": {
+    "normal_one_relevant": 18,
+    "normal_two_relevant": 16,
+    "normal_total": 20,
+    "edge_required": 10
+  },
+  "cases": [
+    {
+      "id": "N01",
+      "kind": "normal",
+      "label": "Kantor, citrus ringan",
+      "held_out": false,
+      "answers": {
+        "budget_max": 300000,
+        "use": "office",
+        "environment": "ac",
+        "likes": [
+          "citrus"
+        ],
+        "avoid": [
+          "oud",
+          "leather_smoky"
+        ],
+        "sweetness": "light",
+        "projection": "close",
+        "longevity": "few_hours",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N02",
+      "kind": "normal",
+      "label": "Outdoor Palu, aquatic",
+      "held_out": false,
+      "answers": {
+        "budget_max": 400000,
+        "use": "daily",
+        "environment": "outdoor",
+        "likes": [
+          "aquatic",
+          "citrus"
+        ],
+        "avoid": [
+          "gourmand"
+        ],
+        "sweetness": "light",
+        "projection": "medium",
+        "longevity": "all_day",
+        "gender": "pria",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "pria"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N03",
+      "kind": "normal",
+      "label": "Buah segar, harian",
+      "held_out": false,
+      "answers": {
+        "budget_max": 350000,
+        "use": "daily",
+        "environment": "mixed",
+        "likes": [
+          "fruity",
+          "citrus"
+        ],
+        "avoid": [
+          "oud"
+        ],
+        "sweetness": "medium",
+        "projection": "medium",
+        "longevity": "any",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fruity",
+        "mood": "playful",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N04",
+      "kind": "normal",
+      "label": "Bunga lembut untuk kerja",
+      "held_out": false,
+      "answers": {
+        "budget_max": 300000,
+        "use": "office",
+        "environment": "ac",
+        "likes": [
+          "floral"
+        ],
+        "avoid": [
+          "leather_smoky",
+          "oud"
+        ],
+        "sweetness": "light",
+        "projection": "close",
+        "longevity": "few_hours",
+        "gender": "wanita",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "floral",
+        "mood": "elegant",
+        "gender": "wanita"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N05",
+      "kind": "normal",
+      "label": "Kayu bersih, kantor",
+      "held_out": false,
+      "answers": {
+        "budget_max": 500000,
+        "use": "office",
+        "environment": "ac",
+        "likes": [
+          "woody",
+          "musk"
+        ],
+        "avoid": [
+          "gourmand"
+        ],
+        "sweetness": "light",
+        "projection": "close",
+        "longevity": "all_day",
+        "gender": "pria",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "woody",
+        "mood": "elegant",
+        "gender": "pria"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N06",
+      "kind": "normal",
+      "label": "Gourmand untuk santai",
+      "held_out": false,
+      "answers": {
+        "budget_max": 300000,
+        "use": "casual",
+        "environment": "ac",
+        "likes": [
+          "gourmand"
+        ],
+        "avoid": [
+          "oud",
+          "leather_smoky"
+        ],
+        "sweetness": "sweet",
+        "projection": "close",
+        "longevity": "any",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "afternoon",
+        "intensity": "soft",
+        "scent": "sweet",
+        "mood": "playful",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N07",
+      "kind": "normal",
+      "label": "Oud untuk acara malam",
+      "held_out": false,
+      "answers": {
+        "budget_max": 600000,
+        "use": "event",
+        "environment": "mixed",
+        "likes": [
+          "oud",
+          "woody"
+        ],
+        "avoid": [
+          "aquatic"
+        ],
+        "sweetness": "any",
+        "projection": "strong",
+        "longevity": "all_day",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "oud",
+        "mood": "bold",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N08",
+      "kind": "normal",
+      "label": "Amber hangat, acara",
+      "held_out": false,
+      "answers": {
+        "budget_max": 450000,
+        "use": "event",
+        "environment": "ac",
+        "likes": [
+          "amber_resin",
+          "woody"
+        ],
+        "avoid": [
+          "aquatic"
+        ],
+        "sweetness": "medium",
+        "projection": "medium",
+        "longevity": "all_day",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "medium",
+        "scent": "woody",
+        "mood": "elegant",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N09",
+      "kind": "normal",
+      "label": "Powdery dekat badan",
+      "held_out": false,
+      "answers": {
+        "budget_max": 350000,
+        "use": "casual",
+        "environment": "ac",
+        "likes": [
+          "powdery",
+          "musk"
+        ],
+        "avoid": [
+          "oud",
+          "leather_smoky"
+        ],
+        "sweetness": "light",
+        "projection": "close",
+        "longevity": "few_hours",
+        "gender": "wanita",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "afternoon",
+        "intensity": "soft",
+        "scent": "floral",
+        "mood": "clean",
+        "gender": "wanita"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N10",
+      "kind": "normal",
+      "label": "Herbal hijau, outdoor",
+      "held_out": false,
+      "answers": {
+        "budget_max": 400000,
+        "use": "daily",
+        "environment": "outdoor",
+        "likes": [
+          "green",
+          "citrus"
+        ],
+        "avoid": [
+          "gourmand"
+        ],
+        "sweetness": "light",
+        "projection": "medium",
+        "longevity": "any",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N11",
+      "kind": "normal",
+      "label": "Leather/asap, statement",
+      "held_out": false,
+      "answers": {
+        "budget_max": 700000,
+        "use": "event",
+        "environment": "mixed",
+        "likes": [
+          "leather_smoky",
+          "woody"
+        ],
+        "avoid": [
+          "gourmand"
+        ],
+        "sweetness": "light",
+        "projection": "strong",
+        "longevity": "all_day",
+        "gender": "pria",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "woody",
+        "mood": "bold",
+        "gender": "pria"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N12",
+      "kind": "normal",
+      "label": "Musk untuk keseharian",
+      "held_out": false,
+      "answers": {
+        "budget_max": 250000,
+        "use": "daily",
+        "environment": "mixed",
+        "likes": [
+          "musk"
+        ],
+        "avoid": [
+          "oud"
+        ],
+        "sweetness": "any",
+        "projection": "close",
+        "longevity": "few_hours",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N13",
+      "kind": "normal",
+      "label": "Buah dan bunga, date",
+      "held_out": false,
+      "answers": {
+        "budget_max": 450000,
+        "use": "event",
+        "environment": "ac",
+        "likes": [
+          "fruity",
+          "floral"
+        ],
+        "avoid": [
+          "leather_smoky"
+        ],
+        "sweetness": "medium",
+        "projection": "medium",
+        "longevity": "any",
+        "gender": "wanita",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "medium",
+        "scent": "fruity",
+        "mood": "playful",
+        "gender": "wanita"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N14",
+      "kind": "normal",
+      "label": "Citrus tanpa aroma manis",
+      "held_out": false,
+      "answers": {
+        "budget_max": 200000,
+        "use": "daily",
+        "environment": "outdoor",
+        "likes": [
+          "citrus"
+        ],
+        "avoid": [
+          "gourmand"
+        ],
+        "sweetness": "light",
+        "projection": "any",
+        "longevity": "any",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N15",
+      "kind": "normal",
+      "label": "Kayu dan oud, bebas budget",
+      "held_out": false,
+      "answers": {
+        "budget_max": null,
+        "use": "event",
+        "environment": "mixed",
+        "likes": [
+          "woody",
+          "oud"
+        ],
+        "avoid": [],
+        "sweetness": "any",
+        "projection": "strong",
+        "longevity": "all_day",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "oud",
+        "mood": "elegant",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N16",
+      "kind": "normal",
+      "label": "Kantor, bebas peruntukan",
+      "held_out": true,
+      "answers": {
+        "budget_max": 450000,
+        "use": "office",
+        "environment": "ac",
+        "likes": [
+          "citrus",
+          "floral"
+        ],
+        "avoid": [
+          "oud"
+        ],
+        "sweetness": "light",
+        "projection": "close",
+        "longevity": "all_day",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N17",
+      "kind": "normal",
+      "label": "Gourmand kuat, malam",
+      "held_out": true,
+      "answers": {
+        "budget_max": 500000,
+        "use": "event",
+        "environment": "ac",
+        "likes": [
+          "gourmand",
+          "amber_resin"
+        ],
+        "avoid": [],
+        "sweetness": "sweet",
+        "projection": "strong",
+        "longevity": "all_day",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "sweet",
+        "mood": "bold",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N18",
+      "kind": "normal",
+      "label": "Aquatic tanpa oud",
+      "held_out": true,
+      "answers": {
+        "budget_max": 350000,
+        "use": "daily",
+        "environment": "mixed",
+        "likes": [
+          "aquatic"
+        ],
+        "avoid": [
+          "oud",
+          "leather_smoky"
+        ],
+        "sweetness": "any",
+        "projection": "medium",
+        "longevity": "any",
+        "gender": "wanita",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "wanita"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N19",
+      "kind": "normal",
+      "label": "Bunga dan powdery",
+      "held_out": true,
+      "answers": {
+        "budget_max": 500000,
+        "use": "casual",
+        "environment": "ac",
+        "likes": [
+          "floral",
+          "powdery"
+        ],
+        "avoid": [
+          "oud"
+        ],
+        "sweetness": "medium",
+        "projection": "close",
+        "longevity": "any",
+        "gender": "all",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "afternoon",
+        "intensity": "soft",
+        "scent": "floral",
+        "mood": "elegant",
+        "gender": "all"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "N20",
+      "kind": "normal",
+      "label": "Citrus dan musk, kampus",
+      "held_out": true,
+      "answers": {
+        "budget_max": 250000,
+        "use": "office",
+        "environment": "mixed",
+        "likes": [
+          "citrus",
+          "musk"
+        ],
+        "avoid": [
+          "gourmand"
+        ],
+        "sweetness": "light",
+        "projection": "medium",
+        "longevity": "few_hours",
+        "gender": "pria",
+        "favorite_product_id": null
+      },
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "pria"
+      },
+      "legacy_mapping_limit": "Approximation only: the existing six-question engine cannot express budget, avoid, separate performance or these families.",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "relevant_product_ids": null,
+        "rejected_product_ids": null,
+        "acceptable_empty": null,
+        "note": null
+      }
+    },
+    {
+      "id": "E01",
+      "kind": "edge",
+      "label": "Aroma suka dan hindari bertentangan",
+      "held_out": false,
+      "expected_behavior": "Reject the contradictory answer at validation; never silently delete either choice.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "answers": {
+          "likes": [
+            "oud"
+          ],
+          "avoid": [
+            "oud"
+          ]
+        },
+        "expected": {
+          "validation_error": "likes_avoid_conflict",
+          "recommendation_created": false
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E02",
+      "kind": "edge",
+      "label": "Karakter yang dihindari terdeteksi",
+      "held_out": false,
+      "expected_behavior": "Exclude products with detected avoided character; unknown evidence never becomes a free-from claim.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "answers": {
+          "likes": [
+            "citrus"
+          ],
+          "avoid": [
+            "oud"
+          ]
+        },
+        "candidates": [
+          {
+            "id": "with-oud",
+            "evidence_families": [
+              "citrus",
+              "oud"
+            ]
+          },
+          {
+            "id": "clear-citrus",
+            "evidence_families": [
+              "citrus"
+            ]
+          },
+          {
+            "id": "unknown",
+            "evidence_families": []
+          }
+        ],
+        "expected": {
+          "excluded": [
+            "with-oud",
+            "unknown"
+          ],
+          "eligible": [
+            "clear-citrus"
+          ],
+          "free_from_claim": false
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E03",
+      "kind": "edge",
+      "label": "Batas budget dan alternatif +10%",
+      "held_out": false,
+      "expected_behavior": "Exact budget is primary; exact 110% is allowed only in the labelled alternative; greater than 110% is excluded.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "answers": {
+          "budget_max": 300000
+        },
+        "candidates": [
+          {
+            "id": "exact",
+            "price": 300000
+          },
+          {
+            "id": "plus10",
+            "price": 330000
+          },
+          {
+            "id": "above10",
+            "price": 330001
+          }
+        ],
+        "expected": {
+          "primary_eligible": [
+            "exact"
+          ],
+          "alternative_eligible": [
+            "plus10"
+          ],
+          "excluded": [
+            "above10"
+          ],
+          "alternative_max_count": 1,
+          "alternative_condition": "primary count <3 OR more relevant than last primary"
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E04",
+      "kind": "edge",
+      "label": "Ready dan Habis",
+      "held_out": false,
+      "expected_behavior": "Both can appear with correct status; Ready-only filter must apply before choosing the displayed three.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "candidates": [
+          {
+            "id": "sold",
+            "availability": "sold_out",
+            "score": 80
+          },
+          {
+            "id": "ready1",
+            "availability": "available",
+            "score": 70
+          },
+          {
+            "id": "ready2",
+            "availability": "available",
+            "score": 60
+          },
+          {
+            "id": "ready3",
+            "availability": "available",
+            "score": 50
+          }
+        ],
+        "expected": {
+          "default_primary": [
+            "sold",
+            "ready1",
+            "ready2"
+          ],
+          "ready_only_primary": [
+            "ready1",
+            "ready2",
+            "ready3"
+          ],
+          "filter_without_reanswering": true
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E05",
+      "kind": "edge",
+      "label": "Peruntukan dan Unisex",
+      "held_out": false,
+      "expected_behavior": "A Pria/Wanita preference never removes all matching Unisex products as the legacy exact filter does.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "answers": {
+          "gender": "Pria"
+        },
+        "candidates": [
+          {
+            "id": "unisex",
+            "gender": "Unisex",
+            "aroma_match": true
+          },
+          {
+            "id": "pria",
+            "gender": "Pria",
+            "aroma_match": true
+          }
+        ],
+        "expected": {
+          "both_eligible": true,
+          "gender_weight": 5
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E06",
+      "kind": "edge",
+      "label": "Placeholder, negasi, performa ambigu",
+      "held_out": false,
+      "expected_behavior": "TBC/not-disclosed is unknown; vanilla and EDP do not invent sweetness level or longevity; contradictory claims require review.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "source_examples": [
+          "TBC",
+          "Tidak dirinci oleh brand",
+          "Vanilla",
+          "Extrait de Parfum",
+          "tidak terlalu manis",
+          "ketahanan belum diketahui",
+          "proyeksi kuat / proyeksi lembut (conflict)"
+        ],
+        "expected": {
+          "placeholders_unknown": true,
+          "vanilla_does_not_set_sweetness": "very_sweet",
+          "concentration_does_not_set_longevity": true,
+          "negation_respected": true,
+          "conflict_requires_review": true,
+          "missing_fields_no_points": true
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E07",
+      "kind": "edge",
+      "label": "Parfum sama, ukuran berbeda",
+      "held_out": false,
+      "expected_behavior": "Use verified identity groups only; equal notes in different fragrances must not create a group.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "candidates": [
+          {
+            "id": "size50",
+            "verified_identity": "approved-A",
+            "size_ml": 50
+          },
+          {
+            "id": "size100",
+            "verified_identity": "approved-A",
+            "size_ml": 100
+          },
+          {
+            "id": "different",
+            "verified_identity": null,
+            "notes_equal_to": "size50"
+          }
+        ],
+        "expected": {
+          "max_from_verified_group": 1,
+          "different_not_merged": true,
+          "unverified_identical_notes_do_not_form_group": true
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E08",
+      "kind": "edge",
+      "label": "Kandidat sedikit dan nol",
+      "held_out": false,
+      "expected_behavior": "Do not pad with score-zero or bestseller products; show fewer/empty with explicit editable constraints.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "subcases": [
+          {
+            "positive_candidates": 1,
+            "expected_primary_count": 1
+          },
+          {
+            "positive_candidates": 0,
+            "expected_primary_count": 0
+          }
+        ],
+        "expected": {
+          "zero_score_padding": false,
+          "bestseller_padding": false,
+          "explicit_budget_or_preference_edit": true
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E09",
+      "kind": "edge",
+      "label": "Katalog berubah setelah hasil",
+      "held_out": false,
+      "expected_behavior": "Hide draft/hidden/archive; show current offer/status; invalidate changed notes; recompute creates a new result version.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "initial_result": "public-A at 300000 / available / profile-v1",
+        "changes": [
+          "price=350000",
+          "availability=sold_out",
+          "notes source changes",
+          "publication=draft",
+          "hidden=true",
+          "archived=true"
+        ],
+        "expected": {
+          "current_price_and_status": true,
+          "source_change_invalidates_profile": true,
+          "nonpublic_not_rendered": true,
+          "recompute_new_result_id": true,
+          "old_feedback_not_reassigned": true
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    },
+    {
+      "id": "E10",
+      "kind": "edge",
+      "label": "Belum mengenali preferensi",
+      "held_out": false,
+      "expected_behavior": "Offer an exploration result only when contextual evidence exists; never claim strong personalization or an accuracy percentage.",
+      "implementation_test_status": "not_started",
+      "owner_review": {
+        "status": "pending",
+        "reviewer": null,
+        "reviewed_at": null,
+        "accepted": null,
+        "note": null
+      },
+      "fixture_spec": {
+        "answers": {
+          "likes": [],
+          "avoid": [],
+          "sweetness": "any",
+          "projection": "unknown",
+          "longevity": "unknown",
+          "use": "office",
+          "environment": "ac"
+        },
+        "expected": {
+          "label": "Pilihan awal untuk dieksplorasi",
+          "strong_personalization_claim": false,
+          "accuracy_percent": false,
+          "no_context_and_no_evidence_not_padded": true
+        }
+      },
+      "fixture_scope": "Synthetic acceptance specification for PREF-02/03; not a production catalog mutation or an executed engine test."
+    }
+  ]
+}

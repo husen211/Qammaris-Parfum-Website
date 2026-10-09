@@ -6,6 +6,12 @@ Konsolidasi AUD-02 — 2026-10-07. Ini peta kode/boundary current, bukan catatan
 
 Laravel 12 / PHP 8.2+, Blade, Eloquent, MySQL/MariaDB, Tailwind 4/DaisyUI/Vite. React islands terbatas (navbar/elemen 3D), bukan router SPA. Form requests menangani HTTP validation; focused product operations pada `app/Actions/Products` menangani mutasi yang dipakai lintas form/import/feed. Services menangani parsing, snapshots, storage, dan client source; Support menangani query state/search/copy. Tidak ada generic repository atau event bus yang perlu ditambahkan.
 
+## Preference audit boundary — PREF-01
+
+Public `/fragrance-quiz` still calls existing `FragranceQuizController` / `FragranceQuizService` and six-question config/session result. No route/model/migration/frontend or runtime caller changed. New operator `tools/fragrance-quiz/export-public-snapshot.php` captures only website public product fields/legacy outputs in enforced MySQL read-only transaction (rollback); `audit.php` is vendor-autoload-only offline processing, no Laravel bootstrap/DB/network. `FragranceNoteNormalizer` reads explicit versioned JSON search groups and preserves raw provenance; it is not a scoring engine, sensory evaluator or imported catalog mutation.
+
+Committed [PREF-01 evidence](../verification/pref-01/README.md) separates pending Owner labels from observed legacy output. Future profile/result/feedback tables, feature flag/ranking/anonymous access/admin report are **not installed**; [ADR-037](decisions/ADR-037-fragrance-preference-review-first.md) and [approved phased plan](../planning/QAMMARIS_FRAGRANCE_PREFERENCE.md) define their boundaries. One item active, no automatic next phase.
+
 ## Katalog dan detail publik
 
 ```text

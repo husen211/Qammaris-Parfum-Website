@@ -1,0 +1,448 @@
+{
+  "schema": "qammaris-legacy-quiz-baseline-v1",
+  "source_revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+  "legacy_input_sha256": "a3f92b9f4850405de305d8dd97fed0634533b11824767a584e227db0a399c963",
+  "mapping_limit": "Approximate old six-question answers; new budget, avoid, individual families/performance and favorites cannot be represented. IDs are observations, not human relevance labels. Hold-out labels must not be used to calibrate.",
+  "cases": [
+    {
+      "case_id": "N01",
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "product_ids": [
+        453,
+        861,
+        687,
+        539
+      ],
+      "tags": [
+        "fresh",
+        "clean",
+        "fruity"
+      ]
+    },
+    {
+      "case_id": "N02",
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "pria"
+      },
+      "product_ids": [
+        670,
+        498,
+        644,
+        507
+      ],
+      "tags": [
+        "fresh",
+        "fruity",
+        "woody"
+      ]
+    },
+    {
+      "case_id": "N03",
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fruity",
+        "mood": "playful",
+        "gender": "all"
+      },
+      "product_ids": [
+        465,
+        605,
+        767,
+        659
+      ],
+      "tags": [
+        "fruity",
+        "sweet",
+        "fresh"
+      ]
+    },
+    {
+      "case_id": "N04",
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "floral",
+        "mood": "elegant",
+        "gender": "wanita"
+      },
+      "product_ids": [
+        817,
+        605,
+        575,
+        679
+      ],
+      "tags": [
+        "fresh",
+        "floral",
+        "clean"
+      ]
+    },
+    {
+      "case_id": "N05",
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "woody",
+        "mood": "elegant",
+        "gender": "pria"
+      },
+      "product_ids": [
+        455,
+        598,
+        498,
+        670
+      ],
+      "tags": [
+        "fresh",
+        "woody",
+        "floral"
+      ]
+    },
+    {
+      "case_id": "N06",
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "afternoon",
+        "intensity": "soft",
+        "scent": "sweet",
+        "mood": "playful",
+        "gender": "all"
+      },
+      "product_ids": [
+        465,
+        563,
+        752,
+        483
+      ],
+      "tags": [
+        "sweet",
+        "floral",
+        "fruity"
+      ]
+    },
+    {
+      "case_id": "N07",
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "oud",
+        "mood": "bold",
+        "gender": "all"
+      },
+      "product_ids": [
+        650,
+        589,
+        647,
+        744
+      ],
+      "tags": [
+        "oud",
+        "woody",
+        "spicy"
+      ]
+    },
+    {
+      "case_id": "N08",
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "medium",
+        "scent": "woody",
+        "mood": "elegant",
+        "gender": "all"
+      },
+      "product_ids": [
+        592,
+        455,
+        615,
+        621
+      ],
+      "tags": [
+        "woody",
+        "oud",
+        "spicy"
+      ]
+    },
+    {
+      "case_id": "N09",
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "afternoon",
+        "intensity": "soft",
+        "scent": "floral",
+        "mood": "clean",
+        "gender": "wanita"
+      },
+      "product_ids": [
+        563,
+        849,
+        817,
+        679
+      ],
+      "tags": [
+        "floral",
+        "fresh",
+        "sweet"
+      ]
+    },
+    {
+      "case_id": "N10",
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "product_ids": [
+        861,
+        453,
+        670,
+        498
+      ],
+      "tags": [
+        "fresh",
+        "fruity",
+        "woody"
+      ]
+    },
+    {
+      "case_id": "N11",
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "woody",
+        "mood": "bold",
+        "gender": "pria"
+      },
+      "product_ids": [
+        592,
+        455,
+        615,
+        458
+      ],
+      "tags": [
+        "woody",
+        "oud",
+        "spicy"
+      ]
+    },
+    {
+      "case_id": "N12",
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "product_ids": [
+        453,
+        861,
+        498,
+        644
+      ],
+      "tags": [
+        "fresh",
+        "floral",
+        "sweet"
+      ]
+    },
+    {
+      "case_id": "N13",
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "medium",
+        "scent": "fruity",
+        "mood": "playful",
+        "gender": "wanita"
+      },
+      "product_ids": [
+        605,
+        597,
+        656,
+        862
+      ],
+      "tags": [
+        "fruity",
+        "woody",
+        "oud"
+      ]
+    },
+    {
+      "case_id": "N14",
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "product_ids": [
+        453,
+        861,
+        498,
+        687
+      ],
+      "tags": [
+        "fresh",
+        "fruity",
+        "floral"
+      ]
+    },
+    {
+      "case_id": "N15",
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "oud",
+        "mood": "elegant",
+        "gender": "all"
+      },
+      "product_ids": [
+        650,
+        592,
+        647,
+        589
+      ],
+      "tags": [
+        "oud",
+        "woody",
+        "spicy"
+      ]
+    },
+    {
+      "case_id": "N16",
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "soft",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "all"
+      },
+      "product_ids": [
+        453,
+        861,
+        687,
+        539
+      ],
+      "tags": [
+        "fresh",
+        "clean",
+        "fruity"
+      ]
+    },
+    {
+      "case_id": "N17",
+      "legacy_answers": {
+        "activity": "event",
+        "time": "night",
+        "intensity": "bold",
+        "scent": "sweet",
+        "mood": "bold",
+        "gender": "all"
+      },
+      "product_ids": [
+        604,
+        465,
+        551,
+        752
+      ],
+      "tags": [
+        "oud",
+        "sweet",
+        "woody"
+      ]
+    },
+    {
+      "case_id": "N18",
+      "legacy_answers": {
+        "activity": "outdoor",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "wanita"
+      },
+      "product_ids": [
+        605,
+        575,
+        843,
+        860
+      ],
+      "tags": [
+        "fresh",
+        "fruity",
+        "woody"
+      ]
+    },
+    {
+      "case_id": "N19",
+      "legacy_answers": {
+        "activity": "casual",
+        "time": "afternoon",
+        "intensity": "soft",
+        "scent": "floral",
+        "mood": "elegant",
+        "gender": "all"
+      },
+      "product_ids": [
+        563,
+        849,
+        465,
+        461
+      ],
+      "tags": [
+        "floral",
+        "woody",
+        "sweet"
+      ]
+    },
+    {
+      "case_id": "N20",
+      "legacy_answers": {
+        "activity": "office",
+        "time": "morning",
+        "intensity": "medium",
+        "scent": "fresh",
+        "mood": "clean",
+        "gender": "pria"
+      },
+      "product_ids": [
+        498,
+        670,
+        644,
+        736
+      ],
+      "tags": [
+        "fresh",
+        "clean",
+        "fruity"
+      ]
+    }
+  ]
+}

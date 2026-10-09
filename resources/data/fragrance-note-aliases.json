@@ -1,0 +1,664 @@
+{
+  "schema": "qammaris-note-aliases-v1",
+  "version": "pref-01.1",
+  "purpose": "Explicit note search groups for audit only. Original labels are retained; grouped modifiers/material names are not proof of interchangeable ingredients. No family or performance assignment.",
+  "placeholders": [
+    "tidak dirinci oleh brand",
+    "tbc",
+    "n a",
+    "na",
+    "not disclosed",
+    "not specified",
+    "unknown",
+    "belum tersedia"
+  ],
+  "modifiers": [
+    "madagascar",
+    "moroccan",
+    "egyptian",
+    "indian",
+    "italian",
+    "sicilian",
+    "calabrian",
+    "bulgarian",
+    "turkish",
+    "tunisian",
+    "haitian",
+    "virginian",
+    "virginia",
+    "atlas",
+    "texas",
+    "french",
+    "provencal",
+    "sulawesi",
+    "indonesia",
+    "absolute",
+    "essence",
+    "essences",
+    "heart",
+    "oil",
+    "leaf",
+    "leaves",
+    "buds",
+    "accord",
+    "accords",
+    "notes",
+    "note",
+    "fresh",
+    "creamy",
+    "burnt",
+    "smoked",
+    "roasted",
+    "sparkling",
+    "green",
+    "red",
+    "white",
+    "black",
+    "light",
+    "soft",
+    "dry",
+    "modern",
+    "mineral",
+    "sweet",
+    "transparent",
+    "precious",
+    "living",
+    "spicy",
+    "brazilian",
+    "blonde",
+    "wild"
+  ],
+  "notes": {
+    "agastache": [],
+    "akigalawood": [],
+    "aldehyde": [],
+    "aldehydes": [],
+    "almond": [
+      "almonds",
+      "bitter almond",
+      "sweet almond",
+      "almond cream"
+    ],
+    "amaretto": [],
+    "amber": [],
+    "amber accord": [
+      "ambery notes",
+      "dry amber",
+      "amber dry",
+      "mineral amber",
+      "modern amber",
+      "white amber",
+      "gray amber",
+      "ambery"
+    ],
+    "amber xtreme": [],
+    "ambergris": [],
+    "ambermax": [],
+    "amberwood": [
+      "amber wood"
+    ],
+    "ambrette": [
+      "ambret",
+      "ambrette musk mallow"
+    ],
+    "ambrofix": [],
+    "ambroxan": [
+      "ambbroxan"
+    ],
+    "angelica": [],
+    "anise": [],
+    "apple": [],
+    "apple blossom": [],
+    "apricot": [],
+    "aquatic accord": [
+      "water notes",
+      "watery notes",
+      "aquatic notes",
+      "aqueous",
+      "watery",
+      "aquatic"
+    ],
+    "aromatic accord": [],
+    "artemisia": [],
+    "balsam": [],
+    "balsam fir": [],
+    "balsamic accord": [
+      "balsamic notes",
+      "balsamic"
+    ],
+    "bark": [],
+    "basil": [],
+    "benzoin": [
+      "benzoi",
+      "benzoin laos"
+    ],
+    "bergamot": [
+      "berga mot",
+      "calabrian bergamot",
+      "sicilian bergamot",
+      "italian bergamot"
+    ],
+    "berries": [],
+    "birch": [],
+    "birch tar": [],
+    "biscuit": [],
+    "bitter orange": [],
+    "black cherry": [],
+    "black pepper": [
+      "lada hitam",
+      "black pepper essences",
+      "tellicherry pepper"
+    ],
+    "black tea": [],
+    "blackberry": [],
+    "blackcurrant": [
+      "black currant",
+      "cassis"
+    ],
+    "blood orange": [],
+    "blueberry": [],
+    "bourbon whiskey": [],
+    "brown sugar": [],
+    "cacao": [],
+    "calone": [],
+    "candied fruit": [],
+    "candy apple": [],
+    "cane sugar": [],
+    "cannabis": [],
+    "caramel": [],
+    "cardamom": [
+      "cardamon",
+      "cardamome",
+      "spicy cardamom"
+    ],
+    "carnation": [],
+    "carrot": [],
+    "cashmeran": [],
+    "cashmere wood": [
+      "cashmere"
+    ],
+    "cassis buds": [],
+    "cedar": [
+      "cedarwood",
+      "cedar wood",
+      "virginian cedar",
+      "atlas cedar",
+      "cedarwood atlas"
+    ],
+    "chamomile": [],
+    "champagne": [],
+    "charentais": [],
+    "cherry": [],
+    "cherry blossom": [],
+    "chestnut": [
+      "chesnut"
+    ],
+    "chocolate": [],
+    "cinnamon": [],
+    "cinnamon bark": [],
+    "cistus": [],
+    "cistus absolute": [],
+    "citron": [],
+    "citrus accord": [
+      "citrus notes",
+      "citrus fresh",
+      "citrussy",
+      "citruses",
+      "citrus"
+    ],
+    "clementine": [],
+    "clove": [],
+    "cloves": [],
+    "coconut": [],
+    "coconut milk": [],
+    "coconut water": [],
+    "coffee": [
+      "coffe"
+    ],
+    "cognac": [],
+    "cookie dough": [],
+    "coriander": [],
+    "cotton flower": [],
+    "coumarin": [],
+    "cucumber": [],
+    "cumin": [],
+    "cyclamen": [],
+    "cypress": [],
+    "cypriol": [],
+    "cypriol oil": [],
+    "daffodils": [],
+    "dark chocolate": [],
+    "dates": [
+      "date accord",
+      "dates accord",
+      "custard date accord"
+    ],
+    "davana": [],
+    "dragon fruit": [
+      "dragron fruit",
+      "pitahaya"
+    ],
+    "driftwood": [],
+    "dulce de leche": [],
+    "edenolide": [],
+    "elemi": [],
+    "fig": [],
+    "fig leaf": [],
+    "fig tree": [],
+    "floral accord": [
+      "floral bouquet",
+      "white floral accord",
+      "white flowers",
+      "white florals",
+      "white floral",
+      "white flower",
+      "white blossom",
+      "floral",
+      "flowery",
+      "flowers"
+    ],
+    "frangipani": [],
+    "freesia": [],
+    "fresh accord": [],
+    "fruity accord": [
+      "fruity notes",
+      "red fruits",
+      "fruits",
+      "tropical fruits",
+      "fruity",
+      "mediterranean fruits"
+    ],
+    "galaxolide": [],
+    "galbanum": [],
+    "gardenia": [],
+    "georgywood": [],
+    "geranium": [],
+    "ginger": [],
+    "gourmand accord": [],
+    "grapefruit": [
+      "grape fruit",
+      "fizzy grapefruit",
+      "pink grapefruit"
+    ],
+    "grapefruit blossom": [],
+    "grapes": [],
+    "green accord": [
+      "green notes",
+      "green leaves",
+      "leafy",
+      "green",
+      "herbs"
+    ],
+    "green tea": [],
+    "guaiac wood": [
+      "guaiacwood",
+      "guaic wood",
+      "gaiac wood",
+      "gaiacwood",
+      "guiacwood"
+    ],
+    "hazelnut": [],
+    "hedione": [],
+    "heliotrope": [],
+    "hibiscus": [],
+    "honey": [],
+    "honeysuckle": [],
+    "hyacinth": [],
+    "ice cream": [],
+    "iced ginger": [],
+    "icing pink": [],
+    "immortelle": [],
+    "incense": [
+      "frankincense",
+      "olibanum"
+    ],
+    "indol": [],
+    "iris": [],
+    "iso e super": [],
+    "jasmine": [
+      "jamine",
+      "jasmin",
+      "melati",
+      "sambac jasmine",
+      "jasmine sambac",
+      "moroccan jasmine",
+      "egyptian jasmine",
+      "indian jasmine",
+      "jasmine egyptian",
+      "sampaguita"
+    ],
+    "jasmine tea": [],
+    "juniper": [
+      "juniper berries",
+      "juniper berry",
+      "bush juniper"
+    ],
+    "knafeh kunafa": [],
+    "kumquat": [],
+    "labdanum": [],
+    "labdanum resin": [],
+    "lactones": [],
+    "lavender": [
+      "lavandin",
+      "provencal lavender",
+      "fresh lavender"
+    ],
+    "leather": [],
+    "lemon": [
+      "sicilian lemon",
+      "italian lemon",
+      "green lemon",
+      "lemon peel",
+      "lemon zest"
+    ],
+    "lemon blossom": [],
+    "licorice": [],
+    "lilac": [],
+    "lily": [],
+    "lily of the valley": [
+      "lily-of-the-valley",
+      "lilly of the valley",
+      "lyly of the valley",
+      "muguet"
+    ],
+    "limau indonesia": [],
+    "lime": [],
+    "liquor": [],
+    "lotus": [
+      "teratai"
+    ],
+    "lychee": [
+      "litchi"
+    ],
+    "lychee blossom": [],
+    "magnolia": [],
+    "mahogany": [],
+    "mahonia": [],
+    "maltol": [],
+    "mandarin": [
+      "mandarin orange",
+      "sicilian mandarin",
+      "chinese mandarin",
+      "green mandarin",
+      "blood mandarin",
+      "red tangarine",
+      "tangerine",
+      "tangerine heart"
+    ],
+    "mango": [
+      "mangga"
+    ],
+    "marigold": [],
+    "marine accord": [
+      "marine notes",
+      "marine accords",
+      "sea notes",
+      "sea accord",
+      "sea water",
+      "oceanic",
+      "marine"
+    ],
+    "marshmallow": [
+      "marshamallow"
+    ],
+    "matcha": [],
+    "mate leaf": [],
+    "melon": [],
+    "milk": [
+      "condensed milk"
+    ],
+    "mimosa": [],
+    "mineral accord": [],
+    "mineral notes": [],
+    "mint": [
+      "spearmint",
+      "peppermint"
+    ],
+    "moss": [],
+    "muscat grapes": [],
+    "musk": [
+      "musks",
+      "musky",
+      "white musk",
+      "black musk",
+      "ambery musk"
+    ],
+    "myrrh": [],
+    "myrtle": [],
+    "nagarmotha": [],
+    "narcissus": [],
+    "nectarine": [],
+    "neroli": [],
+    "nutmeg": [],
+    "nutty notes": [],
+    "nympheal": [],
+    "oak": [],
+    "oakmoss": [
+      "oak moss"
+    ],
+    "oakwood": [],
+    "olive flowers": [],
+    "olive wood": [],
+    "orange": [
+      "sicilian orange",
+      "sweet orange",
+      "chinotto"
+    ],
+    "orange blossom": [
+      "orange flower",
+      "african orange flower",
+      "tunisian orange blossom",
+      "orange blossom accord"
+    ],
+    "orcanox": [],
+    "orchid": [],
+    "orris": [
+      "orris root",
+      "orris butter"
+    ],
+    "osmanthus": [],
+    "oud": [
+      "agarwood",
+      "agar wood",
+      "hindi agarwood",
+      "hindi agarwood oud"
+    ],
+    "ozone": [],
+    "ozonic": [],
+    "ozonic notes": [],
+    "palo santo": [],
+    "panna cotta": [],
+    "papyrus": [],
+    "passion fruit": [],
+    "passionfruit": [],
+    "patchouli": [
+      "patchoulli",
+      "pathouli",
+      "patchoul",
+      "patchouli leaf",
+      "patchouli leaves",
+      "sulawesi patchouli",
+      "indian patchouli",
+      "patchouli indonesia",
+      "haitian patchouli"
+    ],
+    "peach": [],
+    "peach blossom": [],
+    "peach cream": [],
+    "pear": [],
+    "peony": [],
+    "pepper": [
+      "timur pepper"
+    ],
+    "peru balsam": [],
+    "petalia": [],
+    "petit grain": [],
+    "petitgrain": [],
+    "pimento": [],
+    "pineapple": [
+      "pine apple"
+    ],
+    "pink pepper": [
+      "pink peppercorn",
+      "pink peppercorns",
+      "pink- pepper"
+    ],
+    "pistachio": [],
+    "pitosporum": [],
+    "plum": [],
+    "pomegranate": [],
+    "powdery accord": [
+      "powdery notes",
+      "powdery",
+      "talc",
+      "white powder"
+    ],
+    "praline": [],
+    "raspberry": [
+      "rasberry"
+    ],
+    "red berries": [],
+    "red currant": [
+      "red currant buah ribes rubrum"
+    ],
+    "resin": [],
+    "rhubarb": [],
+    "rice": [],
+    "rose": [
+      "mawar",
+      "turkish rose",
+      "bulgarian rose",
+      "damask rose",
+      "damas rose",
+      "rose damas",
+      "rose damascena",
+      "may rose",
+      "rose extract",
+      "rose hindi",
+      "rose taif accord",
+      "rose water",
+      "rose water accord"
+    ],
+    "rose geranium": [],
+    "rosemary": [],
+    "rosewood": [],
+    "rum": [],
+    "saffron": [],
+    "sage": [
+      "clary sage",
+      "clary sage french"
+    ],
+    "salt": [],
+    "sand": [],
+    "sandalwood": [
+      "sandal wood",
+      "white sandalwood",
+      "red sandalwood",
+      "kayu cendana",
+      "sandalwood cendana",
+      "cendana"
+    ],
+    "sapodilla": [],
+    "sea salt": [],
+    "seaweed": [],
+    "sesame": [],
+    "sichuan pepper": [],
+    "sidr honey": [],
+    "smoke": [],
+    "smoked black tea": [],
+    "solar accord": [],
+    "soursop": [],
+    "spicy accord": [
+      "spicy notes",
+      "spicy accords",
+      "fresh spicy",
+      "warm spicy",
+      "spices",
+      "spicy"
+    ],
+    "star anise": [],
+    "strawberry": [],
+    "strawberry candy": [],
+    "suede": [],
+    "sugar": [],
+    "sugar cane": [],
+    "tagetes": [],
+    "tea": [],
+    "tea leaves": [],
+    "thyme": [],
+    "tobacco": [
+      "tabacco",
+      "tobac o",
+      "tobac*o"
+    ],
+    "toffee": [],
+    "tomato leaf": [],
+    "tonic water": [],
+    "tonka bean": [
+      "tonka",
+      "tonka beans",
+      "tonka absolute",
+      "roasted tonka"
+    ],
+    "tuberose": [
+      "indian tuberose",
+      "tuberose sedap malam",
+      "sedap malam"
+    ],
+    "turmeric leaf": [],
+    "vanilla": [
+      "vanila",
+      "vanille",
+      "vanilla bean",
+      "vanilla pod",
+      "vanilla flower",
+      "madagascar vanilla",
+      "moroccan vanilla",
+      "creamy vanilla",
+      "pompona"
+    ],
+    "verbena": [],
+    "vetiver": [
+      "haitian vetiver"
+    ],
+    "violet": [],
+    "violet leaf": [
+      "violet leaves"
+    ],
+    "vodka": [],
+    "water lily": [
+      "waterlily"
+    ],
+    "watermelon": [],
+    "whipped cream": [
+      "whipped cream krim kocok",
+      "krim kocok"
+    ],
+    "whiskey": [],
+    "white tea": [],
+    "white tea leaves": [],
+    "woody accord": [
+      "woody notes",
+      "woodsy notes",
+      "woody",
+      "woodsy",
+      "woods",
+      "wood",
+      "dry woods",
+      "dry wood",
+      "soft wood",
+      "white wood",
+      "white woods",
+      "precious woods",
+      "transparent wood"
+    ],
+    "wormwood": [],
+    "ylang ylang": [
+      "ylang-ylang",
+      "ylang",
+      "ylang - ylang"
+    ],
+    "yuzu": []
+  },
+  "review_status": "agent_proposal_pending_owner_review"
+}

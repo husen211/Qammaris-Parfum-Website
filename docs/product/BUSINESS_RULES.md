@@ -2,6 +2,12 @@
 
 Konsolidasi AUD-02, 2026-10-07: merangkum keputusan Owner yang sudah diterima, bukan keputusan bisnis baru. Implementasi aktual ada di [ARCHITECTURE](../architecture/ARCHITECTURE.md); status/verifikasi di [BACKLOG](../planning/BACKLOG.md). [Dokumen sebelum konsolidasi](../history/2026-10-07-context/BUSINESS_RULES.md) mempertahankan seluruh keputusan launching, daftar yang disetujui, dan aturan yang kemudian digantikan. Angka produk/release dalam riwayat adalah bukti bertanggal, bukan konfigurasi atau izin pekerjaan baru.
 
+## Tes preferensi V1 — keputusan disetujui, belum live
+
+Owner2026-10-09 approved [V1 preference plan](../planning/QAMMARIS_FRAGRANCE_PREFERENCE.md). Current active stage audit/review PREF-01; public six-question engine remains existing. Future V1: self-only, existing catalog-derived profiles with traceable evidence/unknowns/revisions, no full catalog refilling, no external AI. Detected avoids excluded; unknowns never allergy/free-from proof. Ready/Habis both eligible with Ready filter, max3 inside budget plus separate max1 ≤110% under the agreed relevance condition. Unisex eligible; verified identity only for size dedup. Eight core/two optional preference questions, no age/personality proxies, no unvalidated match percentages or performance promises.
+
+Seven-day same-browser anonymous results and24h local drafts; structured relevance feedback overall/per-product, no post-smell claims, no automatic learning; answers/feedback retained without automatic deletion. No PII/free text/account required.30 Owner/staff-labelled cases, five held out;18/20≥1 relevant and16/20≥2 plus all edges, not a universal accuracy claim. Human review/phase gates separate; production release requires new permission after acceptance. V2 covers gifts/offline QR/tester/staff and post-smell feedback. Detailed authoritative contract/questions/security/retention/rollout: [approved plan](../planning/QAMMARIS_FRAGRANCE_PREFERENCE.md); [ADR-037](../architecture/decisions/ADR-037-fragrance-preference-review-first.md).
+
 ## Lokasi dan jam operasional toko
 
 - Keputusan Owner 2026-10-08: toko Palu buka **Sabtu–Kamis, 09.00–21.00 WITA**; **Jumat tutup**. Halaman lokasi harus menampilkan jadwal ini, bukan Senin–Sabtu/Minggu tutup.
