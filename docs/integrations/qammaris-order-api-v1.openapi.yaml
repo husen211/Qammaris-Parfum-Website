@@ -1,11 +1,14 @@
 openapi: 3.1.0
 info:
   title: Qammaris Order API (Website ↔ Qammaris App)
-  version: 1.0.0-rc.4.1
+  version: 1.0.0-rc.4.2
   description: |
-    r4.1 final candidate matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.1. Qammaris App gave conditional
-    sign-off on r4; r4.1 applies the required corrections K-A (webhook signature path + vectors) and K-B (new
-    timestamp and signature on every webhook retry). Final once the App agent confirms r4.1; not implemented.
+    r4.2 DRAFT matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2; replaces the r4.1 baseline only after the
+    App agent signs off. r4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver
+    decision_id with Owner authorization vs relayed resends (X-Qammaris-Delivery); error codes aligned
+    (structure -> validation_failed, approval requirement -> proof_required, unauthorized waiver -> 403);
+    OrderListPage.unavailable and serialization_failed so one unreadable order cannot fail the list.
+    r4.1 history: K-A (webhook signature path + vectors) and K-B (new timestamp and signature on every webhook retry).
     The Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.
     The App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that
     permission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles
@@ -44,7 +47,7 @@ paths:
     get:
       operationId: getOrder
       parameters: [{ $ref: '#/components/parameters/OrderId' }]
-      x-error-codes: [order_not_found]
+      x-error-codes: [order_not_found, serialization_failed]
       responses:
         '200': { description: Order, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
         '400': { $ref: '#/components/responses/Error' }
@@ -168,6 +171,7 @@ paths:
         - { $ref: '#/components/parameters/OrderId' }
         - { $ref: '#/components/parameters/IdempotencyKey' }
         - { name: expense_ref, in: path, required: true, schema: { $ref: '#/components/schemas/ExpenseRef' } }
+        - { $ref: '#/components/parameters/QammarisDelivery' }
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CostRequest' } } } }
       x-error-codes: [order_not_found, action_not_allowed, revision_conflict, expense_already_linked, proof_required]
       responses: *mutationResponses
@@ -208,6 +212,7 @@ components:
   parameters:
     OrderId: { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/Ulid' } }
     IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,128}$' } }
+    QammarisDelivery: { name: X-Qammaris-Delivery, in: header, required: false, description: 'Transport identity, kept apart from the actor: live (default), retry, or resync by the App backend; stored in the Website audit', schema: { type: string, enum: [live, retry, resync] } }
     QammarisClient: { name: X-Qammaris-Client, in: header, required: true, schema: { type: string, maxLength: 64 } }
     QammarisTimestamp: { name: X-Qammaris-Timestamp, in: header, required: true, description: 'Unix seconds at send time; new on every attempt', schema: { type: string, pattern: '^[0-9]{10}$' } }
     QammarisSignature: { name: X-Qammaris-Signature, in: header, required: true, description: 'Lowercase hex HMAC-SHA256; new on every attempt', schema: { type: string, pattern: '^[0-9a-f]{64}$' } }
@@ -279,17 +284,25 @@ components:
     Waiver:
       type: object
       additionalProperties: false
-      required: [by, reason, at]
-      description: Owner exception allowing approval without proof
+      required: [by, reason, at, decision_id]
+      description: >-
+        Owner exception allowing approval without proof. by is the approving App Owner (not the sender); decision_id is
+        the App's immutable approval record. A new or changed decision is accepted only from an actor with app_role
+        owner whose app_user_id equals by.app_user_id and is on the Website's Owner allowlist; an identical resend of a
+        stored decision is accepted from any App actor. decision_id is null only on waivers stored before r4.2.
       properties:
         by: { $ref: '#/components/schemas/ActorRef' }
         reason: { type: string, minLength: 5, maxLength: 200 }
         at: { $ref: '#/components/schemas/Timestamp' }
+        decision_id: { type: [string, 'null'], pattern: '^[A-Za-z0-9_-]{8,64}$' }
     Reimbursement:
       type: object
       additionalProperties: false
       required: [status, amount, proof, waiver, updated_at]
-      description: amount equals the staff_advance part. approved/paid need proof=attached or proof=waived with a waiver.
+      description: >-
+        amount equals the staff_advance part. Structure (422 validation_failed): awaiting_proof needs proof=pending;
+        proof=waived needs a waiver object; any other proof needs waiver=null. Approval requirement (422 proof_required):
+        approved/paid need proof=attached or proof=waived.
       properties:
         status: { $ref: '#/components/schemas/ReimbursementStatus' }
         amount: { $ref: '#/components/schemas/Money' }
@@ -297,12 +310,12 @@ components:
         waiver: { oneOf: [{ $ref: '#/components/schemas/Waiver' }, { type: 'null' }] }
         updated_at: { $ref: '#/components/schemas/Timestamp' }
       allOf:
-        - if: { properties: { status: { enum: [approved, paid] } } }
-          then: { properties: { proof: { enum: [attached, waived] } } }
         - if: { properties: { status: { const: awaiting_proof } } }
           then: { properties: { proof: { const: pending } } }
         - if: { properties: { proof: { const: waived } } }
           then: { properties: { waiver: { $ref: '#/components/schemas/Waiver' } } }
+        - if: { properties: { proof: { enum: [pending, attached] } } }
+          then: { properties: { waiver: { type: 'null' } } }
     Claim:
       oneOf:
         - type: 'null'
@@ -464,7 +477,7 @@ components:
     Issue:
       type: object
       additionalProperties: false
-      required: [id, type, status, note, opened_by, opened_at, resolved_at]
+      required: [id, type, status, note, opened_by, opened_by_source, opened_at, resolved_at]
       properties:
         id: { $ref: '#/components/schemas/Ulid' }
         type: { $ref: '#/components/schemas/IssueType' }
@@ -472,9 +485,15 @@ components:
         note: { type: string }
         line_id: { oneOf: [{ $ref: '#/components/schemas/Ulid' }, { type: 'null' }] }
         reported_quantity: { type: [integer, 'null'] }
-        opened_by: { $ref: '#/components/schemas/ActorRef' }
+        opened_by: { oneOf: [{ $ref: '#/components/schemas/ActorRef' }, { type: 'null' }] }
+        opened_by_source: { type: string, enum: [app, website] }
         opened_at: { $ref: '#/components/schemas/Timestamp' }
         resolved_at: { $ref: '#/components/schemas/NullableTimestamp' }
+      allOf:
+        - if: { properties: { opened_by_source: { const: app } } }
+          then: { properties: { opened_by: { $ref: '#/components/schemas/ActorRef' } } }
+        - if: { properties: { opened_by_source: { const: website } } }
+          then: { properties: { opened_by: { type: 'null' } } }
     OrderSummary:
       type: object
       additionalProperties: false
@@ -507,6 +526,17 @@ components:
         data: { type: array, items: { $ref: '#/components/schemas/OrderSummary' } }
         next_cursor: { type: [string, 'null'], maxLength: 512, description: 'Opaque; sent back unchanged' }
         has_more: { type: boolean }
+        unavailable:
+          type: array
+          maxItems: 100
+          description: Orders on this page that could not be serialised; left out of data, readable again once fixed
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, reason_code]
+            properties:
+              id: { $ref: '#/components/schemas/Ulid' }
+              reason_code: { type: string, const: serialization_failed }
     Recipient:
       type: object
       additionalProperties: false
@@ -684,7 +714,8 @@ components:
               type: string
               enum: [bad_request, invalid_signature, stale_timestamp, unknown_client, action_not_allowed, order_not_found,
                      revision_conflict, task_already_claimed, invalid_transition, expense_already_linked, idempotency_key_reused,
-                     payload_too_large, validation_failed, proof_required, rate_limited, server_error, unavailable]
+                     payload_too_large, validation_failed, proof_required, rate_limited, server_error, serialization_failed,
+                     unavailable]
             message: { type: string }
             details: { type: object }
         request_id: { $ref: '#/components/schemas/Ulid' }
@@ -705,4 +736,5 @@ components:
         proof_required: 422
         rate_limited: 429
         server_error: 500
+        serialization_failed: 500
         unavailable: 503

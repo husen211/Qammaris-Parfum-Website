@@ -2,8 +2,8 @@
     "openapi": "3.1.0",
     "info": {
         "title": "Qammaris Order API (Website ↔ Qammaris App)",
-        "version": "1.0.0-rc.4.1",
-        "description": "r4.1 final candidate matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.1. Qammaris App gave conditional\nsign-off on r4; r4.1 applies the required corrections K-A (webhook signature path + vectors) and K-B (new\ntimestamp and signature on every webhook retry). Final once the App agent confirms r4.1; not implemented.\nThe Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.\nThe App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that\npermission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles\nopportunistically with `updated_since` because it has no cron.\ntests/Unit/OrderApiContractTest.php validates $refs, the Markdown examples, enums and per-operation error codes.\n"
+        "version": "1.0.0-rc.4.2",
+        "description": "r4.2 DRAFT matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2; replaces the r4.1 baseline only after the\nApp agent signs off. r4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver\ndecision_id with Owner authorization vs relayed resends (X-Qammaris-Delivery); error codes aligned\n(structure -> validation_failed, approval requirement -> proof_required, unauthorized waiver -> 403);\nOrderListPage.unavailable and serialization_failed so one unreadable order cannot fail the list.\nr4.1 history: K-A (webhook signature path + vectors) and K-B (new timestamp and signature on every webhook retry).\nThe Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.\nThe App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that\npermission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles\nopportunistically with `updated_since` because it has no cron.\ntests/Unit/OrderApiContractTest.php validates $refs, the Markdown examples, enums and per-operation error codes.\n"
     },
     "servers": [
         {
@@ -124,7 +124,8 @@
                     }
                 ],
                 "x-error-codes": [
-                    "order_not_found"
+                    "order_not_found",
+                    "serialization_failed"
                 ],
                 "responses": {
                     "200": {
@@ -841,6 +842,9 @@
                         "schema": {
                             "$ref": "#/components/schemas/ExpenseRef"
                         }
+                    },
+                    {
+                        "$ref": "#/components/parameters/QammarisDelivery"
                     }
                 ],
                 "requestBody": {
@@ -983,6 +987,20 @@
                 "schema": {
                     "type": "string",
                     "pattern": "^[A-Za-z0-9_-]{16,128}$"
+                }
+            },
+            "QammarisDelivery": {
+                "name": "X-Qammaris-Delivery",
+                "in": "header",
+                "required": false,
+                "description": "Transport identity, kept apart from the actor: live (default), retry, or resync by the App backend; stored in the Website audit",
+                "schema": {
+                    "type": "string",
+                    "enum": [
+                        "live",
+                        "retry",
+                        "resync"
+                    ]
                 }
             },
             "QammarisClient": {
@@ -1318,9 +1336,10 @@
                 "required": [
                     "by",
                     "reason",
-                    "at"
+                    "at",
+                    "decision_id"
                 ],
-                "description": "Owner exception allowing approval without proof",
+                "description": "Owner exception allowing approval without proof. by is the approving App Owner (not the sender); decision_id is the App's immutable approval record. A new or changed decision is accepted only from an actor with app_role owner whose app_user_id equals by.app_user_id and is on the Website's Owner allowlist; an identical resend of a stored decision is accepted from any App actor. decision_id is null only on waivers stored before r4.2.",
                 "properties": {
                     "by": {
                         "$ref": "#/components/schemas/ActorRef"
@@ -1332,6 +1351,13 @@
                     },
                     "at": {
                         "$ref": "#/components/schemas/Timestamp"
+                    },
+                    "decision_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "pattern": "^[A-Za-z0-9_-]{8,64}$"
                     }
                 }
             },
@@ -1345,7 +1371,7 @@
                     "waiver",
                     "updated_at"
                 ],
-                "description": "amount equals the staff_advance part. approved/paid need proof=attached or proof=waived with a waiver.",
+                "description": "amount equals the staff_advance part. Structure (422 validation_failed): awaiting_proof needs proof=pending; proof=waived needs a waiver object; any other proof needs waiver=null. Approval requirement (422 proof_required): approved/paid need proof=attached or proof=waived.",
                 "properties": {
                     "status": {
                         "$ref": "#/components/schemas/ReimbursementStatus"
@@ -1375,28 +1401,6 @@
                         "if": {
                             "properties": {
                                 "status": {
-                                    "enum": [
-                                        "approved",
-                                        "paid"
-                                    ]
-                                }
-                            }
-                        },
-                        "then": {
-                            "properties": {
-                                "proof": {
-                                    "enum": [
-                                        "attached",
-                                        "waived"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "if": {
-                            "properties": {
-                                "status": {
                                     "const": "awaiting_proof"
                                 }
                             }
@@ -1421,6 +1425,25 @@
                             "properties": {
                                 "waiver": {
                                     "$ref": "#/components/schemas/Waiver"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "proof": {
+                                    "enum": [
+                                        "pending",
+                                        "attached"
+                                    ]
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "waiver": {
+                                    "type": "null"
                                 }
                             }
                         }
@@ -1935,6 +1958,7 @@
                     "status",
                     "note",
                     "opened_by",
+                    "opened_by_source",
                     "opened_at",
                     "resolved_at"
                 ],
@@ -1972,7 +1996,21 @@
                         ]
                     },
                     "opened_by": {
-                        "$ref": "#/components/schemas/ActorRef"
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ActorRef"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "opened_by_source": {
+                        "type": "string",
+                        "enum": [
+                            "app",
+                            "website"
+                        ]
                     },
                     "opened_at": {
                         "$ref": "#/components/schemas/Timestamp"
@@ -1980,7 +2018,41 @@
                     "resolved_at": {
                         "$ref": "#/components/schemas/NullableTimestamp"
                     }
-                }
+                },
+                "allOf": [
+                    {
+                        "if": {
+                            "properties": {
+                                "opened_by_source": {
+                                    "const": "app"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "opened_by": {
+                                    "$ref": "#/components/schemas/ActorRef"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "opened_by_source": {
+                                    "const": "website"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "opened_by": {
+                                    "type": "null"
+                                }
+                            }
+                        }
+                    }
+                ]
             },
             "OrderSummary": {
                 "type": "object",
@@ -2123,6 +2195,28 @@
                     },
                     "has_more": {
                         "type": "boolean"
+                    },
+                    "unavailable": {
+                        "type": "array",
+                        "maxItems": 100,
+                        "description": "Orders on this page that could not be serialised; left out of data, readable again once fixed",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "id",
+                                "reason_code"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "$ref": "#/components/schemas/Ulid"
+                                },
+                                "reason_code": {
+                                    "type": "string",
+                                    "const": "serialization_failed"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -2762,6 +2856,7 @@
                                     "proof_required",
                                     "rate_limited",
                                     "server_error",
+                                    "serialization_failed",
                                     "unavailable"
                                 ]
                             },
@@ -2794,6 +2889,7 @@
                     "proof_required": 422,
                     "rate_limited": 429,
                     "server_error": 500,
+                    "serialization_failed": 500,
                     "unavailable": 503
                 }
             }

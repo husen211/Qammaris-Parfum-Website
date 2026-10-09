@@ -14,12 +14,13 @@ use Tests\TestCase;
  */
 class OrderMigrationsMariaDbTest extends TestCase
 {
-    /** ORD-02a … ORD-02e, newest last. */
+    /** ORD-02a … ORD-02e and contract r4.2, newest last. */
     private const ORD02 = [
         '2026_10_08_100001_add_admin_access_controls', '2026_10_08_200001_add_submission_token_to_online_orders',
         '2026_10_08_300001_add_order_state_dimensions_to_online_orders', '2026_10_09_000001_add_order_cutover_and_money_ledger',
         '2026_10_09_100001_add_order_issues_and_v2_operations', '2026_10_09_200001_create_customers_and_saved_addresses',
         '2026_10_09_300001_add_keep_adjustments_and_change_requests', '2026_10_09_400001_create_order_api_tables',
+        '2026_10_09_500001_add_delivery_to_online_order_events',
     ];
 
     protected function setUp(): void
@@ -41,10 +42,10 @@ class OrderMigrationsMariaDbTest extends TestCase
     public function test_ord02_migrations_backfill_ord01_data_and_roll_back_without_losing_it(): void
     {
         $files = collect(glob(database_path('migrations/*.php')))->map(fn ($file) => basename($file, '.php'))->sort()->values();
-        $this->assertSame(self::ORD02, $files->slice(-8)->values()->all(), 'ORD-02 migrations are the newest eight');
+        $this->assertSame(self::ORD02, $files->slice(-count(self::ORD02))->values()->all(), 'ORD-02 migrations are the newest ones');
 
         Artisan::call('migrate:fresh', ['--force' => true]);
-        Artisan::call('migrate:rollback', ['--step' => 8, '--force' => true]);
+        Artisan::call('migrate:rollback', ['--step' => count(self::ORD02), '--force' => true]);
         $this->assertFalse(Schema::hasColumn('online_orders', 'lifecycle'));
         $this->assertFalse(Schema::hasColumn('users', 'username'));
 
@@ -55,7 +56,7 @@ class OrderMigrationsMariaDbTest extends TestCase
         $this->assertBackfilled($ids);
         $this->assertNoImplicitTimestampUpdates();
 
-        Artisan::call('migrate:rollback', ['--step' => 8, '--force' => true]);
+        Artisan::call('migrate:rollback', ['--step' => count(self::ORD02), '--force' => true]);
         $this->assertSame($before, $this->ord01Snapshot(), 'Rollback keeps every ORD-01 row and value');
         foreach (['online_order_payments', 'online_order_issues', 'customers', 'online_order_claims', 'integration_outbox', 'integration_idempotency_keys', 'online_order_costs'] as $table) {
             $this->assertFalse(Schema::hasTable($table), $table);

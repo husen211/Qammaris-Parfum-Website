@@ -11,8 +11,10 @@ use App\Support\OrderApi\OrderSerializer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 /** Order API v1 reads (contract r4.1 §6, §8). Only V2 orders exist for the App; anything else is `order_not_found`. */
 class OrderApiReadController extends Controller
@@ -23,6 +25,7 @@ class OrderApiReadController extends Controller
     {
         [$since, $after, $limit, $lifecycle, $queue] = $this->listParameters($request);
         $data = [];
+        $unavailable = [];
         $last = null;
         $more = false;
         $cursor = $after;
@@ -33,7 +36,13 @@ class OrderApiReadController extends Controller
             foreach ($batch as $index => $order) {
                 $last = $order;
                 if ($queue === null || OnlineOrderState::queue($order, $order->issues->where('status', 'open')->count(), $order->claims->contains('task', 'preparation')) === $queue) {
-                    $data[] = OrderSerializer::summary($order);
+                    // r4.2: one unreadable order is reported, never fails the whole page.
+                    try {
+                        $data[] = OrderSerializer::summary($order);
+                    } catch (Throwable $error) {
+                        self::reportUnreadable($order, $error);
+                        $unavailable[] = ['id' => $order->public_id, 'reason_code' => 'serialization_failed'];
+                    }
                 }
                 if (count($data) === $limit) {
                     $more = $index < $batch->count() - 1 || $this->batch($since, $this->key($order), $lifecycle, 1)->isNotEmpty();
@@ -50,12 +59,29 @@ class OrderApiReadController extends Controller
             'data' => $data,
             'next_cursor' => $more && $last ? $this->encodeCursor($this->key($last)) : null,
             'has_more' => $more,
-        ]);
+        ] + ($unavailable === [] ? [] : ['unavailable' => array_slice($unavailable, 0, 100)]));
     }
 
     public function show(Request $request, string $id): JsonResponse
     {
-        return OrderApiResponse::json($request, OrderSerializer::order(self::findOrder($id)));
+        $order = self::findOrder($id);
+        try {
+            $body = OrderSerializer::order($order);
+        } catch (Throwable $error) {
+            self::reportUnreadable($order, $error);
+
+            throw new OrderApiException(500, 'serialization_failed', 'Order ini tidak bisa dibaca. Laporkan request_id ke Website.');
+        }
+
+        return OrderApiResponse::json($request, $body);
+    }
+
+    /** Log the order and the failure site only (no order or customer content) so the request_id can be traced. */
+    private static function reportUnreadable(OnlineOrder $order, Throwable $error): void
+    {
+        Log::warning('Order API: order could not be serialised', [
+            'order' => $order->public_id, 'error' => $error::class, 'at' => basename($error->getFile()).':'.$error->getLine(),
+        ]);
     }
 
     /** QR image from private storage; never cached. */

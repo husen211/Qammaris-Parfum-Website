@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Models\OnlineOrder;
+use App\Models\User;
+use App\Support\OrderActor;
 use App\Support\OrderApi\OrderApiSignature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -11,7 +14,7 @@ use Tests\Concerns\BuildsV2Orders;
 use Tests\Concerns\SignsOrderApiRequests;
 use Tests\TestCase;
 
-/** ORD-02e slice A: authentication, error envelope, reads and data minimisation against the r4.1 baseline. */
+/** ORD-02e slice A: authentication, error envelope, reads and data minimisation against the contract (r4.1 baseline, r4.2 draft additions). */
 class OrderApiReadTest extends TestCase
 {
     use BuildsV2Orders, RefreshDatabase, SignsOrderApiRequests;
@@ -20,6 +23,38 @@ class OrderApiReadTest extends TestCase
     {
         parent::setUp();
         $this->enableOrderApi();
+    }
+
+    /** Contract r4.2: Website-opened issues are served with opened_by=null; the admin stays in the Website audit. */
+    public function test_issues_from_the_website_and_the_app_are_served_with_their_source(): void
+    {
+        $order = $this->v2Order();
+        $admin = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN, 'name' => 'Admin Website'])->fresh();
+        config(['orders_api.website_issues' => true]);
+        app(OnlineOrderFulfillment::class)->openIssue($order->fresh(), null, OrderActor::user($admin), 'stock_problem', 'Stok tester tinggal 1');
+        app(OnlineOrderFulfillment::class)->openIssue($order->fresh(), null, OrderActor::app('665f0c2a9b1e4a0012ab34cd', 'Andi', 'employee'), 'courier_problem', 'Driver batal');
+
+        $read = $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$order->public_id)->assertOk(), 'Order');
+        $bySource = collect($read->issues)->keyBy('opened_by_source');
+        $this->assertNull($bySource['website']->opened_by);
+        $this->assertSame('665f0c2a9b1e4a0012ab34cd', $bySource['app']->opened_by->app_user_id);
+        $this->assertStringNotContainsString('Admin Website', $this->orderApi('GET', '/orders/'.$order->public_id)->getContent());
+        $this->assertSame([$admin->id, 'Admin Website'], [$order->issues()->whereNull('opened_by_app_user_id')->sole()->opened_by_user_id, $order->issues()->whereNull('opened_by_app_user_id')->sole()->opened_by_name]);
+    }
+
+    /** Contract r4.2: one order that cannot be serialised is reported in `unavailable`, never fails the page. */
+    public function test_an_unreadable_order_is_listed_as_unavailable_and_its_detail_answers_serialization_failed(): void
+    {
+        $good = $this->v2Order();
+        $broken = $this->v2Order();
+        $this->makeUnreadable($broken);
+
+        $page = $this->assertMatchesApiSchema($this->orderApi('GET', '/orders')->assertOk(), 'OrderListPage');
+        $this->assertSame([$good->public_id], array_column($page->data, 'id'));
+        $this->assertEquals([(object) ['id' => $broken->public_id, 'reason_code' => 'serialization_failed']], $page->unavailable);
+
+        $this->assertApiError($this->orderApi('GET', '/orders/'.$broken->public_id), 500, 'serialization_failed');
+        $this->assertObjectNotHasProperty('unavailable', $this->assertMatchesApiSchema($this->orderApi('GET', '/orders?lifecycle=completed')->assertOk(), 'OrderListPage'));
     }
 
     public function test_authentication_failures_use_the_contract_codes_in_order(): void

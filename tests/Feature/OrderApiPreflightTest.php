@@ -29,7 +29,7 @@ class OrderApiPreflightTest extends TestCase
             'orders.v2_enabled' => true, 'orders_api.enabled' => true, 'orders_api.client_id' => 'qammaris-app-staging',
             'orders_api.secret' => self::API_SECRET, 'orders_api.secret_previous' => '', 'orders_api.webhook_enabled' => true,
             'orders_api.webhook_url' => 'https://tunnel.example.test/api/integrations/website/orders/events', 'orders_api.webhook_secret' => self::HOOK_SECRET,
-            'orders_api.app_task_links' => false, 'qammaris_app.api_key' => '', 'mail.default' => 'log',
+            'orders_api.app_task_links' => false, 'qammaris_app.api_key' => '', 'mail.default' => 'log', 'orders_api.app_owner_ids' => ['6650aaaabbbbccccddddeeee'],
         ]);
     }
 
@@ -84,18 +84,23 @@ class OrderApiPreflightTest extends TestCase
     public function test_unreadable_orders_and_a_stopped_worker_are_reported(): void
     {
         $order = $this->v2Order();
-        // An issue opened in the Website while the API was off: r4.1 cannot represent it.
+        // r4.2: an issue opened in the Website is readable (opened_by_source=website); it is reported, not failed.
         config(['orders_api.enabled' => false]);
         app(OnlineOrderFulfillment::class)->openIssue($order, null, OrderActor::user($this->orderOwner), 'stock_problem', 'Stok kurang');
         config(['orders_api.enabled' => true]);
+        $broken = $this->v2Order();
+        $this->makeUnreadable($broken);
         IntegrationOutbox::query()->update(['delivered_at' => null, 'failed_at' => null, 'next_attempt_at' => now()->subMinutes(10)]);
+        config(['orders_api.app_owner_ids' => []]);
 
         $this->assertSame(1, Artisan::call('qammaris:order-api:preflight', ['--json' => true]));
         $checks = collect(json_decode(Artisan::output(), true)['checks'])->keyBy('check');
-        $this->assertSame('FAIL', $checks['website_issues']['status']);
-        $this->assertStringContainsString($order->public_id, $checks['website_issues']['detail']);
+        $this->assertSame(['INFO', '1 kendala V2 dari Website (r4.2: opened_by_source=website)'], [$checks['website_issues']['status'], $checks['website_issues']['detail']]);
         $this->assertSame('FAIL', $checks['serializable']['status']);
+        $this->assertStringContainsString($broken->public_id, $checks['serializable']['detail']);
+        $this->assertStringNotContainsString($order->public_id, $checks['serializable']['detail']);
         $this->assertSame('FAIL', $checks['webhook_worker']['status']);
+        $this->assertSame('WARN', $checks['app_owner_ids']['status'], 'No allowlist: new waiver decisions would be refused');
     }
 
     public function test_pages_are_not_indexed_outside_production(): void

@@ -16,6 +16,8 @@ For the Website operator and the Qammaris App agent. Decision: [ADR-041](../arch
 | `QAMMARIS_ORDER_WEBHOOK_CLIENT_ID` / `_SECRET` / `_SECRET_PREVIOUS` | Website → App HMAC | shared out of band |
 | `QAMMARIS_ORDER_APP_TASK_LINKS` | Group link opens the App instead of the Admin PWA | `false` until the App order page is live |
 | `QAMMARIS_APP_ORDERS_URL` | App order page base | `https://qammarisapp.com/orders` |
+| `QAMMARIS_APP_OWNER_IDS` | r4.2: comma-separated App user IDs of the Owners who may create or change a proof waiver. Server only. Empty means new waivers are refused. | the App's synthetic Owner ID(s) |
+| `QAMMARIS_ORDER_API_WEBSITE_ISSUES` | r4.2: the Admin PWA may open V2 issues while the API is on | `false` until the App confirms it reads `opened_by_source` |
 
 Secrets are exchanged out of band only. Never put them in Git, chat, tickets or logs.
 

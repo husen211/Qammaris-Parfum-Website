@@ -11,7 +11,6 @@ use App\Support\OnlineOrderState;
 use App\Support\Rupiah;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
-use LogicException;
 
 /**
  * Order API v1 JSON (contract r4.1 §6). Every shape here is validated against the OpenAPI baseline in tests.
@@ -244,7 +243,8 @@ final class OrderSerializer
                 'status' => $cost->reimbursement_status,
                 'amount' => self::money($cost->reimbursement_amount),
                 'proof' => $cost->proof,
-                'waiver' => $cost->waiver,
+                // r4.2: waivers stored before decision_id existed are served with decision_id null.
+                'waiver' => $cost->waiver === null ? null : $cost->waiver + ['decision_id' => null],
                 'updated_at' => self::time($cost->reimbursement_updated_at),
             ],
             'reported_by' => ['app_user_id' => $cost->reported_by_app_user_id, 'display_name' => $cost->reported_by_name],
@@ -261,23 +261,13 @@ final class OrderSerializer
             'note' => $issue->note,
             'line_id' => $issue->line_id,
             'reported_quantity' => $issue->reported_quantity,
-            'opened_by' => self::issueOpenedBy($issue),
+            'opened_by' => $issue->opened_by_app_user_id === null ? null
+                : ['app_user_id' => $issue->opened_by_app_user_id, 'display_name' => $issue->opened_by_name],
+            // r4.2: an issue opened in the Website Admin PWA has no App user; the admin stays in the Website audit.
+            'opened_by_source' => $issue->opened_by_app_user_id === null ? 'website' : 'app',
             'opened_at' => self::time($issue->created_at),
             'resolved_at' => self::time($issue->resolved_at),
         ];
-    }
-
-    /**
-     * r4.1 requires an App ActorRef here. An issue opened in the Website Admin PWA has no App user; rather than
-     * invent an app_user_id, such issues need the contract clarification agreed with the App agent (open item).
-     */
-    private static function issueOpenedBy(OnlineOrderIssue $issue): array
-    {
-        if ($issue->opened_by_app_user_id === null) {
-            throw new LogicException('Issue opened in the Website cannot be represented in API v1 r4.1 (opened_by gap).');
-        }
-
-        return ['app_user_id' => $issue->opened_by_app_user_id, 'display_name' => $issue->opened_by_name];
     }
 
     private static function money(mixed $amount): int

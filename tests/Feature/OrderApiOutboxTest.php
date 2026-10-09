@@ -181,7 +181,8 @@ class OrderApiOutboxTest extends TestCase
         $this->assertSame(0, $order->issues()->count());
         $this->assertMatchesApiSchema($this->orderApi('GET', '/orders')->assertOk(), 'OrderListPage');
 
-        config(['orders_api.enabled' => false]);
+        // r4.2: once the App reads opened_by_source, the Admin PWA may record issues while the API stays on.
+        config(['orders_api.website_issues' => true]);
         $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('+ Catat kendala');
         $this->actingAs($owner)->post(route('admin.orders.v2.issues', $order), $issue)->assertSessionHas('order_notice.type', 'success');
         $this->assertSame(1, $order->issues()->count());

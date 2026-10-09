@@ -6,6 +6,7 @@ use App\Actions\Orders\CreateOnlineOrder;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\OnlineOrder;
+use App\Models\OnlineOrderClaim;
 use App\Models\Product;
 use App\Models\User;
 
@@ -42,6 +43,20 @@ trait BuildsV2Orders
         [$order] = app(CreateOnlineOrder::class)->handle($this->orderOwner, $this->orderLines, $customer);
 
         return $order->fresh(['items']);
+    }
+
+    /**
+     * Makes one order unserialisable on every driver: its claim's timestamp turns unparseable in memory when loaded
+     * (MySQL/MariaDB reject such a value in the column itself, so the database row stays valid).
+     */
+    protected function makeUnreadable(OnlineOrder $order): void
+    {
+        $order->claims()->create(['task' => 'preparation', 'holder_app_user_id' => '665f0c2a9b1e4a0012ab34cd', 'holder_display_name' => 'Andi', 'claimed_at' => now()]);
+        OnlineOrderClaim::retrieved(function (OnlineOrderClaim $claim) use ($order) {
+            if ($claim->online_order_id === $order->id) {
+                $claim->setRawAttributes(['claimed_at' => 'not-a-date'] + $claim->getAttributes());
+            }
+        });
     }
 
     protected function actor(string $id = '665f0c2a9b1e4a0012ab34cd', string $name = 'Andi', string $role = 'employee'): array

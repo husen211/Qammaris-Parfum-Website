@@ -151,7 +151,8 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
   - Admin PWA adalah jalur cadangan dan tidak dibatasi klaim.
   - Super Admin bisa melepas klaim yang macet dengan alasan, dan alasan itu tercatat.
 - Link pesanan di grup WhatsApp membuka Admin PWA. Link baru membuka halaman pesanan di App setelah saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dinyalakan atas persetujuan Owner. Link ini tidak pernah berisi token akses.
-- Selama integrasi aktif, **kendala baru dicatat dari App**. Kendala yang sudah ada tetap bisa diselesaikan di Website. Aturan ini berlaku sampai kontrak r4.2 disetujui Owner.
+- Selama integrasi aktif, **kendala baru dicatat dari App**. Kendala yang sudah ada tetap bisa diselesaikan di Website. Aturan ini berlaku sampai kontrak r4.2 berlaku dan App mendukungnya (draf r4.2: kendala dari Website dikirim dengan `opened_by_source=website`).
+- **Pengecualian bukti reimburse (keputusan Owner 2026-10-09, draf r4.2):** hanya Owner App yang boleh membuat atau menyetujui pengecualian bukti. Backend App boleh mengirim ulang keputusan yang sudah sah tanpa Owner sedang melakukan request itu. Website memisahkan pemberi persetujuan, aktor request, dan jalur sinkronisasi. Keputusan baru tidak diterima hanya karena payload memuat nama atau ID Owner: Owner itu sendiri yang harus mengirim, dan ID-nya harus terdaftar di allowlist Website.
 - Bila App bermasalah, pesanan tetap dikerjakan di Admin PWA. Pemberitahuan ke App menunggu dan dicoba ulang. Setelah 24 jam, event yang gagal tampil di **Integrasi App** untuk dikirim ulang oleh Super Admin.
 
 ### Status pesanan terpisah (ORD-02c, branch review)

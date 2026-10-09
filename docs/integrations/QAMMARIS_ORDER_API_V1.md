@@ -1,6 +1,6 @@
 # Qammaris Order API v1 — kontrak Website ↔ Qammaris App
 
-Status: **BASELINE API v1 — dibekukan (r4.1, OpenAPI `1.0.0-rc.4.1`, 2026-10-08).**
+Status: **DRAF r4.2 (OpenAPI `1.0.0-rc.4.2`, 2026-10-09) — menunggu sign-off agen App.** Baseline yang berlaku tetap **r4.1** (OpenAPI `1.0.0-rc.4.1`, branch ORD-02) sampai agen App menyetujui draf ini.
 - Agen Qammaris App memberi *conditional sign-off* atas r4 setelah memverifikasi HMAC, 16 contoh JSON, OpenAPI, enum, dan R1–R10. Syaratnya koreksi K-A dan K-B, yang diterapkan di r4.1 (§3, §12).
 - Agen App **mengonfirmasi r4.1** tanpa koreksi. Vektor webhook diverifikasi dengan kode signing App sendiri (`order-signing.ts`, branch App `dev/september-2026`).
   - `sha256` raw body dan kedua signature cocok byte demi byte.
@@ -19,7 +19,13 @@ Riwayat versi:
   - **K-B:** setiap retry webhook memakai timestamp dan signature baru (§12).
   Tidak ada perubahan skema payload.
 - **Klarifikasi r4.1 (2026-10-09):** aturan klaim per aksi dan `details` pada `403 action_not_allowed` (§8.1). Tidak mengubah skema; OpenAPI tetap `1.0.0-rc.4.1`.
-- **Usulan r4.2 (menunggu persetujuan Owner):** `Issue.opened_by` menjadi `ActorRef | null`, ditambah `opened_by_source: "app" | "website"`, agar kendala yang dibuka di Website bisa diserialisasi. Agen App setuju secara teknis. Sampai r4.2 terbit, kendala pesanan V2 hanya dibuka dari App selama integrasi aktif.
+- **Smoke test lokal r4.1 (2026-10-09):** putaran 3 lulus 23/0/1, 135/135 webhook ([bukti](../verification/ord-02e/SMOKE_LOCAL.md)). Hasil ini adalah baseline pembanding r4.2.
+- **r4.2 (DRAF, 2026-10-09; keputusan Owner, menunggu sign-off agen App)**:
+  1. **Issue:** `opened_by` menjadi `ActorRef | null`, ditambah `opened_by_source` (`app` | `website`). Kendala dari Website: `opened_by=null`. Identitas admin Website tetap lengkap di audit internal Website (§8.6).
+  2. **Waiver:** ditambah `decision_id` (ID catatan persetujuan App yang tidak berubah). Pemberi persetujuan (`waiver.by`) dipisah dari aktor request dan dari jalur sinkronisasi (header `X-Qammaris-Delivery`). Keputusan baru atau berubah hanya diterima dari Owner App yang ada di allowlist Website. Kirim ulang keputusan yang identik boleh dari aktor App mana pun (§8.5).
+  3. **Kode error diselaraskan:** struktur waiver salah/hilang → `422 validation_failed`; payload valid tetapi bukti tidak memenuhi syarat approval → `422 proof_required`; membuat/mengubah waiver tanpa otorisasi → `403 action_not_allowed` (§10).
+  4. **Daftar order tahan galat:** `OrderListPage.unavailable` dan kode `500 serialization_failed`, sehingga satu order yang tidak bisa diserialisasi tidak menggagalkan seluruh daftar (§6.3).
+  5. **Kompatibilitas:** semua perubahan aditif, kecuali aturan status→bukti yang pindah dari skema ke validasi bisnis (kodenya kini `proof_required`). Waiver lama tanpa `decision_id` ditampilkan dengan `decision_id: null`. Urutan rilis ada di §14.
 
 Skema mesin: [`qammaris-order-api-v1.openapi.yaml`](qammaris-order-api-v1.openapi.yaml). Markdown dan OpenAPI harus sama. Test `tests/Unit/OrderApiContractTest.php` memvalidasi:
 - setiap `$ref` OpenAPI;
@@ -207,6 +213,14 @@ Order di atas sudah `completed` walaupun reimburse staf masih `awaiting_proof` (
 
 `next_cursor` adalah string opak. App mengirimnya kembali tanpa ditafsirkan. Urutan selalu `(updated_at, id)` naik.
 
+**r4.2:** bila satu order di halaman tidak bisa diserialisasi, order itu tidak dimasukkan ke `data` dan dicatat di `unavailable` (`id`, `reason_code: serialization_failed`). Halaman tetap `200`. `GET /orders/{id}` untuk order itu menjawab `500 serialization_failed` dengan `request_id`, supaya bisa dilacak di log Website. Field `unavailable` bersifat opsional; bila tidak ada masalah, field ini tidak dikirim.
+
+<!-- validate: OrderListPage -->
+```json
+{ "data": [], "next_cursor": null, "has_more": false,
+  "unavailable": [ { "id": "01JABCDE2F3G4H5J6K7M8N9P0Q", "reason_code": "serialization_failed" } ] }
+```
+
 ## 7. Status dan transisi
 
 | Dimensi | Nilai | Pengubah / aturan |
@@ -352,9 +366,28 @@ Bila `booking_responsibility=customer`, staf langsung mencatat handover `custome
   - `status` ∈ `not_applicable`, `awaiting_proof`, `submitted`, `approved`, `paid`, `rejected`, `cancelled`;
   - `amount` = total bagian `staff_advance` (0 dan `not_applicable` bila tidak ada talangan);
   - `proof` ∈ `pending`, `attached`, `waived`.
-- **Aturan bukti (Owner 1, divalidasi kedua sisi, `422 proof_required`)**:
-  - `approved`/`paid` hanya bila `proof=attached`, atau `proof=waived` dengan `waiver` (`by` owner, `reason`, `at`);
-  - `awaiting_proof` berarti `proof=pending`.
+- **Struktur (`422 validation_failed`, r4.2):**
+  - `proof=waived` wajib `waiver` berupa objek lengkap (`by`, `reason`, `at`, `decision_id`); `waiver` null atau hilang ditolak;
+  - `proof` `pending`/`attached` wajib `waiver=null`;
+  - `awaiting_proof` berarti `proof=pending`;
+  - keputusan waiver baru wajib membawa `decision_id` (tidak null).
+- **Syarat approval (`422 proof_required`, Owner 1, divalidasi kedua sisi):** `approved`/`paid` hanya bila `proof=attached` atau `proof=waived`. Payload yang strukturnya valid tetapi tidak memenuhi syarat ini (misalnya `approved` dengan `proof=pending`) dijawab `proof_required`.
+- **Otorisasi waiver (r4.2, keputusan Owner 2026-10-09):** hanya Owner App yang boleh membuat atau menyetujui pengecualian bukti. Tiga identitas dipisah:
+
+  | Identitas | Sumber | Disimpan Website |
+  |---|---|---|
+  | Pemberi persetujuan | `waiver.by` + `waiver.decision_id` + `waiver.at` | di biaya (`waiver`) |
+  | Aktor request | `actor`: orang yang tindakannya menghasilkan versi biaya ini | di event audit |
+  | Jalur kirim | klien HMAC + `X-Request-Id` + header `X-Qammaris-Delivery` (`live` bawaan, `retry`, `resync`) | di event audit |
+
+  - **Keputusan baru atau berubah** (`decision_id` belum tersimpan untuk `expense_ref` ini, atau `decision_id` sama dengan isi berbeda) diterima hanya bila ketiganya benar:
+    1. `actor.app_role = owner`;
+    2. `actor.app_user_id = waiver.by.app_user_id`;
+    3. ID itu ada di **allowlist Owner Website** (`QAMMARIS_APP_OWNER_IDS`, diatur di server Website, tidak pernah diambil dari payload).
+    Bila tidak → `403 action_not_allowed`. Nama atau ID Owner di payload saja tidak cukup.
+  - **Kirim ulang keputusan yang sudah tersimpan** (`decision_id`, `by`, `reason`, `at` identik) diterima dari aktor App mana pun, termasuk sinkronisasi backend App tanpa Owner yang sedang melakukan request. Status reimburse boleh berubah di kiriman ulang itu sesuai aturan di atas.
+  - Bila keputusan Owner belum pernah sampai ke Website (misalnya Website sedang mati), backend App mengirim ulang request aslinya dengan `actor` = Owner yang memutuskan dan `X-Qammaris-Delivery: retry` atau `resync`.
+  - Waiver yang tersimpan sebelum r4.2 tidak punya `decision_id` (ditampilkan `null`). Kiriman ulang yang identik tetap diterima; perubahan apa pun pada waiver itu diperlakukan sebagai keputusan baru.
 - Konkurensi: `source_version` integer naik dari App. Versi lebih lama atau sama → no-op 200. `expected_revision` boleh dikirim, dan bila dikirim divalidasi. Ini supaya pembaruan reimburse mingguan tidak gagal hanya karena order berubah.
 - `obligations[type=reimbursement]` **diturunkan Website** dari `costs` (App tidak menulis obligations):
   - `open` saat `awaiting_proof`, `submitted`, `approved`;
@@ -375,10 +408,39 @@ Bila `booking_responsibility=customer`, staf langsung mencatat handover `custome
 { "kind": "actual_shipping", "status": "active", "amount": 20000,
   "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
   "reimbursement": { "status": "approved", "amount": 5000, "proof": "waived",
-    "waiver": { "by": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner" }, "reason": "Struk Maxim hilang, sudah dicek di aplikasi", "at": "2026-10-09T02:00:00Z" },
+    "waiver": { "by": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner" }, "reason": "Struk Maxim hilang, sudah dicek di aplikasi", "at": "2026-10-09T02:00:00Z",
+                "decision_id": "apr_7c1e2d9a4b5f4e3a" },
     "updated_at": "2026-10-09T02:00:00Z" },
   "source_version": 3,
   "actor": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner", "app_role": "owner" } }
+```
+
+Kiriman ulang keputusan yang sama oleh sinkronisasi backend App (`X-Qammaris-Delivery: resync`), dengan aktor karyawan yang menandai sudah dibayar:
+
+<!-- validate: CostRequest -->
+```json
+{ "kind": "actual_shipping", "status": "active", "amount": 20000,
+  "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
+  "reimbursement": { "status": "paid", "amount": 5000, "proof": "waived",
+    "waiver": { "by": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner" }, "reason": "Struk Maxim hilang, sudah dicek di aplikasi", "at": "2026-10-09T02:00:00Z",
+                "decision_id": "apr_7c1e2d9a4b5f4e3a" },
+    "updated_at": "2026-10-10T01:00:00Z" },
+  "source_version": 4,
+  "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
+```
+
+### 8.6 Kendala: sumber pembuka (r4.2)
+
+- Kendala dari App: `opened_by` = aktor App, `opened_by_source = "app"`.
+- Kendala dari Admin PWA Website: `opened_by = null`, `opened_by_source = "website"`. App menampilkannya sebagai "Dicatat di Website".
+- Identitas admin Website (ID akun, nama, waktu) tetap lengkap di audit internal Website dan tidak dikirim ke App.
+- Menyelesaikan kendala yang dibuka di Website lewat App mengikuti aturan yang sama dengan kendala orang lain (§4: owner saja).
+
+<!-- validate: Issue -->
+```json
+{ "id": "01JABCG7QWERTYZXPASDFGHJKM", "type": "stock_problem", "status": "open", "note": "Stok tester tinggal 1",
+  "line_id": "01JABCDE9F3G4H5J6K7M8N9P0Q", "reported_quantity": 1,
+  "opened_by": null, "opened_by_source": "website", "opened_at": "2026-10-09T03:00:00Z", "resolved_at": null }
 ```
 
 ## 9. Antrean `queue` (R10)
@@ -414,7 +476,7 @@ Nilai `queue`: `needs_handling`, `preparing`, `ready`, `awaiting_pickup`, `in_de
 | 401 | `invalid_signature` | Jangan retry tanpa perbaikan |
 | 401 | `stale_timestamp` | Periksa jam server |
 | 401 | `unknown_client` | Periksa konfigurasi |
-| 403 | `action_not_allowed` | Aksi owner-only oleh `employee`, atau di luar scope |
+| 403 | `action_not_allowed` | Aksi owner-only oleh `employee`, di luar scope, atau waiver baru/berubah tanpa otorisasi Owner (§8.5) |
 | 404 | `order_not_found` | Order salah atau belum dibagikan |
 | 409 | `revision_conflict` | Baca ulang; bila diulang = aksi baru, key baru (§11) |
 | 409 | `task_already_claimed` | Tampilkan pemegang, jangan retry |
@@ -422,10 +484,11 @@ Nilai `queue`: `needs_handling`, `preparing`, `ready`, `awaiting_pickup`, `in_de
 | 409 | `expense_already_linked` | Bug data, laporkan |
 | 409 | `idempotency_key_reused` | Key sama, payload beda: bug App |
 | 413 | `payload_too_large` | Perkecil berkas |
-| 422 | `validation_failed` | Perbaiki input (`details.fields`) |
-| 422 | `proof_required` | Lampirkan bukti atau pengecualian owner |
+| 422 | `validation_failed` | Perbaiki input (`details.fields`); termasuk struktur waiver salah/hilang |
+| 422 | `proof_required` | Payload valid, tetapi approval belum memenuhi syarat bukti: lampirkan bukti atau minta pengecualian Owner |
 | 429 | `rate_limited` | Tunggu `Retry-After` |
 | 500 | `server_error` | Retry jaringan, key sama |
+| 500 | `serialization_failed` | Order tidak bisa dibaca; laporkan `request_id` ke Website, jangan retry terus-menerus |
 | 503 | `unavailable` | Retry jaringan, key sama |
 
 ## 11. Idempotency dan revision (R3)
@@ -434,7 +497,7 @@ Nilai `queue`: `needs_handling`, `preparing`, `ready`, `awaiting_pickup`, `in_de
 - **Retry jaringan** (timeout, 5xx, 429): key **sama** + payload **identik**. Hasilnya respons tersimpan, tanpa efek ganda. App retry terbatas (±3 kali) hanya selama request staf berjalan; sisanya "Belum terkirim — Kirim ulang" dengan key yang sama. Tidak ada retry latar karena App tanpa cron.
 - **Setelah `409 revision_conflict`**: App membaca ulang order. Bila staf/App memutuskan mengulang, itu **aksi logis baru**: key **baru** dan `expected_revision` **baru**. Memakai key lama dengan payload baru → `409 idempotency_key_reused`.
 - `expected_revision` wajib untuk preparation, courier, J&T, QR, handover, delivery. Klaim/issue opsional (§8.1). Biaya memakai `source_version` (§8.5).
-- Audit Website per event: `app_user_id`, `display_name`, `app_role`, `Idempotency-Key`, `X-Request-Id`. Replay tidak menambah event.
+- Audit Website per event: `app_user_id`, `display_name`, `app_role`, `Idempotency-Key`, `X-Request-Id`, dan (r4.2) `X-Qammaris-Delivery`. Pemberi persetujuan waiver disimpan terpisah di biaya. Replay tidak menambah event.
 
 ## 12. Webhook Website → App
 
@@ -486,7 +549,13 @@ Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`.
 - Perubahan non-breaking juga memerlukan pemberitahuan ke agen App.
 - `tests/Unit/OrderApiContractTest.php` mengunci SHA-256 file OpenAPI baseline. Setiap perubahan file itu membuat test gagal sampai hash baseline diperbarui bersama catatan revisi dan persetujuannya.
 
-Urutan:
+Urutan rilis r4.2 (setelah sign-off agen App):
+1. App menerima respons r4.2 (field baru `opened_by_source`, `decision_id`, `unavailable`) dan mengirim `decision_id` untuk keputusan waiver baru.
+2. Website menerapkan r4.2. Allowlist `QAMMARIS_APP_OWNER_IDS` diisi di server.
+3. Setelah App mengonfirmasi tahap 1, Website membuka pencatatan kendala dari Admin PWA selama integrasi aktif (`QAMMARIS_ORDER_API_WEBSITE_ISSUES=true`).
+4. Smoke ulang dengan harness App, dibandingkan dengan baseline smoke r4.1.
+
+Urutan awal:
 1. r4 conditional sign-off App, r4.1 dikonfirmasi agen App (selesai, 2026-10-08);
 2. implementasi Website ORD-02e dan App mengikuti kontrak final;
 3. tes kontrak bersama agen App memakai contoh payload dan vektor HMAC resmi dokumen ini;

@@ -174,9 +174,11 @@ class OrderApiWriteTest extends TestCase
 
         $this->assertApiError($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['amount' => 21000, 'source_version' => 2])), 422, 'validation_failed');
         $this->assertApiError($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['reimbursement' => ['amount' => 4000], 'source_version' => 2])), 422, 'validation_failed');
-        $this->assertApiError($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['reimbursement' => ['status' => 'approved', 'proof' => 'pending'], 'source_version' => 2])), 422, 'validation_failed');
+        // r4.2: a structurally valid payload that does not meet the approval requirement is proof_required.
+        $this->assertApiError($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['reimbursement' => ['status' => 'approved', 'proof' => 'pending'], 'source_version' => 2])), 422, 'proof_required');
         $this->assertMutation($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['reimbursement' => ['status' => 'submitted', 'proof' => 'pending'], 'source_version' => 2])));
-        $waiver = ['by' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner'], 'reason' => 'Struk hilang, sudah dicek', 'at' => '2026-10-09T04:00:00Z'];
+        config(['orders_api.app_owner_ids' => [self::OWNER]]);
+        $waiver = ['by' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner'], 'reason' => 'Struk hilang, sudah dicek', 'at' => '2026-10-09T04:00:00Z', 'decision_id' => 'apr_0000000000000001'];
         $this->assertApiError($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['reimbursement' => ['status' => 'approved', 'proof' => 'waived', 'waiver' => $waiver], 'source_version' => 3])), 403, 'action_not_allowed');
         $approved = $this->assertMutation($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['reimbursement' => ['status' => 'approved', 'proof' => 'waived', 'waiver' => $waiver], 'source_version' => 3, 'actor' => $this->actor(self::OWNER, 'Owner', 'owner')])));
         $this->assertSame('approved', $approved->order->costs[0]->reimbursement->status);
@@ -251,6 +253,68 @@ class OrderApiWriteTest extends TestCase
         $this->assertApiError($this->mutate('POST', $order, '/claims', '[1,2]'), 400, 'bad_request');
         $this->assertApiError($this->mutate('POST', $order, '/issues', str_repeat('x', 64 * 1024 + 1)), 413, 'payload_too_large');
         $this->assertApiError($this->orderApi('POST', '/orders/01JABCDE2F3G4H5J6K7M8N9P0Q/claims', ['task' => 'preparation', 'actor' => $this->actor()], ['Idempotency-Key' => Str::random(20)]), 404, 'order_not_found');
+    }
+
+    /** Contract r4.2 (Owner 2026-10-09): only an allowlisted App Owner creates or changes a waiver; resends are relayed. */
+    public function test_waiver_decisions_need_the_deciding_allowlisted_owner_and_identical_resends_are_relayed(): void
+    {
+        $order = $this->v2Order();
+        $ref = 'exp_waiver_r42_000000000001';
+        $waiver = ['by' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner'], 'reason' => 'Struk Maxim hilang, sudah dicek', 'at' => '2026-10-09T02:00:00Z', 'decision_id' => 'apr_7c1e2d9a4b5f4e3a'];
+        $cost = fn (array $reimbursement, int $version, array $actor) => ['kind' => 'actual_shipping', 'status' => 'active', 'amount' => 5000,
+            'funding' => [['source' => 'staff_advance', 'amount' => 5000]],
+            'reimbursement' => $reimbursement + ['amount' => 5000, 'updated_at' => '2026-10-09T02:00:00Z'], 'source_version' => $version, 'actor' => $actor];
+        $owner = $this->actor(self::OWNER, 'Owner', 'owner');
+        $approve = fn (?array $w, int $version, array $actor, array $headers = []) => $this->mutate('PUT', $order, '/costs/'.$ref,
+            $cost(['status' => 'approved', 'proof' => 'waived', 'waiver' => $w], $version, $actor), null, $headers);
+
+        $this->assertMutation($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['status' => 'submitted', 'proof' => 'pending', 'waiver' => null], 1, $this->actor())));
+
+        // Structure: waived needs a full waiver; a new decision needs decision_id.
+        $this->assertApiError($approve(null, 2, $owner), 422, 'validation_failed');
+        config(['orders_api.app_owner_ids' => [self::OWNER]]);
+        $this->assertApiError($approve(['decision_id' => null] + $waiver, 2, $owner), 422, 'validation_failed');
+
+        // An Owner ID in the payload is not enough: the deciding Owner must send it and be on the Website allowlist.
+        $this->assertApiError($approve($waiver, 2, $this->actor()), 403, 'action_not_allowed');
+        $this->assertApiError($approve($waiver, 2, $this->actor(self::IKRAR, 'Ikrar', 'owner')), 403, 'action_not_allowed');
+        config(['orders_api.app_owner_ids' => ['6650ffffffffffffffffffff']]);
+        $this->assertApiError($approve($waiver, 2, $owner), 403, 'action_not_allowed');
+        config(['orders_api.app_owner_ids' => [self::OWNER]]);
+        $this->assertSame('submitted', $order->costs()->sole()->reimbursement_status, 'Refused decisions change nothing');
+
+        $approved = $this->assertMutation($approve($waiver, 2, $owner));
+        $this->assertEquals(json_decode(json_encode($waiver)), $approved->order->costs[0]->reimbursement->waiver);
+
+        // The App backend relays the stored decision (resync) with an employee actor, e.g. when marking it paid.
+        $paid = $this->assertMutation($this->mutate('PUT', $order, '/costs/'.$ref,
+            $cost(['status' => 'paid', 'proof' => 'waived', 'waiver' => $waiver], 3, $this->actor()), null, ['X-Qammaris-Delivery' => 'resync']));
+        $this->assertSame(['paid', self::OWNER], [$paid->order->costs[0]->reimbursement->status, $paid->order->costs[0]->reimbursement->waiver->by->app_user_id]);
+        $event = $order->events()->reorder('id', 'desc')->first();
+        $this->assertSame(['cost_updated', '665f0c2a9b1e4a0012ab34cd', 'resync'], [$event->kind, $event->actor_app_user_id, $event->delivery]);
+        $this->assertSame('live', $order->events()->where('kind', 'cost_updated')->orderBy('id')->first()->delivery);
+
+        // Changing the decision is a new decision again; an unknown delivery mode is refused.
+        $this->assertApiError($approve(['reason' => 'Alasan lain dari karyawan'] + $waiver, 4, $this->actor()), 403, 'action_not_allowed');
+        $this->assertApiError($approve($waiver, 4, $this->actor(), ['X-Qammaris-Delivery' => 'batch']), 400, 'bad_request');
+    }
+
+    public function test_waivers_stored_before_r42_are_served_with_a_null_decision_id_and_identical_resends_pass(): void
+    {
+        $order = $this->v2Order();
+        $legacy = ['by' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner'], 'reason' => 'Struk hilang, sudah dicek', 'at' => '2026-10-09T04:00:00Z'];
+        $order->costs()->create(['expense_ref' => 'exp_legacy_waiver_0001', 'kind' => 'actual_shipping', 'status' => 'active', 'amount' => '5000.00',
+            'funding' => [['source' => 'staff_advance', 'amount' => 5000]], 'reimbursement_status' => 'approved', 'reimbursement_amount' => '5000.00',
+            'proof' => 'waived', 'waiver' => $legacy, 'reimbursement_updated_at' => now(), 'source_version' => 3,
+            'reported_by_app_user_id' => self::OWNER, 'reported_by_name' => 'Owner', 'reported_at' => now()]);
+
+        $read = $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$order->public_id)->assertOk(), 'Order');
+        $this->assertNull($read->costs[0]->reimbursement->waiver->decision_id);
+
+        $resend = ['kind' => 'actual_shipping', 'status' => 'active', 'amount' => 5000, 'funding' => [['source' => 'staff_advance', 'amount' => 5000]],
+            'reimbursement' => ['status' => 'paid', 'amount' => 5000, 'proof' => 'waived', 'waiver' => $legacy + ['decision_id' => null], 'updated_at' => '2026-10-10T01:00:00Z'],
+            'source_version' => 4, 'actor' => $this->actor()];
+        $this->assertSame('paid', $this->assertMutation($this->mutate('PUT', $order, '/costs/exp_legacy_waiver_0001', $resend))->order->costs[0]->reimbursement->status);
     }
 
     private function mutate(string $method, OnlineOrder $order, string $suffix, array|string $body, ?string $key = null, array $headers = []): TestResponse

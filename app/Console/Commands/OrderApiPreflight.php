@@ -82,6 +82,10 @@ class OrderApiPreflight extends Command
         if ($apiPrevious !== '') {
             $this->add($apiPrevious === $api ? 'FAIL' : 'INFO', 'api_secret_previous', $apiPrevious === $api ? 'sama dengan secret aktif' : 'terisi (rotasi berjalan)');
         }
+        // r4.2: without an Owner allowlist no new proof waiver is accepted (fails closed).
+        $owners = (array) config('orders_api.app_owner_ids');
+        $this->add($owners === [] ? 'WARN' : 'PASS', 'app_owner_ids', $owners === [] ? 'kosong: keputusan waiver baru akan ditolak 403' : count($owners).' Owner App terdaftar');
+        $this->add('INFO', 'website_issues_open', config('orders_api.website_issues') ? 'Admin PWA boleh mencatat kendala selama API aktif' : 'kendala baru hanya dari App selama API aktif');
         if ($api !== '' && $api === (string) config('qammaris_app.webhook_secret')) {
             $this->add('FAIL', 'secret_reuse', 'secret Order API sama dengan secret webhook katalog App');
         }
@@ -122,14 +126,12 @@ class OrderApiPreflight extends Command
         $this->add($pending->isEmpty() ? 'PASS' : 'FAIL', 'migrations', $pending->isEmpty() ? 'tidak ada yang tertunda' : 'tertunda: '.$pending->implode(', '));
     }
 
-    /** Every V2 order the API can return must serialise under r4.1; Website-opened issues cannot (opened_by gap). */
+    /** Every V2 order the API can return must serialise; r4.2 serves Website-opened issues with opened_by_source=website. */
     private function dataChecks(): void
     {
         $websiteIssues = OnlineOrderIssue::query()->whereNull('opened_by_app_user_id')
-            ->whereHas('order', fn ($query) => $query->where('state_model', OnlineOrder::STATE_V2))
-            ->with('order:id,public_id')->get()->map(fn ($issue) => $issue->order->public_id)->unique()->values();
-        $this->add($websiteIssues->isEmpty() ? 'PASS' : 'FAIL', 'website_issues', $websiteIssues->isEmpty()
-            ? 'tidak ada kendala Website pada pesanan V2' : 'pesanan V2 dengan kendala Website (r4.1 tidak bisa membacanya): '.$websiteIssues->implode(', '));
+            ->whereHas('order', fn ($query) => $query->where('state_model', OnlineOrder::STATE_V2))->count();
+        $this->add('INFO', 'website_issues', "{$websiteIssues} kendala V2 dari Website (r4.2: opened_by_source=website)");
 
         $broken = [];
         $count = 0;

@@ -18,6 +18,8 @@ final class OrderActor
         public readonly ?string $appRole,
         public readonly ?string $idempotencyKey = null,
         public readonly ?string $requestId = null,
+        // r4.2 transport identity (X-Qammaris-Delivery): live, retry or resync by the App backend; not the approver.
+        public readonly ?string $delivery = null,
     ) {}
 
     public static function user(User $user): self
@@ -25,10 +27,10 @@ final class OrderActor
         return new self($user, null, $user->name, null);
     }
 
-    /** App employee from a signed API request; key and X-Request-Id are kept on the audit event. */
-    public static function app(string $appUserId, string $displayName, string $appRole, ?string $idempotencyKey = null, ?string $requestId = null): self
+    /** App employee from a signed API request; key, X-Request-Id and delivery mode are kept on the audit event. */
+    public static function app(string $appUserId, string $displayName, string $appRole, ?string $idempotencyKey = null, ?string $requestId = null, ?string $delivery = null): self
     {
-        return new self(null, $appUserId, $displayName, $appRole, $idempotencyKey, $requestId);
+        return new self(null, $appUserId, $displayName, $appRole, $idempotencyKey, $requestId, $delivery);
     }
 
     public function isApp(): bool
@@ -70,7 +72,7 @@ final class OrderActor
             $this->user !== null => ['actor_type' => 'admin', 'source' => 'website', 'actor_user_id' => $this->user->id],
             $this->isCustomer() => ['actor_type' => 'customer', 'source' => 'customer'],
             default => ['actor_type' => 'app', 'source' => 'app', 'actor_app_user_id' => $this->appUserId, 'actor_display_name' => $this->displayName,
-                'idempotency_key' => $this->idempotencyKey, 'request_id' => $this->requestId],
+                'idempotency_key' => $this->idempotencyKey, 'request_id' => $this->requestId, 'delivery' => $this->delivery],
         };
     }
 }

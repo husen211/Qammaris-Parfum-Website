@@ -161,8 +161,13 @@ class OrderApiWriteController extends Controller
 
     private function actorFrom(Request $request, stdClass $actor): OrderActor
     {
+        $delivery = (string) $request->header('X-Qammaris-Delivery', 'live');
+        if (! in_array($delivery, ['live', 'retry', 'resync'], true)) {
+            throw new OrderApiException(400, 'bad_request', 'X-Qammaris-Delivery harus live, retry, atau resync.');
+        }
+
         return OrderActor::app($actor->app_user_id, $actor->display_name, $actor->app_role,
-            (string) $request->header('Idempotency-Key'), $request->attributes->get('order_api_app_request_id'));
+            (string) $request->header('Idempotency-Key'), $request->attributes->get('order_api_app_request_id'), $delivery);
     }
 
     private function time(?string $value): ?Carbon

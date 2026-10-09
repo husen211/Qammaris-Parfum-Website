@@ -382,7 +382,7 @@
                         @endforeach
                     </ul>
                 @endif
-                @if ($order->lifecycle !== 'cancelled' && config('orders_api.enabled'))
+                @if ($order->lifecycle !== 'cancelled' && config('orders_api.enabled') && ! config('orders_api.website_issues'))
                     <p class="mt-3 text-sm text-gray-600" data-issue-app-only>Selama integrasi Qammaris App aktif, kendala baru dicatat dari Qammaris App. Kendala yang ada tetap bisa ditandai selesai di sini.</p>
                 @elseif ($order->lifecycle !== 'cancelled')
                     <details class="mt-3" @if (old('_section') === 'kendala') open @endif>

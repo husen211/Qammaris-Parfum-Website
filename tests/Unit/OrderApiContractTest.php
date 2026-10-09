@@ -19,7 +19,7 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
-    private const BASELINE_OPENAPI_SHA256 = 'ee896e7e078df82fa6966141664b7ef152d7be108406f2d57f2769ceb438eeae';
+    private const BASELINE_OPENAPI_SHA256 = '168cc6337f5fae9977d28885c84717d1b49583a93ca7167a10904756fba13d83';
 
     private array $spec;
 
@@ -34,11 +34,12 @@ class OrderApiContractTest extends TestCase
 
     public function test_openapi_baseline_is_frozen(): void
     {
-        // API v1 baseline confirmed by both agents (r4.1). Changing the OpenAPI file needs a new revision note,
-        // the other agent's approval for breaking changes, and then a deliberate update of this hash.
+        // r4.2 DRAFT (branch modernization/ord-02-r4.2-draft). The r4.1 baseline (ee896e7e…) stays on the ORD-02 branch
+        // until the App agent signs off; this hash locks the draft so every further change is deliberate.
         $source = str_replace("\r\n", "\n", file_get_contents(dirname(__DIR__, 2).'/docs/integrations/qammaris-order-api-v1.openapi.yaml'));
         $this->assertSame(self::BASELINE_OPENAPI_SHA256, hash('sha256', $source), 'OpenAPI v1 baseline changed: follow contract §14 change control');
-        $this->assertStringContainsString('**BASELINE API v1 — dibekukan (r4.1, OpenAPI `1.0.0-rc.4.1`', $this->markdown);
+        $this->assertStringContainsString('**DRAF r4.2 (OpenAPI `1.0.0-rc.4.2`', $this->markdown);
+        $this->assertStringContainsString('Baseline yang berlaku tetap **r4.1**', $this->markdown);
     }
 
     public function test_runtime_schema_is_the_compiled_baseline(): void
@@ -48,10 +49,10 @@ class OrderApiContractTest extends TestCase
         $this->assertSame($this->spec, $compiled);
     }
 
-    public function test_versions_match_and_contract_is_the_r4_1_baseline(): void
+    public function test_versions_match_and_contract_is_the_r4_2_draft(): void
     {
-        $this->assertSame('1.0.0-rc.4.1', $this->spec['info']['version']);
-        $this->assertStringContainsString('r4.1', $this->spec['info']['description']);
+        $this->assertSame('1.0.0-rc.4.2', $this->spec['info']['version']);
+        $this->assertStringContainsString('r4.2 DRAFT', $this->spec['info']['description']);
         // The App review commit is still local to the App machine; it must not be presented as a GitHub link.
         $this->assertStringNotContainsString('github.com/husen211/qammaris-reimbursement-management-system', $this->markdown);
     }
@@ -161,13 +162,18 @@ class OrderApiContractTest extends TestCase
             'Actor' => [['app_user_id' => 'ABC', 'display_name' => 'Andi', 'app_role' => 'employee'],
                 $actor + ['permission' => 'orders.handle'], array_merge($actor, ['app_role' => 'mitra'])],
             'PreparationRequest' => [['status' => 'packed', 'expected_revision' => 3, 'actor' => $actor]],
-            'CostRequest' => [$this->cost(['reimbursement' => ['status' => 'approved', 'amount' => 5000, 'proof' => 'pending',
+            // r4.2: structure only. A waived proof needs a full waiver (with decision_id); other proofs need waiver=null.
+            'CostRequest' => [$this->cost(['reimbursement' => ['status' => 'approved', 'amount' => 5000, 'proof' => 'waived',
                 'waiver' => null, 'updated_at' => '2026-10-08T03:10:00Z']]),
                 $this->cost(['reimbursement' => ['status' => 'approved', 'amount' => 5000, 'proof' => 'waived',
-                    'waiver' => null, 'updated_at' => '2026-10-08T03:10:00Z']]),
+                    'waiver' => array_diff_key($this->waiver(), ['decision_id' => 1]), 'updated_at' => '2026-10-08T03:10:00Z']]),
+                $this->cost(['reimbursement' => ['status' => 'approved', 'amount' => 5000, 'proof' => 'attached',
+                    'waiver' => $this->waiver(), 'updated_at' => '2026-10-08T03:10:00Z']]),
                 $this->cost(['funding' => [['source' => 'owner_transfer', 'amount' => 20000]]]),
                 $this->cost(['status' => 'deleted'])],
             'JntRequest' => [['expected_revision' => 3, 'actor' => $actor]],
+            'Issue' => [$this->issue(['opened_by_source' => 'website']), $this->issue(['opened_by' => null]),
+                array_diff_key($this->issue([]), ['opened_by_source' => 1])],
             'WebhookEvent' => [['event_id' => '01JABCF0QWERTYUIOPASDFGHJK', 'type' => 'order.changed',
                 'order_id' => '01JABCDE2F3G4H5J6K7M8N9P0Q', 'revision' => 1, 'occurred_at' => '2026-10-08T03:15:00Z']],
         ];
@@ -183,6 +189,32 @@ class OrderApiContractTest extends TestCase
         $errors = [];
         $this->validate($this->toJson($this->cost([])), ['$ref' => '#/components/schemas/CostRequest'], 'CostRequest', $errors);
         $this->assertSame([], $errors, 'Baseline cost fixture must be valid');
+
+        // r4.2: approval requirements are business rules (422 proof_required), so the schema accepts these shapes.
+        foreach ([['approved', 'pending', null], ['paid', 'waived', $this->waiver()]] as [$status, $proof, $waiver]) {
+            $errors = [];
+            $this->validate($this->toJson($this->cost(['reimbursement' => ['status' => $status, 'amount' => 5000, 'proof' => $proof,
+                'waiver' => $waiver, 'updated_at' => '2026-10-08T03:10:00Z']])), ['$ref' => '#/components/schemas/CostRequest'], 'CostRequest', $errors);
+            $this->assertSame([], $errors, "{$status}/{$proof} is structurally valid");
+        }
+        foreach ([$this->issue([]), $this->issue(['opened_by' => null, 'opened_by_source' => 'website'])] as $issue) {
+            $errors = [];
+            $this->validate($this->toJson($issue), ['$ref' => '#/components/schemas/Issue'], 'Issue', $errors);
+            $this->assertSame([], $errors, 'Issue from the App and from the Website');
+        }
+    }
+
+    private function waiver(): array
+    {
+        return ['by' => ['app_user_id' => '6650aaaabbbbccccddddeeee', 'display_name' => 'Owner'], 'reason' => 'Struk hilang, sudah dicek',
+            'at' => '2026-10-09T02:00:00Z', 'decision_id' => 'apr_7c1e2d9a4b5f4e3a'];
+    }
+
+    private function issue(array $override): array
+    {
+        return array_replace(['id' => '01JABCG7QWERTYZXPASDFGHJKM', 'type' => 'stock_problem', 'status' => 'open', 'note' => 'Stok kurang',
+            'line_id' => null, 'reported_quantity' => null, 'opened_by' => ['app_user_id' => '665f0c2a9b1e4a0012ab34cd', 'display_name' => 'Andi'],
+            'opened_by_source' => 'app', 'opened_at' => '2026-10-09T03:00:00Z', 'resolved_at' => null], $override);
     }
 
     public function test_order_example_follows_business_rules(): void
@@ -234,10 +266,15 @@ class OrderApiContractTest extends TestCase
     public function test_cost_examples_balance_funding_and_reimbursement(): void
     {
         $costs = array_filter($this->examples(), fn ($example) => $example[0] === 'CostRequest');
-        $this->assertCount(2, $costs);
+        $this->assertCount(3, $costs);
         foreach ($costs as [, $cost]) {
             $this->assertCostArithmetic($cost);
         }
+        // r4.2: the relayed resend carries the same decision as the Owner's original approval.
+        $waived = array_values(array_filter(array_column($costs, 1), fn ($cost) => $cost->reimbursement->proof === 'waived'));
+        $this->assertCount(2, $waived);
+        $this->assertEquals($waived[0]->reimbursement->waiver, $waived[1]->reimbursement->waiver);
+        $this->assertSame(['owner', 'employee'], [$waived[0]->actor->app_role, $waived[1]->actor->app_role]);
     }
 
     public function test_queue_rules_are_ordered_and_cover_every_queue_value(): void
@@ -385,6 +422,7 @@ class OrderApiContractTest extends TestCase
         $this->assertContains('task_already_claimed', $this->spec['paths']['/orders/{id}/claims']['post']['x-error-codes']);
         $cost = $this->spec['paths']['/orders/{id}/costs/{expense_ref}']['put']['x-error-codes'];
         $this->assertContains('proof_required', $cost);
+        $this->assertContains('serialization_failed', $this->spec['paths']['/orders/{id}']['get']['x-error-codes']);
         $this->assertContains('expense_already_linked', $cost);
         $this->assertEqualsCanonicalizing($codes, array_values(array_unique($used)), 'Every error code must be reachable from some operation');
     }

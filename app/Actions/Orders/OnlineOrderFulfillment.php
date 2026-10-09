@@ -291,8 +291,8 @@ class OnlineOrderFulfillment
             if ($existing && $data['source_version'] <= $existing->source_version) {
                 return;
             }
-            if ($reimbursement['proof'] === 'waived' && ($existing?->waiver ?? null) != ($reimbursement['waiver'] ?? null) && ! $actor->isOwner()) {
-                throw new OrderActionNotAllowed('Pengecualian bukti hanya dari Owner.');
+            if ($reimbursement['proof'] === 'waived') {
+                $this->assertWaiverDecision($existing?->waiver, (array) $reimbursement['waiver'], $actor);
             }
             $attributes = [
                 'kind' => $data['kind'], 'status' => $data['status'], 'amount' => Rupiah::decimal($data['amount'] * 100),
@@ -474,7 +474,7 @@ class OnlineOrderFulfillment
     {
         // API v1 (r4.1) requires Issue.opened_by to be an App user, so a Website-opened issue would make the order
         // unreadable for the App. Until r4.2 (nullable opened_by) is approved, issues come from the App while it is on.
-        if (! $actor->isApp() && config('orders_api.enabled')) {
+        if (! $actor->isApp() && config('orders_api.enabled') && ! config('orders_api.website_issues')) {
             throw new OrderActionNotAllowed('Selama integrasi Qammaris App aktif, kendala dicatat dari Qammaris App.');
         }
 
@@ -657,6 +657,37 @@ class OnlineOrderFulfillment
                 'completed' => 'Pesanan sudah selesai.',
                 default => 'Data customer belum lengkap, pesanan belum bisa diproses.',
             });
+        }
+    }
+
+    /**
+     * Contract r4.2 waiver authorization (Owner decision 2026-10-09). The approver is waiver.by; the request actor and
+     * the delivery mode are separate identities. An identical resend of the stored decision is accepted from any App
+     * actor (backend sync). A new or changed decision needs a decision_id and must come from that same App Owner, whose
+     * ID is on the Website's own allowlist: an Owner name or ID inside the payload alone is never enough.
+     *
+     * @param  array<string, mixed>|null  $stored
+     * @param  array<string, mixed>  $incoming
+     */
+    private function assertWaiverDecision(?array $stored, array $incoming, OrderActor $actor): void
+    {
+        $decision = fn (?array $waiver) => $waiver === null ? null : [
+            'by' => (string) ($waiver['by']['app_user_id'] ?? ''), 'name' => (string) ($waiver['by']['display_name'] ?? ''),
+            'reason' => (string) ($waiver['reason'] ?? ''), 'at' => Carbon::parse((string) ($waiver['at'] ?? 'now'))->utc()->format('Y-m-d\TH:i:s\Z'),
+            'decision_id' => $waiver['decision_id'] ?? null,
+        ];
+        if ($stored !== null && $decision($stored) === $decision($incoming)) {
+            return;
+        }
+        if (($incoming['decision_id'] ?? null) === null) {
+            throw new OrderValidationFailed('Keputusan pengecualian bukti yang baru wajib membawa decision_id.', ['reimbursement.waiver.decision_id' => 'Wajib']);
+        }
+        $approver = (string) ($incoming['by']['app_user_id'] ?? '');
+        $authorized = $actor->isApp() && $actor->appRole === 'owner' && $actor->appUserId === $approver
+            && in_array($approver, (array) config('orders_api.app_owner_ids'), true);
+        if (! $authorized) {
+            throw new OrderActionNotAllowed('Pengecualian bukti baru hanya dari Owner App yang terdaftar dan memutuskannya sendiri.',
+                ['decision_id' => $incoming['decision_id']]);
         }
     }
 
