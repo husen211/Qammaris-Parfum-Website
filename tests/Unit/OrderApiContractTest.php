@@ -19,7 +19,7 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
-    private const BASELINE_OPENAPI_SHA256 = '168cc6337f5fae9977d28885c84717d1b49583a93ca7167a10904756fba13d83';
+    private const BASELINE_OPENAPI_SHA256 = '8dbc8221ac90451a9d0ed97c129312377b11ff11ab6a466739fe868b687aa247';
 
     private array $spec;
 
@@ -207,7 +207,7 @@ class OrderApiContractTest extends TestCase
     private function waiver(): array
     {
         return ['by' => ['app_user_id' => '6650aaaabbbbccccddddeeee', 'display_name' => 'Owner'], 'reason' => 'Struk hilang, sudah dicek',
-            'at' => '2026-10-09T02:00:00Z', 'decision_id' => 'apr_7c1e2d9a4b5f4e3a'];
+            'at' => '2026-10-09T02:00:00Z', 'decision_id' => 'wvr_7c1e2d9a4b5f4e3a9c0d1e2f3a4b5c6d'];
     }
 
     private function issue(array $override): array
@@ -266,15 +266,21 @@ class OrderApiContractTest extends TestCase
     public function test_cost_examples_balance_funding_and_reimbursement(): void
     {
         $costs = array_filter($this->examples(), fn ($example) => $example[0] === 'CostRequest');
-        $this->assertCount(3, $costs);
+        $this->assertCount(4, $costs);
         foreach ($costs as [, $cost]) {
             $this->assertCostArithmetic($cost);
         }
-        // r4.2: the relayed resend carries the same decision as the Owner's original approval.
+        // r4.2: the resend by the paying Owner carries the deciding Owner's identical decision (K-2).
         $waived = array_values(array_filter(array_column($costs, 1), fn ($cost) => $cost->reimbursement->proof === 'waived'));
         $this->assertCount(2, $waived);
         $this->assertEquals($waived[0]->reimbursement->waiver, $waived[1]->reimbursement->waiver);
-        $this->assertSame(['owner', 'employee'], [$waived[0]->actor->app_role, $waived[1]->actor->app_role]);
+        $this->assertSame(['owner', 'owner'], [$waived[0]->actor->app_role, $waived[1]->actor->app_role]);
+        $this->assertSame($waived[0]->reimbursement->waiver->by->app_user_id, $waived[0]->actor->app_user_id);
+        $this->assertNotSame($waived[1]->reimbursement->waiver->by->app_user_id, $waived[1]->actor->app_user_id);
+        $this->assertMatchesRegularExpression('/^wvr_[0-9a-f]{32}$/', $waived[0]->reimbursement->waiver->decision_id);
+        // K-1: removing the waiver (proof attached later) is an ordinary employee update.
+        $removed = array_values(array_filter(array_column($costs, 1), fn ($cost) => $cost->reimbursement->proof === 'attached'));
+        $this->assertSame([null, 'employee'], [$removed[0]->reimbursement->waiver, $removed[0]->actor->app_role]);
     }
 
     public function test_queue_rules_are_ordered_and_cover_every_queue_value(): void

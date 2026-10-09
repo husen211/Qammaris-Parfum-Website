@@ -993,7 +993,7 @@
                 "name": "X-Qammaris-Delivery",
                 "in": "header",
                 "required": false,
-                "description": "Transport identity, kept apart from the actor: live (default), retry, or resync by the App backend; stored in the Website audit",
+                "description": "Transport identity, kept apart from the actor: live (default), retry, or resync by the App backend. Not signed; audit only, never affects authorization or idempotency",
                 "schema": {
                     "type": "string",
                     "enum": [
@@ -1339,7 +1339,7 @@
                     "at",
                     "decision_id"
                 ],
-                "description": "Owner exception allowing approval without proof. by is the approving App Owner (not the sender); decision_id is the App's immutable approval record. A new or changed decision is accepted only from an actor with app_role owner whose app_user_id equals by.app_user_id and is on the Website's Owner allowlist; an identical resend of a stored decision is accepted from any App actor. decision_id is null only on waivers stored before r4.2.",
+                "description": "Owner exception allowing approval without proof. by is the approving App Owner (not the sender); decision_id is the App's immutable approval record. A new or changed decision is accepted only from an actor with app_role owner whose app_user_id equals by.app_user_id and is on the Website's Owner allowlist; an identical resend of a stored decision, and removing the waiver (waiver=null with proof attached or pending), are accepted from any App actor. decision_id is null only on waivers stored before r4.2.",
                 "properties": {
                     "by": {
                         "$ref": "#/components/schemas/ActorRef"

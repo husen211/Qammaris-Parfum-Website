@@ -380,14 +380,17 @@ Bila `booking_responsibility=customer`, staf langsung mencatat handover `custome
   | Aktor request | `actor`: orang yang tindakannya menghasilkan versi biaya ini | di event audit |
   | Jalur kirim | klien HMAC + `X-Request-Id` + header `X-Qammaris-Delivery` (`live` bawaan, `retry`, `resync`) | di event audit |
 
-  - **Keputusan baru atau berubah** (`decision_id` belum tersimpan untuk `expense_ref` ini, atau `decision_id` sama dengan isi berbeda) diterima hanya bila ketiganya benar:
+  `X-Qammaris-Delivery` **tidak ikut HMAC** (yang ditandatangani hanya method, `path_with_query`, dan body) dan **hanya untuk audit**. Header ini tidak pernah memengaruhi otorisasi maupun idempotensi; hash idempotensi tetap method + path + body. App mengirim `live` untuk aksi staf dan `retry`/`resync` untuk jalur otomatis.
+
+  - Yang wajib Owner + allowlist **hanya penambahan waiver atau perubahan isinya** (`by`, `reason`, `at`, `decision_id`): `decision_id` belum tersimpan untuk `expense_ref` ini, atau isinya berbeda dari yang tersimpan. Keputusan seperti itu diterima hanya bila ketiganya benar:
     1. `actor.app_role = owner`;
     2. `actor.app_user_id = waiver.by.app_user_id`;
     3. ID itu ada di **allowlist Owner Website** (`QAMMARIS_APP_OWNER_IDS`, diatur di server Website, tidak pernah diambil dari payload).
     Bila tidak → `403 action_not_allowed`. Nama atau ID Owner di payload saja tidak cukup.
   - **Kirim ulang keputusan yang sudah tersimpan** (`decision_id`, `by`, `reason`, `at` identik) diterima dari aktor App mana pun, termasuk sinkronisasi backend App tanpa Owner yang sedang melakukan request. Status reimburse boleh berubah di kiriman ulang itu sesuai aturan di atas.
+  - **Penghapusan waiver bukan keputusan baru** dan diterima dari aktor App mana pun: `waiver=null` dengan `proof` `attached` (bukti diunggah setelah pengecualian) atau `pending` (misalnya reimburse `cancelled`/`rejected`, atau biaya `void`). Penghapusan hanya mengembalikan syarat bukti biasa, tidak memberi persetujuan baru.
   - Bila keputusan Owner belum pernah sampai ke Website (misalnya Website sedang mati), backend App mengirim ulang request aslinya dengan `actor` = Owner yang memutuskan dan `X-Qammaris-Delivery: retry` atau `resync`.
-  - Waiver yang tersimpan sebelum r4.2 tidak punya `decision_id` (ditampilkan `null`). Kiriman ulang yang identik tetap diterima; perubahan apa pun pada waiver itu diperlakukan sebagai keputusan baru.
+  - Waiver yang tersimpan sebelum r4.2 tidak punya `decision_id` (ditampilkan `null`). Kiriman ulang yang identik tetap diterima. Perubahan isi (`by`, `reason`, `at`) atau penambahan `decision_id` diperlakukan sebagai keputusan baru; penghapusan tidak.
 - Konkurensi: `source_version` integer naik dari App. Versi lebih lama atau sama → no-op 200. `expected_revision` boleh dikirim, dan bila dikirim divalidasi. Ini supaya pembaruan reimburse mingguan tidak gagal hanya karena order berubah.
 - `obligations[type=reimbursement]` **diturunkan Website** dari `costs` (App tidak menulis obligations):
   - `open` saat `awaiting_proof`, `submitted`, `approved`;
@@ -409,13 +412,13 @@ Bila `booking_responsibility=customer`, staf langsung mencatat handover `custome
   "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
   "reimbursement": { "status": "approved", "amount": 5000, "proof": "waived",
     "waiver": { "by": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner" }, "reason": "Struk Maxim hilang, sudah dicek di aplikasi", "at": "2026-10-09T02:00:00Z",
-                "decision_id": "apr_7c1e2d9a4b5f4e3a" },
+                "decision_id": "wvr_7c1e2d9a4b5f4e3a9c0d1e2f3a4b5c6d" },
     "updated_at": "2026-10-09T02:00:00Z" },
   "source_version": 3,
   "actor": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner", "app_role": "owner" } }
 ```
 
-Kiriman ulang keputusan yang sama oleh sinkronisasi backend App (`X-Qammaris-Delivery: resync`), dengan aktor karyawan yang menandai sudah dibayar:
+Owner lain membayar reimburse itu kemudian. App mengirim ulang keputusan yang sama dengan `actor` = Owner yang membayar (penyebab versi ini). Karena waiver identik, Owner itu tidak harus pemberi waiver dan tidak diperiksa terhadap allowlist:
 
 <!-- validate: CostRequest -->
 ```json
@@ -423,9 +426,20 @@ Kiriman ulang keputusan yang sama oleh sinkronisasi backend App (`X-Qammaris-Del
   "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
   "reimbursement": { "status": "paid", "amount": 5000, "proof": "waived",
     "waiver": { "by": { "app_user_id": "6650aaaabbbbccccddddeeee", "display_name": "Owner" }, "reason": "Struk Maxim hilang, sudah dicek di aplikasi", "at": "2026-10-09T02:00:00Z",
-                "decision_id": "apr_7c1e2d9a4b5f4e3a" },
+                "decision_id": "wvr_7c1e2d9a4b5f4e3a9c0d1e2f3a4b5c6d" },
     "updated_at": "2026-10-10T01:00:00Z" },
   "source_version": 4,
+  "actor": { "app_user_id": "6650bbbbccccddddeeeeffff", "display_name": "Owner Dua", "app_role": "owner" } }
+```
+
+Karyawan mengunggah bukti setelah pengecualian: waiver dihapus (`waiver=null`, `proof=attached`). Ini bukan keputusan baru, jadi tidak memerlukan Owner:
+
+<!-- validate: CostRequest -->
+```json
+{ "kind": "actual_shipping", "status": "active", "amount": 20000,
+  "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
+  "reimbursement": { "status": "approved", "amount": 5000, "proof": "attached", "waiver": null, "updated_at": "2026-10-09T05:00:00Z" },
+  "source_version": 5,
   "actor": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi", "app_role": "employee" } }
 ```
 
@@ -549,11 +563,11 @@ Breaking change hanya di `/v2`. Header `X-Qammaris-Api-Version: 1`.
 - Perubahan non-breaking juga memerlukan pemberitahuan ke agen App.
 - `tests/Unit/OrderApiContractTest.php` mengunci SHA-256 file OpenAPI baseline. Setiap perubahan file itu membuat test gagal sampai hash baseline diperbarui bersama catatan revisi dan persetujuannya.
 
-Urutan rilis r4.2 (setelah sign-off agen App):
-1. App menerima respons r4.2 (field baru `opened_by_source`, `decision_id`, `unavailable`) dan mengirim `decision_id` untuk keputusan waiver baru.
-2. Website menerapkan r4.2. Allowlist `QAMMARIS_APP_OWNER_IDS` diisi di server.
-3. Setelah App mengonfirmasi tahap 1, Website membuka pencatatan kendala dari Admin PWA selama integrasi aktif (`QAMMARIS_ORDER_API_WEBSITE_ISSUES=true`).
-4. Smoke ulang dengan harness App, dibandingkan dengan baseline smoke r4.1.
+Urutan rilis r4.2 (setelah sign-off agen App), **tanpa shim kompatibilitas**. Website r4.1 menolak `decision_id` (`Waiver` `additionalProperties: false`), sehingga App tidak bisa mengirimnya lebih dulu. Fitur ini juga belum ada di production. Karena itu:
+1. App r4.2 dan Website r4.2 diaktifkan **bersama** di lingkungan uji (lokal terisolasi, lalu staging terisolasi). Allowlist `QAMMARIS_APP_OWNER_IDS` diisi di server Website, dengan ID Owner App dikirim lewat Owner, di luar repository dan chat.
+2. `QAMMARIS_ORDER_API_WEBSITE_ISSUES=true` di lingkungan uji itu. Runtime App mengabaikan field yang tidak dikenal, jadi respons r4.2 aman dibaca.
+3. Smoke ulang dengan harness App, dibandingkan dengan baseline smoke r4.1.
+4. Production hanya setelah persetujuan Owner terpisah, dengan App dan Website r4.2 dirilis bersama.
 
 Urutan awal:
 1. r4 conditional sign-off App, r4.1 dikonfirmasi agen App (selesai, 2026-10-08);

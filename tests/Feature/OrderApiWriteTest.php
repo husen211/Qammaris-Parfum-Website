@@ -297,6 +297,12 @@ class OrderApiWriteTest extends TestCase
         // Changing the decision is a new decision again; an unknown delivery mode is refused.
         $this->assertApiError($approve(['reason' => 'Alasan lain dari karyawan'] + $waiver, 4, $this->actor()), 403, 'action_not_allowed');
         $this->assertApiError($approve($waiver, 4, $this->actor(), ['X-Qammaris-Delivery' => 'batch']), 400, 'bad_request');
+
+        // K-1: removing the waiver is not a decision. Proof uploaded later, then cancelled: any App actor.
+        $attached = $this->assertMutation($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['status' => 'approved', 'proof' => 'attached', 'waiver' => null], 4, $this->actor())));
+        $this->assertSame(['attached', null], [$attached->order->costs[0]->reimbursement->proof, $attached->order->costs[0]->reimbursement->waiver]);
+        $cancelled = $this->assertMutation($this->mutate('PUT', $order, '/costs/'.$ref, $cost(['status' => 'cancelled', 'proof' => 'pending', 'waiver' => null], 5, $this->actor(self::IKRAR, 'Ikrar'))));
+        $this->assertSame('cancelled', $cancelled->order->costs[0]->reimbursement->status);
     }
 
     public function test_waivers_stored_before_r42_are_served_with_a_null_decision_id_and_identical_resends_pass(): void

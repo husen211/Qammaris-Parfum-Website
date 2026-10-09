@@ -32,4 +32,6 @@ The r4.1 smoke test showed three gaps:
 - The waiver rule is **stricter** for new decisions than r4.1's actor-is-owner check: it adds the ID match, the allowlist and the `decision_id`. Resends are explicitly allowed.
 - An empty allowlist fails closed: no new waiver is accepted, and the preflight warns.
 - New migration `2026_10_09_500001` adds `online_order_events.delivery`. It is additive; its rollback rebuilds the table first.
-- Rollout follows contract §14: the App accepts r4.2 first, then the Website switches, then Website issues are enabled, then the smoke test is repeated against the r4.1 baseline.
+- Removing a waiver (proof attached later, cancelled, rejected or void cost) is not a decision and is accepted from any App actor (App review K-1).
+- `X-Qammaris-Delivery` is audit only: it is not signed and never affects authorization or idempotency (K-3).
+- Rollout follows contract §14 with no compatibility shim (K-4). Website r4.1 rejects `decision_id`, so the App and the Website switch to r4.2 together in the test environment. The smoke test is then repeated against the r4.1 baseline. Production follows only after separate Owner approval.
