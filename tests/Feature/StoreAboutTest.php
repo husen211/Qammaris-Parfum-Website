@@ -23,7 +23,7 @@ class StoreAboutTest extends TestCase
             ->assertSee('Semua produk di toko tersedia testernya.')
             ->assertSee('Sabtu–Kamis · 09.00–21.00 WITA')->assertSee('Jumat tutup')
             ->assertDontSee('paper-test-')->assertDontSee('skin-test-')
-            ->assertSee('data-about-hero10', false)->assertDontSee('data-cinematic-hero', false)->assertSee('data-about-spy', false)
+            ->assertSee('data-about-split-hero', false)->assertDontSee('data-about-hero10', false)->assertDontSee('data-cinematic-hero', false)->assertSee('data-about-spy', false)
             ->assertDontSee('Loading 3D...')->assertDontSee('about-lanyard')
             ->assertDontSee('<iframe', false)
             ->assertSee('https://www.instagram.com/reel/Dd0iMrDJURL/embed/', false)

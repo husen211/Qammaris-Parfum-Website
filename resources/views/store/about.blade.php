@@ -14,21 +14,30 @@
 
 @section('content')
 <div class="qammaris-about">
-    {{-- Hero10: felipemenezes098 / 21st demo19079. One full Owner-supplied photo replaces the image fan. --}}
-    <section class="about-hero10" aria-labelledby="about-title" data-about-hero10>
-        <div class="about-container about-hero10-content">
-            <div class="about-hero10-header">
-                <h1 id="about-title">Coba dulu.<br><span>Temukan yang cocok.</span></h1>
-                <p class="about-lead">Experience store parfum di Palu. Coba koleksinya langsung, bandingkan aroma, dan diskusikan pilihan Anda dengan kami.</p>
+    {{-- ravikatiyar162/hero-section-2, 21st demo5260: split content and diagonal photo reveal. --}}
+    <section class="about-split-hero" aria-labelledby="about-title" data-about-split-hero>
+        <div class="about-split-content">
+            <div>
+                <div class="about-split-brand" data-split-item="brand">
+                    <img src="{{ asset('images/logo-black2.png') }}" alt="" width="40" height="40" decoding="async">
+                    <div><p>Qammaris Perfumes</p><span>Experience store parfum di Palu</span></div>
+                </div>
+                <div class="about-split-main" data-split-main>
+                    <h1 id="about-title" data-split-item="title">Coba dulu.<br><span>Temukan yang cocok.</span></h1>
+                    <div class="about-split-rule" aria-hidden="true" data-split-item="rule"></div>
+                    <p class="about-split-subtitle" data-split-item="subtitle">Coba koleksinya langsung, bandingkan aroma, dan diskusikan pilihan Anda dengan kami. Semua produk di toko tersedia testernya.</p>
+                    <a class="about-split-cta" href="{{ route('store.location') }}" data-split-item="cta">Kunjungi toko <x-icon name="arrow-up-right" /></a>
+                </div>
             </div>
-            <div class="about-hero10-actions">
-                <div class="about-actions"><a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <x-icon name="arrow-up-right" /></a><a href="#cerita" class="about-button about-button-outline">Kenali Qammaris <x-icon name="arrow-down" /></a></div>
-                <p class="about-hero10-hours">Sabtu–Kamis · 09.00–21.00 WITA</p>
+            <div class="about-split-contacts" aria-label="Kontak Qammaris" data-split-item="contacts">
+                <a href="{{ route('home') }}"><x-icon name="globe" /><span>qammarisparfum.id</span></a>
+                <a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer"><x-icon name="phone" /><span>+{{ $storeInfo->whatsapp_number }}</span></a>
+                <a href="{{ route('store.location') }}"><x-icon name="map-pin" /><span>{{ $aboutAddress }}</span></a>
             </div>
-            <figure class="about-hero10-photo" data-hero10-photo>
-                <img src="{{ asset('images/store/storefront-hero-1200.webp') }}" srcset="{{ asset('images/store/storefront-hero-480.webp') }} 480w, {{ asset('images/store/storefront-hero-768.webp') }} 768w, {{ asset('images/store/storefront-hero-1200.webp') }} {{ $aboutMedia['storefront-hero']['width'] }}w" sizes="(min-width: 408px) 360px, calc(100vw - 48px)" width="{{ $aboutMedia['storefront-hero']['width'] }}" height="{{ $aboutMedia['storefront-hero']['height'] }}" alt="Fasad toko Qammaris Perfumes di Palu dengan papan nama dan pintu masuk menuju ruang tester parfum" fetchpriority="high" decoding="async">
-            </figure>
         </div>
+        <figure class="about-split-photo" data-split-photo>
+            <img src="{{ asset('images/store/storefront-hero-1200.webp') }}" srcset="{{ asset('images/store/storefront-hero-480.webp') }} 480w, {{ asset('images/store/storefront-hero-768.webp') }} 768w, {{ asset('images/store/storefront-hero-1200.webp') }} {{ $aboutMedia['storefront-hero']['width'] }}w" sizes="(min-width: 1024px) 40vw, (min-width: 768px) 50vw, 100vw" width="{{ $aboutMedia['storefront-hero']['width'] }}" height="{{ $aboutMedia['storefront-hero']['height'] }}" alt="Fasad toko Qammaris Perfumes di Palu dengan papan nama dan pintu masuk menuju ruang tester parfum" fetchpriority="high" decoding="async">
+        </figure>
     </section>
 
     {{-- ScrollSpy23554 + ScrollProgress18715: native links and a contained mobile rail. --}}

@@ -1,0 +1,23 @@
+{
+  "id": 5260,
+  "componentId": 3839,
+  "url": "https://21st.dev/@ravikatiyar162/components/hero-section-2",
+  "componentSha256": "b8c856be2d8f742983f62ae3a74173e0f68df2079cdefc8160e5648b48191be2",
+  "demoSha256": "2530f0a630be6922bba9c76bb0a7dbe4ec64aed97bb66b10caed951ec8165ae4",
+  "motion": {
+    "itemDurationMs": 500,
+    "itemTranslateYPx": 20,
+    "staggerMs": 150,
+    "delayChildrenMs": 200,
+    "clipDurationMs": 1200,
+    "clipEase": "circOut",
+    "absoluteDelays": {
+      "brand": 200,
+      "contacts": 500,
+      "title": 550,
+      "rule": 700,
+      "subtitle": 850,
+      "cta": 1000
+    }
+  }
+}
