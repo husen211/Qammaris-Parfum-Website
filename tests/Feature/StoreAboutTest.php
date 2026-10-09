@@ -23,7 +23,7 @@ class StoreAboutTest extends TestCase
             ->assertSee('Semua produk di toko tersedia testernya.')
             ->assertSee('Sabtu–Kamis · 09.00–21.00 WITA')->assertSee('Jumat tutup')
             ->assertDontSee('paper-test-')->assertDontSee('skin-test-')
-            ->assertSee('data-cinematic-hero', false)->assertSee('data-about-spy', false)
+            ->assertSee('data-about-hero10', false)->assertDontSee('data-cinematic-hero', false)->assertSee('data-about-spy', false)
             ->assertDontSee('Loading 3D...')->assertDontSee('about-lanyard')
             ->assertDontSee('<iframe', false)
             ->assertSee('https://www.instagram.com/reel/Dd0iMrDJURL/embed/', false)
@@ -34,10 +34,10 @@ class StoreAboutTest extends TestCase
 
         $response->assertViewHas('aboutContent', fn ($content) => count($content['gallery']) === 4
             && count($content['timeline']) === 4 && count($content['reviews']) === 6);
-        foreach (['shelves', 'visitors', 'facade', 'construction', 'design-board', 'shelf-plan', 'floor-plan'] as $key) {
+        foreach (['storefront-hero', 'visitors', 'facade', 'construction', 'design-board', 'shelf-plan', 'floor-plan'] as $key) {
             $this->assertSame(1, substr_count($response->getContent(), 'src="'.asset('images/store/'.$key.'-')), 'Photo composition must appear only once: '.$key);
         }
-        foreach (config('store_about.gallery') as $photo) {
+        foreach ([...config('store_about.gallery'), ['key' => 'storefront-hero']] as $photo) {
             foreach ([480, 768, 1200] as $width) {
                 $path = public_path('images/store/'.$photo['key'].'-'.$width.'.webp');
                 $this->assertFileExists($path);

@@ -22,22 +22,17 @@
 .about-button-outline { background:transparent; }
 .qammaris-about .about-button-primary:active { background:#383832; color:white; }
 .about-text-link { display:inline-flex; align-items:center; gap:12px; min-height:44px; font-size:.82rem; text-decoration:underline; text-underline-offset:5px; line-height:1.6; }
-/* jahed/CinematicHero11494: depth card, perspective image and scroll expansion/pullback. */
-.about-cinematic-heading { text-align:center; padding-block:45px 55px; }
-.about-cinematic-heading .about-lead { margin-inline:auto; max-width:560px; }
-.about-cinematic-heading .about-actions { justify-content:center; }
-.about-cinematic-stage { display:flex; justify-content:center; align-items:center; padding:0 24px 40px; perspective:1400px; }
-.about-cinematic-card { width:100%; max-width:1380px; display:grid; grid-template-columns:1fr 360px 1fr; gap:55px; align-items:center; padding:48px 65px; border-radius:28px; background:#22231f; color:#f4f1e8; box-shadow:0 24px 45px -30px rgb(0 0 0 / .65),inset 0 1px 0 rgb(255 255 255 / .12); transform-style:preserve-3d; }
-.about-cinematic-card .about-eyebrow { color:#dbc295; }
-.about-cinematic-side h2 { font-size:clamp(1.9rem,2.7vw,2.7rem); }
-.about-cinematic-side>p:not(.about-eyebrow) { font-size:.88rem; line-height:1.9; color:#d2d0c7; margin-top:24px; }
-.about-cinematic-side .about-text-link { margin-top:26px; }
-.about-cinematic-photo { min-width:0; padding:7px; border:1px solid #857450; border-radius:24px; background:#33342e; box-shadow:0 25px 40px -15px rgb(0 0 0 / .65); transform-style:preserve-3d; }
-.about-cinematic-photo img { display:block; width:100%; height:auto; max-height:540px; object-fit:contain; border-radius:16px; }
-.about-cinematic-photo figcaption { text-align:center; font-size:.65rem; line-height:1.7; padding:12px 4px 4px; color:#e0d3b8; }
-.about-cinematic-mark { display:block; font-family:Georgia,serif; font-size:4rem; font-weight:400; color:#bba274; line-height:1; margin-bottom:30px; }
-.about-cinematic-right h3 { font-size:1.25rem; font-weight:400; }
-.about-cinematic-card a:active { color:#dbc295; }
+/* felipemenezes098/Hero10 demo19079: centered serif heading, dual CTAs and one photo. */
+.about-hero10 { position:relative; isolation:isolate; background:#faf9f5; }
+.about-hero10-content { display:flex; flex-direction:column; align-items:center; gap:32px; padding-block:56px 64px; text-align:center; }
+.about-hero10-header { display:flex; flex-direction:column; align-items:center; gap:20px; max-width:672px; }
+.qammaris-about .about-hero10 h1 { font-family:Georgia,serif; font-size:clamp(2rem,4vw,3.4rem); }
+.about-hero10 .about-lead { font-size:1rem; line-height:1.8; margin:0 !important; max-width:512px; text-wrap:balance; }
+.about-hero10-actions { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.about-hero10 .about-actions { justify-content:center; gap:12px 16px; margin:0; }
+.about-hero10-hours { font-size:.75rem; line-height:1.8; color:var(--about-muted); }
+.about-hero10-photo { width:min(100%,360px); overflow:hidden; border-radius:12px; border:1px solid rgb(0 0 0 / .1); box-shadow:0 16px 32px -18px rgb(0 0 0 / .3); }
+.about-hero10-photo img { display:block; width:100%; height:auto; object-fit:contain; }
 /* ddoemonn/ScrollSpy23554 and cnippet-dev/ScrollProgress18715. */
 .about-nav-wrap { position:sticky; top:100px; z-index:20; background:#faf9f5; border-block:1px solid var(--about-line); }
 .about-section-nav { position:relative; display:flex; flex-wrap:nowrap; gap:4px; overflow-x:auto; padding-block:8px; scrollbar-width:thin; }
@@ -160,11 +155,6 @@ body.about-photo-open,body.about-video-open { overflow:hidden; }
     .about-gallery-link:hover { border-color:#b6a580; }
     .about-video-play:hover { background:rgb(0 0 0 / .2); }
 }
-@media (max-width:1099px) {
-    .about-cinematic-card { grid-template-columns:1fr 1fr; padding:35px; gap:35px; }
-    .about-cinematic-right { grid-column:1/-1; border-top:1px solid #53534b; padding-top:25px; }
-    .about-cinematic-mark { display:none; }
-}
 @media (max-width:899px) {
     .about-story,.about-reel-layout,.about-reviews-layout,.about-visit { grid-template-columns:1fr; gap:35px; }
     .about-section,.about-experience,.about-gallery-section,.about-reviews-section { padding-block:55px; }
@@ -189,14 +179,11 @@ body.about-photo-open,body.about-video-open { overflow:hidden; }
 @media (max-width:599px) {
     .qammaris-about { padding-top:95px; }
     .about-container { width:calc(100% - 36px); }
+    .about-hero10-content { width:calc(100% - 48px); padding-block:32px 44px; gap:28px; }
+    .about-hero10 .about-lead { font-size:.9rem; }
+    .about-hero10 .about-actions { gap:12px; }
     .about-eyebrow { margin-bottom:14px !important; }
     .about-lead { font-size:.9rem; margin-top:20px !important; }
-    .about-cinematic-heading { padding-block:25px 35px; }
-    .about-cinematic-stage { padding:0 12px 28px; }
-    .about-cinematic-card { grid-template-columns:1fr; padding:30px 24px; gap:30px; border-radius:20px; }
-    .about-cinematic-side h2 { font-size:1.9rem; }
-    .about-cinematic-photo { max-width:310px; width:100%; justify-self:center; }
-    .about-cinematic-photo img { max-height:460px; }
     .about-nav-wrap { top:87px; }
     .about-section-nav a { font-size:.72rem; padding-inline:12px; }
     .about-feature-help { flex-direction:column; align-items:start; }

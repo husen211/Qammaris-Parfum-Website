@@ -14,23 +14,20 @@
 
 @section('content')
 <div class="qammaris-about">
-    {{-- CinematicHero: jahed / 21st demo11494. Real store photography replaces the demo app. --}}
-    <section class="about-cinematic" aria-labelledby="about-title" data-cinematic-hero>
-        <div class="about-container about-cinematic-heading">
-            <p class="about-eyebrow">Qammaris Perfumes · Palu</p>
-            <h1 id="about-title">Coba dulu.<br><span>Temukan yang cocok.</span></h1>
-            <p class="about-lead">Experience store parfum di Palu. Coba koleksinya langsung, bandingkan aroma, dan diskusikan pilihan Anda dengan kami.</p>
-            <div class="about-actions"><a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <x-icon name="arrow-up-right" /></a><a href="#cerita" class="about-text-link">Kenali Qammaris <x-icon name="arrow-down" /></a></div>
-        </div>
-        <div class="about-cinematic-stage" data-hero-stage>
-            <div class="about-cinematic-card" data-hero-card>
-                <div class="about-cinematic-side"><p class="about-eyebrow">Di dalam Qammaris</p><h2>Parfum lebih mudah dipilih<br>kalau sudah dicoba.</h2><p>Kami hadir bukan hanya untuk menjual parfum. Di sini, Anda bisa mengenal aromanya sebelum memutuskan.</p></div>
-                <figure class="about-cinematic-photo" data-hero-photo>
-                    <img src="{{ asset('images/store/shelves-1200.webp') }}" srcset="{{ asset('images/store/shelves-480.webp') }} 480w, {{ asset('images/store/shelves-768.webp') }} 768w, {{ asset('images/store/shelves-1200.webp') }} {{ $aboutMedia['shelves']['width'] }}w" sizes="(min-width: 1100px) 360px, (min-width: 600px) 480px, 90vw" width="{{ $aboutMedia['shelves']['width'] }}" height="{{ $aboutMedia['shelves']['height'] }}" alt="Rak lengkung dan koleksi parfum di dalam experience store Qammaris" fetchpriority="high" decoding="async">
-                    <figcaption>Koleksi dan tester di toko Qammaris.</figcaption>
-                </figure>
-                <div class="about-cinematic-side about-cinematic-right"><span class="about-cinematic-mark" aria-hidden="true">Q</span><h3>Datang dengan rasa ingin tahu.</h3><p>Semua produk di toko tersedia testernya. Staf kami siap membantu, termasuk saat Anda baru mulai mengenal parfum.</p><a class="about-text-link" href="#pengalaman">Pengalaman di toko <x-icon name="arrow-down" /></a></div>
+    {{-- Hero10: felipemenezes098 / 21st demo19079. One full Owner-supplied photo replaces the image fan. --}}
+    <section class="about-hero10" aria-labelledby="about-title" data-about-hero10>
+        <div class="about-container about-hero10-content">
+            <div class="about-hero10-header">
+                <h1 id="about-title">Coba dulu.<br><span>Temukan yang cocok.</span></h1>
+                <p class="about-lead">Experience store parfum di Palu. Coba koleksinya langsung, bandingkan aroma, dan diskusikan pilihan Anda dengan kami.</p>
             </div>
+            <div class="about-hero10-actions">
+                <div class="about-actions"><a href="{{ route('store.location') }}" class="about-button about-button-primary">Kunjungi toko <x-icon name="arrow-up-right" /></a><a href="#cerita" class="about-button about-button-outline">Kenali Qammaris <x-icon name="arrow-down" /></a></div>
+                <p class="about-hero10-hours">Sabtu–Kamis · 09.00–21.00 WITA</p>
+            </div>
+            <figure class="about-hero10-photo" data-hero10-photo>
+                <img src="{{ asset('images/store/storefront-hero-1200.webp') }}" srcset="{{ asset('images/store/storefront-hero-480.webp') }} 480w, {{ asset('images/store/storefront-hero-768.webp') }} 768w, {{ asset('images/store/storefront-hero-1200.webp') }} {{ $aboutMedia['storefront-hero']['width'] }}w" sizes="(min-width: 408px) 360px, calc(100vw - 48px)" width="{{ $aboutMedia['storefront-hero']['width'] }}" height="{{ $aboutMedia['storefront-hero']['height'] }}" alt="Fasad toko Qammaris Perfumes di Palu dengan papan nama dan pintu masuk menuju ruang tester parfum" fetchpriority="high" decoding="async">
+            </figure>
         </div>
     </section>
 

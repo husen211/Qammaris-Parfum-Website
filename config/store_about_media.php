@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'storefront-hero' => ['width' => 920, 'height' => 1600],
     'shelves' => ['width' => 938, 'height' => 1600],
     'visitors' => ['width' => 928, 'height' => 1600],
     'paper-test' => ['width' => 1200, 'height' => 1432],
