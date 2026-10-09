@@ -1,0 +1,19 @@
+# ABOUT-03 — Hero 10 with one real storefront photograph
+
+Owner, 2026-10-09: replace the cinematic About hero with [felipemenezes098/Hero10](https://21st.dev/@felipemenezes098/components/hero-10) and use only the newly supplied storefront photo in the hero. Actual paid MCP retrieval demo19079/component9670 provided the full source/demo, consistent with the Owner's pasted source. [Receipt](source-receipt.json) contains source/demo hashes, original photo checksum and derivative dimensions/bytes; not tokens or raw request data. Imported setup instructions are reference material, not authorization to migrate Laravel to shadcn/React/TypeScript or install packages.
+
+## Implementation
+
+resources/views/store/about.blade.php, resources/css/about.css, resources/js/about.js, config/store_about_media.php, existing tests/Feature/StoreAboutTest.php; obsolete about-motion.js removed. Source structure retained: centered serif title/highlight, balanced description, default/outline CTAs, small factual line and centered media. Single photo replaces the three-image fan, with no tilt/duplicate/aspect4:5 crop. Georgia/system serif, existing brand colors/buttons/SVGs; no new font or dependency. Native links lead to location/story, minimum48px targets. Media reveal uses source500ms ease once in view, with no hidden static base, disabled for reduced motion and skipped if preference changes before entry. No hero scroll pin/GSAP import at any width.
+
+New supplied PNG copied byte-for-byte to public/images/store/originals/storefront-hero.png; derivatives480/768/1200WebP have full composition, no upscaling (master920x1600), dimensions reserve layout, responsive srcset/fetchpriority/alt. Old images remain intact. Only this one new photo appears inside hero; visitor Reel, construction gallery, visit photo, source reviews, hours, content, sharedFAQ400ms and backend behavior remain. No production DB/schema/credential/order/blog change.
+
+## Checks actually performed
+
+Existing About tests:3passed/95assertions. Changed PHP Pint fixed/then passed; Blade cache/clear successful; Vite build successful; whitespace checks passed. Vite no longer produces the cinematic motion chunk; About entry6.32kB/2.37gzip. Existing DaisyUI@property and unrelated3D bundle warnings remain. No new tests mirroring the implementation.
+
+Actual installed Chrome:320/390x844 genuine touch,768/1440x900. [Flow results](results.json): one hero photo, natural ratio/contain/decode, no pin/GSAP requests, source500ms once-only reveal, both native CTAs including single tap, no overflow or JS page errors. One390px FAQ400ms/gallery-dialog Escape smoke passed. Desktop no-JS/reduced-motion readable, no hero animation. After final serif adjustment, [final layout](final-layout.json) reconfirmed all four widths/no overflow/errors; screenshots refreshed. Visual inspection uses final390/1440 frame. [Before390](before-390.png)/[before1440](before-1440.png), [after390](after-390.png)/[after1440](after-1440.png), [actual390 viewport](viewport-390.png)/[1440](viewport-1440.png). Tall after frames show the full portrait without scrolling or changing composition; viewport frames use agreed844/900height. No actual Instagram playback or physical iPhoneSafari claim. Synthetic local SQLite preview has no accounts/real data and is removed before commit.
+
+## Release and recovery
+
+Concrete PR and GitHub CI gates required. Owner previously authorized publication of this ongoing About redesign; this item is a bounded hero correction. Before merge, release remains pending; CI/live revision results are reported in chat after automatic deployment. No manual production editing/migration. Code-only rollback to previous main1fedea5c7232ab635a261f28f5890b2670367027 retains DB/media/env; new static photo can remain. Current backlog/business rules/architecture updated to reflect this hero replacement; older cinematic evidence remains history. Next Owner visual review, no next phase started.
