@@ -154,6 +154,9 @@ class OrderApiPreflight extends Command
     private function fixtureChecks(): void
     {
         foreach (OrderApiFixtures::SCENARIOS as $scenario => $spec) {
+            if (($spec['website_issue'] ?? false) && ! config('orders_api.website_issues')) {
+                continue;
+            }
             $order = OnlineOrder::query()->where('state_model', OnlineOrder::STATE_V2)->where('staff_note', '[e2e-fixture:'.$scenario.']')
                 ->where('lifecycle', 'active')->latest('id')->first();
             if (! $order) {
@@ -161,11 +164,7 @@ class OrderApiPreflight extends Command
 
                 continue;
             }
-            $problems = array_keys(array_filter([
-                'diklaim' => $order->claims()->exists(), 'packing dimulai' => $order->preparation_status !== 'not_started',
-                'ada kendala' => $order->issues()->exists(), 'ada biaya' => $order->costs()->exists(),
-                'nama bukan E2E' => ! str_starts_with((string) $order->customer_name, 'E2E '),
-            ]));
+            $problems = OrderApiFixtures::problems($order, $scenario);
             $this->add($problems === [] ? 'PASS' : 'WARN', "fixture:{$scenario}", $order->public_id.' rev '.$order->revision.($problems === [] ? '' : ' — '.implode(', ', $problems)));
         }
     }

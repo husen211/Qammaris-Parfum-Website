@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Synthetic V2 orders for joint staging tests with Qammaris App (ORD-02e). Refuses production. Re-runnable:
  * clean fixtures (active, no claim/cost/issue) are reused; `--reset` cancels earlier fixtures (never deletes) and
- * creates six fresh ones. Recipient names start with "E2E " and phones/addresses are fake.
+ * creates fresh ones. Recipient names start with "E2E " and phones/addresses are fake. Contract r4.2 adds
+ * `websiteIssue` (one open issue opened in the Admin PWA), created only when QAMMARIS_ORDER_API_WEBSITE_ISSUES is on.
  */
 class OrderApiFixtures extends Command
 {
@@ -32,6 +33,7 @@ class OrderApiFixtures extends Command
         'pickup' => ['fulfillment' => 'pickup', 'lines' => [0, 1], 'phone' => '080000000004'],
         'issue' => ['fulfillment' => 'local_delivery', 'lines' => [2, 0], 'phone' => '080000000005'],
         'costs' => ['fulfillment' => 'local_delivery', 'lines' => [0, 1], 'phone' => '080000000006'],
+        'websiteIssue' => ['fulfillment' => 'pickup', 'lines' => [1, 0], 'phone' => '080000000007', 'website_issue' => true],
     ];
 
     public function handle(CreateOnlineOrder $create, OnlineOrderFulfillment $orders): int
@@ -52,6 +54,9 @@ class OrderApiFixtures extends Command
         $variants = $this->syntheticVariants($actor);
         $result = [];
         foreach (self::SCENARIOS as $scenario => $spec) {
+            if (($spec['website_issue'] ?? false) && ! config('orders_api.website_issues')) {
+                continue; // r4.2 only: needs the Admin PWA issue path open while the API is on.
+            }
             $existing = $this->fixtures($scenario);
             if ($this->option('reset')) {
                 foreach ($existing->whereIn('lifecycle', ['awaiting_customer', 'active']) as $old) {
@@ -59,8 +64,9 @@ class OrderApiFixtures extends Command
                 }
                 $existing = collect();
             }
-            $order = $existing->first(fn (OnlineOrder $order) => $this->clean($order)) ?? $this->createFixture($create, $orders, $actor, $variants, $scenario, $spec);
-            // Keyed like the App's E2E env (local, intercity, customerCourier, pickup, issue, costs).
+            $order = $existing->first(fn (OnlineOrder $order) => self::problems($order, $scenario) === [])
+                ?? $this->createFixture($create, $orders, $actor, $variants, $scenario, $spec);
+            // Keyed like the App's E2E env (local, intercity, customerCourier, pickup, issue, costs, websiteIssue).
             $result[$scenario] = ['id' => $order->public_id, 'number' => $order->code, 'revision' => $order->fresh()->revision, 'fulfillment' => $order->fulfillment];
         }
         $this->line(json_encode(['fixtures' => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -80,6 +86,9 @@ class OrderApiFixtures extends Command
         if ($spec['customer_courier'] ?? false) {
             $order = $orders->setCourierResponsibility($order->fresh(), $order->fresh()->revision, OrderActor::user($actor), 'customer');
         }
+        if ($spec['website_issue'] ?? false) {
+            $orders->openIssue($order->fresh(), null, OrderActor::user($actor), 'stock_problem', 'E2E kendala dari Admin PWA (sintetis)');
+        }
 
         return $order->fresh();
     }
@@ -89,10 +98,25 @@ class OrderApiFixtures extends Command
         return OnlineOrder::query()->where('state_model', OnlineOrder::STATE_V2)->where('staff_note', '[e2e-fixture:'.$scenario.']')->latest('id')->get();
     }
 
-    private function clean(OnlineOrder $order): bool
+    /**
+     * What keeps a fixture from matching the App preflight (empty = clean): active, unclaimed, preparation not started,
+     * no costs, recipient "E2E …"; no issue, except `websiteIssue`, which has exactly one open issue opened in the Website.
+     *
+     * @return list<string>
+     */
+    public static function problems(OnlineOrder $order, string $scenario): array
     {
-        return $order->lifecycle === 'active' && $order->claims()->doesntExist() && $order->costs()->doesntExist() && $order->issues()->doesntExist()
-            && $order->preparation_status === 'not_started' && $order->handover_status === 'pending';
+        $issues = $order->issues()->get();
+        $issueOk = ($scenario === 'websiteIssue')
+            ? $issues->count() === 1 && $issues->first()->status === 'open' && $issues->first()->opened_by_app_user_id === null
+            : $issues->isEmpty();
+
+        return array_keys(array_filter([
+            'tidak aktif' => $order->lifecycle !== 'active', 'diklaim' => $order->claims()->exists(),
+            'packing dimulai' => $order->preparation_status !== 'not_started', 'sudah diserahkan' => $order->handover_status !== 'pending',
+            'ada biaya' => $order->costs()->exists(), 'kendala tidak sesuai' => ! $issueOk,
+            'nama bukan E2E' => ! str_starts_with((string) $order->customer_name, 'E2E '),
+        ]));
     }
 
     /** @return array{0: ProductVariant, 1: ProductVariant} draft products of the synthetic brand; never public */

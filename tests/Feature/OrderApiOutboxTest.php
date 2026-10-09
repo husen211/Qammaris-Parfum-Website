@@ -188,6 +188,33 @@ class OrderApiOutboxTest extends TestCase
         $this->assertSame(1, $order->issues()->count());
     }
 
+    /** Contract r4.2: a seventh fixture with one Admin PWA issue, only while Website issues are enabled. */
+    public function test_website_issue_fixture_exists_only_with_r42_website_issues_and_is_served_with_its_source(): void
+    {
+        Http::fake();
+        User::factory()->create(['role' => User::ROLE_SUPER_ADMIN, 'username' => 'pemilik-uji']);
+
+        Artisan::call('qammaris:order-api:fixtures', ['--actor' => 'pemilik-uji']);
+        $this->assertArrayNotHasKey('websiteIssue', json_decode(Artisan::output(), true)['fixtures']);
+
+        config(['orders_api.website_issues' => true]);
+        Artisan::call('qammaris:order-api:fixtures', ['--actor' => 'pemilik-uji']);
+        $fixtures = json_decode(Artisan::output(), true)['fixtures'];
+        $this->assertSame(['local', 'intercity', 'customerCourier', 'pickup', 'issue', 'costs', 'websiteIssue'], array_keys($fixtures));
+
+        $order = $this->assertMatchesApiSchema($this->orderApi('GET', '/orders/'.$fixtures['websiteIssue']['id'])->assertOk(), 'Order');
+        $this->assertSame(['active', 'has_issue', 1, null, 'website'], [$order->lifecycle, $order->queue, count($order->issues), $order->issues[0]->opened_by, $order->issues[0]->opened_by_source]);
+        $this->assertSame([null, null, null, []], [$order->claims->preparation, $order->claims->courier_booking, $order->claims->handover, $order->costs]);
+
+        // Re-run reuses it; the preflight checks it against its own expectation (exactly one Website issue).
+        Artisan::call('qammaris:order-api:fixtures', ['--actor' => 'pemilik-uji']);
+        $this->assertSame($fixtures['websiteIssue']['id'], json_decode(Artisan::output(), true)['fixtures']['websiteIssue']['id']);
+        Artisan::call('qammaris:order-api:preflight', ['--json' => true]);
+        $checks = collect(json_decode(Artisan::output(), true)['checks'])->keyBy('check');
+        $this->assertSame('PASS', $checks['fixture:websiteIssue']['status'], $checks['fixture:websiteIssue']['detail']);
+        $this->assertSame('PASS', $checks['fixture:issue']['status']);
+    }
+
     public function test_fixtures_refuse_production_and_create_six_clean_rerunnable_orders(): void
     {
         Http::fake();
