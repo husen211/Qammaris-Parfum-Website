@@ -102,6 +102,22 @@ Full suite on MariaDB: every ORD-01/ORD-02 test passes (513 passed). Two pre-exi
 - Production uses MariaDB 11.8.9. That is recorded in [audit-release](../audit-release/README.md) and [p1-04](../p1-04/PRODUCTION_TARGET_PREPARATION.md); it was not re-checked live from here, because this session has no production access.
 - Before staging sign-off, run the same two test files on a database matching the production engine and version (Owner decision 3). 11.8 defaults to `explicit_defaults_for_timestamp=ON`, so fix 3 is defensive there.
 
+## MariaDB 11.8.9 (production version, isolated) — follow-up 2026-10-09
+
+The official `mariadb-11.8.9-winx64.zip` was checked against the release's `sha256sums.txt` and run as a separate process bound to 127.0.0.1, with its own datadir and empty scratch databases. Its server defaults match production: `explicit_defaults_for_timestamp=ON`, strict mode, `REPEATABLE-READ`, utf8mb4.
+
+| Test | Result |
+|---|---|
+| `OrderMigrationsMariaDbTest`: migrate → roll back 8 → ORD-01 data → migrate (backfill) → roll back (data identical) → migrate | **pass** |
+| `OrderApiConcurrencyTest` (5 races) | **pass**, run 3 times in a row |
+| Full suite on 11.8.9 | **518 passed**, 2 failed (the known Shopee test assumptions, TEST-MYSQL-01) |
+
+One run showed a transient failure in `ProductDetailJsonLdTest`. It happened while `bootstrap/app.php` was being edited mid-run, and the test passed on rerun and in the final full run.
+
+Production's own version was not re-checked live: this session has no official production access. The staging deploy key is not used for production.
+
+Local smoke test with Qammaris App: [SMOKE_LOCAL.md](SMOKE_LOCAL.md). Round 3: 23/0/1, 50/50 webhooks, revisions match.
+
 ## Browser (real headless Chrome, synthetic data, temporary SQLite)
 
 The run used:
