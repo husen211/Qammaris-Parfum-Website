@@ -98,6 +98,8 @@ Every response outside production carries `X-Robots-Tag: noindex, nofollow`, in 
 
 ## 8. Hosted staging — plan (Owner actions)
 
+> **Superseded (Owner, 2026-10-09):** E2E does not run on the old Hostinger staging. Use the isolated staging in [STAGING_ISOLATED_PLAN](STAGING_ISOLATED_PLAN.md). The table below remains as the record of why the old staging was rejected.
+
 The existing `staging.qammarisparfum.id` (see [Hostinger runbook](HOSTINGER_GITHUB_DEPLOYMENT.md)) is a separate site with its own database and `.env`, behind Basic Auth. Before it can serve ORD-02 E2E tests:
 
 | Requirement | Current state | Needed |

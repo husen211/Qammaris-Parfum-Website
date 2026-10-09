@@ -93,8 +93,10 @@ class ShopeeContentImportTest extends TestCase
         $this->product();
         $basic = $this->file('basic', [['501', '', 'Demo EDP 100ML', 'Parfum unisex.'], ['502', '', 'Different EDP 50ML', 'copy']]);
         $media = $this->file('media', [['502', '', 'Different EDP 50ML', '', 'https://images.example.test/b.png', '', ''], ['501', '', 'Demo EDP 100ML', '', 'https://images.example.test/a.png', '', '']]);
-        $this->actingAs($this->admin)->post(route('admin.shopee-imports.preview'), ['basic_file' => $basic, 'media_file' => $media])
-            ->assertSessionHasNoErrors()->assertRedirect(route('admin.shopee-imports.index', ['batch' => 1]));
+        $response = $this->actingAs($this->admin)->post(route('admin.shopee-imports.preview'), ['basic_file' => $basic, 'media_file' => $media])
+            ->assertSessionHasNoErrors();
+        // The new batch's own ID: MySQL/MariaDB do not reuse IDs after a rolled-back test transaction.
+        $response->assertRedirect(route('admin.shopee-imports.index', ['batch' => ProductImportBatch::sole()->id]));
         $this->assertSame(2, ProductImportBatch::first()->total_rows);
         $this->assertSame('https://images.example.test/a.png', ProductImportBatch::first()->rows()->where('external_product_id', '501')->first()->normalized_data['foto_utama_url']);
         $this->post(route('admin.shopee-imports.preview'))->assertSessionHasErrors(['basic_file', 'media_file']);
@@ -499,7 +501,8 @@ class ShopeeContentImportTest extends TestCase
         DB::disableQueryLog();
         DB::flushQueryLog();
         $this->assertLessThanOrEqual(40, count($queries), 'Review SQL must stay bounded for375 rows, not query readiness per product.');
-        $this->assertCount(1, array_filter($queries, fn ($query) => str_contains($query['query'], 'group by "slug"')));
+        // Identifier quoting differs per driver ("slug" on SQLite, `slug` on MySQL/MariaDB).
+        $this->assertCount(1, array_filter($queries, fn ($query) => preg_match('/group by ["`]?slug["`]?/i', $query['query']) === 1));
         $this->assertSame(7, $response->viewData('rows')->total());
         $this->assertSame(368, $response->viewData('completeCount'));
         $this->assertSame(0, $response->viewData('pendingCount'));

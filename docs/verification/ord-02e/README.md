@@ -111,6 +111,7 @@ The official `mariadb-11.8.9-winx64.zip` was checked against the release's `sha2
 | `OrderMigrationsMariaDbTest`: migrate → roll back 8 → ORD-01 data → migrate (backfill) → roll back (data identical) → migrate | **pass** |
 | `OrderApiConcurrencyTest` (5 races) | **pass**, run 3 times in a row |
 | Full suite on 11.8.9 | **518 passed**, 2 failed (the known Shopee test assumptions, TEST-MYSQL-01) |
+| Full suite on 11.8.9 after the Shopee test fix | **522 passed, 0 failed** |
 
 One run showed a transient failure in `ProductDetailJsonLdTest`. It happened while `bootstrap/app.php` was being edited mid-run, and the test passed on rerun and in the final full run.
 

@@ -38,7 +38,7 @@ Owner requested and approved ORD-01 on 2026-10-07, developed in parallel with th
 | ORD-04 | Absorbed | Authenticated staff (Staff Order role + App task link) is part of ORD-02 |
 | ORD-06 | BACKLOG | Cart checkout creates the same online order (changes ADR-028); needs Owner approval |
 | ORD-05 | BACKLOG | Customer-data retention/anonymization policy; currently no automatic deletion |
-| TEST-MYSQL-01 | BACKLOG | Two `ShopeeContentImportTest` cases assume SQLite (double-quoted `"slug"` in a logged query; batch ID 1 after a rolled-back transaction) and fail on MySQL/MariaDB. Test-only; found in ORD-02e. |
+| TEST-MYSQL-01 | DONE | Two `ShopeeContentImportTest` cases assumed SQLite (double-quoted `"slug"` in a logged query; batch ID 1 after a rolled-back transaction). Fixed test-only (driver-neutral match, the batch's own ID) on 2026-10-09; full suite on MariaDB 11.8.9: 522 passed. |
 
 ORD-01 local verification: 14 new tests/142 assertions; full suite and browser flow at 320/375/390/1440 on an isolated synthetic SQLite DB; staging MySQL, genuine touch/Safari and real WhatsApp sending not confirmed.
 
