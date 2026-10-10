@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-10",
+  "surface": "local isolated preference quiz fixture",
+  "fixture_public_products": 381,
+  "synthetic_actors": 1,
+  "fixture_removed": true,
+  "temporary_server_and_tab_closed": true,
+  "production_write": false,
+  "viewports": {
+    "390x844": {
+      "clientWidth": 375,
+      "scrollWidth": 375
+    },
+    "1440x900": {
+      "clientWidth": 1425,
+      "scrollWidth": 1425
+    },
+    "320x844": {
+      "clientWidth": 305,
+      "scrollWidth": 305
+    }
+  },
+  "checks": [
+    "budget validation and disabled-free visual state",
+    "pressed range",
+    "back and previous-stage navigation",
+    "skip/unskip sweetness and dynamic question count",
+    "refresh retains draft",
+    "favorite search and clear",
+    "keyboard Space and Enter",
+    "summary edit",
+    "submit to local result with three candidates",
+    "overall feedback persisted: Terima kasih, feedback tersimpan.",
+    "result edit retains answers",
+    "final build transition clears height lock",
+    "hidden panels have inert attributes",
+    "no captured browser console errors"
+  ],
+  "automated": {
+    "focused_js": "7 passed",
+    "quiz_http": "13 tests / 161 assertions passed",
+    "vite_build": "passed"
+  },
+  "limits": [
+    "viewport resizing is not genuine touch/iPhone Safari verification",
+    "reduced motion/cancel covered in unit helper, not OS setting emulation",
+    "local product images use placeholder fixture; no production media claim",
+    "sensory relevance and 80–90% accuracy not measured by this UI patch"
+  ]
+}

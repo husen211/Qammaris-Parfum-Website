@@ -1,3 +1,4 @@
+import { PREFERENCE_STAGES, preferenceStage, stageDestination, transitionPreferencePanel } from './preference-multistep.js';
 import { activeQuestionKeys, effectiveAnswers, sweetnessBranch, validBudget } from './preference-flow.js';
 
 const form = document.querySelector('[data-preference-form]');
@@ -12,6 +13,12 @@ if (form) {
     const budget = form.elements.budget_max;
     const free = form.querySelector('[data-budget-free]');
     const avoidSweet = form.querySelector('[data-avoid-sweet]');
+    const frame = form.querySelector('[data-step-frame]');
+    const nextButton = form.querySelector('[data-preference-next]');
+    const backButton = form.querySelector('[data-preference-back]');
+    const submitButton = form.querySelector('[data-preference-submit]');
+    const stageButtons = [...form.querySelectorAll('[data-preference-stage]')];
+    let transitioning = false;
     let current = keys[0];
     let none = { likes: false, avoid: false };
     let minimum = 0;
@@ -81,7 +88,7 @@ if (form) {
         const data = answers();
         for (const key of active()) {
             const panel = panels.find(p => p.dataset.key === key);
-            const line = document.createElement('div'); line.className = 'py-4 flex items-start justify-between gap-3';
+            const line = document.createElement('div'); line.className = 'pref-summary-row';
             const info = document.createElement('div');
             const label = document.createElement('p'); label.className = 'text-sm text-brand-black/60'; label.textContent = panel.querySelector('legend').textContent;
             const value = document.createElement('p');
@@ -96,27 +103,63 @@ if (form) {
         form.querySelector('[data-branch-summary]').hidden = !branch.skipped;
         form.querySelector('[data-branch-summary]').textContent = data.avoid_sweet ? 'Pilihan tidak suka aroma manis sudah dipakai. Pertanyaan kemanisan dilewati.' : 'Pertanyaan kemanisan dilewati karena kamu menghindari dessert/gourmand. Pilih Aroma manis pada jawaban hindari jika kamu juga ingin menghindari manis dari buah atau bunga.';
     }
-    function show(key, focus = true) {
+    function updateStages() {
+        const stageIndex = preferenceStage(current);
+        stageButtons.forEach((button, index) => {
+            button.dataset.state = index < stageIndex ? 'complete' : index === stageIndex ? 'current' : 'pending';
+            button.disabled = transitioning || form.getAttribute('aria-busy') === 'true' || index > stageIndex;
+            if (index === stageIndex) button.setAttribute('aria-current', 'step');
+            else button.removeAttribute('aria-current');
+        });
+        form.querySelector('[data-stage-label]').textContent = PREFERENCE_STAGES[stageIndex].label;
+    }
+    function focusCurrent() {
+        const heading = current === 'summary' ? summary.querySelector('h2') : panels.find(p => p.dataset.key === current).querySelector('legend');
+        heading.focus({ preventScroll: true });
+        form.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
+    async function show(key, focus = true) {
+        if (transitioning && (focus || key !== current)) return;
         const available = active();
-        current = key === 'summary' || available.includes(key) ? key : available[0];
-        const index = available.indexOf(current);
-        panels.forEach(panel => { panel.hidden = panel.dataset.key !== current; panel.inert = panel.hidden; });
-        summary.hidden = current !== 'summary';
-        const panel = panels.find(p => p.dataset.key === current);
-        form.querySelector('[data-step-label]').textContent = current === 'summary' ? 'Ringkasan jawaban' : `Pertanyaan ${index + 1} dari ${available.length}${panel?.dataset.optional === 'true' ? ' · opsional' : ''}`;
-        const progress = form.querySelector('[data-progress]'); progress.max = available.length + 1; progress.value = current === 'summary' ? available.length + 1 : index + 1;
-        form.querySelector('[data-preference-back]').hidden = index === 0;
-        form.querySelector('[data-preference-next]').hidden = current === 'summary';
-        form.querySelector('[data-preference-next]').textContent = panel?.dataset.optional === 'true' ? 'Lanjut / lewati' : 'Lanjut';
-        form.querySelector('[data-preference-submit]').hidden = current !== 'summary';
-        if (current === 'summary') summaryRows();
-        message(null); budgetState(); save();
-        if (focus) {
-            const heading = current === 'summary' ? summary.querySelector('h2') : panel.querySelector('legend');
-            heading.focus({ preventScroll: true });
-            heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+        const target = key === 'summary' || available.includes(key) ? key : available[0];
+        const previous = current;
+        const outgoing = previous === 'summary' ? summary : panels.find(p => p.dataset.key === previous);
+        const render = () => {
+            current = target;
+            const index = available.indexOf(current);
+            panels.forEach(panel => { panel.hidden = panel.dataset.key !== current; panel.inert = panel.hidden; });
+            summary.hidden = current !== 'summary'; summary.inert = summary.hidden;
+            const panel = current === 'summary' ? summary : panels.find(p => p.dataset.key === current);
+            const label = current === 'summary' ? 'Ringkasan jawaban' : `Pertanyaan ${index + 1} dari ${available.length}${panel.dataset.optional === 'true' ? ' · opsional' : ''}`;
+            form.querySelector('[data-step-label]').textContent = label;
+            const progress = form.querySelector('[data-progress]'); progress.max = available.length; progress.value = current === 'summary' ? available.length : index;
+            progress.setAttribute('aria-valuetext', label);
+            form.querySelector('[data-progress-fill]').style.width = `${progress.value / progress.max * 100}%`;
+            backButton.hidden = index === 0;
+            nextButton.hidden = current === 'summary';
+            form.querySelector('[data-next-label]').textContent = panel.dataset.optional === 'true' ? 'Lanjut / lewati' : 'Lanjut';
+            form.querySelector('[data-preference-submit]').hidden = current !== 'summary';
+            if (current === 'summary') summaryRows();
+            message(null); budgetState(); updateStages(); save();
+            return panel;
+        };
+        if (previous === target || !focus) { render(); return; }
+        transitioning = true; nextButton.disabled = true; backButton.disabled = true; submitButton.disabled = true; updateStages();
+        const order = [...available, 'summary'];
+        try {
+            await transitionPreferencePanel({ frame, outgoing, render,
+                direction: order.indexOf(target) < order.indexOf(previous) ? -1 : 1,
+                reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+            focusCurrent();
+        } finally {
+            transitioning = false; nextButton.disabled = false; backButton.disabled = false; submitButton.disabled = false; updateStages();
         }
     }
+    stageButtons.forEach((button, index) => button.addEventListener('click', () => {
+        if (transitioning || index > preferenceStage(current)) return;
+        const target = stageDestination(index, active());
+        if (target) show(target);
+    }));
     form.querySelectorAll('[data-budget]').forEach(button => button.addEventListener('click', () => {
         free.checked = false; minimum = Number(button.dataset.min); openRange = !button.dataset.budget; budget.value = button.dataset.budget || ''; budgetState(); save();
     }));
@@ -148,19 +191,20 @@ if (form) {
         });
         if (!matches.length) { const note = document.createElement('p'); note.textContent = 'Tidak ditemukan. Coba nama lain atau lewati.'; target.append(note); }
     });
-    form.querySelector('[data-preference-next]').addEventListener('click', () => { const problem = valid(current); if (problem) message(problem); else { const available = active(); show(available[available.indexOf(current) + 1] || 'summary'); } });
-    form.querySelector('[data-preference-back]').addEventListener('click', () => { const available = active(); show(current === 'summary' ? available.at(-1) : available[available.indexOf(current) - 1]); });
+    nextButton.addEventListener('click', () => { if (transitioning) return; const problem = valid(current); if (problem) message(problem); else { const available = active(); show(available[available.indexOf(current) + 1] || 'summary'); } });
+    backButton.addEventListener('click', () => { if (transitioning) return; const available = active(); show(current === 'summary' ? available.at(-1) : available[available.indexOf(current) - 1]); });
     form.addEventListener('submit', async event => {
         event.preventDefault();
-        for (const key of active()) { const problem = valid(key); if (problem) { show(key); message(problem); return; } }
-        const submit = form.querySelector('[data-preference-submit]'); submit.disabled = true; submit.textContent = 'Mencari rekomendasi…'; form.setAttribute('aria-busy', 'true'); save();
+        if (transitioning || form.getAttribute('aria-busy') === 'true') return;
+        for (const key of active()) { const problem = valid(key); if (problem) { await show(key); message(problem); return; } }
+        const submit = form.querySelector('[data-preference-submit]'); submit.disabled = true; form.querySelector('[data-submit-label]').textContent = 'Mencari rekomendasi…'; form.setAttribute('aria-busy', 'true'); frame.inert = true; backButton.disabled = true; updateStages(); save();
         try {
             const response = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': form.elements._token.value }, body: JSON.stringify(answers()) });
             if (response.ok && response.redirected) { window.location.assign(response.url); return; }
             if (response.status === 422) { const data = await response.json(); message(Object.values(data.errors || {}).flat().join(' ') || 'Periksa jawabanmu.'); }
             else message(response.status === 429 ? 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.' : response.status === 419 ? 'Sesi berubah. Refresh halaman; jawaban sementara tetap tersimpan.' : 'Hasil belum berhasil disimpan. Coba lagi, jawabanmu tetap tersedia.');
         } catch { message('Koneksi terputus. Coba lagi, jawabanmu tetap tersedia.'); }
-        finally { submit.disabled = false; submit.textContent = 'Lihat rekomendasi'; form.removeAttribute('aria-busy'); }
+        finally { submit.disabled = false; form.querySelector('[data-submit-label]').textContent = 'Lihat rekomendasi'; form.removeAttribute('aria-busy'); frame.inert = false; backButton.disabled = false; updateStages(); }
     });
     if (Object.keys(seed.answers).length) restore(seed.answers);
     else { try { const draft = JSON.parse(localStorage.getItem(draftKey)); if (draft && Date.now() - draft.timestamp < 86400000 && Date.now() >= draft.timestamp) { restore(draft.answers, draft.none, draft.free); current = typeof draft.current === 'string' ? draft.current : keys[0]; } } catch { /* Storage is optional. */ } }

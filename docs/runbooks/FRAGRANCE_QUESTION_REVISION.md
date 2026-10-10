@@ -11,3 +11,7 @@ Runbook ini sudah digunakan untuk rilis koreksi PR51; [bukti operasional](../ver
 7. Jika gagal, flag `false` mengembalikan tes enam pertanyaan. Pertahankan tabel/data baru. Jika ingin beta v1.1 kembali, deploy code lama lalu preview/rebuild parser lama sebelum flag `true`, sebab fingerprint parser berbeda. Jangan memulihkan dump produksi di atas jawaban pelanggan baru tanpa rencana terpisah.
 
 Dokumentasikan release SHA, CI, snapshot/preview/apply/replay, backup receipt, actor ID dan hasil smoke. Tidak memulai PREF-04 atau mengklaim 80–90% dari smoke ini.
+
+## UI-only Multistep adaptation
+
+Owner-requested [21st UI patch](../verification/pref-03/multistep-ui/README.md) changes presentation/navigation only. After separate authorization, use the normal CI/deploy pipeline; no migrations, profile apply/rebuild or flag cutover are required because question/parser/engine semantics stay unchanged. Code rollback to the preceding UI keeps all recommendation/result/feedback tables. Human quality and genuine-touch limits remain separately reported.
