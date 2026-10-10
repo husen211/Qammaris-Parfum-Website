@@ -1,13 +1,12 @@
 @use('App\Models\OnlineOrder')
 @use('App\Support\OnlineOrderLabels')
-{{-- ORD-03 payment: one form (amount, method, Majoo). The ledger keeps the audit source internally. Ongkir sits here because it changes the total. --}}
+{{-- ORD-03/04 payment: ongkir first, then the final total with copyable instructions, then one "Tandai Lunas". The ledger keeps the audit source. --}}
 @php
     $paymentSummary = match (true) {
         $order->payment_status === 'paid' => 'Lunas'.($order->recorded_in_majoo ? ' · tercatat di Majoo' : ''),
         $received > 0 => 'Dibayar '.$rp($received).' · sisa '.$rp($remainingCents),
         default => 'Belum dibayar · '.$rp($totalCents),
     };
-    $canChargeShipping = auth()->user()->can('orders.charge-shipping', $order);
 @endphp
 <details id="pembayaran" class="{{ $card }}" @if ($openSection) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2" @if ($openSection) data-next-step @endif>
@@ -42,50 +41,50 @@
         </ul>
     @endif
 
-    @if ($order->lifecycle === 'draft')
-        <p class="mt-3 text-sm text-gray-600">Pembayaran dicatat setelah pesanan website dikonfirmasi.@if ($order->payment_preference) Customer memilih: <strong>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</strong>.@endif</p>
-    @elseif ($order->lifecycle !== 'cancelled' && $remainingCents > 0)
-        <form method="POST" action="{{ route('admin.orders.v2.payments', $order) }}" class="mt-3 space-y-3">
-            @csrf {!! $hidden('pembayaran') !!}
-            @if ($order->payment_preference)
-                <p class="text-sm text-gray-700">Customer memilih: <strong>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</strong></p>
-            @endif
-            <div class="grid grid-cols-2 gap-3">
-                <label class="text-sm font-medium text-gray-700">Nominal (Rp)
-                    <input name="amount" inputmode="numeric" required value="{{ old('_section') === 'pembayaran' ? old('amount') : (int) ($remainingCents / 100) }}" class="{{ $input }}">
-                </label>
-                <label class="text-sm font-medium text-gray-700">Metode
-                    <select name="payment_method" required class="{{ $input }}">
-                        @foreach (OnlineOrder::PAYMENT_METHODS as $value => $label)<option value="{{ $value }}" @selected(old('payment_method', $order->payment_preference ?? $order->payment_method ?? 'transfer') === $value)>{{ $label }}</option>@endforeach
-                    </select>
-                </label>
-            </div>
-            <label class="flex min-h-11 items-center gap-3 text-sm text-gray-700"><input type="checkbox" name="recorded_in_majoo" value="1" @checked($order->recorded_in_majoo) class="h-5 w-5"> Sudah dicatat di Majoo</label>
-            <button class="{{ $primary }}" data-busy-label="Menyimpan…">{{ $received === 0 ? 'Tandai Lunas' : 'Catat pembayaran' }}</button>
-        </form>
-    @endif
+    @include('admin.orders.v2._ongkir', ['section' => 'pembayaran'])
 
-    {{-- Ongkir charged to the customer. --}}
-    <details class="mt-3 border-t border-gray-100 pt-2" @if (old('_section') === 'pembayaran' && old('shipping_payer') !== null) open @endif>
-        <summary class="{{ $quiet }} cursor-pointer">Ongkir: {{ $order->shipping_fee !== null ? format_rupiah($order->shipping_fee) : 'belum diisi' }}{{ $order->shipping_payer ? ' · '.OnlineOrder::SHIPPING_PAYERS[$order->shipping_payer] : '' }}</summary>
-        @if ($canChargeShipping)
-            <form method="POST" action="{{ route('admin.orders.v2.shipping', $order) }}" class="mt-2 space-y-3">
+    @if ($order->lifecycle === 'draft')
+        <p class="mt-3 text-sm text-gray-600">Pembayaran dicatat setelah pesanan website dikonfirmasi.</p>
+    @elseif ($order->lifecycle !== 'cancelled' && $remainingCents > 0)
+        @if (! $totalFinal)
+            <p class="mt-3 text-sm text-gray-700">Isi ongkir dan siapa yang membayarnya dulu supaya total pembayaran final.</p>
+        @else
+            {{-- ORD-04: total + official accounts for the customer; staff still mark paid only after the proof. --}}
+            <div class="mt-3 rounded-lg bg-gray-50 p-3" data-payment-instructions>
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <span class="text-sm text-gray-700">Total pembayaran</span>
+                    <strong class="text-xl tabular-nums">{{ $rp($totalCents) }}</strong>
+                </div>
+                @if ($received > 0)<p class="text-sm text-gray-600">Sudah diterima {{ $rp($received) }} · sisa {{ $rp($remainingCents) }}</p>@endif
+                @if ($order->payment_preference)
+                    <p class="mt-1 text-sm text-gray-700">Customer memilih <strong>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</strong> <span class="text-gray-500">(boleh berubah lewat chat)</span></p>
+                @endif
+                <textarea id="payment-message" readonly hidden>{{ $paymentText }}</textarea>
+                <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                    <button type="button" data-copy="#payment-message" class="{{ $secondary }} w-full">Salin Total & Instruksi Pembayaran</button>
+                    @if ($paymentChatUrl)<a href="{{ $paymentChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} w-full">Kirim ke WhatsApp customer</a>@endif
+                </div>
+                @if (! $hasPaymentAccount)
+                    <p class="mt-2 text-xs text-amber-900">Belum ada rekening resmi terverifikasi; instruksi meminta customer menunggu nomor rekening dari admin.@can('orders.payment-accounts') <a href="{{ route('admin.orders.payment-accounts.index') }}" class="underline underline-offset-2">Atur rekening</a>@endcan</p>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('admin.orders.v2.payments', $order) }}" class="mt-3 space-y-3" data-confirm="Bukti pembayaran sudah diterima dan dicek?">
                 @csrf {!! $hidden('pembayaran') !!}
                 <div class="grid grid-cols-2 gap-3">
-                    <label class="text-sm font-medium text-gray-700">Ongkir (Rp)<input name="shipping_fee" inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" class="{{ $input }}"></label>
-                    <label class="text-sm font-medium text-gray-700">Dibayar
-                        <select name="shipping_payer" class="{{ $input }}"><option value="">Belum ditentukan</option>@foreach (OnlineOrder::SHIPPING_PAYERS as $value => $label)<option value="{{ $value }}" @selected(old('shipping_payer', $order->shipping_payer) === $value)>{{ $label }}</option>@endforeach</select>
+                    <label class="text-sm font-medium text-gray-700">Nominal diterima (Rp)
+                        <input name="amount" inputmode="numeric" required value="{{ old('_section') === 'pembayaran' ? old('amount') : (int) ($remainingCents / 100) }}" class="{{ $input }}">
+                    </label>
+                    <label class="text-sm font-medium text-gray-700">Metode
+                        <select name="payment_method" required class="{{ $input }}">
+                            @foreach (OnlineOrder::PAYMENT_METHODS as $value => $label)<option value="{{ $value }}" @selected(old('payment_method', $order->payment_preference ?? $order->payment_method ?? 'transfer') === $value)>{{ $label }}</option>@endforeach
+                        </select>
                     </label>
                 </div>
-                @can('orders.finance')
-                    <label class="block text-sm font-medium text-gray-700">Toko bayar driver dengan
-                        <select name="driver_funding" class="{{ $input }}"><option value="">Tidak perlu / belum ditentukan</option>@foreach (OnlineOrder::DRIVER_FUNDING as $value => $label)<option value="{{ $value }}" @selected(old('driver_funding', $order->driver_funding) === $value)>{{ $label }}</option>@endforeach</select>
-                    </label>
-                @endcan
-                <button class="{{ $secondary }}" data-busy-label="Menyimpan…">Simpan ongkir</button>
+                <label class="flex min-h-11 items-center gap-3 text-sm text-gray-700"><input type="checkbox" name="recorded_in_majoo" value="1" @checked($order->recorded_in_majoo) class="h-5 w-5"> Sudah dicatat di Majoo</label>
+                <button class="{{ $primary }}" data-busy-label="Menyimpan…">{{ $received === 0 ? 'Tandai Lunas' : 'Catat pembayaran' }}</button>
+                <p class="text-xs text-gray-500">Tandai setelah bukti pembayaran diterima. Packing dan pengiriman baru bisa setelah lunas.</p>
             </form>
-        @else
-            <p class="mt-2 text-sm text-gray-600">{{ $received > 0 ? 'Sudah ada pembayaran. Ubah total lewat Opsi lanjutan → penyesuaian harga (disetujui Super Admin).' : 'Ongkir diatur Super Admin.' }}</p>
         @endif
-    </details>
+    @endif
+
 </details>

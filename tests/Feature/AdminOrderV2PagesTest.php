@@ -74,10 +74,11 @@ class AdminOrderV2PagesTest extends TestCase
 
         $page = $this->get(route('admin.orders.show', $order))->assertOk();
         $this->assertStringContainsString('no-store', $page->headers->get('Cache-Control'));
-        // ORD-03: the current step (payment, unpaid order) is open first with one primary action; later steps follow collapsed.
+        // ORD-04 stepper: payment is the current step; ongkir comes first, so no "Tandai Lunas" yet; later steps are inert.
         $page->assertSee('data-order-v2', false)
-            ->assertSeeInOrder(['data-next-step', 'Pembayaran', 'Tandai Lunas', 'id="packing"', 'id="pengiriman"', 'id="link"'], false)
-            ->assertSee('Salin Link')->assertSee('Pesan untuk grup staf')->assertSee('Konfirmasi packing')
+            ->assertSeeInOrder(['data-stepper', 'data-step="pembayaran" data-state="current"', 'id="pembayaran"', 'Isi ongkir dan siapa yang membayarnya dulu', 'data-step-row="persiapan"', 'id="link"'], false)
+            ->assertSee('Salin Link')->assertSee('Pesan untuk grup staf')
+            ->assertDontSee('Tandai Lunas')->assertDontSee('Konfirmasi packing')->assertDontSee('Sudah diserahkan ke kurir')
             ->assertDontSee('Dikonfirmasi dari')->assertDontSee('Mulai siapkan')
             ->assertSee(route('admin.orders.show', $order), false)
             ->assertDontSee('/tugas-pesanan/', false)
@@ -124,7 +125,8 @@ class AdminOrderV2PagesTest extends TestCase
         $this->post(route('admin.orders.v2.payments', $order), ['revision' => 1, 'amount' => '400000', 'payment_method' => 'qris', 'confirmation_source' => 'majoo'])
             ->assertSessionHas('order_notice.type', 'conflict');
         $this->assertSame(1, OnlineOrderPayment::count());
-        $this->get(route('admin.orders.show', $order))->assertSee('Lunas · tercatat di Majoo');
+        $this->get(route('admin.orders.show', $order))->assertSee('Lunas Rp 400.000 · QRIS · Majoo')->assertSee('data-step="persiapan" data-state="current"', false)
+            ->assertSee('Konfirmasi packing')->assertDontSee('Tandai Lunas');
 
         [$alpha, $beta] = $order->items->pluck('line_id')->all();
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, '_section' => 'packing', 'packed' => [$alpha => 1, $beta => 1]])

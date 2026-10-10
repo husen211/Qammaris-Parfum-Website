@@ -113,8 +113,9 @@ class OrderOperationalUxTest extends TestCase
         $this->assertSame(['qris', 'unpaid', 0], [$order->payment_preference, $order->payment_status, $order->payments()->count()], 'A preference is never a payment');
         $this->assertArrayNotHasKey('payment_preference', OrderSerializer::order($order)['payment'], 'Not part of API v1');
 
-        $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertSee('Customer memilih: <strong>QRIS</strong>', false)
-            ->assertSee('<option value="qris" selected>', false);
+        $this->actingAs($this->staff)->post(route('admin.orders.v2.shipping', $order), ['revision' => $order->revision, 'shipping_fee' => '15000', 'shipping_payer' => 'added_to_transfer']);
+        $this->get(route('admin.orders.show', $order))->assertSee('Customer memilih <strong>QRIS</strong>', false)
+            ->assertSee('<option value="qris" selected>', false)->assertSee('Salin Total & Instruksi Pembayaran', false);
         $this->get(route('orders.customer.show', $token))->assertSee('Kirim Sharelok')->assertDontSee('ikon lampiran');
     }
 
@@ -140,7 +141,7 @@ class OrderOperationalUxTest extends TestCase
     {
         $order = $this->paidV2Order('intercity');
         $this->actingAs($this->staff);
-        $this->get(route('admin.orders.show', $order))->assertSee('Pickup J&amp;T belum diminta', false);
+        $this->get(route('admin.orders.show', $order))->assertSee('data-step="persiapan" data-state="current"', false)->assertDontSee('Request pickup J&amp;T', false);
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($i) => [$i->line_id => $i->quantity])->all()]);
         $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested']);
         $this->get(route('admin.orders.show', $order))->assertSee('Menunggu kurir J&amp;T', false)->assertSee('Sudah di-pickup J&T', false)->assertSee('Opsi lanjutan: QR & resi', false);

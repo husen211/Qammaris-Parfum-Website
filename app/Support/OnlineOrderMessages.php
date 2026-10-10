@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderItem;
+use App\Models\StorePaymentAccount;
 
 /** Plain-text WhatsApp messages for the staff group and the customer; every stored value is flattened. */
 final class OnlineOrderMessages
@@ -124,6 +125,46 @@ final class OnlineOrderMessages
             'Mohon lengkapi data pengiriman di link berikut ya:',
             $customerUrl,
         ]);
+    }
+
+    /**
+     * ORD-04: total and payment instructions, copied by staff once the total is final. Accounts come only from
+     * verified Owner configuration; without one, the text says the account follows in the chat.
+     */
+    public function paymentInstructions(OnlineOrder $order): string
+    {
+        $received = OnlineOrderMoney::totals($order)['received'];
+        $total = Rupiah::minorUnits($order->customerTotal());
+        $lines = ['Pesanan *'.$order->code.'*', 'Subtotal produk: '.Rupiah::format($order->subtotal())];
+        $lines[] = match (true) {
+            $order->fulfillment === 'pickup' => 'Ongkir: - (ambil di toko)',
+            $order->shipping_payer === 'added_to_transfer' => 'Ongkir: '.Rupiah::format($order->shipping_fee),
+            $order->shipping_payer === 'cash_to_driver' => 'Ongkir: '.Rupiah::format($order->shipping_fee).' (dibayar langsung ke driver)',
+            $order->shipping_payer === 'store_free' => 'Ongkir: gratis',
+            default => 'Ongkir: menunggu konfirmasi',
+        };
+        if (($adjustment = $order->approvedAdjustmentCents()) !== 0) {
+            $lines[] = 'Penyesuaian: '.($adjustment < 0 ? '-' : '').Rupiah::format(Rupiah::decimal(abs($adjustment)));
+        }
+        $lines[] = '*Total pembayaran: '.Rupiah::format(Rupiah::decimal($total)).'*';
+        if ($received > 0) {
+            $lines[] = 'Sudah diterima: '.Rupiah::format(Rupiah::decimal($received)).' · sisa '.Rupiah::format(Rupiah::decimal(max(0, $total - $received)));
+        }
+        $lines[] = '';
+        $accounts = StorePaymentAccount::query()->usable()->get();
+        if ($accounts->isEmpty()) {
+            $lines[] = 'Nomor rekening resmi dikirim admin di chat ini.';
+        } else {
+            $lines[] = 'Transfer ke rekening resmi Qammaris:';
+            foreach ($accounts as $account) {
+                $lines[] = '- '.$this->text($account->line());
+            }
+        }
+        $lines[] = 'Untuk QRIS, minta kode QRIS ke admin di chat ini.';
+        $lines[] = '';
+        $lines[] = 'Setelah membayar, kirim foto atau screenshot bukti pembayaran di chat ini. Pesanan disiapkan setelah pembayaran kami konfirmasi.';
+
+        return implode("\n", $lines);
     }
 
     public function customerLocation(OnlineOrder $order): string

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminProductImportController;
 use App\Http\Controllers\Admin\AdminProductMaintenanceController;
 use App\Http\Controllers\Admin\AdminQammarisAppProductController;
 use App\Http\Controllers\Admin\AdminShopeeContentController;
+use App\Http\Controllers\Admin\AdminStorePaymentAccountController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
@@ -144,6 +145,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
 
     // Online orders (Super Admin, Staff Order, legacy admin); money changes need orders.finance
     Route::middleware('can:orders.manage')->group(function () {
+        Route::prefix('orders/payment-accounts')->name('orders.payment-accounts.')->controller(AdminStorePaymentAccountController::class)
+            ->middleware('can:orders.payment-accounts')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/', 'store')->name('store');
+                Route::post('{account}/verify', 'verify')->name('verify');
+                Route::post('{account}/deactivate', 'deactivate')->name('deactivate');
+            });
         Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
         Route::get('orders/customer-search', [AdminOnlineOrderV2Controller::class, 'customerSearch'])->name('orders.customer-search');
 

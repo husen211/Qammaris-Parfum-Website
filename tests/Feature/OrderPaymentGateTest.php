@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Orders\OnlineOrderAdjustments;
 use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\RecordOnlineOrderMoney;
 use App\Exceptions\OrderRevisionConflict;
@@ -70,6 +71,39 @@ class OrderPaymentGateTest extends TestCase
 
         // Releasing a claim stays possible.
         $this->orderApi('DELETE', '/orders/'.$order->public_id.'/claims/handover', ['actor' => $this->actor()], ['Idempotency-Key' => Str::random(24)])->assertOk();
+    }
+
+    public function test_refund_pending_is_blocked_and_issues_costs_release_and_delivery_are_not_gated(): void
+    {
+        // Overpaid by a discount, refund decided but not paid out: refund_pending is not "paid".
+        $order = $this->paidV2Order('local_delivery');
+        $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
+        $adjustments = app(OnlineOrderAdjustments::class);
+        $order = $adjustments->request($order, $order->revision, $this->staff, '-10000', 'Diskon member terlambat');
+        $order = $adjustments->approve($order, $order->revision, $owner, $order->adjustments()->sole()->id);
+        $order = app(RecordOnlineOrderMoney::class)->decideRefund($order, $order->revision, $owner, '10000', 'Kembalikan selisih diskon');
+        $this->assertSame(['active', 'refund_pending'], [$order->lifecycle, $order->payment_status]);
+        $this->assertPaymentRequired($this->api($order, '/claims', ['task' => 'preparation', 'actor' => $this->actor()]));
+
+        // Not gated on an unpaid order: issues and costs (App expense records).
+        $unpaid = $this->v2Order('local_delivery');
+        $this->api($unpaid, '/issues', ['type' => 'customer_unreachable', 'note' => 'Customer belum membalas', 'actor' => $this->actor()])->assertOk();
+        $this->orderApi('PUT', '/orders/'.$unpaid->public_id.'/costs/exp_0a1b2c3d4e5f60718293a4b5c6d7e8f9', [
+            'kind' => 'actual_shipping', 'status' => 'active', 'amount' => 20000,
+            'funding' => [['source' => 'customer_cash_held', 'amount' => 15000], ['source' => 'staff_advance', 'amount' => 5000]],
+            'reimbursement' => ['status' => 'awaiting_proof', 'amount' => 5000, 'proof' => 'pending', 'waiver' => null, 'updated_at' => '2026-10-10T03:10:00Z'],
+            'source_version' => 1, 'actor' => $this->actor(),
+        ], ['Idempotency-Key' => Str::random(24)])->assertOk();
+
+        // Delivery confirmation after a handover stays possible even if the payment is later corrected.
+        $paid = $this->paidV2Order('local_delivery');
+        $ops = app(OnlineOrderFulfillment::class);
+        $actor = OrderActor::user($this->staff);
+        $paid = $ops->pack($paid, $paid->revision, $actor, $paid->items->map(fn ($i) => ['line_id' => $i->line_id, 'quantity' => $i->quantity])->all());
+        $paid = $ops->requestCourier($paid, $paid->revision, $actor, 'maxim');
+        $paid = $ops->handover($paid, $paid->revision, $actor, 'courier');
+        $this->api($paid, '/delivery', ['expected_revision' => $paid->revision, 'actor' => $this->actor()])->assertOk();
+        $this->assertSame('delivered', $paid->fresh()->delivery_status);
     }
 
     public function test_local_courier_and_handover_wait_for_payment_after_packing_and_a_short_payment_is_not_enough(): void

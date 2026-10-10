@@ -180,7 +180,7 @@ class WebsiteCheckoutOrderTest extends TestCase
         $this->get(route('admin.orders.index'))->assertSee('1 pesanan website menunggu konfirmasi');
         $this->get(route('admin.orders.index', ['status' => 'website']))->assertSee($order->code);
         $this->get(route('admin.orders.show', $order))->assertOk()->assertSee('Konfirmasi pesanan website')->assertSee('Menunggu konfirmasi website')
-            ->assertSee('Pembayaran dicatat setelah pesanan website dikonfirmasi.')->assertSee('Palu Barat');
+            ->assertSee('data-step="konfirmasi" data-state="current"', false)->assertDontSee('Tandai Lunas')->assertSee('Palu Barat');
 
         // Unpaid draft: no payment can be recorded before confirmation; ongkir can be set.
         $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '200000', 'payment_method' => 'qris'])

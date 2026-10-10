@@ -16,10 +16,12 @@ use App\Http\Requests\Admin\OnlineOrderV2DetailsRequest;
 use App\Models\Customer;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderIssue;
+use App\Models\StorePaymentAccount;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderMessages;
 use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderState;
+use App\Support\OnlineOrderStepper;
 use App\Support\OrderActor;
 use App\Support\PhoneNumber;
 use App\Support\Rupiah;
@@ -56,8 +58,16 @@ class AdminOnlineOrderV2Controller extends Controller
         $totals = OnlineOrderMoney::totals($order);
         $totalCents = Rupiah::minorUnits($order->customerTotal());
         $openIssues = $order->issues->where('status', 'open')->count();
+        $paymentText = $messages->paymentInstructions($order);
 
         return response()->view('admin.orders.v2.show', [
+            // ORD-04 stepper: derived from backend state only; the domain refuses steps out of order.
+            'steps' => OnlineOrderStepper::steps($order),
+            'currentStep' => OnlineOrderStepper::current($order),
+            'totalFinal' => OnlineOrderStepper::totalIsFinal($order),
+            'paymentText' => $paymentText,
+            'paymentChatUrl' => $order->customer_phone ? $whatsApp->textUrl($order->customer_phone, $paymentText) : null,
+            'hasPaymentAccount' => StorePaymentAccount::query()->usable()->exists(),
             'order' => $order,
             'queue' => OnlineOrderState::queue($order, $openIssues),
             'flags' => OnlineOrderState::flags($order),

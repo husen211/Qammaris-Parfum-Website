@@ -83,34 +83,83 @@
     @endif
 
     {{--
-        ORD-03 layout: the current step is open first with one primary action; the other steps stay collapsed with a
-        one-line status; exceptions ("Ada masalah", "Opsi lanjutan") open only when something needs attention.
+        ORD-04 stepper (Owner UAT): Konfirmasi → Pembayaran → Siapkan → Pengiriman → Selesai, derived from backend state
+        (OnlineOrderStepper). Only the current step shows its form and one primary action; finished steps are one line;
+        later steps are inert. Exceptions (Ada masalah, Keep, Link, Opsi lanjutan, Riwayat) sit in disclosures below.
     --}}
     @php
         $isOpen = fn (string $section, bool $default = false) => $default || old('_section') === $section || session('order_notice.section') === $section;
-        $stage = match (true) {
-            ! $open => null,
-            $order->lifecycle === 'draft' => 'konfirmasi',
-            $order->lifecycle === 'awaiting_customer' => 'link',
-            $openIssues > 0 => 'kendala',
-            $remainingCents > 0 => 'pembayaran',
-            $order->preparation_status !== 'packed' => 'packing',
-            $pending => 'pengiriman',
-            default => null,
-        };
-        $steps = array_values(array_unique(array_filter([$stage, 'pembayaran', 'packing', 'pengiriman', 'link'])));
-        $stepView = fn (string $step) => $step === 'link' ? 'admin.orders.v2._links' : 'admin.orders.v2.sections.'.$step;
-        // An open issue comes first; otherwise "Ada masalah" waits below the steps.
+        $finished = $order->lifecycle === 'completed';
+        $doneText = [
+            'konfirmasi' => $order->source === 'website' && $order->created_by === null ? 'Pesanan website dikonfirmasi' : 'Data customer lengkap',
+            'pembayaran' => 'Lunas '.$rp($received).($order->payment_method ? ' · '.(OnlineOrder::PAYMENT_METHODS[$order->payment_method] ?? '') : '').($order->recorded_in_majoo ? ' · Majoo' : ''),
+            'persiapan' => collect($order->packed_items ?? [])->sum('quantity').' barang dipacking',
+            'pengiriman' => 'Diserahkan ke '.(OnlineOrderLabels::HANDED_TO[$order->handed_to] ?? '-').($order->handed_over_at ? ' · '.$time($order->handed_over_at) : ''),
+            'selesai' => 'Pesanan selesai',
+        ];
+        $stepView = [
+            'konfirmasi' => $order->lifecycle === 'draft' ? 'admin.orders.v2.sections.konfirmasi' : 'admin.orders.v2._links',
+            'pembayaran' => 'admin.orders.v2.sections.pembayaran',
+            'persiapan' => 'admin.orders.v2.sections.packing',
+            'pengiriman' => 'admin.orders.v2.sections.pengiriman',
+            'selesai' => 'admin.orders.v2.sections.pengiriman',
+        ];
+        $currentPosition = collect($steps)->search(fn ($step) => $step['state'] === 'current');
     @endphp
+
+    <nav aria-label="Tahap pesanan" class="rounded-xl border border-gray-200 bg-white px-3 py-3 sm:px-5" data-stepper>
+        <ol class="grid grid-cols-5 gap-1">
+            @foreach ($steps as $i => $step)
+                <li class="flex min-w-0 flex-col items-center gap-1 text-center" data-step="{{ $step['key'] }}" data-state="{{ $step['state'] }}" @if ($step['state'] === 'current') aria-current="step" @endif>
+                    <span aria-hidden="true" @class(['flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold',
+                        'bg-gray-900 text-white' => $step['state'] === 'done',
+                        'border-2 border-gray-900 bg-white text-gray-900' => $step['state'] === 'current',
+                        'border border-gray-300 text-gray-400' => $step['state'] === 'todo'])>{{ $step['state'] === 'done' ? '✓' : $i + 1 }}</span>
+                    <span @class(['hidden w-full truncate text-xs sm:block',
+                        'font-semibold text-gray-900' => $step['state'] === 'current',
+                        'text-gray-700' => $step['state'] === 'done',
+                        'text-gray-400' => $step['state'] === 'todo'])>{{ $step['label'] }}</span>
+                    <span class="sr-only">{{ $step['label'] }}: {{ ['done' => 'selesai', 'current' => 'sekarang', 'todo' => 'belum'][$step['state']] }}</span>
+                </li>
+            @endforeach
+        </ol>
+        <p class="mt-2 text-center text-sm text-gray-700 sm:hidden" aria-hidden="true">
+            @if ($order->lifecycle === 'cancelled') Dibatalkan
+            @elseif ($currentPosition !== false) Langkah {{ $currentPosition + 1 }} dari 5 · <strong>{{ $steps[$currentPosition]['label'] }}</strong>
+            @else Pesanan selesai
+            @endif
+        </p>
+    </nav>
 
     <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
         <div class="min-w-0 space-y-3">
-            @if (! $stage && $order->lifecycle !== 'cancelled')
-                <p class="rounded-lg border-l-4 border-green-700 bg-white px-4 py-3 text-sm font-medium text-gray-900" data-next-step>{{ $order->lifecycle === 'completed' ? 'Pesanan selesai.' : 'Pesanan sudah diserahkan. Tidak ada langkah wajib.' }}</p>
+            @if ($order->lifecycle === 'cancelled')
+                <p class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" data-next-step>Pesanan dibatalkan {{ $time($order->closed_at) }}: {{ $order->cancel_reason }}</p>
             @endif
-            @foreach ($steps as $step)
-                @include($stepView($step), ['openSection' => $step === $stage || $isOpen($step)])
-            @endforeach
+            {{-- An open issue comes first; the step stays where it is. --}}
+            @if ($openIssues > 0)
+                @include('admin.orders.v2.sections.kendala')
+            @endif
+
+            <ol class="space-y-2" aria-label="Langkah pesanan">
+                @foreach ($steps as $i => $step)
+                    <li data-step-row="{{ $step['key'] }}">
+                        @if ($step['state'] === 'current' || ($step['key'] === 'selesai' && $finished))
+                            @include($stepView[$step['key']], ['openSection' => true])
+                        @elseif ($step['state'] === 'done')
+                            <div class="flex min-h-12 items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm">
+                                <span aria-hidden="true" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs text-white">✓</span>
+                                <span class="min-w-0"><span class="font-semibold text-gray-900">{{ $step['label'] }}</span> <span class="text-gray-600">· {{ $doneText[$step['key']] }}</span></span>
+                            </div>
+                        @else
+                            <div class="flex min-h-11 items-center gap-3 rounded-xl border border-dashed border-gray-200 px-4 py-2 text-sm text-gray-400">
+                                <span aria-hidden="true" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs">{{ $i + 1 }}</span>
+                                <span>{{ $step['label'] }}</span>
+                            </div>
+                        @endif
+                    </li>
+                @endforeach
+            </ol>
 
             {{-- Customer change requests stay visible: they wait for a decision. --}}
             @if ($order->changeRequests->where('status', 'pending')->isNotEmpty() || $isOpen('perubahan'))
@@ -144,9 +193,15 @@
                 </section>
             @endif
 
-            @include('admin.orders.v2.sections.keep')
-            @if ($stage !== 'kendala')
+            {{-- Exceptions and less frequent tools, collapsed. --}}
+            @if ($open && $pending && ($order->payment_status !== 'paid' || $order->keep_status === 'active'))
+                @include('admin.orders.v2.sections.keep')
+            @endif
+            @if ($openIssues === 0 && $order->lifecycle !== 'cancelled')
                 @include('admin.orders.v2.sections.kendala')
+            @endif
+            @if ($order->lifecycle !== 'awaiting_customer')
+                @include('admin.orders.v2._links', ['openSection' => $isOpen('link')])
             @endif
             @include('admin.orders.v2.sections.lanjutan')
 
@@ -245,10 +300,6 @@
                     @endif
                 @endif
             </details>
-
-            @if ($order->lifecycle === 'cancelled')
-                <p class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">Dibatalkan {{ $time($order->closed_at) }}: {{ $order->cancel_reason }}</p>
-            @endif
 
             <details id="riwayat" class="{{ $card }}">
                 <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
