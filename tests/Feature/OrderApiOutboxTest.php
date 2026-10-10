@@ -41,10 +41,12 @@ class OrderApiOutboxTest extends TestCase
         Http::fake([self::HOOK => Http::response(['ok' => true], 200)]);
         $order = $this->v2Order();
         $this->assertSame(1, IntegrationOutbox::count(), 'One event for the new order, not one per internal save');
+        $order = $this->payInFull($order, $this->orderOwner);
+        $this->assertSame(2, IntegrationOutbox::count(), 'The payment is one revision');
 
         $this->orderApi('POST', '/orders/'.$order->public_id.'/claims', ['task' => 'preparation', 'actor' => $this->actor()], ['Idempotency-Key' => Str::random(24)])->assertOk();
-        $this->assertSame(2, IntegrationOutbox::count());
-        $this->assertSame(2, IntegrationOutbox::whereNotNull('delivered_at')->count());
+        $this->assertSame(3, IntegrationOutbox::count());
+        $this->assertSame(3, IntegrationOutbox::whereNotNull('delivered_at')->count());
 
         Http::assertSent(function (HttpRequest $request) use ($order) {
             $body = json_decode($request->body(), false);
@@ -63,7 +65,7 @@ class OrderApiOutboxTest extends TestCase
 
         config(['orders_api.webhook_enabled' => false]);
         $this->v2Order();
-        $this->assertSame(2, IntegrationOutbox::count(), 'Webhook off: nothing queued (App reconciles with updated_since)');
+        $this->assertSame(3, IntegrationOutbox::count(), 'Webhook off: nothing queued (App reconciles with updated_since)');
     }
 
     public function test_retries_sign_again_keep_the_same_bytes_and_give_up_after_24_hours(): void

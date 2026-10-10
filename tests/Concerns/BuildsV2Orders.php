@@ -13,6 +13,8 @@ use App\Models\User;
 /** Synthetic V2 orders for API tests. */
 trait BuildsV2Orders
 {
+    use PaysOrders;
+
     protected ?User $orderOwner = null;
 
     /** @var array<int, int> variant ID => default quantity */
@@ -43,6 +45,12 @@ trait BuildsV2Orders
         [$order] = app(CreateOnlineOrder::class)->handle($this->orderOwner, $this->orderLines, $customer);
 
         return $order->fresh(['items']);
+    }
+
+    /** ORD-04 P0: an order the App may claim, pack and hand over (fully paid). */
+    protected function paidV2Order(?string $fulfillment = 'local_delivery', array $details = []): OnlineOrder
+    {
+        return $this->payInFull($this->v2Order($fulfillment, $details), $this->orderOwner);
     }
 
     /**

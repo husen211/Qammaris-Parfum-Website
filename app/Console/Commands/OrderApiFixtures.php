@@ -4,12 +4,14 @@ namespace App\Console\Commands;
 
 use App\Actions\Orders\CreateOnlineOrder;
 use App\Actions\Orders\OnlineOrderFulfillment;
+use App\Actions\Orders\RecordOnlineOrderMoney;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Support\OnlineOrderMoney;
 use App\Support\OrderActor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -60,7 +62,8 @@ class OrderApiFixtures extends Command
             $existing = $this->fixtures($scenario);
             if ($this->option('reset')) {
                 foreach ($existing->whereIn('lifecycle', ['awaiting_customer', 'active']) as $old) {
-                    $orders->cancel($old, $old->revision, OrderActor::user($actor), 'E2E reset');
+                    // Fixture payments are synthetic; a reset decides "nothing to return" explicitly (ADR-040).
+                    $orders->cancel($old, $old->revision, OrderActor::user($actor), 'E2E reset', OnlineOrderMoney::totals($old)['received'] > 0 ? '0' : null);
                 }
                 $existing = collect();
             }
@@ -83,6 +86,8 @@ class OrderApiFixtures extends Command
             'postcode' => $spec['fulfillment'] === 'intercity' ? '90000' : null, 'packaging' => 'no_paperbag', 'customer_note' => null,
         ], null, ['source' => 'manual', 'fixture' => true]);
         $order->forceFill(['staff_note' => '[e2e-fixture:'.$scenario.']'])->save();
+        // ORD-04 P0: the App may only claim, pack and hand over paid orders, so fixtures start fully paid.
+        $order = app(RecordOnlineOrderMoney::class)->recordPayment($order->fresh(), $order->fresh()->revision, $actor, $order->fresh()->customerTotal(), 'transfer', RecordOnlineOrderMoney::ADMIN_RECORDED);
         if ($spec['customer_courier'] ?? false) {
             $order = $orders->setCourierResponsibility($order->fresh(), $order->fresh()->revision, OrderActor::user($actor), 'customer');
         }
@@ -112,7 +117,7 @@ class OrderApiFixtures extends Command
             : $issues->isEmpty();
 
         return array_keys(array_filter([
-            'tidak aktif' => $order->lifecycle !== 'active', 'diklaim' => $order->claims()->exists(),
+            'tidak aktif' => $order->lifecycle !== 'active', 'belum lunas' => $order->payment_status !== 'paid', 'diklaim' => $order->claims()->exists(),
             'packing dimulai' => $order->preparation_status !== 'not_started', 'sudah diserahkan' => $order->handover_status !== 'pending',
             'ada biaya' => $order->costs()->exists(), 'kendala tidak sesuai' => ! $issueOk,
             'nama bukan E2E' => ! str_starts_with((string) $order->customer_name, 'E2E '),

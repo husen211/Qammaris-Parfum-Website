@@ -45,7 +45,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_claims_are_atomic_with_task_already_claimed_before_revision_conflict(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $claim = $this->mutate('POST', $order, '/claims', ['task' => 'preparation', 'expected_revision' => $order->revision, 'actor' => $this->actor()]);
         $data = $this->assertMutation($claim);
         $this->assertSame([$order->revision + 1, '665f0c2a9b1e4a0012ab34cd', 'preparing'], [$data->order->revision, $data->order->claims->preparation->holder->app_user_id, $data->order->queue]);
@@ -59,9 +59,9 @@ class OrderApiWriteTest extends TestCase
         $this->assertSame(['preparation', '665f0c2a9b1e4a0012ab34cd', 'Andi'], [$taken->error->details->task, $taken->error->details->holder->app_user_id, $taken->error->details->holder->display_name]);
 
         $this->assertApiError($this->mutate('POST', $order, '/claims', ['task' => 'handover', 'expected_revision' => 1, 'actor' => $this->actor()]), 409, 'revision_conflict');
-        $waiting = $this->v2Order(null);
+        $waiting = $this->paidV2Order(null);
         $this->assertApiError($this->mutate('POST', $waiting, '/claims', ['task' => 'preparation', 'actor' => $this->actor()]), 409, 'invalid_transition');
-        $pickup = $this->v2Order('pickup');
+        $pickup = $this->paidV2Order('pickup');
         $this->assertApiError($this->mutate('POST', $pickup, '/claims', ['task' => 'courier_booking', 'actor' => $this->actor()]), 409, 'invalid_transition');
 
         // Releasing someone else's claim: owner only, with a reason.
@@ -74,7 +74,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_preparation_requires_the_claim_and_exact_packed_quantities_at_the_latest_revision(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         [$alpha, $beta] = $order->items->pluck('line_id')->all();
         $this->assertApiError($this->mutate('POST', $order, '/preparation', ['status' => 'preparing', 'expected_revision' => $order->revision, 'actor' => $this->actor()]), 403, 'action_not_allowed');
         $revision = $this->claim($order, 'preparation');
@@ -105,7 +105,7 @@ class OrderApiWriteTest extends TestCase
         $this->assertApiError($this->mutate('POST', $order, '/handover', ['handed_to' => 'courier', 'expected_revision' => $requested->order->revision, 'actor' => $this->actor()]), 403, 'action_not_allowed');
         $revision = $this->claim($order, 'handover');
         $handed = $this->assertMutation($this->mutate('POST', $order, '/handover', ['handed_to' => 'courier', 'occurred_at' => '2026-10-09T03:05:00Z', 'expected_revision' => $revision, 'actor' => $this->actor()]));
-        $this->assertSame(['handed_over', 'courier', '2026-10-09T03:05:00Z', 'in_delivery'], [$handed->order->fulfillment->handover->status, $handed->order->fulfillment->handover->handed_to, $handed->order->fulfillment->handover->handed_over_at, $handed->order->queue]);
+        $this->assertSame(['handed_over', 'courier', '2026-10-09T03:05:00Z', 'completed', 'done'], [$handed->order->fulfillment->handover->status, $handed->order->fulfillment->handover->handed_to, $handed->order->fulfillment->handover->handed_over_at, $handed->order->lifecycle, $handed->order->queue], 'Paid and handed over: completed');
 
         $delivered = $this->assertMutation($this->mutate('POST', $order, '/delivery', ['expected_revision' => $handed->order->revision, 'actor' => $this->actor(self::IKRAR, 'Ikrar')]));
         $this->assertSame(['delivered', 'app'], [$delivered->order->fulfillment->delivery->status, $delivered->order->fulfillment->delivery->confirmed_by]);
@@ -138,13 +138,14 @@ class OrderApiWriteTest extends TestCase
         $this->assertSame([$revision + 1, 'picked_up', 'handed_over', 'jnt'], [$picked->order->revision, $picked->order->fulfillment->jnt->status, $picked->order->fulfillment->handover->status, $picked->order->fulfillment->handover->handed_to]);
         $this->assertSame(1, OnlineOrderEvent::where('online_order_id', $order->id)->where('kind', 'jnt_picked_up')->count());
 
+        $this->assertSame('completed', $picked->order->lifecycle, 'Paid and picked up: completed');
         $tracked = $this->assertMutation($this->mutate('POST', $order, '/jnt', ['tracking_number' => 'JX1234567890', 'expected_revision' => $picked->order->revision, 'actor' => $this->actor()]));
-        $this->assertSame('JX1234567890', $tracked->order->fulfillment->jnt->tracking_number);
+        $this->assertSame(['JX1234567890', 'completed'], [$tracked->order->fulfillment->jnt->tracking_number, $tracked->order->lifecycle], 'The resi can follow after completion');
     }
 
     public function test_issues_and_owner_only_resolution_of_someone_elses_issue(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $line = $order->items->first()->line_id;
         $opened = $this->assertMutation($this->mutate('POST', $order, '/issues', ['type' => 'stock_problem', 'note' => 'Stok hanya 1', 'line_id' => $line, 'reported_quantity' => 1, 'actor' => $this->actor()]));
         $issue = $opened->order->issues[0];
@@ -158,7 +159,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_costs_funding_reimbursement_proof_and_unique_expense_ref(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $ref = 'exp_9b2f4c1e8a7d4b6f9c0e1a2b3c4d5e6f';
         $cost = fn (array $override = []) => array_replace_recursive([
             'kind' => 'actual_shipping', 'status' => 'active', 'amount' => 20000,
@@ -187,7 +188,7 @@ class OrderApiWriteTest extends TestCase
         $this->assertNull($stale->event_id, 'Older source_version: no-op');
         $this->assertSame('approved', $stale->order->costs[0]->reimbursement->status);
 
-        $other = $this->v2Order();
+        $other = $this->paidV2Order();
         $this->assertApiError($this->mutate('PUT', $other, '/costs/'.$ref, $cost(['source_version' => 9])), 409, 'expense_already_linked');
         $this->assertApiError($this->mutate('PUT', $order, '/costs/bad', $cost()), 422, 'validation_failed');
     }
@@ -208,7 +209,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_idempotency_replay_reuse_stored_errors_and_expiry(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $key = Str::random(24);
         $body = ['task' => 'preparation', 'expected_revision' => $order->revision, 'actor' => $this->actor()];
         $first = $this->mutate('POST', $order, '/claims', $body, $key)->assertOk();
@@ -238,7 +239,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_audit_events_keep_the_app_actor_key_and_request_id(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $this->mutate('POST', $order, '/claims', ['task' => 'preparation', 'actor' => $this->actor()], 'audit-key-0000000001', ['X-Request-Id' => 'app-action-77'])->assertOk();
         $event = OnlineOrderEvent::where('online_order_id', $order->id)->where('kind', 'claimed')->sole();
         $this->assertSame(['app', 'app', '665f0c2a9b1e4a0012ab34cd', 'Andi', 'audit-key-0000000001', 'app-action-77'],
@@ -247,7 +248,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_request_shape_body_size_and_unknown_order(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $this->assertApiError($this->mutate('POST', $order, '/claims', ['task' => 'preparation', 'actor' => $this->actor() + ['permission' => 'orders.handle']]), 422, 'validation_failed');
         $this->assertApiError($this->mutate('POST', $order, '/claims', ['task' => 'preparation', 'actor' => $this->actor('NOT-HEX')]), 422, 'validation_failed');
         $this->assertApiError($this->mutate('POST', $order, '/claims', '[1,2]'), 400, 'bad_request');
@@ -258,7 +259,7 @@ class OrderApiWriteTest extends TestCase
     /** Contract r4.2 (Owner 2026-10-09): only an allowlisted App Owner creates or changes a waiver; resends are relayed. */
     public function test_waiver_decisions_need_the_deciding_allowlisted_owner_and_identical_resends_are_relayed(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $ref = 'exp_waiver_r42_000000000001';
         $waiver = ['by' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner'], 'reason' => 'Struk Maxim hilang, sudah dicek', 'at' => '2026-10-09T02:00:00Z', 'decision_id' => 'apr_7c1e2d9a4b5f4e3a'];
         $cost = fn (array $reimbursement, int $version, array $actor) => ['kind' => 'actual_shipping', 'status' => 'active', 'amount' => 5000,
@@ -307,7 +308,7 @@ class OrderApiWriteTest extends TestCase
 
     public function test_waivers_stored_before_r42_are_served_with_a_null_decision_id_and_identical_resends_pass(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $legacy = ['by' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner'], 'reason' => 'Struk hilang, sudah dicek', 'at' => '2026-10-09T04:00:00Z'];
         $order->costs()->create(['expense_ref' => 'exp_legacy_waiver_0001', 'kind' => 'actual_shipping', 'status' => 'active', 'amount' => '5000.00',
             'funding' => [['source' => 'staff_advance', 'amount' => 5000]], 'reimbursement_status' => 'approved', 'reimbursement_amount' => '5000.00',
@@ -346,7 +347,7 @@ class OrderApiWriteTest extends TestCase
 
     private function packedOrder(string $fulfillment): OnlineOrder
     {
-        $order = $this->v2Order($fulfillment);
+        $order = $this->paidV2Order($fulfillment);
         $revision = $this->claim($order, 'preparation');
         $this->mutate('POST', $order, '/preparation', ['status' => 'packed', 'expected_revision' => $revision, 'actor' => $this->actor(),
             'packed_items' => $order->items->map(fn ($item) => ['line_id' => $item->line_id, 'quantity' => $item->quantity])->all()])->assertOk();

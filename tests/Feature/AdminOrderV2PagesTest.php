@@ -16,12 +16,13 @@ use App\Support\OnlineOrderState;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Tests\Concerns\PaysOrders;
 use Tests\TestCase;
 
 /** ORD-02d: Admin PWA pages for V2 orders, through real routes and permissions. */
 class AdminOrderV2PagesTest extends TestCase
 {
-    use RefreshDatabase;
+    use PaysOrders, RefreshDatabase;
 
     private User $owner;
 
@@ -147,11 +148,13 @@ class AdminOrderV2PagesTest extends TestCase
     {
         $order = $this->activeOrder('intercity');
         $this->actingAs($this->staff);
-        $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->revision, 'tracking_number' => 'JX-77']);
+        // Unpaid: J&T work is refused on the server; keep (D9) still holds stock without payment.
+        $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->revision, 'tracking_number' => 'JX-77'])
+            ->assertSessionHas('order_notice', fn ($notice) => $notice['type'] === 'error' && str_contains($notice['message'], 'belum lunas'));
         $this->post(route('admin.orders.v2.keep', [$order->refresh(), 'start']), ['revision' => $order->revision, 'hours' => 12]);
         $this->post(route('admin.orders.v2.keep', [$order->refresh(), 'stock']), ['revision' => $order->revision]);
         $order->refresh();
-        $this->assertSame(['JX-77', 'active'], [$order->tracking_number, $order->keep_status]);
+        $this->assertSame([null, 'active'], [$order->tracking_number, $order->keep_status]);
         $this->assertNotNull($order->keep_stock_confirmed_at);
         $this->get(route('admin.orders.show', $order))->assertSee('Stok sudah dipisahkan')->assertSee('Keep sampai');
 
@@ -163,11 +166,16 @@ class AdminOrderV2PagesTest extends TestCase
         $this->post(route('admin.orders.v2.issues.resolve', [$order, $issue->public_id]), ['note' => 'Diganti varian']);
         $this->assertSame('resolved', $issue->fresh()->status);
 
-        $this->post(route('admin.orders.v2.pack', $order->refresh()), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($item) => [$item->line_id => $item->quantity])->all()]);
+        $packed = fn () => $this->post(route('admin.orders.v2.pack', $order->refresh()), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($item) => [$item->line_id => $item->quantity])->all()]);
+        $packed()->assertSessionHas('order_notice.type', 'error');
+        $this->assertSame(['not_started', 'active'], [$order->refresh()->preparation_status, $order->keep_status], 'A keep never allows packing before payment');
+
+        $order = $this->payInFull($order, $this->staff);
+        $this->assertSame('converted', $order->keep_status, 'Payment turns the keep into a normal order');
+        $packed()->assertSessionHas('order_notice.type', 'success');
         $this->post(route('admin.orders.v2.jnt', $order->refresh()), ['revision' => $order->revision, 'status' => 'picked_up']);
         $order->refresh();
         $this->assertSame(['picked_up', 'handed_over', 'jnt'], [$order->jnt_status, $order->handover_status, $order->handed_to]);
-        $this->assertSame('converted', $order->keep_status, 'Handover ends the keep');
     }
 
     public function test_super_admin_panel_refund_reverse_and_adjustment_approval_with_staff_denied(): void
@@ -209,7 +217,7 @@ class AdminOrderV2PagesTest extends TestCase
 
     public function test_customer_change_request_is_reviewed_and_legacy_paths_refuse_v2_orders(): void
     {
-        $order = $this->activeOrder('local_delivery');
+        $order = $this->payInFull($this->activeOrder('local_delivery'), $this->staff);
         $this->actingAs($this->staff)->post(route('admin.orders.v2.preparation', $order), ['revision' => $order->revision]);
         $token = $order->refresh()->customer_token_encrypted;
 
@@ -234,7 +242,7 @@ class AdminOrderV2PagesTest extends TestCase
 
     public function test_customer_confirms_receipt_of_a_v2_delivery_and_the_legacy_page_offers_reconciliation(): void
     {
-        $order = $this->activeOrder('local_delivery');
+        $order = $this->payInFull($this->activeOrder('local_delivery'), $this->staff);
         $this->actingAs($this->staff);
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($item) => [$item->line_id => $item->quantity])->all()]);
         $this->post(route('admin.orders.v2.handover', $order->refresh()), ['revision' => $order->revision, 'handed_to' => 'courier']);

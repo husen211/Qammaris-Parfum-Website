@@ -18,12 +18,13 @@ use App\Models\User;
 use App\Support\OrderActor;
 use App\Support\PhoneNumber;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\PaysOrders;
 use Tests\TestCase;
 
 /** ORD-02c slice 4: repeat customers and confirmed saved addresses, never linked or reused automatically. */
 class OnlineOrderCustomersTest extends TestCase
 {
-    use RefreshDatabase;
+    use PaysOrders, RefreshDatabase;
 
     private User $staff;
 
@@ -122,6 +123,7 @@ class OnlineOrderCustomersTest extends TestCase
         $address->forceFill(['archived_at' => null])->save();
         $ops = app(OnlineOrderFulfillment::class);
         $actor = OrderActor::user($this->staff);
+        $owner = $this->payInFull($owner, $this->staff);
         $owner = $ops->pack($owner, $owner->revision, $actor, $owner->items->map(fn ($item) => ['line_id' => $item->line_id, 'quantity' => $item->quantity])->all());
         $owner = $ops->requestCourier($owner, $owner->revision, $actor, 'maxim', 'arrived');
         $owner = $ops->handover($owner, $owner->revision, $actor, 'courier');

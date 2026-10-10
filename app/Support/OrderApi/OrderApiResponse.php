@@ -9,6 +9,7 @@ use App\Exceptions\OrderActionNotAllowed;
 use App\Exceptions\OrderApi\OrderApiException;
 use App\Exceptions\OrderRevisionConflict;
 use App\Exceptions\OrderValidationFailed;
+use App\Exceptions\PaymentRequired;
 use App\Exceptions\ProofRequired;
 use App\Exceptions\TaskAlreadyClaimed;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -63,6 +64,7 @@ final class OrderApiResponse
             $error instanceof ProofRequired => self::error($request, 422, 'proof_required', $error->getMessage()),
             $error instanceof OrderValidationFailed => self::error($request, 422, 'validation_failed', $error->getMessage(), ['fields' => (object) $error->fields]),
             $error instanceof OrderActionNotAllowed => self::error($request, 403, 'action_not_allowed', $error->getMessage(), $error->details),
+            $error instanceof PaymentRequired => self::error($request, 409, 'invalid_transition', $error->getMessage(), ['reason' => 'payment_required']),
             $error instanceof InvalidOrderTransition, $error instanceof OnlineOrderRejected => self::error($request, 409, 'invalid_transition', $error->getMessage()),
             $error instanceof ModelNotFoundException, $error instanceof NotFoundHttpException => self::error($request, 404, 'order_not_found', 'Order tidak ditemukan.'),
             $error instanceof MethodNotAllowedHttpException => self::error($request, 400, 'bad_request', 'Metode tidak didukung untuk path ini.'),

@@ -10,6 +10,7 @@ use App\Actions\Orders\RecordOnlineOrderMoney;
 use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OrderActionNotAllowed;
 use App\Exceptions\OrderValidationFailed;
+use App\Exceptions\PaymentRequired;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\OnlineOrder;
@@ -18,12 +19,13 @@ use App\Models\User;
 use App\Support\OrderActor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Tests\Concerns\PaysOrders;
 use Tests\TestCase;
 
 /** ORD-02c slice 5: keep (D9), price adjustments with Super Admin approval, customer change requests (D5). */
 class OnlineOrderKeepAdjustmentChangeTest extends TestCase
 {
-    use RefreshDatabase;
+    use PaysOrders, RefreshDatabase;
 
     private User $owner;
 
@@ -117,18 +119,21 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
         $this->assertSame('rejected', $big->fresh()->status);
     }
 
-    public function test_an_approved_discount_can_complete_a_handed_over_order(): void
+    public function test_an_approved_discount_settles_a_short_payment_before_fulfillment(): void
     {
-        $order = $this->packed($this->order('pickup'));
-        $order = $this->ops->handover($order, $order->revision, $this->actor(), 'customer');
+        $order = $this->order('pickup');
         $order = app(RecordOnlineOrderMoney::class)->recordPayment($order, $order->revision, $this->staff, '190000', 'cash', 'proof_in_chat');
         $this->assertSame(['unpaid', 'active'], [$order->payment_status, $order->lifecycle]);
+        $this->assertRejected(fn () => $this->ops->startPreparation($order, $order->revision, $this->actor()), PaymentRequired::class);
 
         $adjustments = app(OnlineOrderAdjustments::class);
         $order = $adjustments->request($order, $order->revision, $this->staff, '-10000', 'Potongan harga disepakati');
         $order = $adjustments->approve($order, $order->revision, $this->owner, $order->adjustments()->sole()->id);
+        $this->assertSame(['paid', 'active'], [$order->payment_status, $order->lifecycle]);
+
+        $order = $this->packed($order);
+        $order = $this->ops->handover($order, $order->revision, $this->actor(), 'customer');
         $this->assertSame(['paid', 'completed'], [$order->payment_status, $order->lifecycle]);
-        $this->assertContains('completed', $order->events()->pluck('kind')->all());
     }
 
     public function test_customer_changes_become_reviewed_requests_once_packing_started(): void
@@ -136,6 +141,7 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
         $requests = app(OnlineOrderChangeRequests::class);
         $order = $this->order('local_delivery');
         $this->assertFalse(OnlineOrderChangeRequests::customerMustRequest($order), 'Unpaid and not started: the customer edits directly');
+        $order = $this->payInFull($order, $this->staff);
         $order = $this->ops->startPreparation($order, $order->revision, $this->actor());
         $this->assertTrue(OnlineOrderChangeRequests::customerMustRequest($order));
 
@@ -171,7 +177,7 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
     public function test_courier_already_requested_blocks_switching_the_delivery_type(): void
     {
         $requests = app(OnlineOrderChangeRequests::class);
-        $order = $this->order('local_delivery');
+        $order = $this->payInFull($this->order('local_delivery'), $this->staff);
         $order = $this->ops->requestCourier($order, $order->revision, $this->actor(), 'gosend');
         $order = $requests->submit($order, ['fulfillment' => 'pickup']);
         $request = $order->changeRequests()->sole();
@@ -205,6 +211,7 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
 
     private function packed(OnlineOrder $order): OnlineOrder
     {
+        $order = $this->payInFull($order, $this->staff);
         $items = $order->items()->get()->map(fn ($item) => ['line_id' => $item->line_id, 'quantity' => $item->quantity])->all();
 
         return $this->ops->pack($order, $order->fresh()->revision, $this->actor(), $items);

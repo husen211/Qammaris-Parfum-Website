@@ -7,6 +7,7 @@ use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OrderActionNotAllowed;
 use App\Exceptions\OrderRevisionConflict;
 use App\Exceptions\OrderValidationFailed;
+use App\Exceptions\PaymentRequired;
 use App\Exceptions\ProofRequired;
 use App\Exceptions\TaskAlreadyClaimed;
 use App\Models\OnlineOrder;
@@ -51,6 +52,7 @@ class OnlineOrderFulfillment
     {
         return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor): void {
             $this->assertActive($order);
+            $this->assertPaid($order);
             $this->assertClaim($order, $actor, 'preparation');
             if ($order->preparation_status === 'preparing') {
                 return;
@@ -73,6 +75,7 @@ class OnlineOrderFulfillment
     {
         return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $packedItems): void {
             $this->assertActive($order);
+            $this->assertPaid($order);
             $this->assertClaim($order, $actor, 'preparation');
             $packed = $this->validatePackedItems($order, $packedItems);
             if ($order->preparation_status === 'packed') {
@@ -176,6 +179,8 @@ class OnlineOrderFulfillment
                 throw new OrderRevisionConflict($order->revision);
             }
             $this->assertActive($order);
+            // A claim on an unpaid order would show it as being handled (queue `preparing`) and block others later.
+            $this->assertPaid($order);
             $done = match ($task) {
                 'preparation' => $order->preparation_status === 'packed',
                 'courier_booking' => ! ($order->fulfillment === 'intercity' || ($order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store'))
@@ -234,6 +239,7 @@ class OnlineOrderFulfillment
                 if ($order->fulfillment !== 'intercity' || $order->jnt_status === 'picked_up') {
                     throw new InvalidOrderTransition('QR J&T hanya untuk pesanan luar kota yang belum dipickup.');
                 }
+                $this->assertPaid($order);
                 $this->assertClaim($order, $actor, 'courier_booking');
                 $order->jnt_qr_path = $path;
                 $order->jnt_qr_mime = $mime;
@@ -358,6 +364,7 @@ class OnlineOrderFulfillment
             if ($fields) {
                 throw new OrderValidationFailed('Data kurir tidak valid.', $fields);
             }
+            $this->assertPaid($order);
             $this->assertClaim($order, $actor, 'courier_booking');
             if ($order->courier_status === 'arrived' && $status === 'requested') {
                 throw new InvalidOrderTransition('Kurir sudah tiba.');
@@ -380,9 +387,16 @@ class OnlineOrderFulfillment
     public function recordJnt(OnlineOrder $order, int $revision, OrderActor $actor, ?string $status, ?string $trackingNumber = null, ?DateTimeInterface $occurredAt = null): OnlineOrder
     {
         return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $status, $trackingNumber, $occurredAt): void {
-            $this->assertActive($order);
+            // The resi often arrives after pickup; a paid order is already completed by then (ORD-04 P0).
+            $lateTracking = $status === null && $order->lifecycle === 'completed' && $order->handed_to === 'jnt';
+            if (! $lateTracking) {
+                $this->assertActive($order);
+            }
             if ($order->fulfillment !== 'intercity') {
                 throw new InvalidOrderTransition('J&T hanya untuk pesanan kirim ke luar kota.');
+            }
+            if ($order->handover_status !== 'handed_over') {
+                $this->assertPaid($order);
             }
             // Picking up is the handover (handover claim); requesting pickup, QR and tracking are courier booking.
             $this->assertClaim($order, $actor, $status === 'picked_up' && $order->jnt_status !== 'picked_up' ? 'handover' : 'courier_booking');
@@ -445,6 +459,7 @@ class OnlineOrderFulfillment
             if (! in_array($handedTo, $allowed, true)) {
                 throw new InvalidOrderTransition('Penyerahan ini tidak sesuai cara pengiriman pesanan.');
             }
+            $this->assertPaid($order);
             $this->assertPacked($order);
             $this->markHandedOver($order, $handedTo, $occurredAt ?? now());
             $this->record('handed_over', ['customer' => 'Diambil customer', 'courier' => 'Diserahkan ke kurir', 'customer_courier' => 'Diserahkan ke kurir customer'][$handedTo]);
@@ -738,6 +753,17 @@ class OnlineOrderFulfillment
     {
         if ($hours < 1 || $hours > 168) {
             throw new OrderValidationFailed('Lama keep 1 sampai 168 jam.', ['hours' => '1–168']);
+        }
+    }
+
+    /**
+     * ORD-04 P0 (Owner 2026-10-10): fulfillment needs `payment_status=paid`, with no exception. Keep may hold stock
+     * unpaid but never packs or ships; a reversal or a price increase makes the next step wait for payment again.
+     */
+    private function assertPaid(OnlineOrder $order): void
+    {
+        if ($order->payment_status !== 'paid') {
+            throw new PaymentRequired;
         }
     }
 

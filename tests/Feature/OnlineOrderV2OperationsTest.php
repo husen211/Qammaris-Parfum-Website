@@ -12,6 +12,7 @@ use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderActionNotAllowed;
 use App\Exceptions\OrderRevisionConflict;
 use App\Exceptions\OrderValidationFailed;
+use App\Exceptions\PaymentRequired;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\OnlineOrder;
@@ -20,12 +21,13 @@ use App\Models\User;
 use App\Support\OnlineOrderState;
 use App\Support\OrderActor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\PaysOrders;
 use Tests\TestCase;
 
 /** ORD-02c slice 3: V2 state operations, packing quantities, J&T atomic handover, issues, cancel and cutover. */
 class OnlineOrderV2OperationsTest extends TestCase
 {
-    use RefreshDatabase;
+    use PaysOrders, RefreshDatabase;
 
     private User $owner;
 
@@ -75,7 +77,8 @@ class OnlineOrderV2OperationsTest extends TestCase
 
     public function test_packing_requires_every_line_with_the_exact_quantity(): void
     {
-        $order = $this->ops->startPreparation($order = $this->order('local_delivery'), $order->revision, $this->actor());
+        $order = $this->payInFull($this->order('local_delivery'), $this->staff);
+        $order = $this->ops->startPreparation($order, $order->revision, $this->actor());
         $this->assertSame(['preparing', 'preparing'], [$order->preparation_status, OnlineOrderState::queue($order)]);
         [$alpha, $beta] = $order->items->pluck('line_id')->all();
 
@@ -113,9 +116,10 @@ class OnlineOrderV2OperationsTest extends TestCase
         }
     }
 
-    public function test_local_delivery_flow_and_completion_when_paid_after_handover(): void
+    public function test_local_delivery_flow_completes_at_handover_of_a_paid_order(): void
     {
         $order = $this->packed($this->order('local_delivery'));
+        $this->assertSame('paid', $order->payment_status);
         $this->assertRejected(fn () => $this->ops->handover($order, $order->revision, $this->actor(), 'customer_courier'), InvalidOrderTransition::class);
 
         $order = $this->ops->requestCourier($order, $order->revision, $this->actor(), 'maxim', 'requested', 'MX-1');
@@ -124,13 +128,10 @@ class OnlineOrderV2OperationsTest extends TestCase
         $this->assertRejected(fn () => $this->ops->requestCourier($order, $order->revision, $this->actor(), 'maxim', 'requested'), InvalidOrderTransition::class);
 
         $order = $this->ops->handover($order, $order->revision, $this->actor(), 'courier');
-        $this->assertSame(['handed_over', 'courier', 'shipped', 'in_delivery', 'active'],
-            [$order->handover_status, $order->handed_to, $order->stage, OnlineOrderState::queue($order), $order->lifecycle], 'Unpaid: handed over but not completed');
-
-        $order = app(RecordOnlineOrderMoney::class)->recordPayment($order, $order->revision, $this->staff, '400000', 'qris', 'majoo');
-        $this->assertSame(['paid', 'completed', 'completed', 'done'], [$order->payment_status, $order->lifecycle, $order->stage, OnlineOrderState::queue($order)]);
+        $this->assertSame(['handed_over', 'courier', 'paid', 'completed', 'completed', 'done'],
+            [$order->handover_status, $order->handed_to, $order->payment_status, $order->lifecycle, $order->stage, OnlineOrderState::queue($order)], 'Paid and handed over: completed');
         $this->assertNotNull($order->closed_at);
-        $this->assertContains('completed', $order->events()->pluck('kind')->all());
+        $this->assertStringContainsString('pesanan selesai', $this->ops->lastEvent->note, 'Completion is noted on the handover event');
 
         $order = $this->ops->confirmDelivery($order, $order->revision, $this->actor(), 'customer');
         $this->assertSame(['delivered', 'customer'], [$order->delivery_status, $order->delivery_confirmed_by]);
@@ -140,6 +141,8 @@ class OnlineOrderV2OperationsTest extends TestCase
     {
         $order = $this->order('intercity');
         $this->assertSame('not_requested', $order->jnt_status);
+        $this->assertRejected(fn () => $this->ops->recordJnt($order, $order->revision, $this->actor(), 'pickup_requested'), PaymentRequired::class, 'unpaid J&T');
+        $order = $this->payInFull($order, $this->staff);
         $order = $this->ops->recordJnt($order, $order->revision, $this->actor(), null, 'JX-0001');
         $this->assertSame(['JX-0001', 'not_requested'], [$order->tracking_number, $order->jnt_status], 'Resi can be added any time');
 
@@ -159,7 +162,7 @@ class OnlineOrderV2OperationsTest extends TestCase
         $this->assertSame(0, $order->events()->where('kind', 'handed_over')->count());
 
         // handover(jnt) is the same rule, and unpacked orders cannot be picked up.
-        $other = $this->order('intercity');
+        $other = $this->payInFull($this->order('intercity'), $this->staff);
         $this->assertRejected(fn () => $this->ops->handover($other, $other->revision, $this->actor(), 'jnt'), InvalidOrderTransition::class);
         $other = $this->packed($other);
         $other = $this->ops->handover($other, $other->revision, $this->actor(), 'jnt');
@@ -193,8 +196,7 @@ class OnlineOrderV2OperationsTest extends TestCase
         $this->assertRejected(fn () => $this->ops->openIssue($order, null, $app, 'stock_problem', 'Salah baris', '01JABCDEFX0000000000000009'), OrderValidationFailed::class);
 
         $order = $this->ops->handover($order, $order->revision, $this->actor(), 'customer');
-        $order = app(RecordOnlineOrderMoney::class)->recordPayment($order, $order->revision, $this->staff, '400000', 'cash', 'proof_in_chat');
-        $this->assertSame(['active', 'has_issue'], [$order->lifecycle, OnlineOrderState::queue($order, 1)], 'Open issue holds completion');
+        $this->assertSame(['paid', 'active', 'has_issue'], [$order->payment_status, $order->lifecycle, OnlineOrderState::queue($order, 1)], 'Open issue holds completion');
 
         $issue = $order->issues()->first();
         $this->assertRejected(fn () => $this->ops->resolveIssue($order, $issue->public_id, null, $this->actor()), OrderActionNotAllowed::class);
@@ -257,6 +259,7 @@ class OnlineOrderV2OperationsTest extends TestCase
 
     private function packed(OnlineOrder $order): OnlineOrder
     {
+        $order = $this->payInFull($order, $this->staff);
         $items = $order->items->map(fn ($item) => ['line_id' => $item->line_id, 'quantity' => $item->quantity])->all();
 
         return $this->ops->pack($order, $order->fresh()->revision, $this->actor(), $items)->fresh(['items']);

@@ -120,7 +120,7 @@ class OrderOperationalUxTest extends TestCase
 
     public function test_packing_is_one_action_and_still_requires_every_line(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         [$first, $second] = $order->items->all();
         $this->actingAs($this->staff)->get(route('admin.orders.show', $order))
             ->assertSee('Centang barang yang sudah masuk paket')->assertDontSee('Mulai siapkan');
@@ -138,7 +138,7 @@ class OrderOperationalUxTest extends TestCase
 
     public function test_jnt_main_flow_is_request_waiting_picked_up_and_the_qr_is_optional_and_private(): void
     {
-        $order = $this->v2Order('intercity');
+        $order = $this->paidV2Order('intercity');
         $this->actingAs($this->staff);
         $this->get(route('admin.orders.show', $order))->assertSee('Pickup J&amp;T belum diminta', false);
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($i) => [$i->line_id => $i->quantity])->all()]);
@@ -157,7 +157,7 @@ class OrderOperationalUxTest extends TestCase
         $this->get(route('admin.orders.v2.jnt.qr.show', $order))->assertRedirect();
 
         // Picked up without a tracking number; it can follow later.
-        $order = $this->v2Order('intercity');
+        $order = $this->paidV2Order('intercity');
         $this->actingAs($this->staff);
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($i) => [$i->line_id => $i->quantity])->all()]);
         $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested']);

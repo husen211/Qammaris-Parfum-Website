@@ -196,7 +196,7 @@
                 </div>
             </form>
         @else
-            @if ($order->stage === 'shipped' && $order->fulfillment !== 'pickup' && ! ($order->isV2() && $order->delivery_status === 'delivered'))
+            @if ($order->isV2() ? ($order->handover_status === 'handed_over' && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled') : ($order->stage === 'shipped' && $order->fulfillment !== 'pickup'))
                 <form method="POST" action="{{ route('orders.customer.received', $token) }}" class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" data-received-form>
                     @csrf
                     <p class="text-base font-semibold text-brand-black">Pesanan sedang dikirim</p>

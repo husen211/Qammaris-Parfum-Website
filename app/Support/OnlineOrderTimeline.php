@@ -15,9 +15,12 @@ final class OnlineOrderTimeline
     public static function items(OnlineOrder $order, string $audience): array
     {
         $events = $order->relationLoaded('events') ? $order->events : $order->events()->with('actor')->get();
-        $current = $order->stepIndex($order->stage === OnlineOrder::STAGE_CANCELLED
-            ? $events->where('kind', 'cancel')->last()?->stage
-            : $order->stage);
+        $current = $order->stepIndex(match (true) {
+            $order->stage === OnlineOrder::STAGE_CANCELLED => $events->where('kind', 'cancel')->last()?->stage,
+            // V2: a paid order completes at handover; "Diterima" waits for the delivery confirmation.
+            $order->isV2() && $order->stage === OnlineOrder::STAGE_COMPLETED && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' => OnlineOrder::STAGE_SHIPPED,
+            default => $order->stage,
+        });
         $items = [];
 
         foreach ($order->steps() as $index => $stage) {
