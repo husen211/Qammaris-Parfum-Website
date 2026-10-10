@@ -144,6 +144,16 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 - Keputusan refund, pembayaran refund, pembatalan entri, rekonsiliasi, dan persetujuan penyesuaian harga hanya untuk Super Admin.
 - Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
 
+### Operasional pesanan yang disederhanakan (ORD-03, branch review)
+
+- Halaman pesanan menampilkan satu langkah saat ini (link, kendala, pembayaran, packing, atau pengiriman) dengan satu tombol utama. Langkah lain dilipat.
+- Pembayaran dicatat dengan nominal, metode, dan centang "Sudah dicatat di Majoo". Sumber konfirmasi tidak dipilih lagi; sistem mencatatnya secara internal (Majoo, atau "dicatat admin").
+- Packing: centang setiap barang sesuai jumlah pesanan, lalu konfirmasi. Barang yang kurang dilaporkan lewat "Ada masalah".
+- J&T: request pickup, menunggu kurir, lalu sudah di-pickup. QR dan nomor resi opsional dan tidak menghalangi pickup.
+- Ongkir (saklar UAT `ORDERS_SIMPLE_UX`): Staff Order boleh mengisi ongkir yang ditagihkan ke customer selama belum ada pembayaran sama sekali. Setelah ada pembayaran, perubahan total lewat penyesuaian harga yang disetujui Super Admin. Pendanaan driver, refund, dan persetujuan harga tetap Super Admin.
+- Customer boleh memilih metode pembayaran (Transfer bank atau QRIS) di link pesanan. Pilihan ini hanya preferensi: tidak menandai lunas dan tidak membuat QRIS Majoo.
+- Link pesanan dibagikan lewat Salin Link, Salin Pesan, atau menu bagikan bawaan HP. WhatsApp tidak wajib.
+
 ### Integrasi pesanan dengan Qammaris App (ORD-02e, branch review)
 
 - Website tetap menjadi sumber data pesanan. App mengerjakan pesanan V2 lewat API v1 privat (kontrak r4.1); setiap perubahan dari App tercatat dengan nama staf App dan ID request.
