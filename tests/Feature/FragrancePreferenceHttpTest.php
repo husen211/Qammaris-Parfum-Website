@@ -26,6 +26,7 @@ class FragrancePreferenceHttpTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
         config(['fragrance_preference.enabled' => true, 'app.key' => 'base64:'.base64_encode(str_repeat('s', 32))]);
         $this->admin = User::factory()->create(['role' => 'admin']);
         $brand = Brand::create(['name' => 'Synthetic quiz brand', 'is_active' => true]);
