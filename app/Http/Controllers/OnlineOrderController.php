@@ -52,6 +52,7 @@ class OnlineOrderController extends Controller
             'locationUrl' => $locationUrl,
             'whatsappUrl' => $this->storeChatUrl($whatsApp, $order),
             'checkoutWhatsappUrl' => $order->lifecycle === 'draft' ? $whatsApp->websiteOrderUrl($this->storeNumber(), $order) : null,
+            'checkoutMessage' => $order->lifecycle === 'draft' ? $whatsApp->websiteOrderMessage($order) : null,
         ]));
     }
 

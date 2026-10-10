@@ -30,7 +30,12 @@
                     <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ session('checkout_placed') ? 'Buka WhatsApp' : 'Buka WhatsApp lagi' }}</a>
                     <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan tombol di atas lagi. Pesanan Anda tetap tersimpan.</p>
                 @else
-                    <p class="mt-2 text-sm leading-6 text-gray-700">Kontak WhatsApp toko belum tersedia. Pesanan Anda tetap tersimpan; simpan halaman ini dan hubungi toko.</p>
+                    {{-- ORD-07: no store number here (test environment): never fall back to the real store chat. --}}
+                    <p class="mt-2 text-sm leading-6 text-gray-700">WhatsApp toko tidak tersedia di sini. Salin pesan berikut dan kirim ke admin Qammaris. Pesanan Anda tetap tersimpan.</p>
+                    <label for="checkout-message" class="mt-3 block text-sm font-medium text-brand-black">Pesan untuk admin</label>
+                    <textarea id="checkout-message" readonly rows="8" class="mt-1 w-full resize-none border border-gray-300 bg-white px-3 py-2 text-base leading-6 text-brand-black" data-checkout-message>{{ $checkoutMessage }}</textarea>
+                    <button type="button" data-copy-checkout class="mt-2 flex min-h-12 w-full items-center justify-center border border-brand-black bg-white px-4 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Salin pesan</button>
+                    <p data-copy-feedback role="status" aria-live="polite" class="mt-1 min-h-5 text-sm text-gray-600"></p>
                 @endif
                 @if ($order->fulfillment === 'local_delivery')
                     <p class="mt-3 text-sm leading-6 text-gray-600">Pengiriman Kota Palu: kirim juga Sharelok di chat yang sama supaya kurir tepat sampai.</p>
@@ -253,6 +258,19 @@
     const link = document.querySelector('[data-checkout-whatsapp][data-auto-open]');
     if (link) window.setTimeout(() => window.location.assign(link.href), 600);
 })();
+// ORD-07: copy the order message where no store chat is available; the selected text is the fallback.
+document.querySelector('[data-copy-checkout]')?.addEventListener('click', async () => {
+    const field = document.querySelector('[data-checkout-message]');
+    const feedback = document.querySelector('[data-copy-feedback]');
+    field.focus();
+    field.select();
+    try {
+        await navigator.clipboard.writeText(field.value);
+        feedback.textContent = 'Pesan disalin.';
+    } catch {
+        feedback.textContent = document.execCommand('copy') ? 'Pesan disalin.' : 'Teks sudah dipilih. Salin secara manual.';
+    }
+});
 document.querySelector('[data-received-form]')?.addEventListener('submit', (event) => {
     const button = event.currentTarget.querySelector('button');
     button.disabled = true;

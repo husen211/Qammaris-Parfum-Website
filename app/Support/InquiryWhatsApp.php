@@ -84,9 +84,15 @@ final class InquiryWhatsApp
      */
     public function websiteOrderUrl(?string $number, OnlineOrder $order): ?string
     {
+        return $this->url($number, $this->websiteOrderMessage($order));
+    }
+
+    /** The same text, shown for copying where no store number is available (test environments, ORD-07). */
+    public function websiteOrderMessage(OnlineOrder $order): string
+    {
         $delivery = config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-';
 
-        return $this->url($number, implode("\n", [
+        return implode("\n", [
             'Halo Qammaris, saya baru memesan lewat website.',
             '',
             'Nomor pesanan: *'.$order->code.'*',
@@ -95,7 +101,7 @@ final class InquiryWhatsApp
             'Subtotal produk: '.Rupiah::format($order->subtotal()),
             '',
             'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
-        ]));
+        ]);
     }
 
     public function availabilityLabel(string $availability): string

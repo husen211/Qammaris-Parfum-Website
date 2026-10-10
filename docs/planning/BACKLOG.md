@@ -47,7 +47,10 @@ Owner requested and approved ORD-01 on 2026-10-07, developed in parallel with th
 
 Branch `modernization/ord-04-cart-checkout`; [evidence](../verification/ord-04/README.md), [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md). Next: Owner-approved UAT run (shared UAT not switched). The earlier "ORD-04 authenticated staff" item was absorbed into ORD-02. |
 | ORD-06 | Alias | → ORD-04 (cart checkout creates the same online order) |
-| ORD-07 | BACKLOG | Finding (ORD-04): `StoreInfo::getWhatsappNumberAttribute` forces every store WhatsApp number to the real store number, so UAT/staging open the real chat. Decide whether non-production may use a test number. |
+| ORD-07 | IN_REVIEW | Owner 2026-10-10: test environments (`local`, `development`, `testing`, `uat`, `staging`) never use the production store WhatsApp number.
+- With `STORE_WHATSAPP_TEST_NUMBER` set, links go to that number. Without it, no `wa.me` link is built and the checkout success page shows a copyable message.
+- Production is unchanged.
+- Shipped on the ORD-04 branch; [evidence](../verification/ord-04/README.md#whatsapp-in-test-environments-ord-07-before-the-uat-switch). |
 | ORD-05 | BACKLOG | Customer-data retention/anonymization policy; currently no automatic deletion |
 | TEST-MYSQL-01 | DONE | Two `ShopeeContentImportTest` cases assumed SQLite (double-quoted `"slug"` in a logged query; batch ID 1 after a rolled-back transaction). Fixed test-only (driver-neutral match, the batch's own ID) on 2026-10-09; full suite on MariaDB 11.8.9: 522 passed. |
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PhoneNumber;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,7 +11,9 @@ class StoreInfo extends Model
     use HasFactory;
 
     private const DEFAULT_WHATSAPP_NUMBER = '6285144924931';
+
     private const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/qammaris';
+
     private const DEFAULT_TIKTOK_URL = 'https://www.tiktok.com/@qammaris.parfum?_r=1&_t=ZS-93QXMasV6w5';
 
     protected $table = 'store_info';
@@ -46,8 +49,21 @@ class StoreInfo extends Model
         ]);
     }
 
+    /** ORD-07: UAT, staging, local and tests never contact the real store (see config/store.php). */
+    public static function usesTestWhatsapp(): bool
+    {
+        return app()->environment(config('store.test_environments', []));
+    }
+
     public function getWhatsappNumberAttribute($value): string
     {
+        if (self::usesTestWhatsapp()) {
+            $test = PhoneNumber::normalize(config('store.whatsapp_test_number'));
+
+            // No test number (or the store number by mistake): no destination at all.
+            return $test === null || $test === self::DEFAULT_WHATSAPP_NUMBER ? '' : $test;
+        }
+
         $normalized = preg_replace('/\D+/', '', (string) $value);
 
         if ($normalized === '') {
@@ -55,7 +71,7 @@ class StoreInfo extends Model
         }
 
         if (str_starts_with($normalized, '0')) {
-            $normalized = '62' . substr($normalized, 1);
+            $normalized = '62'.substr($normalized, 1);
         }
 
         return $normalized === self::DEFAULT_WHATSAPP_NUMBER
@@ -98,7 +114,7 @@ class StoreInfo extends Model
      */
     public function getWhatsappLinkAttribute(): string
     {
-        return 'https://wa.me/' . $this->whatsapp_number;
+        return $this->whatsapp_number === '' ? '' : 'https://wa.me/'.$this->whatsapp_number;
     }
 
     /**

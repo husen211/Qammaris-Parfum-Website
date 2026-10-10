@@ -66,4 +66,9 @@ There must be no second order system, no fake admin identity, and no customer lo
   - Code rollback is safe while no guest order exists.
   - The migration's `down()` stops if guest orders exist instead of inventing creators.
 - **Open-link limits.** A draft link expires after 7 days. The order itself stays visible to staff until it is confirmed or cancelled.
-- **Unrelated finding.** `StoreInfo::getWhatsappNumberAttribute` pins every store number to the real store number. Test environments therefore open WhatsApp to the real store, and a human tester must not press Send. Recorded in the backlog, not changed here.
+- **Store number in test environments (ORD-07, Owner 2026-10-10).** `StoreInfo::getWhatsappNumberAttribute` used to pin every store number to the real store.
+  - **Test environments.** In `config('store.test_environments')` (`local`, `development`, `testing`, `uat`, `staging`), it now returns `STORE_WHATSAPP_TEST_NUMBER`, or nothing. The real store number is refused as a test number.
+  - **No number.** No `wa.me` link is built: product inquiries, footer and store page lose the button, and the checkout success page shows the message with **Salin pesan**.
+  - **Checkout without a number.** Checkout itself no longer needs a number when it saves the order.
+  - **Production.** Any other `APP_ENV`, production included, keeps the previous rule. Production behavior therefore does not depend on its exact `APP_ENV` value, which is not recorded in the docs.
+  - Tests: `StoreWhatsappEnvironmentTest`. PHPUnit runs with a synthetic test number.

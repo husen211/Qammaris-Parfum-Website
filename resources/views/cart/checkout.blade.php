@@ -10,7 +10,13 @@
     $choiceClass = 'flex min-h-14 cursor-pointer items-start gap-3 border border-gray-300 bg-white p-4 [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] active:bg-gray-50 has-[:checked]:border-brand-black has-[:checked]:bg-[#FAF8F3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-black';
     $delivery = old('delivery');
     $isDelivery = in_array($delivery, ['local_delivery', 'intercity'], true);
-    $submitLabel = $whatsappAvailable ? ($savesOrder ? 'Pesan & lanjut ke WhatsApp' : 'Lanjut ke WhatsApp') : 'Kontak belum tersedia';
+    $canSubmit = $whatsappAvailable || $savesOrder;
+    $submitLabel = match (true) {
+        $savesOrder && $whatsappAvailable => 'Pesan & lanjut ke WhatsApp',
+        $savesOrder => 'Pesan sekarang',
+        $whatsappAvailable => 'Lanjut ke WhatsApp',
+        default => 'Kontak belum tersedia',
+    };
 @endphp
 
 @section('content')
@@ -147,7 +153,7 @@
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
                 @endif
-                <button type="submit" @disabled(! $whatsappAvailable) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600">{{ $submitLabel }}</button>
+                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600">{{ $submitLabel }}</button>
                 @if ($savesOrder)
                     <p class="mt-3 text-xs leading-5 text-gray-600">Pesanan diproses setelah admin mengonfirmasi lewat WhatsApp. Data penerima disimpan hanya untuk mengurus pesanan ini dan hanya dapat dilihat tim Qammaris.</p>
                 @else
@@ -191,7 +197,7 @@ orderForm?.addEventListener('submit', () => {
 window.addEventListener('pageshow', () => {
     window.clearTimeout(orderRetryTimer);
     if (orderSubmit) {
-        orderSubmit.disabled = {{ $whatsappAvailable ? 'false' : 'true' }};
+        orderSubmit.disabled = {{ $canSubmit ? 'false' : 'true' }};
         orderSubmit.textContent = initialOrderLabel;
         orderFeedback.textContent = '';
     }

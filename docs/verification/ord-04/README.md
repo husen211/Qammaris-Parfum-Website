@@ -52,8 +52,25 @@ Small targets flagged:
 - "Ada masalah" on the admin page is the existing ORD-03 summary link and is unchanged.
 - The 1440 admin filter inputs at 14 px are desktop-only (the 16 px rule targets touch).
 
+## WhatsApp in test environments (ORD-07, before the UAT switch)
+
+Real headless Chrome, `APP_ENV=uat`, isolated local instance, 390 (touch) and 1440.
+
+| Mode | Result at 390 and 1440 |
+|---|---|
+| `STORE_WHATSAPP_TEST_NUMBER=080000009999` | Order saved. WhatsApp opened once, only to `wa.me/6280000009999` (request blocked in the test browser). "Buka WhatsApp lagi" on reload. [390](uat-wa-test-success-390.jpg), [1440](uat-wa-test-success-1440.jpg) |
+| No test number | Order saved. No `wa.me` request at all. Store number absent from the HTML. Message preview (8 lines, order number) with **Salin pesan**. [390](uat-wa-none-success-preview-390.jpg), [1440](uat-wa-none-success-preview-1440.jpg) |
+| Staff confirm after either mode | Aktif → Pembayaran (Rp 925.000 incl. ongkir) |
+
+Headless Chrome denies clipboard access, so the copy button used its fallback: the text is selected with "Salin secara manual". Clipboard copy on a real phone over UAT HTTPS is not yet confirmed.
+
 ## Tests
 
+- `tests/Feature/StoreWhatsappEnvironmentTest.php`: 4 tests.
+  - UAT without a number saves the order and shows a copyable message; no page contains the store number.
+  - UAT with a test number opens only that number.
+  - The store number is refused as a test number in every test environment.
+  - Production keeps the store number and the WhatsApp-only flow.
 - `tests/Feature/WebsiteCheckoutOrderTest.php`: 12 tests. They cover:
   - guest pickup;
   - three delivery types;
@@ -79,4 +96,4 @@ Small targets flagged:
 
 - **Shared Owner UAT not used.** It was not switched to this branch, at the App agent's request: the Owner is doing their own ORD-03 test there and wants to create the first order themselves. A UAT run needs Owner approval and the two-sided clean afterwards.
 - **No real phone or WhatsApp.** No real iPhone Safari or Android WhatsApp hand-off was tested. The automatic WhatsApp open uses a normal navigation and may land on the wa.me web page first.
-- **Store number pinned.** The store number is pinned to the real Qammaris number by existing code (`StoreInfo`), so test environments open the real store chat. Testers must not press Send.
+- **Store number pinned (resolved, ORD-07).** Test environments now use `STORE_WHATSAPP_TEST_NUMBER` or a copyable message; see the section above.

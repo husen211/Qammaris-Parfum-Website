@@ -1,4 +1,4 @@
-# Manual UAT — Pesanan Online (ORD-01/ORD-02, kontrak r4.2)
+# Manual UAT — Pesanan Online (ORD-01 s.d. ORD-04, kontrak r4.2)
 
 Untuk Owner: mencoba sendiri seluruh alur pesanan lewat browser di laptop dan HP sebelum rilis production.
 
@@ -125,6 +125,25 @@ Tandai ✓ / ✗ dan catat kendalanya. Uji di **laptop** (Chrome) dan **HP**.
 - [ ] Bila App dimatikan sebentar: perubahan di Website tetap tersimpan, webhook menunggu lalu terkirim setelah App hidup lagi. Bila gagal 24 jam, event muncul di daftar gagal dengan tombol **Kirim ulang**.
 - [ ] **Link tugas WhatsApp** (pesan grup dari **Link & WA**) membuka **Qammaris App UAT** (`https://….trycloudflare.com/orders/<id>`, alamat dari agen App, bukan `qammarisapp.com`). Login App UAT memakai akun App dari agen App. Bila alamat App UAT belum diisi, link membuka Admin PWA Website.
 
+### I2. Checkout keranjang website (ORD-04)
+
+Saklar yang aktif di UAT: `ORDERS_WEBSITE_CHECKOUT=true`, bersama `ORDERS_V2_ENABLED` dan `ORDERS_SIMPLE_UX`.
+
+**WhatsApp di UAT tidak pernah membuka chat toko asli.**
+- Bila `STORE_WHATSAPP_TEST_NUMBER` diisi di `secrets\uat.env`, WhatsApp membuka nomor uji itu.
+- Bila kosong (keadaan saat ini), halaman sukses menampilkan pratinjau pesan dan tombol **Salin pesan**, tanpa membuka WhatsApp.
+
+- [ ] Buka katalog `https://…/products`, tambah 1–2 produk ke keranjang, lalu **Checkout**.
+- [ ] Coba kirim kosong: nama, HP, cara pengiriman, paperbag, dan pembayaran ditandai.
+- [ ] Pilih **Ambil di toko**: alamat tidak diminta. Pilih **Pengiriman Instan — Kota Palu** atau **Luar Kota — J&T**: alamat wajib; kelurahan, kecamatan, dan kode pos opsional.
+- [ ] Ongkir tertulis "Menunggu konfirmasi staf". Tekan **Pesan sekarang**: muncul **Pesanan tersimpan** dengan nomor `QAM-…`.
+- [ ] Tekan **Salin pesan** (atau, bila nomor uji diisi, WhatsApp terbuka sekali). Muat ulang halaman: pesanan tetap ada dan WhatsApp tidak terbuka sendiri lagi.
+- [ ] Tekan tombol Back lalu kirim lagi: tidak ada pesanan kedua.
+- [ ] Admin: banner "1 pesanan website menunggu konfirmasi". Halaman pesanan dibuka di **Konfirmasi pesanan website**. Pembayaran belum bisa dicatat; ongkir bisa diisi.
+- [ ] Qammaris App: pesanan ini **belum** muncul di daftar tugas.
+- [ ] Tekan **Konfirmasi pesanan**: status Aktif, lanjut Pembayaran. Di App pesanan muncul sebagai perlu ditangani.
+- [ ] Coba juga **Opsi lanjutan → Batalkan** untuk pesanan website yang tidak jadi.
+
 ### J. Lain-lain
 - [ ] Mode pesawat di HP: halaman offline Admin tampil; tidak ada data pesanan lama yang tampil dari cache.
 - [ ] Riwayat pesanan mencatat setiap langkah beserta pelakunya.
@@ -134,5 +153,6 @@ Tandai ✓ / ✗ dan catat kendalanya. Uji di **laptop** (Chrome) dan **HP**.
 - Halaman Integrasi App masih bertuliskan "baseline r4.1"; kontrak yang berlaku adalah r4.2. Hanya teks.
 - Pemeriksaan integrasi (`status-uat.ps1`) menandai `QAMMARIS_ORDER_APP_TASK_LINKS` sebagai FAIL. Itu benar untuk staging, tetapi di UAT saklar ini sengaja dinyalakan agar link tugas membuka App UAT.
 - Pengiriman WhatsApp hanya membuka aplikasi dengan teks terisi. Website tidak mengirim pesan sendiri.
+- Di UAT tanpa nomor uji, tombol WhatsApp toko (katalog, footer, lokasi toko, checkout) tidak tampil atau nonaktif. Ini disengaja (ORD-07).
 - Foto produk dummy tidak ada (tampil placeholder).
 - Alamat tunnel `trycloudflare.com` bersifat sementara dan berganti setiap tunnel dibuat ulang.

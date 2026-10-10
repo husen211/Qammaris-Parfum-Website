@@ -29,7 +29,8 @@ class CartController extends Controller
         $items = $resolvedItems ?? [];
         $estimateTotal = Rupiah::sum(array_column($items, 'line_total'));
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
-        $canCheckout = $items !== [] && $this->canOrder($items) && $whatsappAvailable;
+        // ORD-04: a saved order does not need WhatsApp to exist; without a number the customer copies the message.
+        $canCheckout = $items !== [] && $this->canOrder($items) && ($whatsappAvailable || CheckoutRequest::savesOrder());
 
         return view('cart.index', compact(
             'items',
