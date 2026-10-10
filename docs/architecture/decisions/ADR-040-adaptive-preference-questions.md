@@ -1,6 +1,6 @@
 # ADR-040 — adaptive preference questions with factual evidence
 
-Date: 2026-10-10. Status: implemented on branch for PREF-03 Owner-feedback review; not deployed. Existing beta permission and pending human-quality acceptance remain governed by ADR-039.
+Date: 2026-10-10. Status: released as the explicitly authorized PREF-03 beta correction through PR51; [production evidence](../../verification/pref-03/question-revision/RELEASE.md). Existing beta permission and pending human-quality acceptance remain governed by ADR-039.
 
 Use explicit budget ranges with real lower/upper bounds, plain Indonesian labels, separate environment/time questions, and conditional sweetness. Avoiding sweet forces non-sweet; avoiding only gourmand skips the question without equating dessert with every sweet floral/fruit impression. Server canonicalization repeats the branch contract and rejects contradictory liked/avoided families. Unknown sweetness remains eligible with a visible limitation, consistent with detected-only exclusion; it is never called proven non-sweet. Favorite perfume remains secondary to explicit current aroma preferences.
 

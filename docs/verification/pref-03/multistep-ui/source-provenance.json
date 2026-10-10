@@ -1,0 +1,16 @@
+{
+  "url": "https://21st.dev/@arihantcodes_1f7b8c4d/components/multistep-form",
+  "author": "arihantcodes_1f7b8c4d",
+  "demo_id": 4883,
+  "retrieval": "21st MCP get_component, signed-in paid tier",
+  "retrieved_at": "2026-10-10",
+  "demo_source_sha256": "93b9c2f6cef15fcdf4aef9a82709db1c2f8fa6cb077e7a9ca5838ce07be656aa",
+  "component_source_sha256": "4acbc7165a8d54738ff62b51414e772c08fe78434e524e6d8770180d3ba2925f",
+  "pasted_reference_sha256": "f17f2a484b3751f0c130bf50e83ee1e7d344598805ac7a48a8f16a33104a7ebe",
+  "adapted_files": [
+    "resources/views/quiz/v1/index.blade.php",
+    "resources/js/ui/preference-multistep.js",
+    "resources/js/ui/preference-quiz.js",
+    "resources/css/preference-quiz.css"
+  ]
+}
