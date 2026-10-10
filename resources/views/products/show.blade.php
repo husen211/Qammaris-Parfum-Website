@@ -30,7 +30,9 @@
         ],
     };
     $availability['label'] = \App\Support\CatalogAvailability::label($product);
-    if ($managedByApp) {
+    if ($effectiveAvailability === \App\Models\Product::AVAILABILITY_AVAILABLE) {
+        $availability['detail'] = \App\Support\CatalogAvailability::detail($product);
+    } elseif ($managedByApp) {
         $availability['detail'] = $effectiveAvailability === \App\Models\Product::AVAILABILITY_UNKNOWN
             ? 'Tanyakan melalui WhatsApp.' : '';
     }

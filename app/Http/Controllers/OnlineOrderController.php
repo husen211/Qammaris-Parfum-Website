@@ -11,10 +11,15 @@ use App\Http\Requests\Orders\CustomerOrderDetailsRequest;
 use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\StoreInfo;
+use App\Models\StorePaymentAccount;
+use App\Support\CustomerOrderHistory;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderMessages;
+use App\Support\OnlineOrderMoney;
+use App\Support\OnlineOrderStepper;
 use App\Support\OnlineOrderTimeline;
 use App\Support\OrderActor;
+use App\Support\Rupiah;
 use Illuminate\Http\Request;
 
 /** Customer link: complete or correct recipient details, then follow the order status. */
@@ -27,6 +32,10 @@ class OnlineOrderController extends Controller
             return $this->private(response()->view('orders.unavailable', ['whatsappUrl' => $this->storeChatUrl($whatsApp)], 404));
         }
         $order->load(['items', 'events']);
+        CustomerOrderHistory::remember($order, $token);
+        // ORD-04: once the total is final, the official (verified) accounts and the way to send the proof.
+        $showPayment = $order->isV2() && $order->lifecycle === 'active' && $order->payment_status !== 'paid' && OnlineOrderStepper::totalIsFinal($order);
+        $proofMessage = 'Halo Qammaris, saya sudah membayar pesanan '.$order->code.' sebesar '.Rupiah::format($order->customerTotal()).'. Berikut bukti pembayarannya.';
         // V2: after payment or once packing started, the same form sends a change request for review.
         $requestsChange = $order->isV2() && $order->lifecycle === 'active' && $order->handover_status === 'pending'
             && OnlineOrderChangeRequests::customerMustRequest($order);
@@ -53,7 +62,25 @@ class OnlineOrderController extends Controller
             'whatsappUrl' => $this->storeChatUrl($whatsApp, $order),
             'checkoutWhatsappUrl' => $order->lifecycle === 'draft' ? $whatsApp->websiteOrderUrl($this->storeNumber(), $order) : null,
             'checkoutMessage' => $order->lifecycle === 'draft' ? $whatsApp->websiteOrderMessage($order) : null,
+            'showPayment' => $showPayment,
+            'paymentAccounts' => $showPayment ? StorePaymentAccount::query()->usable()->get() : collect(),
+            'receivedCents' => $showPayment ? OnlineOrderMoney::totals($order)['received'] : 0,
+            'proofWhatsappUrl' => $showPayment ? $whatsApp->textUrl($this->storeNumber(), $proofMessage) : null,
+            'proofMessage' => $proofMessage,
         ]));
+    }
+
+    /** ORD-04 "Pesanan Saya": orders this browser session opened; no login, details still behind their tokens. */
+    public function mine()
+    {
+        return $this->private(response()->view('orders.mine', ['entries' => CustomerOrderHistory::entries()]));
+    }
+
+    public function forgetMine()
+    {
+        CustomerOrderHistory::forget();
+
+        return $this->private(redirect()->route('orders.customer.mine')->with('success', 'Riwayat pesanan di perangkat ini dihapus.'));
     }
 
     public function submit(CustomerOrderDetailsRequest $request, string $token, OnlineOrderWorkflow $workflow, OnlineOrderDetails $details)

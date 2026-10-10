@@ -398,8 +398,11 @@ class OnlineOrderFulfillment
             if ($order->handover_status !== 'handed_over') {
                 $this->assertPaid($order);
             }
-            // Picking up is the handover (handover claim); requesting pickup, QR and tracking are courier booking.
-            $this->assertClaim($order, $actor, $status === 'picked_up' && $order->jnt_status !== 'picked_up' ? 'handover' : 'courier_booking');
+            // Picking up is the handover (handover claim); requesting pickup, QR and tracking are courier booking. After the
+            // pickup a resi is metadata, not a step: any staff member may add it without a claim (r4.3 draft, App review).
+            if (! ($status === null && $order->jnt_status === 'picked_up')) {
+                $this->assertClaim($order, $actor, $status === 'picked_up' && $order->jnt_status !== 'picked_up' ? 'handover' : 'courier_booking');
+            }
             if ($status === null && $trackingNumber === null) {
                 throw new OrderValidationFailed('Isi status J&T atau nomor resi.', ['status' => 'Wajib bila resi kosong']);
             }

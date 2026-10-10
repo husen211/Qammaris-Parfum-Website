@@ -44,6 +44,36 @@
             </section>
         @endif
 
+        @if ($showPayment)
+            {{-- ORD-04: final total and only verified official accounts; paying is confirmed by the store, never here. --}}
+            <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="pay-title" data-customer-payment>
+                <h2 id="pay-title" class="text-base font-semibold text-brand-black">Pembayaran</h2>
+                <p class="mt-1 flex flex-wrap items-baseline justify-between gap-2"><span class="text-sm text-gray-700">Total pembayaran</span><strong class="text-xl tabular-nums text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong></p>
+                @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.</p>@endif
+                @if ($paymentAccounts->isNotEmpty())
+                    <p class="mt-3 text-sm text-gray-700">Transfer ke rekening resmi Qammaris:</p>
+                    <ul class="mt-2 space-y-2">
+                        @foreach ($paymentAccounts as $account)
+                            <li class="flex flex-wrap items-center justify-between gap-2 border border-gray-200 bg-white px-3 py-2">
+                                <span class="min-w-0"><span class="block text-sm font-semibold text-brand-black">{{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></span><span class="block text-sm text-gray-600">a.n. {{ $account->account_holder }}</span></span>
+                                <button type="button" data-copy-account="{{ $account->account_number }}" class="inline-flex min-h-11 items-center border border-brand-black px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin nomor</button>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="mt-3 text-sm text-gray-700">Nomor rekening resmi dikirim admin lewat WhatsApp.</p>
+                @endif
+                <p class="mt-2 text-sm text-gray-700">Untuk QRIS, minta kode QRIS ke admin lewat WhatsApp.</p>
+                <p class="mt-2 text-sm text-gray-700">Setelah membayar, kirim bukti pembayaran. Pesanan disiapkan setelah pembayaran dikonfirmasi admin.</p>
+                @if ($proofWhatsappUrl)
+                    <a href="{{ $proofWhatsappUrl }}" target="_blank" rel="noopener noreferrer" data-proof-whatsapp class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Kirim bukti lewat WhatsApp</a>
+                @else
+                    <p class="mt-2 text-xs text-gray-500">Lingkungan uji: WhatsApp toko tidak tersedia. Kirim bukti ke admin dengan pesan: “{{ $proofMessage }}”</p>
+                @endif
+                <p data-copy-account-feedback role="status" aria-live="polite" class="mt-1 min-h-5 text-sm text-gray-600"></p>
+            </section>
+        @endif
+
         @if (session('success'))
             <div role="status" class="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-base text-emerald-900">{{ session('success') }}</div>
         @endif
@@ -258,6 +288,16 @@
     const link = document.querySelector('[data-checkout-whatsapp][data-auto-open]');
     if (link) window.setTimeout(() => window.location.assign(link.href), 600);
 })();
+// ORD-04: copy an official account number.
+document.querySelectorAll('[data-copy-account]').forEach((button) => button.addEventListener('click', async () => {
+    const feedback = document.querySelector('[data-copy-account-feedback]');
+    try {
+        await navigator.clipboard.writeText(button.dataset.copyAccount);
+        feedback.textContent = 'Nomor rekening disalin.';
+    } catch {
+        feedback.textContent = 'Salin otomatis tidak tersedia. Nomor: ' + button.dataset.copyAccount;
+    }
+}));
 // ORD-07: copy the order message where no store chat is available; the selected text is the fallback.
 document.querySelector('[data-copy-checkout]')?.addEventListener('click', async () => {
     const field = document.querySelector('[data-checkout-message]');

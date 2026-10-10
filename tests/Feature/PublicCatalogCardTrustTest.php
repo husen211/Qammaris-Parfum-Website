@@ -48,7 +48,7 @@ class PublicCatalogCardTrustTest extends TestCase
         $response->assertOk()
             ->assertSee('75 ml')
             ->assertSee('Rp 425.000')
-            ->assertSee('Tersedia saat diperiksa')
+            ->assertSee('Tersedia · dicek')
             ->assertDontSee('Rp 987.654')
             ->assertDontSee('Rp 999.999');
 
@@ -108,7 +108,7 @@ class PublicCatalogCardTrustTest extends TestCase
             ->assertSee('data-effective-availability="available"', false)
             ->assertSee('data-effective-availability="unknown"', false)
             ->assertSee('data-effective-availability="sold_out"', false)
-            ->assertSee('Tersedia saat diperiksa')
+            ->assertSee('Tersedia · dicek')
             ->assertSee('Konfirmasi stok')
             ->assertSee('Sold out')
             ->assertSee(route('products.show', $soldOut->slug), false);

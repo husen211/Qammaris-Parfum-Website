@@ -106,6 +106,25 @@ class OrderPaymentGateTest extends TestCase
         $this->assertSame('delivered', $paid->fresh()->delivery_status);
     }
 
+    public function test_a_resi_after_jnt_pickup_needs_no_claim_even_on_a_completed_order(): void
+    {
+        // Staff who only took `handover` (the QR came by WhatsApp, nobody booked through the App) still add the resi.
+        $order = $this->paidV2Order('intercity');
+        $items = $order->items->map(fn ($item) => ['line_id' => $item->line_id, 'quantity' => $item->quantity])->all();
+        $revision = $this->api($order, '/claims', ['task' => 'preparation', 'actor' => $this->actor()])->assertOk()->json('order.revision');
+        $revision = $this->api($order, '/preparation', ['status' => 'packed', 'packed_items' => $items, 'expected_revision' => $revision, 'actor' => $this->actor()])->assertOk()->json('order.revision');
+        $ikrar = $this->actor('6660a1b2c3d4e5f601234567', 'Ikrar');
+        $revision = $this->api($order, '/claims', ['task' => 'handover', 'actor' => $ikrar])->assertOk()->json('order.revision');
+        $picked = $this->api($order, '/jnt', ['status' => 'picked_up', 'expected_revision' => $revision, 'actor' => $ikrar])->assertOk();
+        $this->assertSame('completed', $picked->json('order.lifecycle'));
+
+        $tracked = $this->api($order, '/jnt', ['tracking_number' => 'JX0001234567', 'expected_revision' => $picked->json('order.revision'), 'actor' => $ikrar])->assertOk();
+        $this->assertSame(['JX0001234567', 'completed'], [$tracked->json('order.fulfillment.jnt.tracking_number'), $tracked->json('order.lifecycle')]);
+        // Another employee without any claim may correct it too; a status change still needs its claim.
+        $this->api($order, '/jnt', ['tracking_number' => 'JX0001234568', 'expected_revision' => $tracked->json('order.revision'), 'actor' => $this->actor('6670a1b2c3d4e5f601234567', 'Rina')])->assertOk();
+        $this->assertSame('JX0001234568', $order->fresh()->tracking_number);
+    }
+
     public function test_local_courier_and_handover_wait_for_payment_after_packing_and_a_short_payment_is_not_enough(): void
     {
         $ops = app(OnlineOrderFulfillment::class);

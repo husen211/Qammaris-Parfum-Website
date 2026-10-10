@@ -50,10 +50,12 @@ Route::prefix('cart')->name('cart.')->group(function () {
 
 // Online orders: private bearer links; the token is the only lookup key and is never listed.
 Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/pesanan-saya', [OnlineOrderController::class, 'mine'])->name('orders.customer.mine');
     Route::get('/pesanan/{token}', [OnlineOrderController::class, 'show'])->name('orders.customer.show');
     Route::get('/tugas-pesanan/{token}', [OnlineOrderStaffController::class, 'show'])->name('orders.staff.show');
 });
 Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/pesanan-saya/lupakan', [OnlineOrderController::class, 'forgetMine'])->name('orders.customer.forget');
     Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
     Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
     Route::post('/tugas-pesanan/{token}/langkah', [OnlineOrderStaffController::class, 'advance'])->name('orders.staff.advance');

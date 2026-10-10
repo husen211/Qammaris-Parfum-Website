@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StoreInfo;
 use App\Support\CatalogAvailability;
+use App\Support\CustomerOrderHistory;
 use App\Support\InquiryWhatsApp;
 use App\Support\Rupiah;
 use Illuminate\Support\Str;
@@ -197,6 +198,8 @@ class CartController extends Controller
                 ->with('error', 'Sesi checkout sudah berakhir. Periksa ringkasan pesanan, lalu kirim lagi.'));
         }
         if ($order = OnlineOrder::where('checkout_key', $key)->first()) {
+            CustomerOrderHistory::remember($order, $order->customer_token_encrypted);
+
             return $this->placed($order->customer_token_encrypted);
         }
 
@@ -215,7 +218,8 @@ class CartController extends Controller
         }
 
         try {
-            [, $token] = $create->fromWebsiteCheckout($lines, $request->orderDetails(), $key);
+            [$order, $token] = $create->fromWebsiteCheckout($lines, $request->orderDetails(), $key);
+            CustomerOrderHistory::remember($order, $token);
         } catch (CheckoutChanged $changed) {
             return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())->with('error', $changed->getMessage()));
         } catch (OnlineOrderRejected $rejected) {

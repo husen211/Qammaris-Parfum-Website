@@ -28,6 +28,10 @@ Otherwise the Website answers `409 invalid_transition` with `details.reason = "p
   - `PUT /costs/{expense_ref}`;
   - a tracking number added after a J&T pickup (the order may already be `completed`).
 - **Replays.** A replay of an already-stored action (same `Idempotency-Key`) returns the stored response (§11).
+  - The App does not re-check payment before replaying an action already in its outbox (same `client_action_id` = same `Idempotency-Key`). It sends the replay as-is, and the Website returns the stored response even if the payment status has changed since.
+  - A new action after a payment reversal uses a new key, so it is gated.
+  - App-internal: the App also refuses unpaid actions itself, with the same 409 and reason. It re-reads the order detail first, so an order that was just paid is never blocked by a stale projection.
+- **Tracking number after J&T pickup.** Once `jnt.status = picked_up`, `POST /jnt` with only a `tracking_number` is metadata, not a step. Any App actor with `orders.handle` may send it **without a claim**, also on a `completed` order. Any status change still needs its claim (`courier_booking`, or `handover` for `picked_up`).
 
 Effect on completion (§7, unchanged rule): because handover now requires `paid`, a handed-over order normally becomes `completed` in the same revision, unless an issue or open refund holds it.
 
@@ -49,6 +53,7 @@ Both systems derive the same five steps from r4.2 fields:
 
 Tests: `tests/Feature/OrderPaymentGateTest.php`.
 - Signed API calls are rejected before payment: claim for every task, preparation, J&T status, J&T pickup, handover.
+- After pickup, the `handover` holder, and an employee with no claim, can add the resi to a completed order.
 - After a reversal, the same calls are rejected again; claim release works.
 - `refund_pending` is blocked.
 - Issues, costs and delivery are not gated.
