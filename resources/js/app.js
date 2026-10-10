@@ -1,3 +1,4 @@
+import './ui/preference-quiz';
 import './bootstrap';
 import './ui/search-options';
 import './ui/product-cart';

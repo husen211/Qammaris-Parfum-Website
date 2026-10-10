@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="space-y-6">
+    <a class="underline" href="{{ route('admin.fragrance.index') }}">Evaluasi tes preferensi parfum</a>
     
     <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm flex justify-between items-center">
         <div>

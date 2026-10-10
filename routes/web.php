@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminBlogTaxonomyController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminFragrancePreferenceController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
@@ -16,10 +17,12 @@ use App\Http\Controllers\Admin\AdminShopeeContentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\FragrancePreferenceController;
 use App\Http\Controllers\FragranceQuizController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoreController;
+use App\Http\Middleware\FragranceBrowser;
 use Illuminate\Support\Facades\Route;
 
 // Homepage
@@ -56,12 +59,22 @@ Route::prefix('store')->name('store.')->group(function () {
     Route::get('/about', [StoreController::class, 'about'])->name('about');
 });
 
-// Fragrance Quiz
-Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('quiz.index');
-Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name('quiz.store');
-Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
+// Anonymous preference access stays separate from account authentication.
+Route::middleware([FragranceBrowser::class])->group(function () {
+    Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('quiz.index');
+    Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->middleware('throttle:fragrance-submit')->name('quiz.store');
+    Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
+    Route::get('/fragrance-quiz/results/{id}', [FragrancePreferenceController::class, 'show'])->whereUuid('id')->name('quiz.v1.show');
+    Route::post('/fragrance-quiz/results/{id}/recalculate', [FragrancePreferenceController::class, 'recalculate'])->whereUuid('id')->middleware('throttle:fragrance-submit')->name('quiz.v1.recalculate');
+    Route::post('/fragrance-quiz/results/{id}/feedback', [FragrancePreferenceController::class, 'feedback'])->whereUuid('id')->middleware('throttle:fragrance-feedback')->name('quiz.v1.feedback');
+});
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('fragrance-preference', [AdminFragrancePreferenceController::class, 'index'])->name('fragrance.index');
+    Route::post('fragrance-preference/preview', [AdminFragrancePreferenceController::class, 'preview'])->middleware('throttle:6,1')->name('fragrance.preview');
+    Route::post('fragrance-preference/apply', [AdminFragrancePreferenceController::class, 'apply'])->middleware('throttle:6,1')->name('fragrance.apply');
+    Route::get('fragrance-preference/profiles/{product:id}', [AdminFragrancePreferenceController::class, 'profile'])->name('fragrance.profile');
+    Route::post('fragrance-preference/profiles/{product:id}', [AdminFragrancePreferenceController::class, 'review'])->middleware('throttle:10,1')->name('fragrance.review');
 
     Route::get('app-products', [AdminQammarisAppProductController::class, 'index'])->name('app-products.index');
     Route::post('app-products/preview', [AdminQammarisAppProductController::class, 'preview'])->middleware('throttle:6,1')->name('app-products.preview');

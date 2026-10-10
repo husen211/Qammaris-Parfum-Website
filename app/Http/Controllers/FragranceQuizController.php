@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FragrancePreferenceRequest;
 use App\Http\Requests\FragranceQuizRequest;
+use App\Services\FragranceQuizResults;
 use App\Services\FragranceQuizService;
 use Illuminate\Http\Request;
 
@@ -10,6 +12,10 @@ class FragranceQuizController extends Controller
 {
     public function index(Request $request, FragranceQuizService $service)
     {
+        if (config('fragrance_preference.enabled')) {
+            return app(FragrancePreferenceController::class)->index($request, app(FragranceQuizResults::class));
+        }
+
         $request->session()->forget(['quiz_answers', 'quiz_result_ready']);
         $questions = $service->questions();
 
@@ -18,9 +24,13 @@ class FragranceQuizController extends Controller
         ]);
     }
 
-    public function store(FragranceQuizRequest $request)
+    public function store(Request $request)
     {
-        $request->session()->put('quiz_answers', $request->validated());
+        if (config('fragrance_preference.enabled')) {
+            return app(FragrancePreferenceController::class)->store(app(FragrancePreferenceRequest::class), app(FragranceQuizResults::class));
+        }
+        $validated = app(FragranceQuizRequest::class)->validated();
+        $request->session()->put('quiz_answers', $validated);
         $request->session()->put('quiz_result_ready', true);
 
         return redirect()->route('quiz.result');

@@ -8,6 +8,10 @@ Website Laravel untuk discovery dan pemesanan WhatsApp, admin sederhana, bulk en
 
 Majoo tetap sistem operasional. Qammaris App mengirim UUID/status/harga, website mengelola publication/konten/media; tidak menggantikan POS atau mendapat stok numerik. Tidak ada SPA rewrite, generic repository, microservice, event bus, autonomous AI atau payment gateway pada program current.
 
+## Separate approved preference program
+
+[V1 preference plan](../planning/QAMMARIS_FRAGRANCE_PREFERENCE.md) approved2026-10-09. PREF-01 audit/tooling/scenario packet is IN_REVIEW pending actual Owner/staff labels and semantic/reference freeze. Owner explicitly continued PREF-02 implementation2026-10-10; separate profile/engine code and offline evaluation are IN_REVIEW with independent calibration/quality gates pending ([evidence](../verification/pref-02/README.md)). PREF-03 website/feedback/admin and PREF-04 acceptance/release remain unstarted; no phase advances automatically. Preserve existing catalog/site/legacy quiz and operational integrations. Previous blog/About release scopes do not authorize this deployment; post-acceptance quiz release needs separate permission. This program does not close original P9 or initiate offline-store V2.
+
 ## Hasil current dan dependency
 
 ```text

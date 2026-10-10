@@ -1,0 +1,15 @@
+[data-preference-form] [hidden], [data-preference-form][hidden] { display: none !important; }
+.pref-option { border: 1px solid rgb(26 26 26 / .22); padding: .8rem 1rem; min-height: 48px; cursor: pointer; color: #262626; background: white; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.pref-option:has(input:checked) { border-color: #9f7a36; background: #f9f5ed; }
+.pref-option:active { background: #f2eadb; }
+.pref-button { min-height: 48px; padding: .85rem 1.3rem; background: #242424; color: white; touch-action: manipulation; }
+.pref-button:disabled { opacity: .6; cursor: wait; }
+.pref-link { text-decoration: underline; text-underline-offset: 4px; touch-action: manipulation; }
+.pref-option:focus-within, .pref-button:focus-visible, .pref-link:focus-visible { outline: 2px solid #9f7a36; outline-offset: 3px; }
+[data-preference-form] progress { height: 4px; accent-color: #9f7a36; }
+[data-preference-form] input, [data-preference-form] select { accent-color: #9f7a36; }
+@media (hover: hover) and (pointer: fine) { .pref-option:hover { border-color: #9f7a36; } .pref-button:hover { background: #353535; } }
+
+[data-preference-form] progress::-webkit-progress-bar { background: #e5e1da; }
+[data-preference-form] progress::-webkit-progress-value { background: #9f7a36; }
+[data-preference-form] progress::-moz-progress-bar { background: #9f7a36; }
