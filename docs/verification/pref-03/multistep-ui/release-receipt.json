@@ -1,0 +1,185 @@
+{
+  "pull_request": "https://github.com/husen211/Qammaris-Parfum-Website/pull/53",
+  "owner_instruction": "rilis, after published implementation/CI/touch limitation",
+  "revision": "c8e653016ae5d3cfa5f6df2702e33d99deda5a1c",
+  "previous_code_revision": "ec3999367c8f94c70ad1ef60f4ce4b9486754a1f",
+  "main_ci": {
+    "run_id": 38032624116,
+    "conclusion": "success",
+    "php_tests": 542,
+    "assertions": 4112,
+    "node_tests": 38,
+    "vite": "passed"
+  },
+  "production_workflow": {
+    "run_id": 38032666438,
+    "conclusion": "success",
+    "build": "success",
+    "deploy": "success"
+  },
+  "candidate": {
+    "workflow": 38031662307,
+    "artifact": 11662360963,
+    "artifact_zip_bytes": 57753035,
+    "artifact_zip_sha256": "f52da48ea57e4ae848ff95af9fb70e2a6ff0ee78585d126b43b4eefd85488465",
+    "package_sha256": "2c63d5b6b3007320ed9373f5e8b5c84fffef7d5ffa13c13b2a7d814730d8297c",
+    "revision": "7fdad45c3fc0cb56934fc265da00184b468b5b65",
+    "production_deploy": "skipped"
+  },
+  "staging": {
+    "at": "2026-10-10T06:54:54+00:00",
+    "revision": "7fdad45c3fc0cb56934fc265da00184b468b5b65",
+    "mode": "staging",
+    "environment": "staging",
+    "database_boundary_verified": true,
+    "counts": {
+      "products": 446,
+      "product_variants": 391,
+      "product_images": 1017,
+      "users": 0,
+      "fragrance_profiles": 0,
+      "fragrance_profile_revisions": 0,
+      "fragrance_quiz_results": 0,
+      "fragrance_quiz_feedback": 0
+    },
+    "question_version": "preference-v1.2",
+    "wizard_http_status": 200,
+    "stage_count": 6,
+    "compiled_blade_and_manifest": true,
+    "database_rows_unchanged": true,
+    "session_cache_isolated": "array",
+    "public_staging_routing_changed": false
+  },
+  "production_before": {
+    "at": "2026-10-10T06:41:46+00:00",
+    "revision": "ec3999367c8f94c70ad1ef60f4ce4b9486754a1f",
+    "mode": "status",
+    "environment": "production",
+    "database_boundary_verified": true,
+    "counts": {
+      "products": 453,
+      "product_variants": 411,
+      "product_images": 1140,
+      "users": 1,
+      "fragrance_profiles": 381,
+      "fragrance_profile_revisions": 762,
+      "fragrance_quiz_results": 11,
+      "fragrance_quiz_feedback": 3
+    },
+    "question_version": "preference-v1.2",
+    "enabled": true,
+    "http": {
+      "health": {
+        "status": 200,
+        "headers": {
+          "cache-control": "no-cache, private"
+        }
+      },
+      "quiz": {
+        "status": 200,
+        "headers": {
+          "cache-control": "max-age=0, no-store, private",
+          "x-robots-tag": "noindex, nofollow"
+        },
+        "stage_count": 0
+      }
+    },
+    "recent_errors": {
+      "since_utc": "2026-10-10T06:41:46+00:00",
+      "files_checked": 1,
+      "entries": 0
+    }
+  },
+  "production_after": {
+    "at": "2026-10-10T06:58:13+00:00",
+    "revision": "c8e653016ae5d3cfa5f6df2702e33d99deda5a1c",
+    "mode": "status",
+    "environment": "production",
+    "database_boundary_verified": true,
+    "counts": {
+      "products": 453,
+      "product_variants": 411,
+      "product_images": 1140,
+      "users": 1,
+      "fragrance_profiles": 381,
+      "fragrance_profile_revisions": 762,
+      "fragrance_quiz_results": 11,
+      "fragrance_quiz_feedback": 3
+    },
+    "question_version": "preference-v1.2",
+    "enabled": true,
+    "http": {
+      "health": {
+        "status": 200,
+        "headers": {
+          "cache-control": "no-cache, private"
+        }
+      },
+      "quiz": {
+        "status": 200,
+        "headers": {
+          "cache-control": "max-age=0, no-store, private",
+          "x-robots-tag": "noindex, nofollow"
+        },
+        "stage_count": 6
+      }
+    },
+    "recent_errors": {
+      "since_utc": "2026-10-10T06:55:36+00:00",
+      "files_checked": 1,
+      "entries": 0
+    }
+  },
+  "data_scope": {
+    "migrations": false,
+    "profile_rebuild": false,
+    "catalog_media_account_writes": false,
+    "flag_change": false,
+    "new_live_result_or_feedback_probe": false,
+    "row_counts_identical": true
+  },
+  "quota_recovery": {
+    "initial_candidate_extraction": "failed: Disk quota exceeded; active production unchanged",
+    "incomplete_app_removed_after_exact_path_and_archive_checksum_validation": true,
+    "inactive_blog_rehearsal_revision": "51fd5c22d05c405ea217a0d4b59f34aae0fc2d7e",
+    "vendor_archive": "blog-candidates/51fd5c22d05c405ea217a0d4b59f34aae0fc2d7e/vendor-recovery-ui53.tar.gz",
+    "vendor_archive_sha256": "526c40bd277907e3c30475338302d75e7a264a42d5bfa3106897be03ef1ec9e3",
+    "entries_verified": 12485,
+    "only_archived_inactive_vendor_extraction_removed": true,
+    "active_and_previous_releases_retained": true,
+    "current_ui_staging_app_removed_after_success": true,
+    "current_package_and_diagnostics_retained": true
+  },
+  "browser": {
+    "viewports": {
+      "390x844": {
+        "clientWidth": 375,
+        "scrollWidth": 375
+      },
+      "1440x900": {
+        "clientWidth": 1425,
+        "scrollWidth": 1425
+      },
+      "320x844": {
+        "clientWidth": 305,
+        "scrollWidth": 305
+      }
+    },
+    "six_live_stages_visible": true,
+    "keyboard_Enter_to_next": true,
+    "previous_stage_Budget_click": true,
+    "controls_unlock_after_transition": true,
+    "existing_answers_preserved": true,
+    "console_errors": 0,
+    "result_feedback": "not resubmitted on production; complete local UI flow and prior beta release proof remain separate",
+    "touch_or_iPhone_Safari": "not verified",
+    "temporary_tabs_closed_and_viewport_reset": true
+  },
+  "limits": [
+    "No sensory accuracy acceptance implied",
+    "Human/reference and genuine-touch gates remain pending under labelled PREF-03 beta",
+    "No release-retention policy/pruning of active or previous releases introduced",
+    "Operational checker required web context for footer composer; no application patch"
+  ],
+  "activated_at_utc": "2026-10-10T06:57:43Z"
+}
