@@ -42,7 +42,9 @@
         </ul>
     @endif
 
-    @if ($order->lifecycle !== 'cancelled' && $remainingCents > 0)
+    @if ($order->lifecycle === 'draft')
+        <p class="mt-3 text-sm text-gray-600">Pembayaran dicatat setelah pesanan website dikonfirmasi.@if ($order->payment_preference) Customer memilih: <strong>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</strong>.@endif</p>
+    @elseif ($order->lifecycle !== 'cancelled' && $remainingCents > 0)
         <form method="POST" action="{{ route('admin.orders.v2.payments', $order) }}" class="mt-3 space-y-3">
             @csrf {!! $hidden('pembayaran') !!}
             @if ($order->payment_preference)

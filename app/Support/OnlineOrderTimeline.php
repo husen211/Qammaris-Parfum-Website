@@ -28,7 +28,12 @@ final class OnlineOrderTimeline
                 default => 'pending',
             };
             $items[] = [
-                'title' => $stage === OnlineOrder::STAGE_AWAITING_CUSTOMER ? 'Pesanan dibuat' : $order->stageLabel($stage),
+                'title' => match (true) {
+                    $stage === OnlineOrder::STAGE_AWAITING_CUSTOMER => 'Pesanan dibuat',
+                    // ORD-04: a website checkout already has the recipient; this step is the store's confirmation.
+                    $stage === OnlineOrder::STAGE_DETAILS_RECEIVED && $order->source === 'website' && $order->created_by === null => 'Dikonfirmasi toko',
+                    default => $order->stageLabel($stage),
+                },
                 'description' => self::description($order, $stage, $status, $audience),
                 'time' => $status === 'completed' ? $event?->created_at : null,
                 'status' => $status,
@@ -54,7 +59,7 @@ final class OnlineOrderTimeline
     /** The latest advance into a stage, ignoring one later reverted by an admin correction. */
     private static function effectiveEvent($events, string $stage): ?OnlineOrderEvent
     {
-        $advance = $events->where('stage', $stage)->whereIn('kind', ['advance', 'created'])->last();
+        $advance = $events->where('stage', $stage)->whereIn('kind', ['advance', 'created', 'website_confirmed'])->last();
         $revert = $events->where('stage', $stage)->where('kind', 'revert')->last();
 
         return $advance && (! $revert || $revert->id < $advance->id) ? $advance : null;
@@ -66,6 +71,14 @@ final class OnlineOrderTimeline
         $jnt = $order->isV2() ? $order->fulfillment === 'intercity' : $order->courier === 'jnt';
         $courier = OnlineOrder::COURIERS[$order->isV2() ? $order->courier_provider : $order->courier] ?? 'kurir';
 
+        $websiteCheckout = $order->source === 'website' && $order->created_by === null;
+        if ($websiteCheckout && $stage === OnlineOrder::STAGE_DETAILS_RECEIVED) {
+            return match ($status) {
+                'completed' => 'Stok, ongkir, dan pembayaran sudah disepakati.',
+                'active' => 'Admin mengonfirmasi stok, ongkir, dan pembayaran lewat WhatsApp.',
+                default => null,
+            };
+        }
         if ($status === 'completed') {
             return match ($stage) {
                 OnlineOrder::STAGE_DETAILS_RECEIVED => $audience === 'customer' ? 'Data penerima sudah kami terima.' : null,

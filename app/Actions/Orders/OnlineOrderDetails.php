@@ -36,6 +36,9 @@ class OnlineOrderDetails
         if (! $order->customerLinkUsable()) {
             throw new InvalidOrderTransition('Link pesanan ini sudah tidak berlaku. Hubungi kami lewat WhatsApp.');
         }
+        if ($order->lifecycle === 'draft') {
+            throw new InvalidOrderTransition('Pesanan sedang menunggu konfirmasi. Sampaikan perubahan lewat WhatsApp.');
+        }
         if ($order->isV2() && OnlineOrderChangeRequests::customerMustRequest($order) && $order->lifecycle !== 'awaiting_customer') {
             $this->changeRequests->submit($order, array_intersect_key($details, array_flip(self::CUSTOMER_FIELDS)));
 

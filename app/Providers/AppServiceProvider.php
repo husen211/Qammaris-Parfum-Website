@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Models\Category;
 use App\Models\StoreInfo;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,6 +19,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // ORD-04: guest checkout creates orders; a few honest retries per minute, no bulk creation from one client.
+        RateLimiter::for('website-checkout', fn (Request $request) => [
+            Limit::perMinute(6)->by('checkout-min|'.$request->ip()),
+            Limit::perHour(30)->by('checkout-hour|'.$request->ip()),
+        ]);
+
         if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
             return;
         }

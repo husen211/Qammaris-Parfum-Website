@@ -8,12 +8,13 @@ use Illuminate\Support\Str;
 
 class OnlineOrderItem extends Model
 {
-    protected $fillable = ['product_id', 'variant_id', 'brand_name', 'product_name', 'volume', 'unit_price', 'quantity'];
+    protected $fillable = ['product_id', 'variant_id', 'brand_name', 'product_name', 'volume', 'unit_price', 'quantity', 'weight_grams'];
 
     protected $casts = [
         'volume' => 'integer',
         'unit_price' => 'decimal:2',
         'quantity' => 'integer',
+        'weight_grams' => 'integer',
     ];
 
     protected static function booted(): void

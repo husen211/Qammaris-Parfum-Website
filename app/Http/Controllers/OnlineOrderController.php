@@ -51,6 +51,7 @@ class OnlineOrderController extends Controller
             'timeline' => OnlineOrderTimeline::items($order, 'customer'),
             'locationUrl' => $locationUrl,
             'whatsappUrl' => $this->storeChatUrl($whatsApp, $order),
+            'checkoutWhatsappUrl' => $order->lifecycle === 'draft' ? $whatsApp->websiteOrderUrl($this->storeNumber(), $order) : null,
         ]));
     }
 

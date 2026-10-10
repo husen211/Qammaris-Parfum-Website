@@ -128,6 +128,12 @@ class AdminOnlineOrderV2Controller extends Controller
         }, 'Pembayaran dicatat.');
     }
 
+    /** ORD-04: Staff Order accepts a website checkout after the WhatsApp chat. */
+    public function confirmWebsite(Request $request, OnlineOrder $order): RedirectResponse
+    {
+        return $this->attempt($order, 'konfirmasi', fn () => $this->fulfillment->confirmWebsiteOrder($order, $this->revision($request), $this->actor($request)), 'Pesanan dikonfirmasi. Lanjutkan ke pembayaran.');
+    }
+
     public function startPreparation(Request $request, OnlineOrder $order): RedirectResponse
     {
         return $this->attempt($order, 'packing', fn () => $this->fulfillment->startPreparation($order, $this->revision($request), $this->actor($request)), 'Pesanan ditandai sedang disiapkan.');

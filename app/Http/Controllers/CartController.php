@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Orders\CreateOnlineOrder;
+use App\Exceptions\CheckoutChanged;
+use App\Exceptions\OnlineOrderRejected;
 use App\Http\Requests\Cart\AddToCartRequest;
 use App\Http\Requests\Cart\CheckoutRequest;
 use App\Http\Requests\Cart\UpdateCartRequest;
+use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StoreInfo;
 use App\Support\CatalogAvailability;
 use App\Support\InquiryWhatsApp;
 use App\Support\Rupiah;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
@@ -137,15 +142,28 @@ class CartController extends Controller
         }
         $checkoutQuote = $this->quote($items);
         session(['checkout_quote' => $checkoutQuote]);
+        $savesOrder = CheckoutRequest::savesOrder();
+        $checkoutKey = null;
+        if ($savesOrder) {
+            // One key per checkout attempt, kept across re-renders until an order uses it (idempotent submit).
+            $checkoutKey = session('checkout_key');
+            if (! is_string($checkoutKey) || OnlineOrder::where('checkout_key', $checkoutKey)->exists()) {
+                $checkoutKey = (string) Str::uuid();
+                session(['checkout_key' => $checkoutKey]);
+            }
+        }
         $subtotal = Rupiah::sum(array_column($items, 'line_total'));
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
 
-        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable'))
+        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey'))
             ->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
-    public function checkout(CheckoutRequest $request)
+    public function checkout(CheckoutRequest $request, CreateOnlineOrder $create)
     {
+        if (CheckoutRequest::savesOrder()) {
+            return $this->placeOrder($request, $create);
+        }
         $items = $this->resolveCartItems(session('cart', []));
         if (! $items || ! $this->canOrder($items)) {
             return redirect()->route('cart.index')->with('error', 'Tinjau keranjang: hanya produk Tersedia yang dapat dipesan.');
@@ -163,6 +181,59 @@ class CartController extends Controller
 
         // Opening the composer is not proof of delivery: retain the cart for retries.
         return redirect()->away($url)->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
+    }
+
+    /**
+     * ORD-04: the order is saved before WhatsApp opens, so a failed or unsent chat never loses it. The status link
+     * is the success page; it offers WhatsApp again. A replayed key (double tap, refresh, retry) shows the same order.
+     */
+    private function placeOrder(CheckoutRequest $request, CreateOnlineOrder $create)
+    {
+        $form = fn () => $request->safe()->except(['checkout_quote', 'checkout_key']);
+        $key = (string) $request->validated('checkout_key');
+        if (! hash_equals((string) session('checkout_key', ''), $key)) {
+            return $this->privateResponse(redirect()->route(session('cart') ? 'cart.checkout.show' : 'cart.index')->withInput($form())
+                ->with('error', 'Sesi checkout sudah berakhir. Periksa ringkasan pesanan, lalu kirim lagi.'));
+        }
+        if ($order = OnlineOrder::where('checkout_key', $key)->first()) {
+            return $this->placed($order->customer_token_encrypted);
+        }
+
+        $items = $this->resolveCartItems(session('cart', []));
+        if (! $items || ! $this->canOrder($items)) {
+            return redirect()->route('cart.index')->with('error', 'Tinjau keranjang: hanya produk Tersedia yang dapat dipesan.');
+        }
+        $quote = $request->validated('checkout_quote');
+        if (! hash_equals((string) session('checkout_quote', ''), $quote) || ! hash_equals($this->quote($items), $quote)) {
+            return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())
+                ->with('error', 'Harga atau isi keranjang berubah. Periksa ringkasan terbaru, lalu lanjutkan kembali.'));
+        }
+        $lines = [];
+        foreach ($items as $item) {
+            $lines[$item['id']] = ['quantity' => $item['quantity'], 'price' => $item['price']];
+        }
+
+        try {
+            [, $token] = $create->fromWebsiteCheckout($lines, $request->orderDetails(), $key);
+        } catch (CheckoutChanged $changed) {
+            return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())->with('error', $changed->getMessage()));
+        } catch (OnlineOrderRejected $rejected) {
+            return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())->with('error', $rejected->getMessage()));
+        }
+        session()->forget(['cart', 'checkout_quote']);
+
+        return $this->placed($token);
+    }
+
+    private function placed(string $token)
+    {
+        // Flash: the success page opens WhatsApp once by itself; reloads and the back button do not reopen it.
+        return $this->privateResponse(redirect()->route('orders.customer.show', $token)->with('checkout_placed', true));
+    }
+
+    private function privateResponse($response)
+    {
+        return $response->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
     private function canOrder(array $items): bool

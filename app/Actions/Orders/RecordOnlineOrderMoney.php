@@ -33,6 +33,10 @@ class RecordOnlineOrderMoney
             if ($order->lifecycle === 'cancelled') {
                 throw new OnlineOrderRejected('Pesanan yang dibatalkan tidak menerima pembayaran baru.');
             }
+            // ORD-04: a website checkout is not an agreed order until Staff Order confirms it.
+            if ($order->lifecycle === 'draft') {
+                throw new OnlineOrderRejected('Konfirmasi pesanan website dulu sebelum mencatat pembayaran.');
+            }
             if (! array_key_exists($method, OnlineOrder::PAYMENT_METHODS) || ($source !== null && ! in_array($source, [...self::CONFIRMATION_SOURCES, self::ADMIN_RECORDED], true))) {
                 throw new OnlineOrderRejected('Pilih metode dan sumber konfirmasi pembayaran yang valid.');
             }

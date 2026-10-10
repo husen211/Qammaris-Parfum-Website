@@ -42,7 +42,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
     Route::get('/checkout', [CartController::class, 'showCheckout'])->name('checkout.show');
-    Route::post('/checkout', [CartController::class, 'checkout'])->name('checkout');
+    Route::post('/checkout', [CartController::class, 'checkout'])->middleware('throttle:website-checkout')->name('checkout');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
 });
@@ -150,6 +150,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
         // V2 orders (ORD-02d): every action is a V2 domain operation; each form posts its revision.
         Route::prefix('orders/{order}/v2')->name('orders.v2.')->controller(AdminOnlineOrderV2Controller::class)->group(function () {
             Route::patch('details', 'updateDetails')->name('details');
+            Route::post('confirm-website', 'confirmWebsite')->name('confirm-website');
             Route::post('customer-link', 'regenerateCustomerLink')->name('customer-link');
             Route::post('payments', 'recordPayment')->name('payments');
             Route::post('preparation', 'startPreparation')->name('preparation');

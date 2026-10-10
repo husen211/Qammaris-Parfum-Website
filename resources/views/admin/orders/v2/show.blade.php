@@ -16,7 +16,7 @@
     $chip = 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold';
     $time = fn ($value) => $value?->timezone('Asia/Makassar')->locale('id')->translatedFormat('j M Y, H.i');
     $rp = fn (int $cents) => Rupiah::format(Rupiah::decimal($cents));
-    $open = in_array($order->lifecycle, ['awaiting_customer', 'active'], true);
+    $open = in_array($order->lifecycle, ['draft', 'awaiting_customer', 'active'], true);
     $active = $order->lifecycle === 'active';
     $pending = $order->handover_status === 'pending';
     $keep = $order->keepState();
@@ -33,7 +33,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ $order->code }}</h1>
             <span @class([$chip,
                 'bg-gray-900 text-white' => $order->lifecycle === 'active',
-                'bg-amber-100 text-amber-900' => $order->lifecycle === 'awaiting_customer',
+                'bg-amber-100 text-amber-900' => in_array($order->lifecycle, ['draft', 'awaiting_customer'], true),
                 'bg-green-100 text-green-800' => $order->lifecycle === 'completed',
                 'bg-red-100 text-red-800' => $order->lifecycle === 'cancelled'])>{{ OnlineOrderLabels::LIFECYCLE[$order->lifecycle] }}</span>
             @if ($queue && $order->lifecycle === 'active')<span class="{{ $chip }} bg-gray-100 text-gray-800">{{ OnlineOrderLabels::QUEUE[$queue] }}</span>@endif
@@ -90,6 +90,7 @@
         $isOpen = fn (string $section, bool $default = false) => $default || old('_section') === $section || session('order_notice.section') === $section;
         $stage = match (true) {
             ! $open => null,
+            $order->lifecycle === 'draft' => 'konfirmasi',
             $order->lifecycle === 'awaiting_customer' => 'link',
             $openIssues > 0 => 'kendala',
             $remainingCents > 0 => 'pembayaran',

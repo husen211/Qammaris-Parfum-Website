@@ -17,6 +17,10 @@
         @endif
     @endforeach
 
+    @if ($attention['website'] > 0 && $filter !== 'website')
+        <a href="{{ route('admin.orders.index', ['status' => 'website']) }}" class="flex min-h-11 items-center rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 hover:bg-amber-100" data-website-pending>{{ $attention['website'] }} pesanan website menunggu konfirmasi →</a>
+    @endif
+
     @if ($reimburseCount > 0 && $filter !== 'reimburse')
         <a href="{{ route('admin.orders.index', ['status' => 'reimburse']) }}" class="flex min-h-11 items-center rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 hover:bg-amber-100">
             {{ $reimburseCount }} talangan ongkir staf belum diganti →
@@ -51,7 +55,7 @@
                     <span class="flex flex-wrap gap-1">
                         @if ($order->isV2())
                             @php($queue = \App\Support\OnlineOrderState::queue($order, $order->open_issues_count))
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $order->lifecycle === 'cancelled' ? 'bg-red-50 text-red-800' : ($order->lifecycle === 'completed' ? 'bg-green-50 text-green-800' : 'bg-gray-100 text-gray-800') }}">{{ $queue ? \App\Support\OnlineOrderLabels::QUEUE[$queue] : \App\Support\OnlineOrderLabels::LIFECYCLE[$order->lifecycle] }}</span>
+                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $order->lifecycle === 'cancelled' ? 'bg-red-50 text-red-800' : ($order->lifecycle === 'completed' ? 'bg-green-50 text-green-800' : ($order->lifecycle === 'draft' ? 'bg-amber-100 text-amber-900' : 'bg-gray-100 text-gray-800')) }}">{{ $queue ? \App\Support\OnlineOrderLabels::QUEUE[$queue] : \App\Support\OnlineOrderLabels::LIFECYCLE[$order->lifecycle] }}</span>
                             @if ($order->payment_status !== 'paid' && $order->lifecycle === 'active')<span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">{{ \App\Support\OnlineOrderLabels::PAYMENT[$order->payment_status] }}</span>@endif
                             @if ($order->keep_status === 'active')<span class="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-900">Keep</span>@endif
                         @else

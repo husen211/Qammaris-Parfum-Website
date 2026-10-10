@@ -2,6 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Orders\CreateOnlineOrder;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -14,13 +19,14 @@ use Tests\TestCase;
  */
 class OrderMigrationsMariaDbTest extends TestCase
 {
-    /** ORD-02a … ORD-02e and contract r4.2, newest last. */
+    /** ORD-02a … ORD-02e, contract r4.2, ORD-03 and ORD-04, newest last. */
     private const ORD02 = [
         '2026_10_08_100001_add_admin_access_controls', '2026_10_08_200001_add_submission_token_to_online_orders',
         '2026_10_08_300001_add_order_state_dimensions_to_online_orders', '2026_10_09_000001_add_order_cutover_and_money_ledger',
         '2026_10_09_100001_add_order_issues_and_v2_operations', '2026_10_09_200001_create_customers_and_saved_addresses',
         '2026_10_09_300001_add_keep_adjustments_and_change_requests', '2026_10_09_400001_create_order_api_tables',
         '2026_10_09_500001_add_delivery_to_online_order_events', '2026_10_10_000001_add_payment_preference_to_online_orders',
+        '2026_10_10_100001_add_website_checkout_to_online_orders',
     ];
 
     protected function setUp(): void
@@ -65,6 +71,28 @@ class OrderMigrationsMariaDbTest extends TestCase
         Artisan::call('migrate', ['--force' => true]);
         $this->assertBackfilled($ids);
         $this->assertSame($before, $this->ord01Snapshot(), 'Re-running the migrations changes no ORD-01 value');
+    }
+
+    public function test_ord04_rollback_stops_instead_of_inventing_creators_for_guest_orders(): void
+    {
+        Artisan::call('migrate:fresh', ['--force' => true]);
+        config(['orders.v2_enabled' => true, 'orders.website_checkout' => true]);
+        $brand = Brand::create(['name' => 'E2E Brand Sintetis', 'is_active' => true]);
+        $product = Product::create(['brand_id' => $brand->id, 'category_id' => Category::create(['name' => 'EDP'])->id, 'name' => 'Rollback Sintetis',
+            'description' => 'Sintetis.', 'base_price' => 50000, 'gender' => 'Unisex', 'is_active' => true, 'availability_status' => 'available', 'availability_source' => 'qammaris_app']);
+        $variant = ProductVariant::create(['product_id' => $product->id, 'volume' => 50, 'price' => 50000, 'sku' => 'ORD04-RB', 'stock' => 1, 'is_active' => true]);
+        [$order] = app(CreateOnlineOrder::class)->fromWebsiteCheckout([$variant->id => ['quantity' => 1, 'price' => '50000.00']],
+            ['customer_name' => 'E2E Pembeli Sintetis', 'customer_phone' => '080000000101', 'fulfillment' => 'pickup', 'packaging' => 'paperbag', 'payment_preference' => 'qris'], (string) Str::uuid());
+        $this->assertNull($order->created_by);
+
+        try {
+            Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+            $this->fail('Rollback must stop while guest orders exist.');
+        } catch (\RuntimeException $stopped) {
+            $this->assertStringContainsString('rollback ORD-04 dihentikan', $stopped->getMessage());
+        }
+        $this->assertTrue(Schema::hasColumn('online_orders', 'checkout_key'));
+        $this->assertSame(1, DB::table('online_orders')->whereNull('created_by')->count());
     }
 
     /**

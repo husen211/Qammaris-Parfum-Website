@@ -26,6 +26,7 @@ class AdminOnlineOrderController extends Controller
 {
     public const FILTERS = [
         'active' => 'Aktif',
+        'website' => 'Menunggu konfirmasi website',
         'awaiting_customer' => 'Menunggu customer',
         'needs_payment' => 'Perlu dibayar',
         'needs_shipping' => 'Perlu dikirim/diambil',
@@ -50,6 +51,8 @@ class AdminOnlineOrderController extends Controller
 
         match ($filter) {
             'active' => $query->whereNotIn('stage', [OnlineOrder::STAGE_COMPLETED, OnlineOrder::STAGE_CANCELLED]),
+            'website' => $query->where('lifecycle', 'draft'),
+            'awaiting_customer' => $query->where('lifecycle', 'awaiting_customer'),
             'needs_payment' => $query->where('stage', OnlineOrder::STAGE_DETAILS_RECEIVED),
             'needs_shipping' => $query->where('stage', OnlineOrder::STAGE_PAID),
             'in_transit' => $query->where('stage', OnlineOrder::STAGE_SHIPPED),
@@ -76,6 +79,7 @@ class AdminOnlineOrderController extends Controller
                 'reconcile' => OnlineOrder::query()->where('refund_status', 'needs_reconciliation')->count(),
                 'refund' => OnlineOrder::query()->where('payment_status', 'refund_pending')->count(),
                 'issues' => OnlineOrder::query()->whereHas('issues', fn ($issues) => $issues->where('status', 'open'))->count(),
+                'website' => OnlineOrder::query()->where('lifecycle', 'draft')->count(),
             ],
         ]);
     }

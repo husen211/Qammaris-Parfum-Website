@@ -41,7 +41,7 @@ class AuthorizationServiceProvider extends ServiceProvider
             }
 
             return $has($user, [User::ROLE_STAFF_ORDER]) && config('orders.simple_ux') && $order->isV2()
-                && in_array($order->lifecycle, ['awaiting_customer', 'active'], true) && $order->handover_status === 'pending'
+                && in_array($order->lifecycle, ['draft', 'awaiting_customer', 'active'], true) && $order->handover_status === 'pending'
                 && OnlineOrderMoney::totals($order)['received'] === 0;
         });
         // Refund decisions, refund payouts, ledger reversals and reconciliation: Super Admin only (Owner 2026-10-09).

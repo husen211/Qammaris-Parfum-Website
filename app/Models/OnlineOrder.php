@@ -250,10 +250,10 @@ class OnlineOrder extends Model
         return $this->customer_name !== null && $this->fulfillment !== null;
     }
 
-    /** Customers may correct their own data until payment is confirmed. */
+    /** Customers may correct their own data until payment is confirmed; a website checkout waits for the chat (ORD-04). */
     public function customerCanEdit(): bool
     {
-        return in_array($this->stage, [self::STAGE_AWAITING_CUSTOMER, self::STAGE_DETAILS_RECEIVED], true);
+        return $this->lifecycle !== 'draft' && in_array($this->stage, [self::STAGE_AWAITING_CUSTOMER, self::STAGE_DETAILS_RECEIVED], true);
     }
 
     public function customerLinkUsable(): bool

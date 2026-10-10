@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 
@@ -75,6 +76,26 @@ final class InquiryWhatsApp
         $lines[] = 'Ongkir dan pembayaran dilanjutkan di WhatsApp.';
 
         return $this->url($number, implode("\n", $lines));
+    }
+
+    /**
+     * ORD-04: short message after a saved website checkout. The order already holds the recipient and address,
+     * so the chat only names the order for the admin to look up; no address or phone is repeated.
+     */
+    public function websiteOrderUrl(?string $number, OnlineOrder $order): ?string
+    {
+        $delivery = config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-';
+
+        return $this->url($number, implode("\n", [
+            'Halo Qammaris, saya baru memesan lewat website.',
+            '',
+            'Nomor pesanan: *'.$order->code.'*',
+            'Nama: '.$this->plainText((string) $order->customer_name),
+            'Pengiriman: '.$delivery,
+            'Subtotal produk: '.Rupiah::format($order->subtotal()),
+            '',
+            'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
+        ]));
     }
 
     public function availabilityLabel(string $availability): string

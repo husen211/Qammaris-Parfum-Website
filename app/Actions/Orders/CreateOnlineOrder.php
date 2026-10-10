@@ -2,12 +2,14 @@
 
 namespace App\Actions\Orders;
 
+use App\Exceptions\CheckoutChanged;
 use App\Exceptions\DuplicateOnlineOrderSubmission;
 use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderValidationFailed;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\OnlineOrder;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Support\PhoneNumber;
@@ -100,20 +102,7 @@ class CreateOnlineOrder
             $order->save();
 
             foreach ($lines as $variantId => $quantity) {
-                $variant = $variants->get($variantId);
-                if (Rupiah::minorUnits($variant->price) <= 0) {
-                    throw new OnlineOrderRejected('Produk '.$variant->product->name.' belum memiliki harga yang valid.');
-                }
-                // The agreed price is a snapshot; later catalog changes never rewrite this order.
-                $order->items()->create([
-                    'product_id' => $variant->product_id,
-                    'variant_id' => $variant->id,
-                    'brand_name' => $variant->product->brand?->name ?? 'Brand belum diisi',
-                    'product_name' => $variant->product->name,
-                    'volume' => $variant->volume,
-                    'unit_price' => $variant->price,
-                    'quantity' => $quantity,
-                ]);
+                $this->addLine($order, $variants->get($variantId), $quantity);
             }
             $order->events()->create(['kind' => 'created', 'stage' => OnlineOrder::STAGE_AWAITING_CUSTOMER, 'actor_type' => 'admin', 'actor_user_id' => $actor->id]);
 
@@ -144,6 +133,105 @@ class CreateOnlineOrder
 
             return [$order->fresh(), $customerToken, $staffToken];
         });
+    }
+
+    /**
+     * ORD-04: guest order from the website cart. Nobody is signed in, so the order has no creator; the event names
+     * the customer. It starts as `draft` ("Menunggu konfirmasi website"): no App queue and no payment until Staff
+     * Order confirms it after the chat. The catalog is checked again here: every line must still be published,
+     * available and at the unit price the customer reviewed. A repeated checkout key returns the first order.
+     *
+     * @param  array<int, array{quantity: int, price: string}>  $lines  variant ID => reviewed quantity and unit price
+     * @param  array<string, ?string>  $details  recipient, delivery, packaging, payment preference
+     * @return array{0: OnlineOrder, 1: string, 2: bool} order, raw customer token, created now (false: replayed key)
+     *
+     * @throws CheckoutChanged
+     */
+    public function fromWebsiteCheckout(array $lines, array $details, string $checkoutKey): array
+    {
+        if (! config('orders.website_checkout') || ! config('orders.v2_enabled')) {
+            throw new OnlineOrderRejected('Checkout website belum aktif. Silakan pesan lewat WhatsApp.');
+        }
+        if ($lines === [] || ! Str::isUuid($checkoutKey)) {
+            throw new OnlineOrderRejected('Keranjang kosong atau sesi checkout tidak valid.');
+        }
+        if ($existing = $this->checkoutReplay($checkoutKey)) {
+            return $existing;
+        }
+
+        try {
+            return DB::transaction(function () use ($lines, $details, $checkoutKey): array {
+                $variants = ProductVariant::with('product.brand')->active()
+                    ->whereHas('product', fn ($query) => $query->published())
+                    ->whereIn('id', array_keys($lines))->get()->keyBy('id');
+                foreach ($lines as $variantId => $line) {
+                    $variant = $variants->get($variantId);
+                    if (! $variant || $variant->product->effective_availability !== Product::AVAILABILITY_AVAILABLE) {
+                        throw new CheckoutChanged('Ada produk yang sudah tidak tersedia. Periksa keranjang Anda.');
+                    }
+                    if (Rupiah::minorUnits($variant->price) <= 0 || Rupiah::minorUnits($variant->price) !== Rupiah::minorUnits($line['price'])) {
+                        throw new CheckoutChanged('Harga produk berubah. Periksa ringkasan terbaru, lalu kirim lagi.');
+                    }
+                }
+
+                $customerToken = Str::random(40);
+                $staffToken = Str::random(40);
+                $order = new OnlineOrder;
+                $order->customer_token_hash = OnlineOrder::tokenHash($customerToken);
+                $order->customer_token_encrypted = $customerToken;
+                $order->staff_token_hash = OnlineOrder::tokenHash($staffToken);
+                $order->staff_token_encrypted = $staffToken;
+                $order->customer_link_expires_at = now()->addDays(OnlineOrder::CUSTOMER_LINK_DAYS);
+                $order->created_by = null;
+                $order->checkout_key = $checkoutKey;
+                $order->source = 'website';
+                $order->state_model = OnlineOrder::STATE_V2;
+                $order->lifecycle = 'draft';
+                $order->fill(array_intersect_key($details, array_flip(['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'packaging', 'customer_note'])));
+                $order->district = $details['district'] ?? null;
+                $order->subdistrict = $details['subdistrict'] ?? null;
+                $order->payment_preference = $details['payment_preference'] ?? null;
+                $order->save();
+                $order->code = 'QAM-'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT);
+                $order->save();
+                foreach ($lines as $variantId => $line) {
+                    $this->addLine($order, $variants->get($variantId), $line['quantity']);
+                }
+                $order->events()->create(['kind' => 'created', 'stage' => $order->stage, 'actor_type' => 'customer', 'source' => 'customer', 'note' => 'Checkout website']);
+
+                return [$order->fresh(), $customerToken, true];
+            });
+        } catch (UniqueConstraintViolationException $error) {
+            // A double tap raced the first request; report the order that won.
+            return $this->checkoutReplay($checkoutKey) ?? throw $error;
+        }
+    }
+
+    /** @return array{0: OnlineOrder, 1: string, 2: bool}|null */
+    private function checkoutReplay(string $checkoutKey): ?array
+    {
+        $order = OnlineOrder::where('checkout_key', $checkoutKey)->first();
+
+        return $order ? [$order, $order->customer_token_encrypted, false] : null;
+    }
+
+    /** The agreed price is a snapshot; later catalog changes never rewrite this order. */
+    private function addLine(OnlineOrder $order, ProductVariant $variant, int $quantity): void
+    {
+        if (Rupiah::minorUnits($variant->price) <= 0) {
+            throw new OnlineOrderRejected('Produk '.$variant->product->name.' belum memiliki harga yang valid.');
+        }
+        $order->items()->create([
+            'product_id' => $variant->product_id,
+            'variant_id' => $variant->id,
+            'brand_name' => $variant->product->brand?->name ?? 'Brand belum diisi',
+            'product_name' => $variant->product->name,
+            'volume' => $variant->volume,
+            'unit_price' => $variant->price,
+            'quantity' => $quantity,
+            // Unknown weight stays null: phase 2 needs real weights, never an assumed 1 kg.
+            'weight_grams' => $variant->weight_grams,
+        ]);
     }
 
     /** @return array{0: ?Customer, 1: ?CustomerAddress} */

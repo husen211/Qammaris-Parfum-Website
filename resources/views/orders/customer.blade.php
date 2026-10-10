@@ -18,8 +18,26 @@
     <div class="mx-auto max-w-xl">
         <p class="text-sm text-gray-600">Pesanan {{ $order->code }}</p>
         <h1 id="order-title" class="mt-1 font-mayluxa text-3xl text-brand-black md:text-4xl">
-            {{ $editing ? ($order->stage === 'awaiting_customer' ? 'Lengkapi data pesanan' : 'Ubah data pesanan') : 'Status pesanan' }}
+            {{ $editing ? ($order->stage === 'awaiting_customer' ? 'Lengkapi data pesanan' : 'Ubah data pesanan') : ($order->lifecycle === 'draft' ? 'Pesanan tersimpan' : 'Status pesanan') }}
         </h1>
+
+        {{-- ORD-04: the order exists before WhatsApp opens. Opening WhatsApp is not a confirmation; the store confirms. --}}
+        @if ($order->lifecycle === 'draft')
+            <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="next-title" data-checkout-next>
+                <h2 id="next-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim pesan WhatsApp</h2>
+                <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok, ongkir, dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
+                @if ($checkoutWhatsappUrl)
+                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ session('checkout_placed') ? 'Buka WhatsApp' : 'Buka WhatsApp lagi' }}</a>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan tombol di atas lagi. Pesanan Anda tetap tersimpan.</p>
+                @else
+                    <p class="mt-2 text-sm leading-6 text-gray-700">Kontak WhatsApp toko belum tersedia. Pesanan Anda tetap tersimpan; simpan halaman ini dan hubungi toko.</p>
+                @endif
+                @if ($order->fulfillment === 'local_delivery')
+                    <p class="mt-3 text-sm leading-6 text-gray-600">Pengiriman Kota Palu: kirim juga Sharelok di chat yang sama supaya kurir tepat sampai.</p>
+                @endif
+                <p class="mt-3 text-sm leading-6 text-gray-600">Simpan halaman ini untuk melihat status pesanan.</p>
+            </section>
+        @endif
 
         @if (session('success'))
             <div role="status" class="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-base text-emerald-900">{{ session('success') }}</div>
@@ -54,6 +72,10 @@
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
                     <span class="text-sm text-gray-600">Total pembayaran</span>
                     <strong class="text-lg tabular-nums">{{ format_rupiah($order->customerTotal()) }}</strong>
+                </div>
+            @elseif ($order->lifecycle === 'draft' && $order->fulfillment !== 'pickup')
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
+                    <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
                 </div>
             @else
                 <p class="mt-2 text-sm leading-6 text-gray-600">Ongkir dan pembayaran dikonfirmasi admin.</p>
@@ -178,7 +200,7 @@
                 </form>
             @endif
 
-            @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
+            @if ($locationUrl && $order->lifecycle !== 'draft' && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="location-title">
                     <h2 id="location-title" class="text-base font-semibold text-brand-black">Kirim Sharelok</h2>
                     <p class="mt-1 text-sm leading-6 text-gray-700">Supaya kurir tepat sampai ke lokasi Anda.</p>
@@ -197,8 +219,8 @@
                     <dl class="mt-3 space-y-2 text-base">
                         <div><dt class="text-sm text-gray-600">Nama</dt><dd class="break-words">{{ $order->customer_name }}</dd></div>
                         <div><dt class="text-sm text-gray-600">Nomor HP</dt><dd>{{ $order->customer_phone }}</dd></div>
-                        <div><dt class="text-sm text-gray-600">Cara menerima</dt><dd>{{ \App\Models\OnlineOrder::FULFILLMENTS[$order->fulfillment] ?? '-' }}</dd></div>
-                        @if ($order->address)<div><dt class="text-sm text-gray-600">Alamat</dt><dd class="break-words">{{ $order->address }}@if ($order->postcode) {{ $order->postcode }}@endif</dd></div>@endif
+                        <div><dt class="text-sm text-gray-600">Cara menerima</dt><dd>{{ ($order->source === 'website' && $order->created_by === null ? (config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? null) : null) ?? \App\Models\OnlineOrder::FULFILLMENTS[$order->fulfillment] ?? '-' }}</dd></div>
+                        @if ($order->address)<div><dt class="text-sm text-gray-600">Alamat</dt><dd class="break-words">{{ implode(', ', array_filter([$order->address, $order->subdistrict, $order->district])) }}{{ $order->postcode ? ' '.$order->postcode : '' }}</dd></div>@endif
                         <div><dt class="text-sm text-gray-600">Paperbag</dt><dd>{{ \App\Models\OnlineOrder::PACKAGING[$order->packaging] ?? '-' }}</dd></div>
                         @if ($order->payment_preference)<div><dt class="text-sm text-gray-600">Pembayaran</dt><dd>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</dd></div>@endif
                         @if ($order->customer_note)<div><dt class="text-sm text-gray-600">Catatan</dt><dd class="break-words">{{ $order->customer_note }}</dd></div>@endif
@@ -207,6 +229,8 @@
                         <p class="mt-4 border-l-4 border-brand-gold bg-[#FAF8F3] p-3 text-sm leading-6 text-gray-800">Permintaan perubahan Anda sedang ditinjau toko.</p>
                     @elseif ($canEdit)
                         <a href="{{ route('orders.customer.show', ['token' => $token, 'ubah' => 1]) }}" class="mt-4 inline-flex min-h-12 items-center border border-brand-black px-5 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ $requestsChange ? 'Ajukan perubahan' : 'Ubah data' }}</a>
+                    @elseif ($order->lifecycle === 'draft')
+                        <p class="mt-4 text-sm leading-6 text-gray-600">Ada yang perlu diubah? Sampaikan lewat WhatsApp saat konfirmasi pesanan.</p>
                     @else
                         <p class="mt-4 text-sm leading-6 text-gray-600">Data sudah dikunci setelah pembayaran dikonfirmasi. Untuk perubahan, hubungi kami lewat WhatsApp.</p>
                     @endif
@@ -224,6 +248,11 @@
 @unless ($editing)
 @push('scripts')
 <script>
+// ORD-04: open WhatsApp once right after checkout (flash only); reloads and Back keep the page without reopening it.
+(() => {
+    const link = document.querySelector('[data-checkout-whatsapp][data-auto-open]');
+    if (link) window.setTimeout(() => window.location.assign(link.href), 600);
+})();
 document.querySelector('[data-received-form]')?.addEventListener('submit', (event) => {
     const button = event.currentTarget.querySelector('button');
     button.disabled = true;

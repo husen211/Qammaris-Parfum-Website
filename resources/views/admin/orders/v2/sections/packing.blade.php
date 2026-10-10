@@ -12,7 +12,7 @@
             @foreach ($order->items as $item)<li class="flex justify-between gap-3"><span>{{ $item->label() }}</span><span class="font-semibold">✓ {{ $item->quantity }}</span></li>@endforeach
         </ul>
     @elseif (! $active)
-        <p class="mt-3 text-sm text-gray-600">{{ $order->lifecycle === 'awaiting_customer' ? 'Bisa dikerjakan setelah data customer lengkap.' : 'Pesanan sudah ditutup.' }}</p>
+        <p class="mt-3 text-sm text-gray-600">{{ match ($order->lifecycle) { 'draft' => 'Bisa dikerjakan setelah pesanan website dikonfirmasi.', 'awaiting_customer' => 'Bisa dikerjakan setelah data customer lengkap.', default => 'Pesanan sudah ditutup.' } }}</p>
     @else
         <form method="POST" action="{{ route('admin.orders.v2.pack', $order) }}" class="mt-3 space-y-2" data-pack-form>
             @csrf {!! $hidden('packing') !!}

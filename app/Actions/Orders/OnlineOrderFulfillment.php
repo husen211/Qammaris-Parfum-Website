@@ -530,6 +530,26 @@ class OnlineOrderFulfillment
     }
 
     /**
+     * ORD-04: Staff Order confirms a website checkout after the WhatsApp chat (stock, ongkir, payment agreed).
+     * Only then does the order become active work for payment, packing and the App queue. A Website admin step:
+     * opening WhatsApp, the customer or the App never confirms.
+     */
+    public function confirmWebsiteOrder(OnlineOrder $order, int $revision, OrderActor $actor): OnlineOrder
+    {
+        if (! $actor->user) {
+            throw new OrderActionNotAllowed('Pesanan website dikonfirmasi oleh admin Website.');
+        }
+
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order): void {
+            if ($order->lifecycle !== 'draft') {
+                throw new InvalidOrderTransition('Hanya pesanan website yang menunggu konfirmasi yang bisa dikonfirmasi.');
+            }
+            $order->lifecycle = 'active';
+            $this->record('website_confirmed', 'Pesanan website dikonfirmasi');
+        });
+    }
+
+    /**
      * Staff Order cancels only orders without any money and not handed over (D4). If money was received, a
      * Super Admin must state how much is returned in the same step (ADR-040); nothing is assumed.
      */

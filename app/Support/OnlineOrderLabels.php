@@ -19,7 +19,7 @@ final class OnlineOrderLabels
     ];
 
     public const LIFECYCLE = [
-        'draft' => 'Draf',
+        'draft' => 'Menunggu konfirmasi website',
         'awaiting_customer' => 'Menunggu data customer',
         'active' => 'Aktif',
         'completed' => 'Selesai',
@@ -106,6 +106,7 @@ final class OnlineOrderLabels
             $order->lifecycle === 'cancelled' => null,
             $order->refund_status === 'needs_reconciliation' => 'Super Admin perlu merekonsiliasi pembayaran.',
             in_array($order->refund_status, ['pending', 'partial'], true) => 'Ada refund yang belum dibayar.',
+            $order->lifecycle === 'draft' => 'Cek chat WhatsApp customer, isi ongkir, lalu konfirmasi pesanan website.',
             $order->lifecycle === 'awaiting_customer' => 'Kirim link ke customer, atau lengkapi data di bagian Detail.',
             $openIssues > 0 => 'Selesaikan kendala dulu.',
             $order->keepState() === 'expired' => 'Keep sudah lewat batas: hubungi customer, perpanjang, atau lepas.',
