@@ -302,6 +302,64 @@ class FragrancePreferenceEngineTest extends TestCase
         $this->assertStringNotContainsString('Sebagian konteks', implode(' ', $full['limitations']));
     }
 
+    public function test_explicit_projection_conflict_ranks_below_unknown_without_changing_fixed_aroma_weight(): void
+    {
+        $strong = $this->row(1, ['description' => 'Projection: Strong']);
+        $unknown = $this->row(2);
+        $medium = $this->row(3, ['description' => 'Projection: Medium']);
+        $result = $this->engine->recommend($this->answers(['projection' => 'close']), [$strong, $unknown, $medium]);
+        $this->assertSame([2, 3, 1], $this->ids($result));
+        $this->assertSame(0, $result['main'][0]['score_components_internal']['projection']);
+        $this->assertSame(-5000, $result['main'][1]['score_components_internal']['projection']);
+        $this->assertSame(-10000, $result['main'][2]['score_components_internal']['projection']);
+        foreach ($result['main'] as $choice) {
+            $this->assertSame(40000, $choice['score_components_internal']['aroma']);
+        }
+        $this->assertStringContainsString('belum mendukung', implode(' ', $result['main'][2]['limitations']));
+        $this->assertNotContains('projection', array_column($result['main'][2]['reasons'], 'code'));
+    }
+
+    public function test_sweetness_conflict_is_symmetric_and_unanswered_levels_have_no_weight(): void
+    {
+        $light = $this->row(1, ['description' => 'Kemanisan: Ringan']);
+        $medium = $this->row(2, ['description' => 'Kemanisan: Sedang']);
+        $sweet = $this->row(3, ['description' => 'Kemanisan: Manis']);
+        $answers = $this->answers(['sweetness' => 'light']);
+        $result = $this->engine->recommend($answers, [$sweet, $medium, $light]);
+        $this->assertSame([1, 2, 3], $this->ids($result));
+        $this->assertSame([15000, -7500, -15000], array_column(array_column($result['main'], 'score_components_internal'), 'sweetness'));
+        $reverse = $this->engine->recommend($this->answers(['sweetness' => 'sweet']), [$light, $medium, $sweet]);
+        $this->assertSame([3, 2, 1], $this->ids($reverse));
+        foreach ($this->engine->recommend($this->answers(), [$light, $medium, $sweet])['main'] as $choice) {
+            $this->assertSame(0, $choice['score_components_internal']['sweetness']);
+        }
+    }
+
+    public function test_longevity_conflict_requires_a_known_upper_bound_below_customer_need(): void
+    {
+        $short = $this->row(1, ['description' => 'Ketahanan: 4-6 jam']);
+        $crossing = $this->row(2, ['description' => 'Ketahanan: 6-10 jam']);
+        $long = $this->row(3, ['description' => 'Ketahanan: 8-10 jam']);
+        $result = $this->engine->recommend($this->answers(['longevity' => 'all_day']), [$short, $crossing, $long]);
+        $this->assertSame([3, 2, 1], $this->ids($result));
+        $this->assertSame([10000, 0, -10000], array_column(array_column($result['main'], 'score_components_internal'), 'longevity'));
+        $openRange = $this->row(4, ['description' => 'Ketahanan: 6 jam+']);
+        $this->assertSame(0, $this->engine->recommend($this->answers(['longevity' => 'all_day']), [$openRange])['main'][0]['score_components_internal']['longevity']);
+        $this->assertSame(10000, $this->engine->recommend($this->answers(['longevity' => 'few_hours']), [$short])['main'][0]['score_components_internal']['longevity']);
+    }
+
+    public function test_nonpositive_overall_fit_is_not_padded_into_results_or_alternatives(): void
+    {
+        $conflict = $this->row(1, ['description' => "Kemanisan: Manis\nProjection: Strong\nKetahanan: 1-2 jam", 'notes' => ['top' => ['Bergamot'], 'middle' => ['Rose'], 'base' => ['Musk']]]);
+        $answers = $this->answers(['likes' => ['citrus', 'aquatic', 'fruit'], 'sweetness' => 'light', 'projection' => 'close', 'longevity' => 'all_day']);
+        $result = $this->engine->recommend($answers, [$conflict]);
+        $this->assertTrue($result['empty']);
+        $this->assertSame([], $result['main']);
+        $this->assertSame([], $result['alternative']);
+        $exploration = $this->row(2, ['description' => "Penggunaan: Indoor\nProjection: Strong"]);
+        $this->assertTrue($this->engine->recommend($this->answers(['likes' => [], 'environment' => 'ac', 'projection' => 'close']), [$exploration])['empty']);
+    }
+
     public function test_input_rejects_unlisted_fields_non_integer_budget_and_unknown_families(): void
     {
         foreach ([['age' => 30], ['budget_max' => '200000'], ['likes' => ['unlisted']], ['avoid' => [['nested']]], ['likes' => ['fruit', 'wood', 'citrus', 'oud']]] as $change) {

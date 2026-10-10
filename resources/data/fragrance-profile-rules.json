@@ -1,6 +1,6 @@
 {
   "schema": "qammaris-fragrance-profile-rules-v1",
-  "version": "pref-02.2",
+  "version": "pref-02.3",
   "status": "provisional_not_human_calibrated",
   "labels": {
     "citrus": "Citrus/segar",
@@ -371,5 +371,26 @@
     "explicit_catalog_or_review": 1,
     "inferred_exact_notes": 0.8,
     "status": "provisional_fixed_rule_not_human_calibrated"
+  },
+  "fit_rules": {
+    "status": "provisional_catalog_consistency_rule_not_human_calibrated",
+    "ordinal_levels": {
+      "sweetness": [
+        "light",
+        "medium",
+        "sweet"
+      ],
+      "projection": [
+        "close",
+        "medium",
+        "strong"
+      ]
+    },
+    "exact_level": "positive full attribute weight",
+    "one_level_conflict": "negative half attribute weight",
+    "two_level_conflict": "negative full attribute weight",
+    "unknown_or_unanswered": "zero; fixed weights, no denominator shrink",
+    "longevity": "min >= requested threshold: +10; known max < threshold: -10; crossing/unknown range: 0",
+    "minimum_total": "Strictly positive total and existing aroma/context support; no filling nonpositive candidates."
   }
 }

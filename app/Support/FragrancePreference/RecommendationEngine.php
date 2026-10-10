@@ -7,7 +7,7 @@ use InvalidArgumentException;
 
 final class RecommendationEngine
 {
-    public const VERSION = 'pref-02.2-provisional';
+    public const VERSION = 'pref-02.3-provisional';
 
     private const WEIGHTS = ['aroma' => 50, 'sweetness' => 15, 'projection' => 10, 'longevity' => 10, 'context' => 10, 'gender' => 5];
 
@@ -45,7 +45,7 @@ final class RecommendationEngine
             }
             $components = $this->score($answers, $row, $favoriteFamilies);
             // No padding: personal choices need aroma support; exploration needs answered context support.
-            if ((! $exploration && $components['aroma'] === 0) || ($exploration && $components['context'] === 0)) {
+            if (array_sum($components) <= 0 || (! $exploration && $components['aroma'] === 0) || ($exploration && $components['context'] === 0)) {
                 continue;
             }
             $ranked[] = $this->result($row, $answers, $components, $exploration, $favoriteFamilies);
@@ -134,14 +134,33 @@ final class RecommendationEngine
         };
         // Fixed maxima, never divide by the number of known product attributes.
         $score['aroma'] = (int) floor(1000 * ($likes ? (($favorite ? 45 : 50) * $overlap($likes) + ($overlap($likes) > 0 ? 5 * $overlap($favorite) : 0)) : 50 * $overlap($favorite)));
-        foreach (['sweetness', 'projection'] as $key) {
-            if (! in_array($answers[$key], ['any', 'unknown'], true) && $a[$key] !== null && ! empty($row['profile']['evidence'][$key]) && $answers[$key] === $a[$key]) {
-                $score[$key] = self::WEIGHTS[$key] * 1000;
+        foreach (['sweetness' => ['light', 'medium', 'sweet'], 'projection' => ['close', 'medium', 'strong']] as $key => $levels) {
+            if (in_array($answers[$key], ['any', 'unknown'], true) || $a[$key] === null || empty($row['profile']['evidence'][$key])) {
+                continue;
             }
+            $requestedLevel = array_search($answers[$key], $levels, true);
+            $catalogLevel = array_search($a[$key], $levels, true);
+            if ($requestedLevel === false || $catalogLevel === false) {
+                continue;
+            }
+            $distance = abs($requestedLevel - $catalogLevel);
+            // Unknown earns zero; explicit conflicting levels are a compromise, not another unknown.
+            $score[$key] = $distance === 0 ? self::WEIGHTS[$key] * 1000 : -self::WEIGHTS[$key] * 500 * $distance;
         }
+        $requiredHours = match ($answers['longevity']) {
+            'few_hours' => 3,
+            'all_day' => 8,
+            default => null,
+        };
         $minHours = $a['longevity']['min_hours'] ?? null;
-        if ($minHours !== null && ! empty($row['profile']['evidence']['longevity']) && (($answers['longevity'] === 'few_hours' && $minHours >= 3) || ($answers['longevity'] === 'all_day' && $minHours >= 8))) {
-            $score['longevity'] = self::WEIGHTS['longevity'] * 1000;
+        $maxHours = $a['longevity']['max_hours'] ?? null;
+        if ($requiredHours !== null && $minHours !== null && ! empty($row['profile']['evidence']['longevity'])) {
+            if ($minHours >= $requiredHours) {
+                $score['longevity'] = self::WEIGHTS['longevity'] * 1000;
+            } elseif ($maxHours !== null && $maxHours < $requiredHours) {
+                $score['longevity'] = -self::WEIGHTS['longevity'] * 1000;
+            }
+            // A range crossing the requested threshold does not establish either support or conflict.
         }
         $contexts = array_values(array_filter([$answers['use'], $answers['environment']], fn ($v) => $v !== 'any'));
         if ($contexts && ! empty($row['profile']['evidence']['context'])) {
@@ -179,7 +198,7 @@ final class RecommendationEngine
             $requested = $key === 'context' ? ($answers['use'] !== 'any' || $answers['environment'] !== 'any') : ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true);
             if ($requested && empty($attributes[$key])) {
                 $limitations[] = 'Data '.$this->attributeLabel($key).' belum diketahui.';
-            } elseif (in_array($key, ['sweetness', 'projection', 'longevity'], true) && ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true) && $components[$key] === 0) {
+            } elseif (in_array($key, ['sweetness', 'projection', 'longevity'], true) && ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true) && $components[$key] <= 0) {
                 $limitations[] = 'Data '.$this->attributeLabel($key).' belum mendukung kebutuhan yang dipilih.';
             } elseif ($key === 'context' && $requested && $components[$key] < 10000) {
                 $limitations[] = 'Sebagian konteks pemakaian yang dipilih belum didukung data katalog.';
