@@ -1,0 +1,365 @@
+{
+  "schema": "qammaris-fragrance-profile-rules-v1",
+  "version": "pref-02.1",
+  "status": "provisional_not_human_calibrated",
+  "labels": {
+    "citrus": "Citrus/segar",
+    "aquatic": "Aquatic",
+    "green_herbal": "Hijau/herbal",
+    "fruit": "Buah",
+    "floral": "Bunga",
+    "wood": "Kayu",
+    "gourmand": "Gourmand",
+    "amber_resin": "Amber/resin",
+    "oud": "Oud",
+    "leather_smoky": "Leather/asap",
+    "musk": "Musk",
+    "powdery": "Powdery"
+  },
+  "note_families": {
+    "citrus": [
+      "bergamot",
+      "bitter orange",
+      "blood orange",
+      "citron",
+      "citrus accord",
+      "clementine",
+      "grapefruit",
+      "kumquat",
+      "lemon",
+      "limau indonesia",
+      "lime",
+      "mandarin",
+      "orange",
+      "yuzu"
+    ],
+    "aquatic": [
+      "aquatic accord",
+      "marine accord",
+      "sea salt",
+      "seaweed",
+      "calone"
+    ],
+    "green_herbal": [
+      "basil",
+      "black tea",
+      "green accord",
+      "green tea",
+      "white tea",
+      "white tea leaves",
+      "tea",
+      "tea leaves",
+      "jasmine tea",
+      "matcha",
+      "mate leaf",
+      "mint",
+      "rosemary",
+      "sage",
+      "thyme",
+      "lavender",
+      "artemisia",
+      "wormwood",
+      "galbanum",
+      "tomato leaf",
+      "violet leaf",
+      "fig leaf",
+      "verbena"
+    ],
+    "fruit": [
+      "apple",
+      "apricot",
+      "berries",
+      "black cherry",
+      "blackberry",
+      "blackcurrant",
+      "blueberry",
+      "charentais",
+      "cherry",
+      "coconut",
+      "dates",
+      "dragon fruit",
+      "fig",
+      "fruity accord",
+      "grapes",
+      "lychee",
+      "mango",
+      "melon",
+      "muscat grapes",
+      "nectarine",
+      "passion fruit",
+      "passionfruit",
+      "peach",
+      "pear",
+      "pineapple",
+      "plum",
+      "pomegranate",
+      "raspberry",
+      "red berries",
+      "red currant",
+      "rhubarb",
+      "sapodilla",
+      "soursop",
+      "strawberry",
+      "watermelon"
+    ],
+    "floral": [
+      "apple blossom",
+      "carnation",
+      "chamomile",
+      "cherry blossom",
+      "cotton flower",
+      "cyclamen",
+      "daffodils",
+      "floral accord",
+      "frangipani",
+      "freesia",
+      "gardenia",
+      "geranium",
+      "grapefruit blossom",
+      "heliotrope",
+      "hibiscus",
+      "honeysuckle",
+      "hyacinth",
+      "iris",
+      "jasmine",
+      "lilac",
+      "lily",
+      "lily of the valley",
+      "lotus",
+      "lychee blossom",
+      "magnolia",
+      "marigold",
+      "mimosa",
+      "narcissus",
+      "neroli",
+      "olive flowers",
+      "orange blossom",
+      "orchid",
+      "orris",
+      "osmanthus",
+      "peach blossom",
+      "peony",
+      "rose",
+      "rose geranium",
+      "tagetes",
+      "tuberose",
+      "violet",
+      "water lily",
+      "ylang ylang"
+    ],
+    "wood": [
+      "akigalawood",
+      "amberwood",
+      "bark",
+      "birch",
+      "balsam fir",
+      "cashmere wood",
+      "cedar",
+      "cypress",
+      "driftwood",
+      "fig tree",
+      "guaiac wood",
+      "mahogany",
+      "oak",
+      "oakwood",
+      "olive wood",
+      "palo santo",
+      "papyrus",
+      "patchouli",
+      "rosewood",
+      "sandalwood",
+      "vetiver",
+      "woody accord"
+    ],
+    "gourmand": [
+      "biscuit",
+      "brown sugar",
+      "cacao",
+      "candied fruit",
+      "candy apple",
+      "cane sugar",
+      "caramel",
+      "chocolate",
+      "coconut milk",
+      "coffee",
+      "cookie dough",
+      "dark chocolate",
+      "dulce de leche",
+      "gourmand accord",
+      "honey",
+      "ice cream",
+      "icing pink",
+      "knafeh kunafa",
+      "marshmallow",
+      "milk",
+      "panna cotta",
+      "peach cream",
+      "praline",
+      "sidr honey",
+      "strawberry candy",
+      "sugar",
+      "sugar cane",
+      "toffee",
+      "whipped cream"
+    ],
+    "amber_resin": [
+      "amber",
+      "amber accord",
+      "balsam",
+      "balsamic accord",
+      "benzoin",
+      "cistus",
+      "cistus absolute",
+      "elemi",
+      "labdanum",
+      "labdanum resin",
+      "myrrh",
+      "peru balsam",
+      "resin"
+    ],
+    "oud": [
+      "oud"
+    ],
+    "leather_smoky": [
+      "leather",
+      "suede",
+      "smoke",
+      "birch tar",
+      "incense",
+      "smoked black tea"
+    ],
+    "musk": [
+      "musk",
+      "ambrette",
+      "edenolide",
+      "galaxolide"
+    ],
+    "powdery": [
+      "powdery accord"
+    ]
+  },
+  "description_family_terms": {
+    "citrus": [
+      "citrus",
+      "sitrus",
+      "jeruk"
+    ],
+    "aquatic": [
+      "aquatic",
+      "akuatik",
+      "marine",
+      "water notes"
+    ],
+    "green_herbal": [
+      "green",
+      "herbal",
+      "hijau",
+      "aromatic"
+    ],
+    "fruit": [
+      "fruity",
+      "fruit",
+      "buah"
+    ],
+    "floral": [
+      "floral",
+      "bunga"
+    ],
+    "wood": [
+      "woody",
+      "wood",
+      "kayu"
+    ],
+    "gourmand": [
+      "gourmand",
+      "dessert"
+    ],
+    "amber_resin": [
+      "amber",
+      "resin",
+      "ambery"
+    ],
+    "oud": [
+      "oud",
+      "agarwood"
+    ],
+    "leather_smoky": [
+      "leather",
+      "smoky",
+      "smoke",
+      "kulit",
+      "asap"
+    ],
+    "musk": [
+      "musk",
+      "musky"
+    ],
+    "powdery": [
+      "powdery",
+      "bedak"
+    ]
+  },
+  "weights": {
+    "aroma": 50,
+    "sweetness": 15,
+    "projection": 10,
+    "longevity": 10,
+    "context": 10,
+    "gender": 5
+  },
+  "limits": [
+    "Families from exact note groups are conservative inferences, not ingredients or measured dominance.",
+    "Vanilla/tonka alone do not set sweetness or gourmand dominance; concentration never sets performance.",
+    "Only labelled factual descriptions supply sweetness, projection, longevity and context. Negation/conflicts stay unknown.",
+    "Unmapped/placeholder data remains visible; unknown character is not proof of absence.",
+    "Explicit profile/character predicates may provide family evidence; they never set performance or sweetness levels. Note-only family membership gets 0.8 of aroma support, without a changing denominator."
+  ],
+  "source_review_cases": [
+    {
+      "product_id": 455,
+      "source_fingerprint": "ec7262a2de82ccd2c453bec7717c54069201c43984f92da4cf6892dc50dfb227",
+      "issue": "Narrative dry down lists violet/musk/sandalwood, but formal notes list cedar/vetiver/patchouli. Do not silently combine or choose source.",
+      "evidence_excerpts": [
+        "a refined base of violet, musk, sandalwood, and cedarwood",
+        "Base Notes : Cedar, Vetiver, Patchouli"
+      ],
+      "attributes_to_suspend": []
+    },
+    {
+      "product_id": 887,
+      "source_fingerprint": "70da6c0a21b3e7e5ecaaa50e6a08186e3b280ca457c0745aacf72abc2218a36e",
+      "issue": "Two factual-looking longevity ranges (8–10 and10–12 hours), plus differing narrative/formal materials. Unknown/conflict, not a proven wrong catalog.",
+      "evidence_excerpts": [
+        "Longevity: 8–10 hours",
+        "Ketahanan Aroma: 10-12 jam"
+      ],
+      "attributes_to_suspend": [
+        "longevity"
+      ]
+    },
+    {
+      "product_id": 668,
+      "source_fingerprint": "fd1f2d6e0639cbb795d8b95ca57e530f7f1913058413fa91c00d1ce8876ebaa4",
+      "issue": "Catalog gender Pria but description says unisex. Catalog field remains current authority; no rewrite.",
+      "evidence_excerpts": [
+        "Parfum unisex"
+      ],
+      "attributes_to_suspend": []
+    },
+    {
+      "product_id": 834,
+      "source_fingerprint": "e647b672b5aced52510b6f5e2a909645c786ea4f6fd39e35df3650fa919718f6",
+      "issue": "Narrative opening citrus/nectarine differs from formal top notes apple/black currant/dragon fruit. Not enough evidence to resolve.",
+      "evidence_excerpts": [
+        "Trio jeruk, nektarin, dan apel",
+        "Top Notes : Apple, Black Currant, Dragron Fruit"
+      ],
+      "attributes_to_suspend": []
+    }
+  ],
+  "aroma_evidence_weight": {
+    "explicit_catalog_or_review": 1,
+    "inferred_exact_notes": 0.8,
+    "status": "provisional_fixed_rule_not_human_calibrated"
+  }
+}
