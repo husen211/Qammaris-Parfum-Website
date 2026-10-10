@@ -6,6 +6,8 @@ Eight core and two skippable screens, editable summary, immediate options, inact
 
 Results preserve question/engine versions, anonymous answers, internal score/evidence/fingerprints and original selections. Current public offer/image/size/status reread; hidden/draft names/photos never rendered from old snapshots. Changed catalog banner makes original reasons/date limitations explicit; recomputation creates a new result and retains old feedback. Ready filtering of existing results requires no new answers. Empty/sparse/error/retry/expired states; no percentage accuracy. Feedback overall and optional original-product rating/reasons, validated and transactionally updated under result row lock. No feedback auto-learning. Admin report/version/product filters, preview/apply and source/revision guarded profile correction reuse existing admin and store operation; no accounts/permission change.
 
+Current observed release: [2026-10-10 beta deployment and live evidence](RELEASE.md). Below is the dated pre-deployment snapshot; its pending statements are historical.
+
 ## Verification before deployment
 
 -64 focused fragrance tests /406 assertions passed (11 new HTTP/security cases). Exact browser/IP/feedback limits, secure cookie, ownership, seven-day access with record retention, current price/draft hiding, replay, malformed/conflicting answers, legacy rollback and result/feedback insertion failure rollback actually tested using in-memory SQLite.

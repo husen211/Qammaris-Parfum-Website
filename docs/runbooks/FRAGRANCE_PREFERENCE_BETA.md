@@ -1,6 +1,6 @@
 # Preference beta — authorized trial release
 
-Owner2026-10-10 explicitly authorizes trial release (“gua mau t4es gpapa rilis aja dlu”). Human accuracy and genuine touch acceptance remain pending. Current technical evidence: [PREF03](../verification/pref-03/README.md), [ADR039](../architecture/decisions/ADR-039-preference-website-beta.md). Apply normal main-only CI/deployment guards; do not weaken pending-migration refusal.
+Owner2026-10-10 explicitly authorizes trial release (“gua mau t4es gpapa rilis aja dlu”). Human accuracy and genuine touch acceptance remain pending. Current observed beta release: [live/migration/recovery proof](../verification/pref-03/RELEASE.md). Current technical evidence: [PREF03](../verification/pref-03/README.md), [ADR039](../architecture/decisions/ADR-039-preference-website-beta.md). Apply normal main-only CI/deployment guards; do not weaken pending-migration refusal.
 
 ## Candidate and schema
 
@@ -21,3 +21,5 @@ Local browser drafts expire24h. Cookie/result access lasts7days; anonymous answe
 ## Recovery
 
 Disable FRAGRANCE_PREFERENCE_ENABLED and rebuild active config cache to restore legacy quiz. Keep new tables/profiles/results/feedback and existing catalog/media. No migration down. Retained previous release71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213 is current read-only preflight recovery revision; verify again immediately before final switch. Code-only rollback follows standard deployment runbook; do not use a database dump to overwrite normally changing catalog. Investigate error counters and feedback; changed ranking needs new engine version/evaluation. Owner tests/independent quality review are next; V2 remains out of scope.
+
+Rebuild config cache in a fresh PHP CLI process after atomic flag edit, so previously loaded environment values do not survive the edit in memory. Private rehearsal candidates need bootstrap/cache; official deployment already creates it. Reclaim only verified reproducible temporary candidate trees when quota is exhausted; preserve original verified package, diagnostics, private backups and every active/shared runtime path. Never prune unrelated retained releases without a separate recovery/retention decision.
