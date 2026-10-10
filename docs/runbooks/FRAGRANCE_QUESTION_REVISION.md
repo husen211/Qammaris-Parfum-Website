@@ -1,6 +1,6 @@
 # Rilis koreksi pertanyaan preferensi v1.2
 
-Ini persiapan operasional, **belum dieksekusi di produksi**. [Bukti dan batas kualitas](../verification/pref-03/question-revision/README.md). Ikuti [runbook beta](FRAGRANCE_PREFERENCE_BETA.md) untuk backup/cutover dan izin; gunakan preview/aplikasi profil existing, actor admin existing, bukan SQL mass update.
+Runbook ini sudah digunakan untuk rilis koreksi PR51; [bukti operasional](../verification/pref-03/question-revision/RELEASE.md). Langkah di bawah tetap prosedur untuk rilis berikut yang diizinkan, bukan instruksi menjalankannya ulang otomatis. [Bukti dan batas kualitas](../verification/pref-03/question-revision/README.md). Ikuti [runbook beta](FRAGRANCE_PREFERENCE_BETA.md) untuk backup/cutover dan izin; gunakan preview/aplikasi profil existing, actor admin existing, bukan SQL mass update.
 
 1. Pastikan izin rilis koreksi dan rebuild tabel profil rekomendasi, CI atas commit final, backup/recovery terverifikasi, serta beta lama/legacy masih bisa dipulihkan. Tidak memerlukan migrasi tambahan.
 2. Matikan `FRAGRANCE_PREFERENCE_ENABLED` dan refresh config cache untuk sementara menampilkan legacy. Tabel hasil/feedback tetap ada; jangan menghapus jawaban lama.

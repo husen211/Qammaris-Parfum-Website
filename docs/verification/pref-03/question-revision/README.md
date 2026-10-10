@@ -1,6 +1,6 @@
 # PREF-03 — koreksi pertanyaan dan dasar aroma
 
-10 Oktober 2026. **Siap ditinjau pada branch, belum deploy.** Koreksi setelah Owner mencoba beta; PREF-03 tetap satu item aktif. PREF-04 dan penerimaan kualitas manusia belum dimulai/diselesaikan oleh koreksi ini.
+10 Oktober 2026. **Koreksi live melalui PR51; [bukti rilis terpisah](RELEASE.md).** Pemeriksaan lokal di bawah adalah bukti implementasi sebelum rilis; receipt lama tetap historis. Koreksi setelah Owner mencoba beta; PREF-03 tetap satu item aktif. PREF-04 dan penerimaan kualitas manusia belum dimulai/diselesaikan oleh koreksi ini.
 
 ## Perilaku
 
@@ -29,8 +29,8 @@ Revisi ini memperbaiki pemahaman pertanyaan dan ketepatan pemakaian data. Target
 
 ## Rilis dan recovery
 
-Kode belum digabung ke main. Produksi tetap beta v1.1/pref-02.3 di 1a33c70. Release revisi membutuhkan preview/rebuild profil dengan parser baru; deploy kode saja saat flag masih aktif akan membuat fingerprint lama tidak layak dan hasil kosong. Urutan rinci ada di [runbook koreksi](../../../runbooks/FRAGRANCE_QUESTION_REVISION.md). Tidak menambah tabel, tidak mengubah schema existing, dan tidak menulis ulang produk. Rollback flag menampilkan tes legacy dan menjaga feedback; revert ke beta lama memerlukan rebuild parser lama.
+PR51 sudah merged/live pada ec39993 dengan v1.2/pref-03.2-provisional. [Release evidence](RELEASE.md) merekam preview/rebuild381 dan replay0 profil dengan parser baru; deploy kode saja saat flag masih aktif akan membuat fingerprint lama tidak layak dan hasil kosong. Urutan rinci ada di [runbook koreksi](../../../runbooks/FRAGRANCE_QUESTION_REVISION.md). Tidak menambah tabel, tidak mengubah schema existing, dan tidak menulis ulang produk. Rollback flag menampilkan tes legacy dan menjaga feedback; revert ke beta lama memerlukan rebuild parser lama.
 
-Langkah berikut masih PREF-03: review patch/hasil dan persiapan rilis koreksi setelah izin yang sesuai. PREF-04 tidak dimulai otomatis. Tidak meminta Owner mengisi ulang ratusan atribut; review sumber dapat difokuskan pada kandidat yang muncul dan kasus ambigu.
+Langkah berikut masih PREF-03: review hasil beta dan penilaian manusia terhadap kasus ambigu/rekomendasi. PREF-04 tidak dimulai otomatis. Tidak meminta Owner mengisi ulang ratusan atribut; review sumber dapat difokuskan pada kandidat yang muncul dan kasus ambigu.
 
 Fixture SQLite khusus pengujian beserta actor sintetis dan hasil/feedback lokal sudah dihapus setelah verifikasi. Server preview dihentikan, tab sementara ditutup, dan viewport browser direset. Bukti screenshot tetap disimpan.
