@@ -56,7 +56,7 @@
                     <strong class="text-lg tabular-nums">{{ format_rupiah($order->customerTotal()) }}</strong>
                 </div>
             @else
-                <p class="mt-2 text-sm leading-6 text-gray-600">Ongkir dan pembayaran dikonfirmasi admin lewat WhatsApp.</p>
+                <p class="mt-2 text-sm leading-6 text-gray-600">Ongkir dan pembayaran dikonfirmasi admin.</p>
             @endif
         </section>
 
