@@ -1,5 +1,7 @@
 # PREF-02 — Profil dan mesin sementara
 
+**Latest development review:** [PREF-02.2 source-reader corrections and partial-match explanations](quality-v2/README.md). The packet below is the PREF-02.1 baseline at commit `11a8b4c`; historical hashes/counts/held-out checks describe that revision. Quality acceptance remains pending.
+
 Date2026-10-10. Owner explicitly continued the next step after PREF-01. Code and offline evaluation are prepared; **PREF-02 IN_REVIEW, not quality accepted or production released**. PREF-01 human labels/data review remain open. No PREF-03/04 started.
 
 Implemented separate profile/revision migration and models, exact source/parser fingerprints, per-attribute evidence/unknowns/conflicts, admin-scoped optimistic profile corrections, preview-bound transactional/idempotent build and a disabled future catalog adapter. No product columns/forms rewritten. Public `/fragrance-quiz` controller/service remains legacy; even setting the reserved flag does not wire a new public route in this phase.

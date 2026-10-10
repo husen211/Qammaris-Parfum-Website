@@ -207,7 +207,7 @@ class FragrancePreferenceEngineTest extends TestCase
     public function test_explicit_character_priority_does_not_import_story_words_or_claim_sweetness(): void
     {
         $character = $this->row(1, ['description' => 'Parfum gourmand dengan karakter creamy; bukan janji performa.']);
-        $this->assertNotContains('gourmand', $character['profile']['attributes']['families']);
+        $this->assertContains('gourmand', $character['profile']['attributes']['aroma_target']);
         $story = $this->row(2, ['description' => 'Cerita tentang taman floral dan dessert gourmand di kafe.']);
         $this->assertSame(['citrus', 'floral', 'musk'], $story['profile']['attributes']['aroma_target']);
         $clear = $this->row(3, ['description' => 'Parfum gourmand menghadirkan pengalaman aroma coffee.', 'notes' => ['top' => ['Bergamot'], 'middle' => ['Coffee'], 'base' => ['Musk']]]);
@@ -225,6 +225,81 @@ class FragrancePreferenceEngineTest extends TestCase
         foreach ($result['main'] as $row) {
             $this->assertSame(['families.citrus'], $row['reasons'][0]['evidence_keys']);
         }
+    }
+
+    public function test_catalog_classification_is_target_evidence_but_incidental_notes_still_filter_avoids(): void
+    {
+        foreach (['Klasifikasi Aroma', 'Klarifikasi Aroma', 'Fragrance Family', 'Scent Family', 'Accord'] as $label) {
+            $row = $this->row(1, ['description' => $label.': Woody Musky']);
+            $this->assertSame(['musk', 'wood'], $row['profile']['attributes']['aroma_target']);
+            $this->assertTrue($this->engine->recommend($this->answers(), [$row])['empty']);
+            $this->assertTrue($this->engine->recommend($this->answers(['likes' => ['wood'], 'avoid' => ['citrus']]), [$row])['empty']);
+        }
+    }
+
+    public function test_heading_value_lists_stop_at_next_section_or_story_and_do_not_invent_performance(): void
+    {
+        $row = $this->row(1, ['description' => "Karakter Aroma\n\nFruity\nCitrusy\nMusky\nCreamy\nSoft Sweet\nCocok Digunakan Untuk\nAktivitas sehari-hari\nHangout\nDinner\nKesan Aroma\nOud\nStrong\n8 jam"]);
+        $profile = $row['profile'];
+        $this->assertSame(['citrus', 'fruit', 'musk'], $profile['attributes']['aroma_target']);
+        $this->assertSame('light', $profile['attributes']['sweetness']);
+        $this->assertSame(['casual', 'daily', 'event'], $profile['attributes']['context']);
+        $this->assertNotContains('oud', $profile['attributes']['families']);
+        $this->assertNull($profile['attributes']['projection']);
+        $this->assertNull($profile['attributes']['longevity']);
+        $this->assertStringContainsString('Karakter Aroma: Fruity, Citrusy, Musky', $profile['evidence']['families.fruit'][0]['raw']);
+        $prose = $this->row(2, ['description' => "Karakter Aroma\nCerita floral yang indah di taman.\nOud"]);
+        $this->assertNotContains('oud', $prose['profile']['attributes']['families']);
+        $this->assertSame(['citrus', 'floral', 'musk'], $prose['profile']['attributes']['aroma_target']);
+    }
+
+    public function test_unrelated_negative_clause_does_not_erase_direct_character_or_import_negative_characters(): void
+    {
+        $row = $this->row(1, ['description' => 'Parfum gourmand yang creamy; tanpa oud dan bukan janji performa.']);
+        $this->assertSame(['gourmand'], $row['profile']['attributes']['aroma_target']);
+        $this->assertNotContains('oud', $row['profile']['attributes']['families']);
+        foreach (['Bukan parfum gourmand.', 'Mungkin parfum gourmand.', 'Aroma: tanpa gourmand', 'Profil Aroma: belum diketahui'] as $description) {
+            $negative = $this->row(2, ['description' => $description]);
+            $this->assertNotContains('gourmand', $negative['profile']['attributes']['families']);
+        }
+        $citrus = $this->row(3, ['description' => 'Parfum wanita dengan aroma citrus yang lembut.']);
+        $this->assertSame(['citrus'], $citrus['profile']['attributes']['aroma_target']);
+        $this->assertNull($citrus['profile']['attributes']['projection']);
+    }
+
+    public function test_character_sweetness_is_explicit_and_conflicts_remain_unknown(): void
+    {
+        foreach (['Soft Sweet' => 'light', 'Sweet Floral' => 'sweet', 'Manis Sedang' => 'medium'] as $claim => $level) {
+            $row = $this->row(1, ['description' => 'Karakter Aroma: Citrus, '.$claim]);
+            $this->assertSame($level, $row['profile']['attributes']['sweetness']);
+            $this->assertSame(15000, $this->engine->recommend($this->answers(['sweetness' => $level]), [$row])['main'][0]['score_components_internal']['sweetness']);
+        }
+        $conflict = $this->row(2, ['description' => "Karakter Aroma: Soft Sweet\nKemanisan: Tinggi"]);
+        $this->assertNull($conflict['profile']['attributes']['sweetness']);
+        $this->assertContains('conflicting_fact', array_column($conflict['profile']['review_issues'], 'code'));
+        foreach (['Parfum manis yang terbaik, dengan vanilla.', 'Klasifikasi Aroma: Vanilla, Woody, Soft', 'Klasifikasi Aroma: Tidak manis'] as $description) {
+            $this->assertNull($this->row(3, ['description' => $description])['profile']['attributes']['sweetness']);
+        }
+    }
+
+    public function test_exact_green_apple_compound_does_not_invent_an_avoided_herbal_accord(): void
+    {
+        $row = $this->row(1, ['notes' => ['top' => ['Green Apple'], 'middle' => ['Jasmine'], 'base' => ['Musk']]]);
+        $this->assertSame(['apple'], $row['profile']['normalized_layers']['top']['notes']);
+        $this->assertNotContains('green_herbal', $row['profile']['attributes']['families']);
+        $this->assertSame([1], $this->ids($this->engine->recommend($this->answers(['likes' => ['fruit'], 'avoid' => ['green_herbal']]), [$row])));
+    }
+
+    public function test_partial_matches_explain_supported_context_and_missing_aroma_without_overclaiming(): void
+    {
+        $row = $this->row(1, ['description' => "Karakter Aroma: Citrus\nPenggunaan: Indoor"]);
+        $result = $this->engine->recommend($this->answers(['likes' => ['citrus', 'wood'], 'use' => 'office', 'environment' => 'ac']), [$row]);
+        $choice = $result['main'][0];
+        $this->assertSame('Katalog menyebut pemakaian ruangan ber-AC.', $choice['reasons'][1]['text']);
+        $this->assertStringContainsString('kayu', implode(' ', $choice['limitations']));
+        $this->assertStringContainsString('Sebagian konteks', implode(' ', $choice['limitations']));
+        $full = $this->engine->recommend($this->answers(['use' => 'any', 'environment' => 'ac']), [$row])['main'][0];
+        $this->assertStringNotContainsString('Sebagian konteks', implode(' ', $full['limitations']));
     }
 
     public function test_input_rejects_unlisted_fields_non_integer_budget_and_unknown_families(): void

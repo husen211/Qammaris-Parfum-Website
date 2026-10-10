@@ -7,7 +7,7 @@ use InvalidArgumentException;
 
 final class RecommendationEngine
 {
-    public const VERSION = 'pref-02.1-provisional';
+    public const VERSION = 'pref-02.2-provisional';
 
     private const WEIGHTS = ['aroma' => 50, 'sweetness' => 15, 'projection' => 10, 'longevity' => 10, 'context' => 10, 'gender' => 5];
 
@@ -163,9 +163,17 @@ final class RecommendationEngine
         if ($components['aroma'] > 0) {
             $matched = array_values(array_intersect($answers['likes'] ?: $favoriteFamilies, $attributes['aroma_target']));
             $reasons[] = ['code' => $answers['likes'] ? 'liked_aroma' : 'favorite_aroma', 'text' => 'Katalog mendukung arah aroma '.implode(', ', array_map($this->familyLabel(...), $matched)).'.', 'evidence_keys' => array_map(fn ($f) => 'families.'.$f, $matched)];
+            $unmatched = array_diff($answers['likes'], $matched);
+            if ($unmatched) {
+                $limitations[] = 'Arah aroma '.implode(', ', array_map($this->familyLabel(...), $unmatched)).' yang dipilih belum didukung profil katalog.';
+            }
         }
         foreach (['sweetness' => 'Kemanisan yang diminta tercantum dalam data katalog.', 'projection' => 'Sebaran yang diminta tercantum dalam data katalog.', 'longevity' => 'Klaim ketahanan katalog mendukung kebutuhan waktu yang dipilih.', 'context' => 'Konteks pemakaian yang dipilih disebut dalam katalog.'] as $key => $text) {
             if ($components[$key] > 0) {
+                if ($key === 'context') {
+                    $matchedContexts = array_filter([$answers['use'], $answers['environment']], fn ($context) => $context !== 'any' && (in_array($context, $attributes['context'], true) || ($context === 'mixed' && in_array('ac', $attributes['context'], true) && in_array('outdoor', $attributes['context'], true))));
+                    $text = 'Katalog menyebut pemakaian '.implode(', ', array_map($this->contextLabel(...), $matchedContexts)).'.';
+                }
                 $reasons[] = ['code' => $key, 'text' => $text, 'evidence_keys' => [$key]];
             }
             $requested = $key === 'context' ? ($answers['use'] !== 'any' || $answers['environment'] !== 'any') : ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true);
@@ -173,6 +181,8 @@ final class RecommendationEngine
                 $limitations[] = 'Data '.$this->attributeLabel($key).' belum diketahui.';
             } elseif (in_array($key, ['sweetness', 'projection', 'longevity'], true) && ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true) && $components[$key] === 0) {
                 $limitations[] = 'Data '.$this->attributeLabel($key).' belum mendukung kebutuhan yang dipilih.';
+            } elseif ($key === 'context' && $requested && $components[$key] < 10000) {
+                $limitations[] = 'Sebagian konteks pemakaian yang dipilih belum didukung data katalog.';
             }
         }
         $price = Rupiah::minorUnits($row['price']);
@@ -192,6 +202,11 @@ final class RecommendationEngine
     private function familyLabel(string $family): string
     {
         return ['citrus' => 'citrus/segar', 'aquatic' => 'aquatic', 'green_herbal' => 'hijau/herbal', 'fruit' => 'buah', 'floral' => 'bunga', 'wood' => 'kayu', 'gourmand' => 'gourmand', 'amber_resin' => 'amber/resin', 'oud' => 'oud', 'leather_smoky' => 'leather/asap', 'musk' => 'musk', 'powdery' => 'powdery'][$family];
+    }
+
+    private function contextLabel(string $context): string
+    {
+        return ['daily' => 'harian', 'office' => 'kantor/kuliah', 'casual' => 'santai', 'event' => 'acara/date', 'ac' => 'ruangan ber-AC', 'outdoor' => 'luar ruangan', 'mixed' => 'dalam dan luar ruangan'][$context];
     }
 
     private function attributeLabel(string $key): string

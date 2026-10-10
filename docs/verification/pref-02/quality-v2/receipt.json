@@ -1,0 +1,43 @@
+{
+  "schema": "qammaris-pref-02-quality-receipt-v1",
+  "date": "2026-10-10",
+  "engine_version": "pref-02.2-provisional",
+  "engine_fingerprint": "4129ccaac430dec02562179466267c9ed6f3148d4ed16fa100dc1ed63935fef8",
+  "parser_fingerprint": "85cce6bd72512b7e7d5f82b247156df9be90474644db5b94e2ea543ac545de41",
+  "source_capture": {
+    "captured_at": "2026-10-09T09:54:52+00:00",
+    "revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+    "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d"
+  },
+  "focused_tests": {
+    "runner": "PHPUnit 11.5.56 / PHP 8.2.12, --filter=Fragrance --display-warnings",
+    "tests": 49,
+    "assertions": 242,
+    "result": "passed_without_warnings"
+  },
+  "formatting": "Pint changed PHP files passed",
+  "human_quality_acceptance": "pending_not_claimed",
+  "holdout_cases_evaluated_this_revision": 0,
+  "persistent_database_writes": 0,
+  "new_public_callers": 0,
+  "traceability_checks": {
+    "cases_checked": 15,
+    "recommendations_checked": 46,
+    "budget_or_avoid_violations": 0,
+    "missing_reason_evidence": 0,
+    "source_or_profile_fingerprint_mismatch": 0
+  },
+  "files_sha256": {
+    "app/Support/FragrancePreference/ProfileBuilder.php": "26ab44486bcb3aeaaed8454365104cc9a2001bb95d1e50d656cec362731c964b",
+    "app/Support/FragrancePreference/RecommendationEngine.php": "953856d84da76eb895e2c2fe5c7eef6aa8804ee543f13874327505348ba700af",
+    "config/fragrance_preference.php": "5ca8ae68e915df2ec00fd0ccf31a25b6e2edaf4c471b1751bf61b1ce388ca33f",
+    "resources/data/fragrance-note-aliases.json": "5b1c727447d98d922ba61a8e80db69197cba3f1d03bd4f44995e42eec20c2925",
+    "resources/data/fragrance-profile-rules.json": "374919870533b58d4ca9c50dbd83b728f479ad11199f61657af6d57e814e0bee",
+    "tests/Unit/FragrancePreferenceEngineTest.php": "936d8c13fe98d71c6ad6b89a64b94d1ae3ac78a9cf11fe3af92e9e5a2d7326fa"
+  },
+  "artifacts_sha256": {
+    "evaluation.json": "aca116f1ab62930b584f425829f5b614874e8a1b522fd8afe62b89e88a63e10a",
+    "profile-changes.json": "3c992f29fa24b7b980d2f7b03cd01da0fb2b7f1f7c1e74719c1f4ca9ca20ea0f",
+    "RESULTS.md": "1809e361cc0ff6d98da267435f8c7a7b0c86bf3c6568e21bfd5f03c7966f90f8"
+  }
+}

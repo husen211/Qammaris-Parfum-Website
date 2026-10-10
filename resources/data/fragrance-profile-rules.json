@@ -1,6 +1,6 @@
 {
   "schema": "qammaris-fragrance-profile-rules-v1",
-  "version": "pref-02.1",
+  "version": "pref-02.2",
   "status": "provisional_not_human_calibrated",
   "labels": {
     "citrus": "Citrus/segar",
@@ -242,7 +242,8 @@
     "citrus": [
       "citrus",
       "sitrus",
-      "jeruk"
+      "jeruk",
+      "citrusy"
     ],
     "aquatic": [
       "aquatic",
@@ -259,7 +260,8 @@
     "fruit": [
       "fruity",
       "fruit",
-      "buah"
+      "buah",
+      "buah buahan"
     ],
     "floral": [
       "floral",
@@ -272,7 +274,14 @@
     ],
     "gourmand": [
       "gourmand",
-      "dessert"
+      "dessert",
+      "caramel",
+      "coffee",
+      "chocolate",
+      "cokelat",
+      "praline",
+      "milky",
+      "lactonic"
     ],
     "amber_resin": [
       "amber",
@@ -312,7 +321,8 @@
     "Vanilla/tonka alone do not set sweetness or gourmand dominance; concentration never sets performance.",
     "Only labelled factual descriptions supply sweetness, projection, longevity and context. Negation/conflicts stay unknown.",
     "Unmapped/placeholder data remains visible; unknown character is not proof of absence.",
-    "Explicit profile/character predicates may provide family evidence; they never set performance or sweetness levels. Note-only family membership gets 0.8 of aroma support, without a changing denominator."
+    "Explicit profile/character predicates may provide family evidence; they never set performance or sweetness levels. Note-only family membership gets 0.8 of aroma support, without a changing denominator.",
+    "Exact catalog classification labels and bounded heading/value lists supply character facts. Clause-scoped negation never imports a negative character; food accord labels do not establish sweetness levels."
   ],
   "source_review_cases": [
     {

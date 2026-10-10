@@ -1,6 +1,6 @@
 {
   "schema": "qammaris-note-aliases-v1",
-  "version": "pref-01.1",
+  "version": "pref-01.2",
   "purpose": "Explicit note search groups for audit only. Original labels are retained; grouped modifiers/material names are not proof of interchangeable ingredients. No family or performance assignment.",
   "placeholders": [
     "tidak dirinci oleh brand",
@@ -107,7 +107,9 @@
     ],
     "angelica": [],
     "anise": [],
-    "apple": [],
+    "apple": [
+      "green apple"
+    ],
     "apple blossom": [],
     "apricot": [],
     "aquatic accord": [
