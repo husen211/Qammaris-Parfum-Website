@@ -1,0 +1,115 @@
+{
+  "schema": "qammaris-pref-03-question-revision-receipt-v1",
+  "date": "2026-10-10",
+  "production_status": "Not deployed; production remains 1a33c70 with preference-v1.1/pref-02.3 beta.",
+  "source_capture": {
+    "schema": "qammaris-public-source-research-v1",
+    "captured_at": "2026-10-10T04:42:33+00:00",
+    "revision": "1a33c707830f88d845cf433849cf329345890e50",
+    "catalog_sha256": "92186947b4f1b9ccba1cfc24ed17d272c1ae17cf9b44d8bf329be9a735fedd9f"
+  },
+  "current_parser_fingerprint": "6b1661622b36c3be9b8b17bb9e9f147c42e71aa6ec9312d8120d47ab7f72e63a",
+  "engine_version": "pref-03.2-provisional",
+  "engine_fingerprint": "fecce889d9899daeadee7b6f7b102fb5c5cd08e5e18f910e4254176b71a42b38",
+  "current_381_attribute_coverage": {
+    "sweetness": 28,
+    "projection": 54,
+    "longevity": 119,
+    "context": 137
+  },
+  "comparison_same_378_product_snapshot": {
+    "previous_summary": {
+      "normal_cases_evaluated": 15,
+      "empty_results": 0,
+      "agent_proposal_overlap_at_least_one": 9,
+      "agent_proposal_overlap_at_least_two": 2,
+      "legacy_proposal_overlap_at_least_one": 3,
+      "legacy_proposal_overlap_at_least_two": 1,
+      "legacy_above_budget_choices": 34,
+      "legacy_detected_avoid_choices": 8,
+      "human_labels_available": 0
+    },
+    "revision_summary": {
+      "normal_cases_evaluated": 15,
+      "empty_results": 0,
+      "agent_proposal_overlap_at_least_one": 9,
+      "agent_proposal_overlap_at_least_two": 2,
+      "legacy_proposal_overlap_at_least_one": 3,
+      "legacy_proposal_overlap_at_least_two": 1,
+      "legacy_above_budget_choices": 34,
+      "legacy_detected_avoid_choices": 8,
+      "human_labels_available": 0
+    },
+    "holdout_evaluated": false,
+    "human_quality_acceptance": "pending_not_claimed"
+  },
+  "traceability": {
+    "selected_cards": 49,
+    "budget_violations": 0,
+    "avoid_violations": 0,
+    "missing_reason_evidence": 0,
+    "nonpositive_choices": 0
+  },
+  "technical_checks": {
+    "phpunit": {
+      "tests": 72,
+      "assertions": 453,
+      "result": "passed_no_warnings_final"
+    },
+    "node_new_tests": {
+      "tests": 3,
+      "result": "passed"
+    },
+    "vite": "Final build passed; existing large About/editor bundle warning remains outside scope.",
+    "pint": "passed dirty files"
+  },
+  "browser": {
+    "configured_viewports": [
+      "390x844",
+      "1440x900",
+      "320x844"
+    ],
+    "actual_320_content_width": 305,
+    "horizontal_overflow": false,
+    "genuine_touch_or_iphone_safari": "not_tested",
+    "flows": [
+      "free budget disabled visual state",
+      "range restore on edit",
+      "time answers",
+      "skip sweetness for avoid_sweet and gourmand",
+      "Back skip and unskip clearing stale sweetness",
+      "refresh persisted step and answers",
+      "required validation",
+      "Space/Enter keyboard actions",
+      "summary effective questions",
+      "result save",
+      "feedback saved",
+      "recalculate new result ID with previous feedback retained"
+    ],
+    "console_errors": 0,
+    "local_products": 381,
+    "local_images": "Placeholder fixtures; no production media copied or changed"
+  },
+  "persistent_production_writes": 0,
+  "local_fixture_cleanup": {
+    "result": "removed",
+    "removed_files": [
+      "pref-question-local.sqlite"
+    ],
+    "synthetic_actor_and_test_results": "removed with dedicated local SQLite fixture",
+    "preview_server": "stopped",
+    "preview_tab": "closed",
+    "viewport": "reset"
+  },
+  "files_sha256": {
+    "app/Support/FragrancePreference/PreferenceAnswers.php": "ed6240cd3ee312dbb1a732459273899dff246aed1de483e68f0d44ea6e8dd5e9",
+    "app/Support/FragrancePreference/ProfileBuilder.php": "ef098ba410dad19d1d01ed8623b56423dd7c6cf9385750429bae5bb56995649d",
+    "app/Support/FragrancePreference/RecommendationEngine.php": "096f70574545a756d5460e4f251b2b47510bec9fff5c007de7f6c295131c5163",
+    "app/Support/FragrancePreference/QuizQuestions.php": "376541de1d8b6c4c920f01967d94e61f5df271f3128e5855e565d964a1cd2692",
+    "resources/js/ui/preference-flow.js": "98c33de1dcdd8b7f0c3193411257e6746e24546e9942aa2a9e70ee631b215d6f",
+    "resources/js/ui/preference-quiz.js": "894a42d584598a780a068c77320a37aebc0c1d2d297f70585333146f56ddf205",
+    "resources/views/quiz/v1/index.blade.php": "a548ad9973cdb52865098032f90291598e7df465a4418fbac07003b94a659551",
+    "resources/views/quiz/v1/result.blade.php": "31c025d8f80b480a8876f0ec7f85d1b5b134104edb2d85c4327bc026dc29c688",
+    "resources/data/fragrance-profile-rules.json": "63472151bfaa1ef2f29dc8a83457c3ce6909bed7c32c15e373ecd45234ff26ff"
+  }
+}

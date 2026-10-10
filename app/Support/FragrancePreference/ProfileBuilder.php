@@ -119,8 +119,24 @@ final class ProfileBuilder
             if ($attribute === null) {
                 continue;
             }
+            if (FragranceNoteNormalizer::text($match[1]) === 'sillage') {
+                $issues[] = ['code' => 'sillage_not_projection', 'attribute' => 'projection', 'raw' => $line];
+
+                continue;
+            }
             $value = trim($match[2]);
             $normalized = FragranceNoteNormalizer::text($value);
+            if (in_array($attribute, ['sweetness', 'families'], true) && preg_match('/\b(?:tidak manis|not sweet|non sweet|unsweetened)\b/u', $normalized)) {
+                $remainder = preg_replace('/\b(?:tidak manis|not sweet|non sweet|unsweetened)\b/u', ' ', $normalized);
+                if (! $this->uncertain($remainder) && ! $this->hasTerm($remainder, ['sweet', 'manis'])) {
+                    $claims['sweetness'][self::hash('none')] = 'none';
+                    $evidence['sweetness'][] = ['source' => 'description_fact', 'raw' => $line, 'value' => 'none', 'certainty' => 'catalog_character_claim_not_measured'];
+                    $normalized = $remainder;
+                    if ($attribute === 'sweetness') {
+                        continue;
+                    }
+                }
+            }
             if ($this->uncertain($normalized)) {
                 $issues[] = ['code' => 'negated_or_uncertain_claim', 'attribute' => $attribute, 'raw' => $line];
 
@@ -305,7 +321,7 @@ final class ProfileBuilder
         $map = match ($attribute) {
             'sweetness' => ['light' => ['ringan', 'low', 'light', 'sedikit manis'], 'medium' => ['sedang', 'moderate', 'medium'], 'sweet' => ['tinggi', 'high', 'sweet', 'manis']],
             'projection' => ['close' => ['dekat badan', 'intimate', 'soft', 'lemah', 'skin scent'], 'medium' => ['sedang', 'moderate', 'medium'], 'strong' => ['kuat', 'strong', 'powerful']],
-            'context' => ['daily' => ['harian', 'daily', 'sehari hari'], 'office' => ['kantor', 'kuliah', 'office', 'kerja', 'bekerja'], 'casual' => ['santai', 'casual', 'hangout', 'liburan'], 'event' => ['acara', 'date', 'malam', 'evening', 'formal', 'dinner'], 'ac' => ['indoor', 'ac', 'ruangan ber ac'], 'outdoor' => ['outdoor', 'luar ruangan'], 'mixed' => ['campuran', 'mixed', 'indoor outdoor']],
+            'context' => ['daily' => ['harian', 'daily', 'sehari hari'], 'office' => ['kantor', 'kuliah', 'office', 'kerja', 'bekerja'], 'casual' => ['santai', 'casual', 'hangout', 'liburan'], 'event' => ['acara', 'date', 'formal', 'dinner'], 'ac' => ['indoor', 'ac', 'ruangan ber ac'], 'outdoor' => ['outdoor', 'luar ruangan'], 'mixed' => ['campuran', 'mixed', 'indoor outdoor'], 'day' => ['pagi', 'siang', 'daytime', 'morning'], 'night' => ['sore', 'malam', 'evening', 'night']],
             default => [],
         };
         $values = [];

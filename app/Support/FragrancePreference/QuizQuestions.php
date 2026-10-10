@@ -6,19 +6,20 @@ final class QuizQuestions
 {
     public static function all(): array
     {
-        $families = ['citrus' => 'Citrus / segar', 'aquatic' => 'Aquatic / nuansa air', 'green_herbal' => 'Hijau / herbal', 'fruit' => 'Buah', 'floral' => 'Bunga', 'wood' => 'Kayu', 'gourmand' => 'Gourmand / makanan manis', 'amber_resin' => 'Amber / resin', 'oud' => 'Oud', 'leather_smoky' => 'Leather / asap', 'musk' => 'Musk', 'powdery' => 'Powdery / bedak'];
+        $families = ['citrus' => 'Citrus / segar', 'aquatic' => 'Aquatic / nuansa air', 'green_herbal' => 'Hijau / herbal', 'fruit' => 'Buah', 'floral' => 'Bunga', 'wood' => 'Kayu', 'gourmand' => 'Dessert / makanan (gourmand)', 'amber_resin' => 'Amber / resin', 'oud' => 'Oud', 'leather_smoky' => 'Kulit / asap (leather)', 'musk' => 'Musk', 'powdery' => 'Bedak (powdery)'];
 
         return [
-            'budget_max' => ['label' => 'Budget maksimal kamu?', 'helper' => 'Harga untuk satu botol. Alternatif sampai 10% lebih tinggi akan dipisahkan.', 'type' => 'budget', 'options' => []],
-            'use' => ['label' => 'Paling sering dipakai untuk apa?', 'helper' => 'Pilih pemakaian utamanya.', 'type' => 'radio', 'options' => ['daily' => 'Harian', 'office' => 'Kantor / kuliah', 'casual' => 'Santai', 'event' => 'Acara / date', 'any' => 'Bebas']],
-            'environment' => ['label' => 'Biasanya dipakai di mana?', 'helper' => 'Lingkungan membantu menentukan pilihan yang nyaman.', 'type' => 'radio', 'options' => ['ac' => 'Ruangan ber-AC', 'outdoor' => 'Luar ruangan', 'mixed' => 'Dalam dan luar ruangan', 'any' => 'Bebas']],
-            'likes' => ['label' => 'Aroma apa yang kamu suka?', 'helper' => 'Pilih maksimal tiga. Belum mengenali selera? Pilih belum tahu.', 'type' => 'multi', 'options' => $families],
-            'avoid' => ['label' => 'Aroma apa yang ingin dihindari?', 'helper' => 'Karakter yang terdeteksi akan dikeluarkan. Ini bukan pemeriksaan bahan atau alergi.', 'type' => 'multi', 'options' => $families],
-            'sweetness' => ['label' => 'Seberapa manis yang kamu suka?', 'helper' => 'Kemanisan dipisahkan dari kuat-lemahnya sebaran.', 'type' => 'radio', 'options' => ['light' => 'Ringan', 'medium' => 'Sedang', 'sweet' => 'Manis', 'any' => 'Bebas']],
-            'projection' => ['label' => 'Sebaran seperti apa yang nyaman?', 'helper' => 'Seberapa jauh aromanya terasa dari badan.', 'type' => 'radio', 'options' => ['close' => 'Dekat badan', 'medium' => 'Sedang', 'strong' => 'Menyebar kuat', 'unknown' => 'Belum tahu']],
-            'longevity' => ['label' => 'Apa harapan ketahanannya?', 'helper' => 'Ini kebutuhan kamu, bukan janji performa. Hasil mengikuti bukti katalog yang tersedia.', 'type' => 'radio', 'options' => ['not_priority' => 'Tidak diprioritaskan', 'few_hours' => 'Beberapa jam', 'all_day' => 'Seharian', 'unknown' => 'Belum tahu']],
-            'gender' => ['label' => 'Preferensi peruntukan katalog?', 'helper' => 'Opsional. Unisex tetap bisa direkomendasikan.', 'type' => 'radio', 'optional' => true, 'options' => ['pria' => 'Pria', 'wanita' => 'Wanita', 'all' => 'Bebas / lewati']],
-            'favorite_product_id' => ['label' => 'Pernah suka parfum di katalog kami?', 'helper' => 'Opsional. Cari nama parfum atau lewati. Aroma pilihanmu tetap diutamakan.', 'type' => 'favorite', 'optional' => true, 'options' => []],
+            'budget_max' => ['label' => 'Berapa budget untuk satu botol?', 'helper' => 'Pilih rentang harga atau tulis batas maksimalmu.', 'type' => 'budget', 'options' => []],
+            'use' => ['label' => 'Paling sering dipakai untuk apa?', 'helper' => 'Pilih kegiatan yang paling sering kamu lakukan saat memakai parfum.', 'type' => 'radio', 'options' => ['daily' => 'Harian', 'office' => 'Kantor / kuliah', 'event' => 'Acara / date']],
+            'environment' => ['label' => 'Biasanya dipakai di mana?', 'helper' => 'Pilih tempat pemakaian yang paling sering.', 'type' => 'radio', 'options' => ['ac' => 'Ruangan ber-AC', 'outdoor' => 'Luar ruangan', 'mixed' => 'Dalam dan luar ruangan']],
+            'time' => ['label' => 'Biasanya dipakai kapan?', 'helper' => 'Pilih waktu pemakaian yang paling sering.', 'type' => 'radio', 'options' => ['day' => 'Pagi / siang', 'night' => 'Sore / malam', 'both' => 'Pagi hingga malam']],
+            'likes' => ['label' => 'Aroma apa yang kamu suka?', 'helper' => 'Pilih maksimal tiga. Kalau belum mengenali seleramu, pilih belum tahu.', 'type' => 'multi', 'options' => $families],
+            'avoid' => ['label' => 'Aroma apa yang tidak kamu suka?', 'helper' => 'Boleh pilih lebih dari satu. Tidak suka wangi manis? Pilih Aroma manis.', 'type' => 'multi', 'options' => $families],
+            'sweetness' => ['label' => 'Kamu suka aroma yang manis?', 'helper' => 'Pilih yang terasa paling nyaman buatmu.', 'type' => 'radio', 'options' => ['none' => 'Tidak manis', 'light' => 'Sedikit manis', 'medium' => 'Manis sedang', 'sweet' => 'Manis terasa jelas', 'any' => 'Tidak punya pilihan khusus']],
+            'projection' => ['label' => 'Mau wanginya tercium seperti apa?', 'helper' => 'Bayangkan saat kamu berada di dekat orang lain.', 'type' => 'radio', 'options' => ['close' => 'Tercium saat orang dekat', 'medium' => 'Tercium oleh orang di sekitar', 'strong' => 'Lebih kuat dan mudah tercium', 'unknown' => 'Belum tahu']],
+            'longevity' => ['label' => 'Saat memilih parfum, ketahanan jadi pertimbangan?', 'helper' => 'Ketahanan bisa berbeda saat dipakai. Kami melihat informasi yang tersedia di katalog.', 'type' => 'radio', 'options' => ['all_day' => 'Ya, cari yang punya info tahan lama', 'not_priority' => 'Aroma yang cocok lebih penting', 'unknown' => 'Belum tahu']],
+            'gender' => ['label' => 'Mau cari parfum pria, wanita, atau unisex?', 'helper' => 'Boleh dilewati. Parfum unisex juga bisa masuk pilihan pria atau wanita.', 'type' => 'radio', 'optional' => true, 'options' => ['pria' => 'Pria', 'wanita' => 'Wanita', 'unisex' => 'Unisex', 'all' => 'Tidak membatasi']],
+            'favorite_product_id' => ['label' => 'Ada parfum di katalog kami yang pernah kamu suka?', 'helper' => 'Boleh dilewati. Pilihan aroma yang kamu jawab sekarang tetap jadi acuan utama.', 'type' => 'favorite', 'optional' => true, 'options' => []],
         ];
     }
 }

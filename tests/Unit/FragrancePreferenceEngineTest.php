@@ -105,7 +105,7 @@ class FragrancePreferenceEngineTest extends TestCase
     {
         $profile = $this->row(1, ['description' => "Projection: Strong\nKekuatan Aroma: Sedang\nKemanisan: tidak manis\nLongevity: 8–10 hours\nKetahanan Aroma: 10-12 jam\nTahan sampai 24 jam!\nAroma: bukan oud"])['profile'];
         $this->assertNull($profile['attributes']['projection']);
-        $this->assertNull($profile['attributes']['sweetness']);
+        $this->assertSame('none', $profile['attributes']['sweetness']);
         $this->assertNull($profile['attributes']['longevity']);
         $this->assertNotContains('oud', $profile['attributes']['families']);
         $this->assertContains('conflicting_fact', array_column($profile['review_issues'], 'code'));
@@ -277,7 +277,7 @@ class FragrancePreferenceEngineTest extends TestCase
         $conflict = $this->row(2, ['description' => "Karakter Aroma: Soft Sweet\nKemanisan: Tinggi"]);
         $this->assertNull($conflict['profile']['attributes']['sweetness']);
         $this->assertContains('conflicting_fact', array_column($conflict['profile']['review_issues'], 'code'));
-        foreach (['Parfum manis yang terbaik, dengan vanilla.', 'Klasifikasi Aroma: Vanilla, Woody, Soft', 'Klasifikasi Aroma: Tidak manis'] as $description) {
+        foreach (['Parfum manis yang terbaik, dengan vanilla.', 'Klasifikasi Aroma: Vanilla, Woody, Soft'] as $description) {
             $this->assertNull($this->row(3, ['description' => $description])['profile']['attributes']['sweetness']);
         }
     }
@@ -370,5 +370,73 @@ class FragrancePreferenceEngineTest extends TestCase
                 $this->addToAssertionCount(1);
             }
         }
+    }
+
+    public function test_non_sweet_is_a_specific_fact_not_a_guess_from_notes_or_weak_negation(): void
+    {
+        foreach (['Kemanisan: tidak manis', 'Karakter Aroma: Citrus, not sweet'] as $description) {
+            $row = $this->row(1, ['description' => $description]);
+            $this->assertSame('none', $row['profile']['attributes']['sweetness']);
+            $this->assertNotEmpty($row['profile']['evidence']['sweetness']);
+        }
+        foreach (['Kemanisan: tidak terlalu manis', 'Karakter Aroma: maybe not sweet', 'Parfum tidak manis untuk semua orang.', 'Kemanisan: not sweet but sweet'] as $description) {
+            $this->assertNull($this->row(1, ['description' => $description])['profile']['attributes']['sweetness']);
+        }
+    }
+
+    public function test_hidden_sweetness_is_canonicalized_for_avoidance_before_scoring(): void
+    {
+        $sweet = $this->row(1, ['description' => 'Kemanisan: tinggi']);
+        $dry = $this->row(2, ['description' => 'Kemanisan: tidak manis']);
+        $unknown = $this->row(3);
+        $result = $this->engine->recommend($this->answers(['avoid_sweet' => true, 'sweetness' => 'sweet']), [$sweet, $dry, $unknown]);
+        $this->assertSame('none', $result['answers']['sweetness']);
+        $this->assertSame([2, 3], $this->ids($result));
+        $this->assertStringContainsString('belum dapat dipastikan tidak manis', implode(' ', $result['main'][1]['limitations']));
+        $noSweet = $this->engine->recommend($this->answers(['sweetness' => 'none']), [$sweet, $dry]);
+        $this->assertSame([2], $this->ids($noSweet));
+        $gourmand = $this->engine->recommend($this->answers(['avoid' => ['gourmand'], 'sweetness' => 'sweet']), [$sweet, $unknown]);
+        $this->assertSame('any', $gourmand['answers']['sweetness']);
+        $this->assertSame([1, 3], $this->ids($gourmand));
+    }
+
+    public function test_range_lower_bound_is_respected_with_exact_upper_and_110_percent(): void
+    {
+        $rows = [$this->row(1, ['price' => '99999.99']), $this->row(2, ['price' => '100000.00']), $this->row(3, ['price' => '200000.00']), $this->row(4, ['price' => '220000.00']), $this->row(5, ['price' => '220000.01'])];
+        $result = $this->engine->recommend($this->answers(['budget_min' => 100000, 'budget_max' => 200000]), $rows);
+        $this->assertSame([2, 3], $this->ids($result));
+        $this->assertSame([4], $this->ids($result, 'alternative'));
+        $this->assertSame([], $this->ids($this->engine->recommend($this->answers(['budget_min' => 1000000, 'budget_max' => null]), $rows)));
+        $this->expectException(InvalidArgumentException::class);
+        PreferenceAnswers::validate($this->answers(['budget_min' => 400000, 'budget_max' => 300000]));
+    }
+
+    public function test_time_uses_catalog_context_without_making_sweet_night_or_fresh_day_mandatory(): void
+    {
+        $morning = $this->row(1, ['description' => 'Waktu Pemakaian: Pagi - Siang']);
+        $night = $this->row(2, ['description' => 'Waktu Pemakaian: Malam']);
+        $all = $this->row(3, ['description' => 'Waktu Pemakaian: Pagi - Malam']);
+        $result = $this->engine->recommend($this->answers(['time' => 'night']), [$morning, $night, $all]);
+        $this->assertSame([2, 3, 1], $this->ids($result));
+        $this->assertNotContains('event', $night['profile']['attributes']['context']);
+        $this->assertContains('pagi/siang', array_map(fn ($r) => str_contains($r['text'], 'pagi/siang') ? 'pagi/siang' : '', $this->engine->recommend($this->answers(['time' => 'day']), [$morning])['main'][0]['reasons']));
+        $this->assertSame('any', PreferenceAnswers::validate($this->answers())['time']);
+    }
+
+    public function test_sillage_is_not_projection_evidence_in_label_or_heading_lists(): void
+    {
+        foreach (['Sillage: Strong', "Sillage\nStrong"] as $description) {
+            $profile = $this->row(1, ['description' => $description])['profile'];
+            $this->assertNull($profile['attributes']['projection']);
+            $this->assertContains('sillage_not_projection', array_column($profile['review_issues'], 'code'));
+        }
+        $profile = $this->row(1, ['description' => "Sillage: Strong\nProjection: Soft"])['profile'];
+        $this->assertSame('close', $profile['attributes']['projection']);
+    }
+
+    public function test_unisex_preference_is_a_light_score_and_not_a_visibility_filter(): void
+    {
+        $result = $this->engine->recommend($this->answers(['gender' => 'unisex']), [$this->row(1, ['gender' => 'Pria']), $this->row(2)]);
+        $this->assertSame([2, 1], $this->ids($result));
     }
 }

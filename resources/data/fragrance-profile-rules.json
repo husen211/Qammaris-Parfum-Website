@@ -1,6 +1,6 @@
 {
   "schema": "qammaris-fragrance-profile-rules-v1",
-  "version": "pref-02.3",
+  "version": "pref-03.2",
   "status": "provisional_not_human_calibrated",
   "labels": {
     "citrus": "Citrus/segar",

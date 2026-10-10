@@ -1,6 +1,6 @@
 # Qammaris — Tes preferensi parfum V1
 
-Approved Owner plan, 2026-10-09. Status/execution authority: [BACKLOG](BACKLOG.md). Active item **PREF-02 IN_REVIEW** after explicit Owner continuation2026-10-10; PREF-01 human acceptance still IN_REVIEW, not whole V1 complete. [Provisional engine evidence](../verification/pref-02/README.md). [Audit receipt](../verification/pref-01/README.md), [Owner review worksheet](fragrance-preference/REVIEW.md), [versioned 30 scenarios](fragrance-preference/scenarios.json). One item at a time; do not start the next phase automatically. Production release requires separate authorization after acceptance.
+Approved Owner plan, 2026-10-09. Status/execution authority: [BACKLOG](BACKLOG.md). Active item **PREF-03 IN_REVIEW** after explicit Owner continuation2026-10-10; PREF-01 human acceptance still IN_REVIEW, not whole V1 complete. [Provisional engine evidence](../verification/pref-02/README.md). [Audit receipt](../verification/pref-01/README.md), [Owner review worksheet](fragrance-preference/REVIEW.md), [versioned 30 scenarios](fragrance-preference/scenarios.json). One item at a time; do not start the next phase automatically. Production release requires separate authorization after acceptance.
 
 ## Scope and quality reference
 
@@ -42,3 +42,5 @@ Feature flag keeps legacy engine available during development. Production profil
 Technical verification: normalization/negation/dedup/unknowns/profile invalidation/stable ranking; cross-browser result ownership, expiry, feedback replay/CSRF/limits/storage failure. Browser390px touch/1440desktop/320overflow: complete flow, keyboard/back-refresh/edit/retry/feedback. Focused tests first, then CI suite/build once stable. These later checks are not claimed performed during audit. Monitor completion/empty/overall relevance/per-product rejection/errors after release; any next engine version repeats evaluation. Document provenance/ranking/questions/matrix/admin review/retention/runbook before release.
 
 Owner2026-10-10 explicitly requests a usable trial release before independent quality acceptance. [ADR039](../architecture/decisions/ADR-039-preference-website-beta.md) allows labelled beta technical release; no18/20 or16/20 sensory target or final PREF-04 acceptance is inferred.
+
+Owner feedback2026-10-10 revises the questions/conditional flow within PREF-03. [Updated question contract](fragrance-preference/question-revision/QUESTION_FLOW_REVISION.md) supersedes original question wording/count on the correction branch; beta production remains the previous version until a separately recorded release. [Verification and quality limits](../verification/pref-03/question-revision/README.md).

@@ -1,101 +1,139 @@
-const draftKey = 'qammaris:preference:v1';
+import { activeQuestionKeys, effectiveAnswers, sweetnessBranch, validBudget } from './preference-flow.js';
+
 const form = document.querySelector('[data-preference-form]');
 if (form) {
     const seed = JSON.parse(document.getElementById('preference-seed').textContent);
+    const draftKey = `qammaris:preference:${seed.questionVersion}`;
     const panels = [...form.querySelectorAll('[data-preference-step]')];
+    const keys = panels.map(panel => panel.dataset.key);
     const summary = form.querySelector('[data-preference-summary]');
     const error = form.querySelector('[data-preference-error]');
-    let step = 0;
-    let none = { likes: false, avoid: false };
     const favoriteInput = form.elements.favorite_product_id;
     const budget = form.elements.budget_max;
     const free = form.querySelector('[data-budget-free]');
-    const fieldValue = (key) => form.querySelector(`input[name="${key}"]:checked`)?.value;
-    const answers = () => ({
-        budget_max: free.checked ? null : (budget.value ? Number(budget.value) : null),
-        use: fieldValue('use'), environment: fieldValue('environment'),
+    const avoidSweet = form.querySelector('[data-avoid-sweet]');
+    let current = keys[0];
+    let none = { likes: false, avoid: false };
+    let minimum = 0;
+    let openRange = false;
+    const fieldValue = key => form.querySelector(`input[name="${key}"]:checked`)?.value;
+    const answers = () => effectiveAnswers({
+        budget_min: free.checked ? 0 : minimum,
+        budget_max: free.checked || openRange ? null : (budget.value ? Number(budget.value) : null),
+        use: fieldValue('use'), environment: fieldValue('environment'), time: fieldValue('time'),
         likes: [...form.querySelectorAll('input[name="likes"]:checked')].map(e => e.value),
         avoid: [...form.querySelectorAll('input[name="avoid"]:checked')].map(e => e.value),
+        avoid_sweet: avoidSweet.checked,
         sweetness: fieldValue('sweetness'), projection: fieldValue('projection'), longevity: fieldValue('longevity'),
         gender: fieldValue('gender') || 'all', favorite_product_id: favoriteInput.value ? Number(favoriteInput.value) : null,
     });
-    function save() {
-        try { localStorage.setItem(draftKey, JSON.stringify({ timestamp: Date.now(), answers: answers(), step, none, free: free.checked })); }
-        catch { form.querySelector('[data-draft-status]').textContent = 'Browser tidak dapat menyimpan jawaban sementara. Jangan tutup tab sebelum selesai.'; }
+    const active = () => activeQuestionKeys(keys, answers());
+    function message(text) { error.textContent = text || ''; error.hidden = !text; }
+    function budgetState() {
+        budget.disabled = free.checked || openRange;
+        budget.placeholder = free.checked ? 'Budget tidak dibatasi' : openRange ? 'Rp 1.000.000 ke atas' : 'Contoh: 350000';
+        form.querySelector('[data-budget-status]').textContent = free.checked ? 'Budget tidak dibatasi. Kolom angka tidak perlu diisi.' : openRange ? 'Rentang Rp 1.000.000 ke atas dipilih. Untuk batas maksimal tertentu, pilih Isi angka sendiri.' : minimum > 0 ? 'Rentang harga dipilih. Mengubah angka akan memakai batas maksimal sendiri.' : 'Kamu bisa mengisi batas maksimal sendiri.';
+        form.querySelectorAll('[data-budget]').forEach(button => {
+            button.setAttribute('aria-pressed', String(!free.checked && minimum === Number(button.dataset.min) && (openRange ? !button.dataset.budget : budget.value === button.dataset.budget)));
+        });
     }
-    function restore(data, savedNone) {
-        budget.value = data.budget_max ?? '';
-        free.checked = data.budget_max === null;
-        budget.disabled = free.checked;
-        favoriteInput.value = data.favorite_product_id ?? '';
-        for (const [key, value] of Object.entries(data)) {
-            if (['budget_max', 'favorite_product_id'].includes(key)) continue;
-            form.querySelectorAll(`input[name="${key}"]`).forEach(e => { e.checked = Array.isArray(value) ? value.includes(e.value) : e.value === value; });
-        }
-        for (const key of ['likes', 'avoid']) {
-            none[key] = savedNone?.[key] ?? (Array.isArray(data[key]) && !data[key].length);
-            form.querySelector(`[data-none="${key}"]`).checked = none[key];
-        }
-        selectedFavorite();
+    function syncBranch() {
+        if (sweetnessBranch(answers()).skipped) form.querySelectorAll('input[name="sweetness"]').forEach(e => { e.checked = false; });
+    }
+    function save() {
+        try { localStorage.setItem(draftKey, JSON.stringify({ timestamp: Date.now(), answers: answers(), current, none, free: free.checked, openRange })); }
+        catch { form.querySelector('[data-draft-status]').textContent = 'Browser tidak dapat menyimpan jawaban sementara. Jangan tutup tab sebelum selesai.'; }
     }
     function selectedFavorite() {
         const selected = seed.favorites.find(p => p.id === Number(favoriteInput.value));
         form.querySelector('[data-favorite-selected]').textContent = selected ? `Dipilih: ${selected.label}` : 'Belum ada parfum dipilih.';
         if (!selected) favoriteInput.value = '';
     }
-    function valid(index) {
-        const key = panels[index]?.dataset.key;
+    function restore(data, savedNone, savedFree) {
+        minimum = Number.isInteger(data.budget_min) ? data.budget_min : 0;
+        budget.value = data.budget_max ?? '';
+        free.checked = savedFree ?? (data.budget_max === null && minimum === 0);
+        openRange = data.budget_max === null && minimum > 0;
+        avoidSweet.checked = data.avoid_sweet === true;
+        favoriteInput.value = data.favorite_product_id ?? '';
+        for (const [key, value] of Object.entries(data)) {
+            if (!keys.includes(key) || ['budget_max', 'favorite_product_id'].includes(key)) continue;
+            form.querySelectorAll(`input[name="${key}"]`).forEach(e => { e.checked = Array.isArray(value) ? value.includes(e.value) : e.value === value; });
+        }
+        for (const key of ['likes', 'avoid']) {
+            none[key] = savedNone?.[key] ?? (Array.isArray(data[key]) && !data[key].length && !(key === 'avoid' && avoidSweet.checked));
+            form.querySelector(`[data-none="${key}"]`).checked = none[key];
+        }
+        selectedFavorite(); syncBranch(); budgetState();
+    }
+    function valid(key) {
+        const panel = panels.find(p => p.dataset.key === key);
         const data = answers();
-        if (key === 'budget_max' && !free.checked && (!Number.isInteger(data.budget_max) || data.budget_max < 1 || data.budget_max > 99999999)) return 'Isi budget rupiah bulat yang valid atau pilih budget bebas.';
+        if (key === 'budget_max' && !validBudget(data.budget_min, data.budget_max, free.checked || openRange)) return 'Pilih rentang, isi budget rupiah bulat, atau pilih budget tidak dibatasi.';
         if (key === 'likes' && ((!data.likes.length && !none.likes) || data.likes.length > 3)) return 'Pilih satu sampai tiga aroma atau belum tahu.';
-        if (key === 'avoid' && !data.avoid.length && !none.avoid) return 'Pilih aroma yang dihindari atau tidak ada / belum tahu.';
+        if (key === 'avoid' && !data.avoid.length && !data.avoid_sweet && !none.avoid) return 'Pilih aroma yang tidak kamu suka atau tidak ada / belum tahu.';
         if (key === 'avoid' && data.avoid.some(v => data.likes.includes(v))) return 'Ada aroma yang sekaligus disukai dan dihindari. Ubah salah satunya.';
-        if (panels[index]?.dataset.type === 'radio' && !['gender'].includes(key) && !data[key]) return 'Pilih satu jawaban sebelum lanjut.';
+        if (panel?.dataset.type === 'radio' && panel.dataset.optional !== 'true' && !data[key]) return 'Pilih satu jawaban sebelum lanjut.';
         return null;
     }
-    function message(text) { error.textContent = text || ''; error.hidden = !text; }
     function summaryRows() {
         const target = form.querySelector('[data-summary-rows]'); target.replaceChildren();
         const data = answers();
-        panels.forEach((panel, index) => {
-            const key = panel.dataset.key;
+        for (const key of active()) {
+            const panel = panels.find(p => p.dataset.key === key);
             const line = document.createElement('div'); line.className = 'py-4 flex items-start justify-between gap-3';
             const info = document.createElement('div');
             const label = document.createElement('p'); label.className = 'text-sm text-brand-black/60'; label.textContent = panel.querySelector('legend').textContent;
             const value = document.createElement('p');
-            if (key === 'budget_max') value.textContent = data[key] === null ? 'Bebas' : `Rp ${data[key].toLocaleString('id-ID')}`;
+            const rupiah = number => `Rp ${number.toLocaleString('id-ID')}`;
+            if (key === 'budget_max') value.textContent = data.budget_max === null ? (data.budget_min ? `${rupiah(data.budget_min)} ke atas` : 'Tidak dibatasi') : data.budget_min ? `${rupiah(data.budget_min)}–${rupiah(data.budget_max)}` : `Maksimal ${rupiah(data.budget_max)}`;
             else if (key === 'favorite_product_id') value.textContent = seed.favorites.find(p => p.id === data[key])?.label || 'Dilewati';
-            else if (Array.isArray(data[key])) value.textContent = data[key].length ? [...panel.querySelectorAll('input:checked')].map(e => e.closest('label').textContent.trim()).join(', ') : 'Tidak ada / belum tahu';
-            else value.textContent = [...panel.querySelectorAll('input:checked')].map(e => e.closest('label').textContent.trim()).join(', ') || 'Bebas / dilewati';
-            const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'pref-link min-h-11 shrink-0'; edit.textContent = 'Ubah'; edit.setAttribute('aria-label', `Ubah ${label.textContent}`); edit.addEventListener('click', () => show(index));
+            else value.textContent = [...panel.querySelectorAll('input:checked')].map(e => e.closest('label').textContent.trim()).join(', ') || 'Dilewati';
+            const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'pref-link min-h-11 shrink-0'; edit.textContent = 'Ubah'; edit.setAttribute('aria-label', `Ubah ${label.textContent}`); edit.addEventListener('click', () => show(key));
             info.append(label, value); line.append(info, edit); target.append(line);
-        });
+        }
+        const branch = sweetnessBranch(data);
+        form.querySelector('[data-branch-summary]').hidden = !branch.skipped;
+        form.querySelector('[data-branch-summary]').textContent = data.avoid_sweet ? 'Pilihan tidak suka aroma manis sudah dipakai. Pertanyaan kemanisan dilewati.' : 'Pertanyaan kemanisan dilewati karena kamu menghindari dessert/gourmand. Pilih Aroma manis pada jawaban hindari jika kamu juga ingin menghindari manis dari buah atau bunga.';
     }
-    function show(index, focus = true) {
-        step = Math.max(0, Math.min(index, panels.length));
-        panels.forEach((panel, i) => { panel.hidden = i !== step; panel.inert = i !== step; });
-        summary.hidden = step !== panels.length;
-        form.querySelector('[data-step-label]').textContent = step === panels.length ? 'Ringkasan jawaban' : `Pertanyaan ${step + 1} dari ${panels.length}${step >= 8 ? ' · opsional' : ''}`;
-        form.querySelector('[data-progress]').value = step + 1;
-        form.querySelector('[data-preference-back]').hidden = step === 0;
-        form.querySelector('[data-preference-next]').hidden = step === panels.length;
-        form.querySelector('[data-preference-next]').textContent = step >= 8 ? 'Lanjut / lewati' : 'Lanjut';
-        form.querySelector('[data-preference-submit]').hidden = step !== panels.length;
-        if (step === panels.length) summaryRows();
-        message(null); save();
-        if (focus) (step === panels.length ? summary.querySelector('h2') : panels[step].querySelector('legend')).focus({ preventScroll: true });
+    function show(key, focus = true) {
+        const available = active();
+        current = key === 'summary' || available.includes(key) ? key : available[0];
+        const index = available.indexOf(current);
+        panels.forEach(panel => { panel.hidden = panel.dataset.key !== current; panel.inert = panel.hidden; });
+        summary.hidden = current !== 'summary';
+        const panel = panels.find(p => p.dataset.key === current);
+        form.querySelector('[data-step-label]').textContent = current === 'summary' ? 'Ringkasan jawaban' : `Pertanyaan ${index + 1} dari ${available.length}${panel?.dataset.optional === 'true' ? ' · opsional' : ''}`;
+        const progress = form.querySelector('[data-progress]'); progress.max = available.length + 1; progress.value = current === 'summary' ? available.length + 1 : index + 1;
+        form.querySelector('[data-preference-back]').hidden = index === 0;
+        form.querySelector('[data-preference-next]').hidden = current === 'summary';
+        form.querySelector('[data-preference-next]').textContent = panel?.dataset.optional === 'true' ? 'Lanjut / lewati' : 'Lanjut';
+        form.querySelector('[data-preference-submit]').hidden = current !== 'summary';
+        if (current === 'summary') summaryRows();
+        message(null); budgetState(); save();
+        if (focus) {
+            const heading = current === 'summary' ? summary.querySelector('h2') : panel.querySelector('legend');
+            heading.focus({ preventScroll: true });
+            heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+        }
     }
-    form.querySelectorAll('[data-budget]').forEach(button => button.addEventListener('click', () => { free.checked = false; budget.disabled = false; budget.value = button.dataset.budget; save(); }));
-    free.addEventListener('change', () => { budget.disabled = free.checked; save(); });
+    form.querySelectorAll('[data-budget]').forEach(button => button.addEventListener('click', () => {
+        free.checked = false; minimum = Number(button.dataset.min); openRange = !button.dataset.budget; budget.value = button.dataset.budget || ''; budgetState(); save();
+    }));
+    form.querySelector('[data-budget-custom]').addEventListener('click', () => { free.checked = false; minimum = 0; openRange = false; budgetState(); budget.focus(); save(); });
+    budget.addEventListener('input', () => { minimum = 0; openRange = false; budgetState(); });
+    free.addEventListener('change', () => { minimum = 0; openRange = false; budgetState(); save(); });
     form.addEventListener('change', event => {
         if (event.target.dataset.none) {
             const key = event.target.dataset.none; none[key] = event.target.checked;
-            if (none[key]) form.querySelectorAll(`input[name="${key}"]`).forEach(e => e.checked = false);
-        } else if (['likes', 'avoid'].includes(event.target.name)) {
-            const key = event.target.name; none[key] = false; form.querySelector(`[data-none="${key}"]`).checked = false;
+            if (none[key]) { form.querySelectorAll(`input[name="${key}"]`).forEach(e => { e.checked = false; }); if (key === 'avoid') avoidSweet.checked = false; }
+        } else if (['likes', 'avoid'].includes(event.target.name) || event.target === avoidSweet) {
+            const key = event.target === avoidSweet ? 'avoid' : event.target.name; none[key] = false; form.querySelector(`[data-none="${key}"]`).checked = false;
             if (key === 'likes' && answers().likes.length > 3) { event.target.checked = false; message('Pilih maksimal tiga aroma.'); }
         }
-        save();
+        syncBranch();
+        if (event.target.name === 'avoid' || event.target === avoidSweet || event.target.dataset.none === 'avoid') show(current, false);
+        else save();
     });
     form.addEventListener('input', save);
     form.querySelector('[data-favorite-clear]').addEventListener('click', () => { favoriteInput.value = ''; selectedFavorite(); save(); });
@@ -110,11 +148,11 @@ if (form) {
         });
         if (!matches.length) { const note = document.createElement('p'); note.textContent = 'Tidak ditemukan. Coba nama lain atau lewati.'; target.append(note); }
     });
-    form.querySelector('[data-preference-next]').addEventListener('click', () => { const problem = valid(step); if (problem) message(problem); else show(step + 1); });
-    form.querySelector('[data-preference-back]').addEventListener('click', () => show(step - 1));
+    form.querySelector('[data-preference-next]').addEventListener('click', () => { const problem = valid(current); if (problem) message(problem); else { const available = active(); show(available[available.indexOf(current) + 1] || 'summary'); } });
+    form.querySelector('[data-preference-back]').addEventListener('click', () => { const available = active(); show(current === 'summary' ? available.at(-1) : available[available.indexOf(current) - 1]); });
     form.addEventListener('submit', async event => {
         event.preventDefault();
-        for (let i = 0; i < panels.length; i++) { const problem = valid(i); if (problem) { show(i); message(problem); return; } }
+        for (const key of active()) { const problem = valid(key); if (problem) { show(key); message(problem); return; } }
         const submit = form.querySelector('[data-preference-submit]'); submit.disabled = true; submit.textContent = 'Mencari rekomendasi…'; form.setAttribute('aria-busy', 'true'); save();
         try {
             const response = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': form.elements._token.value }, body: JSON.stringify(answers()) });
@@ -125,9 +163,10 @@ if (form) {
         finally { submit.disabled = false; submit.textContent = 'Lihat rekomendasi'; form.removeAttribute('aria-busy'); }
     });
     if (Object.keys(seed.answers).length) restore(seed.answers);
-    else { try { const draft = JSON.parse(localStorage.getItem(draftKey)); if (draft && Date.now() - draft.timestamp < 86400000 && Date.now() >= draft.timestamp) { restore(draft.answers, draft.none); free.checked = draft.free === true; budget.disabled = free.checked; step = Number.isInteger(draft.step) ? draft.step : 0; } } catch { /* Storage is optional. */ } }
-    show(step, false);
+    else { try { const draft = JSON.parse(localStorage.getItem(draftKey)); if (draft && Date.now() - draft.timestamp < 86400000 && Date.now() >= draft.timestamp) { restore(draft.answers, draft.none, draft.free); current = typeof draft.current === 'string' ? draft.current : keys[0]; } } catch { /* Storage is optional. */ } }
+    show(current, false);
 }
+
 const feedback = document.querySelector('[data-preference-feedback]');
 if (feedback) feedback.addEventListener('submit', async event => {
     event.preventDefault();

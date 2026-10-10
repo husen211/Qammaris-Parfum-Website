@@ -31,6 +31,7 @@
        <h3 class="mt-1 font-mayluxa text-2xl"><a href="{{ route('products.show', $row['product']->slug) }}">{{ $row['product']->name }}</a></h3>
        <p class="mt-2">{{ $row['size_ml'] }} ml · {{ \App\Support\Rupiah::format($row['price']) }}</p>
        <p class="mt-2 text-sm font-semibold">{{ ['available' => 'Ready', 'sold_out' => 'Habis', 'unknown' => 'Tanyakan ketersediaan'][$row['availability']] ?? 'Tanyakan ketersediaan' }}</p>
+       @if($row['sweetness_uncertain'] ?? false)<p class="mt-3 text-sm text-amber-900">Kemanisan belum diketahui. Coba tester untuk memastikan pilihan ini sesuai.</p>@endif
        @if($row['changed'])<p class="mt-3 text-sm text-amber-900">Data berubah sejak tes. Hitung ulang untuk memastikan pilihan ini masih sesuai.</p>@endif
        <ul class="mt-4 space-y-2 text-sm">@foreach($row['reasons'] as $reason)<li>{{ $reason['text'] }}</li>@endforeach</ul>
        <details class="mt-4 border-t border-brand-black/10 pt-3"><summary class="cursor-pointer min-h-11 text-sm">Kompromi dan batasan data</summary><ul class="space-y-2 text-sm text-brand-black/60">@foreach($row['limitations'] as $limitation)<li>{{ $limitation }}</li>@endforeach</ul></details>
