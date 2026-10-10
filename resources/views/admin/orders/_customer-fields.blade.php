@@ -1,6 +1,6 @@
 @php
     $order ??= null;
-    $input = 'mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10';
+    $input = 'mt-1 min-h-12 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10';
     $value = fn (string $field) => old($field, $order?->{$field});
 @endphp
 <div class="grid gap-4 sm:grid-cols-2">
@@ -35,17 +35,17 @@
         @error('packaging')<p class="mt-1 text-sm text-red-700">{{ $message }}</p>@enderror
     </div>
     <div class="sm:col-span-2">
-        <label for="address" class="block text-sm font-medium text-gray-700">Alamat / patokan <span class="font-normal text-gray-500">(wajib lengkap untuk luar kota)</span></label>
+        <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
         <textarea id="address" name="address" rows="2" maxlength="500" class="{{ $input }}">{{ $value('address') }}</textarea>
         @error('address')<p class="mt-1 text-sm text-red-700">{{ $message }}</p>@enderror
     </div>
     <div>
-        <label for="postcode" class="block text-sm font-medium text-gray-700">Kode pos <span class="font-normal text-gray-500">(luar kota)</span></label>
+        <label for="postcode" class="block text-sm font-medium text-gray-700">Kode pos <span class="font-normal text-gray-500">(opsional)</span></label>
         <input id="postcode" name="postcode" value="{{ $value('postcode') }}" inputmode="numeric" maxlength="5" class="{{ $input }}">
         @error('postcode')<p class="mt-1 text-sm text-red-700">{{ $message }}</p>@enderror
     </div>
     <div>
-        <label for="customer_note" class="block text-sm font-medium text-gray-700">Catatan customer</label>
+        <label for="customer_note" class="block text-sm font-medium text-gray-700">Catatan <span class="font-normal text-gray-500">(opsional)</span></label>
         <input id="customer_note" name="customer_note" value="{{ $value('customer_note') }}" maxlength="300" class="{{ $input }}">
         @error('customer_note')<p class="mt-1 text-sm text-red-700">{{ $message }}</p>@enderror
     </div>

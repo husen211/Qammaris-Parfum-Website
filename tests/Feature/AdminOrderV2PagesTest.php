@@ -55,9 +55,13 @@ class AdminOrderV2PagesTest extends TestCase
 
     public function test_staff_creates_an_instagram_order_with_complete_data_and_a_new_repeat_customer(): void
     {
-        $this->actingAs($this->staff)->get('/admin/orders/create')->assertOk()
-            ->assertSee('Pesanan dari')->assertSee('Pelanggan lama? Cari nama atau nomor WA')
-            ->assertSee('Data sudah lengkap')->assertSee('Kirim link ke customer');
+        // ORD-03: product -> customer -> recipient data -> create; source is an advanced option; the button is not sticky.
+        $page = $this->actingAs($this->staff)->get('/admin/orders/create')->assertOk()
+            ->assertSeeInOrder(['1. Produk', '2. Pelanggan', '3. Data penerima', 'Opsi lanjutan', 'Pesanan dari', 'Buat pesanan</button>'], false)
+            ->assertSee('Isi sekarang')->assertSee('Customer isi via link');
+        $form = substr($page->getContent(), strpos($page->getContent(), 'data-order-create'));
+        $this->assertStringNotContainsString('sticky', $form);
+        $this->assertStringNotContainsString('text-sm focus:border-black', $form, 'Focusable fields are 16px (no iOS zoom)');
 
         $response = $this->post('/admin/orders', $this->orderPayload([
             'source' => 'instagram', 'fill_customer' => '1', 'new_customer' => '1',

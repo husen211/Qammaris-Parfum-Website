@@ -295,3 +295,14 @@ a[data-catalog-return][data-catalog-pressed] {
     pointer-events: none;
     z-index: 130;
 }
+
+/*
+ * ORD-03: iOS Safari zooms into a focused field whose text is smaller than 16px. On touch screens every focusable
+ * text field in the admin shell and the customer order page is at least 16px. Pinch zoom stays enabled.
+ * Unlayered on purpose, so it wins over Tailwind's text-sm/text-xs utilities.
+ */
+@media (pointer: coarse) {
+    :is([data-navigation-shell="admin"], [data-order-page]) :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"], [type="submit"], [type="button"]), select, textarea) {
+        font-size: max(1rem, 16px);
+    }
+}
