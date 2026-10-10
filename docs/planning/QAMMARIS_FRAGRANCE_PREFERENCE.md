@@ -34,9 +34,11 @@ Overall relevance: Sesuai / Sebagian sesuai / Kurang sesuai. Optional per-perfum
 |---|---|---|
 | PREF-01 | Full read-only audit, dictionary/ambiguities, 30 cases with Owner/staff labels | IN_REVIEW; human labels/semantic decisions pending |
 | PREF-02 | Derived profiles/ranking/review and calibrated comparison meets quality targets | IN_REVIEW; code/offline source comparison prepared, human calibration/acceptance pending |
-| PREF-03 | Wizard, seven-day secure results, relevance feedback, existing admin reports | Not started |
+| PREF-03 | Wizard, seven-day secure results, relevance feedback, existing admin reports | Website beta implemented; technical release pending under explicit Owner trial-release permission |
 | PREF-04 | Final human review, staging, CI, additive migrations, authorized deployment/live verification | Not started |
 
 Feature flag keeps legacy engine available during development. Production profile build preview/idempotent apply writes only new recommendation tables; preserve catalog IDs/slugs/descriptions/notes/prices/status/media. Additive staging/production migrations after review/authorization. Rollback flag returns legacy quiz and retains new tables/feedback.
 
 Technical verification: normalization/negation/dedup/unknowns/profile invalidation/stable ranking; cross-browser result ownership, expiry, feedback replay/CSRF/limits/storage failure. Browser390px touch/1440desktop/320overflow: complete flow, keyboard/back-refresh/edit/retry/feedback. Focused tests first, then CI suite/build once stable. These later checks are not claimed performed during audit. Monitor completion/empty/overall relevance/per-product rejection/errors after release; any next engine version repeats evaluation. Document provenance/ranking/questions/matrix/admin review/retention/runbook before release.
+
+Owner2026-10-10 explicitly requests a usable trial release before independent quality acceptance. [ADR039](../architecture/decisions/ADR-039-preference-website-beta.md) allows labelled beta technical release; no18/20 or16/20 sensory target or final PREF-04 acceptance is inferred.

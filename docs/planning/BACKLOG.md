@@ -14,11 +14,11 @@ Owner approved implementation of [V1 plan](QAMMARIS_FRAGRANCE_PREFERENCE.md), on
 
 | ID | Status | Next prerequisite |
 |---|---|---|
-| PREF-02 | IN_REVIEW, active | Backend code/provisional evaluation prepared under explicit continuation; independent review/calibration/quality acceptance pending; [evidence](../verification/pref-02/README.md) |
-| PREF-03 | READY, not started | PREF-02 accepted plus explicit continuation; wizard/secure results/relevance feedback/admin |
-| PREF-04 | READY, not started | PREF-03 accepted plus final Owner/staff review and separate staging/migration/release permission |
+| PREF-02 | IN_REVIEW | Backend code/provisional evaluation prepared under explicit continuation; independent review/calibration/quality acceptance pending; [evidence](../verification/pref-02/README.md) |
+| PREF-03 | IN_PROGRESS, active | Explicit Owner2026-10-10 trial-release request advances usable website beta; human quality pending; [evidence](../verification/pref-03/README.md) |
+| PREF-04 | READY, not started | Final human-quality acceptance remains separate from the authorized PREF-03 beta technical release |
 
-Do not merge/deploy this draft audit/engine as V1 or use past About release permission for quiz release. PREF-01 cannot become DONE while human reference is pending. PREF-02 code has separate additive profile/revision migration, preview/apply/review operations, default-disabled catalog adapter, traceable provisional ranking and offline training/hold-out comparison.PREF-02.3 distinguishes explicit projection/sweetness/short-longevity compromises from unknowns and excludes nonpositive totals;53 focused tests/265 assertions passed. [Latest15-case quality comparison and limits](../verification/pref-02/quality-v3/README.md); earlier reader/backend proofs remain dated baselines. No production/staging migration, catalog write or public caller; PREF-03/04 not started. One active implementation item remains PREF-02.
+Owner2026-10-10 separately authorizes a labelled usable beta for testing before human-quality acceptance. [ADR039](../architecture/decisions/ADR-039-preference-website-beta.md) supersedes the prior beta release gate only; never mark independent quality targets passed or rely on About permission. PREF-01 cannot become DONE while human reference is pending. PREF-02 code has separate additive profile/revision migration, preview/apply/review operations, default-disabled catalog adapter, traceable provisional ranking and offline training/hold-out comparison.PREF-02.3 distinguishes explicit projection/sweetness/short-longevity compromises from unknowns and excludes nonpositive totals;53 focused tests/265 assertions passed. [Latest15-case quality comparison and limits](../verification/pref-02/quality-v3/README.md); earlier reader/backend proofs remain dated baselines. PREF-03 website adapter is now implemented on its branch with64 focused tests/406 assertions and local responsive/full-flow browser proof. Beta migration/deployment/live proof is pending. No catalog mutation; one active item is PREF-03. PREF-04 final acceptance remains unstarted.
 
 ## ABOUT-04 — Source-faithful split hero — IN_REVIEW
 
