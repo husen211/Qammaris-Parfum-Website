@@ -93,6 +93,16 @@ POST checkout -> CheckoutRequest -> current catalog + review guard
 
 `CartController`, `app/Http/Requests/Cart/`, and `app/Support/InquiryWhatsApp.php` retain routes and numeric cart JSON fields. Public labels use keranjang/pesanan; helper name is historical. Only available, published, positive-price offers proceed. Required name/phone/address and bounded optional postcode/note are not stored in order/customer tables or application logs; failed validation may use temporary session old input. No-store/no-referrer responses limit application/browser caching. Cart remains after redirect because actual WA sending is unobservable. No numeric reservation/payment/order ledger ([ADR-028](decisions/ADR-028-whatsapp-order-checkout.md)).
 
+ORD-04 (flag `ORDERS_WEBSITE_CHECKOUT` + `ORDERS_V2_ENABLED`): POST checkout → session `checkout_key` check → `CreateOnlineOrder::fromWebsiteCheckout()`.
+- **Creation.** Guest V2 order with `created_by` null, `source=website`, lifecycle `draft`. The catalog is re-read in the transaction, and the unique `checkout_key` makes it idempotent.
+- **After save.** The cart is cleared and the customer is redirected to `/pesanan/{token}`, which opens `InquiryWhatsApp::websiteOrderUrl` once.
+- **Confirmation.** `OnlineOrderFulfillment::confirmWebsiteOrder()` moves draft → active.
+- **Contract.** API v1 r4.2 unchanged; a draft has `queue=null`.
+- **Limits.** Throttled by the named limiter `website-checkout`.
+- **Phase-2 columns** (nullable): `district`, `subdistrict`, `shipping_estimate`, `shipping_estimate_source`, `weight_grams` on variants and order items.
+
+See [ADR-044](decisions/ADR-044-website-checkout-orders.md).
+
 AUD-06: `Support/Rupiah` shares the whole-price input rule across editor/CSV/`SyncSingleOffer`, and converts stored decimal rupiah to integer hundredths for exact multiplication/sums. Canonical decimal strings bind the quote and feed Blade/WhatsApp formatting; numeric compatibility JSON casts occur only at output. Add/update/remove totals now resolve every remaining item from current catalog data; an unresolved cart returns `cart_total: null`, never a partial/stale total. `/cart/data` retains its 409 review response. The unused session-price `cart_total()` helper is removed after tracing consumers: product JS uses success/count, cart-page JS reloads, navbar history refresh uses count only. Whole prices display without decimals; hypothetical legacy fractions retain exact display/arithmetic and are flagged in the editor, with no data rewrite. Cart wrapping handles longer totals on small screens. [ADR-030](decisions/ADR-030-whole-rupiah-and-current-cart-totals.md), [verification](../verification/aud-06/README.md); [approved production release](../verification/audit-release/README.md).
 
 `product-cart.js` runs confirmed-success Web Animations flight with reduced-motion fallback; `cart-page.js` serializes quantity/removal mutation feedback. Header points directly to /cart, not drawer. Shared layout destination skeletons observe native same-tab links/valid submits; pageshow resets pending state and timeout recovery never replays POST. No HTML-fetch/swap router; Blade navigation recreates document/navbar DOM. Touch rules/device limits remain explicit, not inferred from mouse viewports.

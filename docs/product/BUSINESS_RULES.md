@@ -105,10 +105,44 @@ Keputusan: [ADR-020](../architecture/decisions/ADR-020-public-catalog-state-and-
 - Checkout wajib nama penerima, nomor HP dan alamat lengkap; kode pos/catatan opsional. Quantity defensif 1–99, bukan reservasi atau bukti jumlah stok aktual.
 - Server membaca ulang product/offer/harga/status/publication; session bukan authority harga. Review fingerprint mengikat isi/jumlah/harga/status; perubahan sebelum submit meminta review ringkasan terbaru.
 - Composer WhatsApp berisi item/jumlah/harga/subtotal/penerima. Customer menekan Kirim sendiri; membuka composer bukan bukti pesan terkirim/order diterima/pembayaran. Ongkir/pembayaran diselesaikan di WA, tidak diasumsikan gratis/lunas. Keranjang tetap untuk retry.
-- Checkout keranjang tidak membuat order/customer record (Pesanan Online di bawah adalah jalur terpisah); tidak ada payment gateway atau quantity reservation. Data penerima checkout keranjang tidak masuk DB/log aplikasi; validasi gagal dapat memakai old input session sementara. Checkout/redirect no-store/no-referrer; proxy/APM/browser/WhatsApp retention tidak diasumsikan terverifikasi.
+- Tanpa saklar ORD-04 (default): checkout keranjang tidak membuat order/customer record (Pesanan Online di bawah adalah jalur terpisah); tidak ada payment gateway atau quantity reservation. Data penerima checkout keranjang tidak masuk DB/log aplikasi; validasi gagal dapat memakai old input session sementara. Checkout/redirect no-store/no-referrer; proxy/APM/browser/WhatsApp retention tidak diasumsikan terverifikasi.
 - Add-to-cart memberi pending lalu sukses hanya setelah server menerima; animasi menuju ikon opsional menurut reduced motion. Failed action dapat retry tanpa sukses palsu.
 
 Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-checkout.md), menggantikan inquiry-only ADR-020. Filename checkout ADR-026 lama adalah alias, bukan keputusan kedua.
+
+### Checkout keranjang menjadi Pesanan Online (ORD-04, branch review, saklar `ORDERS_WEBSITE_CHECKOUT`)
+
+Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir checkout di atas. Saat saklar mati, checkout tetap seperti ADR-028.
+
+- **Tanpa login.** Customer checkout tanpa login/OTP. Pesanan langsung disimpan di domain Pesanan Online yang sama, dengan nomor `QAM-xxxx`, sebelum WhatsApp dibuka. Tidak ada akun admin pengganti: pembuatnya kosong dan riwayat mencatat "Customer".
+- **Pilihan pengiriman:**
+  - Ambil di toko (tanpa alamat).
+  - Pengiriman Instan — Kota Palu: kurir online (ojol) dipilih staf; info perkiraan 1–2 jam setelah pembayaran dikonfirmasi.
+  - Pengiriman Luar Kota — J&T.
+
+  Alamat hanya wajib untuk pengiriman. Kelurahan, kecamatan, dan kode pos opsional.
+- **Pilihan lain:** paperbag wajib dipilih. Preferensi pembayaran Transfer bank atau QRIS hanyalah preferensi, tidak menandai lunas. Ongkir tampil "Menunggu konfirmasi staf".
+- **Status awal "Menunggu konfirmasi website"** (lifecycle `draft`):
+  - belum menjadi tugas packing di Qammaris App;
+  - belum bisa dicatat pembayarannya;
+  - data tidak bisa diubah customer lewat link (perubahan lewat chat).
+
+  Staff Order boleh mengisi ongkir dan memperbaiki data. Setelah chat, Staff Order menekan **Konfirmasi pesanan**; pesanan lalu mengikuti alur biasa (pembayaran → packing → pengiriman → reimburse). Pesanan yang tidak jadi dibatalkan dengan alasan.
+- **Membuka WhatsApp bukan konfirmasi**, bukan bukti pesan terkirim, dan bukan pembayaran.
+  - Halaman sukses (link status pesanan, berlaku 7 hari selama belum dikonfirmasi) membuka WhatsApp sekali dan menyediakan **Buka WhatsApp lagi**.
+  - Pesanan tetap tersimpan walau WhatsApp gagal atau tidak dikirim.
+  - Pesan WhatsApp hanya berisi nomor pesanan, nama, cara pengiriman, dan subtotal.
+- **Katalog dicek ulang di server.** Saat simpan, harga dan status Tersedia dicek ulang. Bila berubah, pesanan tidak dibuat dan customer meninjau ringkasan terbaru.
+- **Kirim ganda aman.** Tekan dua kali, refresh, atau kirim ulang dengan sesi checkout yang sama menghasilkan satu pesanan yang sama.
+- **Batas kirim:** 6 checkout per menit dan 30 per jam per perangkat/IP.
+- **Pelanggan langganan.** Nomor HP checkout tidak otomatis membuat pelanggan langganan; menghubungkan pelanggan tetap aksi Staff Order.
+- **Privasi.** Data penerima checkout (nama, HP, alamat, kelurahan/kecamatan, catatan) disimpan seperti Pesanan Online lain: hanya untuk mengurus pesanan, terlihat oleh tim Qammaris dan detail tugas App setelah aktif. Belum ada penghapusan otomatis (ORD-05).
+- **Tahap 2 (belum dihitung):**
+  - Kolom estimasi ongkir dan sumbernya (manual/zona/jarak/API) serta berat produk/item tersedia tetapi kosong.
+  - Berat yang belum diketahui tetap kosong, tidak diisi 1 kg.
+  - Tidak ada panggilan Maxim, GoSend, atau RajaOngkir.
+
+Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md).
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 
