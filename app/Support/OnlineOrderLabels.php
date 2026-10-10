@@ -51,7 +51,7 @@ final class OnlineOrderLabels
 
     public const PROVIDERS = ['maxim' => 'Maxim', 'gosend' => 'GoSend', 'grab' => 'GrabExpress', 'other' => 'Kurir lain'];
 
-    public const CONFIRMATION_SOURCES = ['proof_in_chat' => 'Bukti di chat', 'proof_uploaded' => 'Bukti diunggah', 'majoo' => 'Majoo'];
+    public const CONFIRMATION_SOURCES = ['proof_in_chat' => 'Bukti di chat', 'proof_uploaded' => 'Bukti diunggah', 'majoo' => 'Majoo', 'admin_recorded' => 'Dicatat admin'];
 
     private const EVENTS = [
         'created' => 'membuat pesanan',

@@ -20,7 +20,7 @@ class OrderMigrationsMariaDbTest extends TestCase
         '2026_10_08_300001_add_order_state_dimensions_to_online_orders', '2026_10_09_000001_add_order_cutover_and_money_ledger',
         '2026_10_09_100001_add_order_issues_and_v2_operations', '2026_10_09_200001_create_customers_and_saved_addresses',
         '2026_10_09_300001_add_keep_adjustments_and_change_requests', '2026_10_09_400001_create_order_api_tables',
-        '2026_10_09_500001_add_delivery_to_online_order_events',
+        '2026_10_09_500001_add_delivery_to_online_order_events', '2026_10_10_000001_add_payment_preference_to_online_orders',
     ];
 
     protected function setUp(): void

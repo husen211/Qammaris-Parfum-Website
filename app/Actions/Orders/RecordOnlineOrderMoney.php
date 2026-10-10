@@ -24,19 +24,23 @@ class RecordOnlineOrderMoney
 {
     public const CONFIRMATION_SOURCES = ['proof_in_chat', 'proof_uploaded', 'majoo'];
 
+    /** ORD-03: ledger-only source when an admin records the payment without naming one; API v1 shows null for it. */
+    public const ADMIN_RECORDED = 'admin_recorded';
+
     public function recordPayment(OnlineOrder $order, int $revision, User $actor, string $amount, string $method, ?string $source, ?string $reference = null, ?string $note = null): OnlineOrder
     {
         return $this->mutate($order, $revision, $actor, 'orders.manage', function (OnlineOrder $order) use ($actor, $amount, $method, $source, $reference, $note): void {
             if ($order->lifecycle === 'cancelled') {
                 throw new OnlineOrderRejected('Pesanan yang dibatalkan tidak menerima pembayaran baru.');
             }
-            if (! array_key_exists($method, OnlineOrder::PAYMENT_METHODS) || ($source !== null && ! in_array($source, self::CONFIRMATION_SOURCES, true))) {
+            if (! array_key_exists($method, OnlineOrder::PAYMENT_METHODS) || ($source !== null && ! in_array($source, [...self::CONFIRMATION_SOURCES, self::ADMIN_RECORDED], true))) {
                 throw new OnlineOrderRejected('Pilih metode dan sumber konfirmasi pembayaran yang valid.');
             }
             $cents = $this->cents($amount);
             $this->entry($order, $actor, OnlineOrderPayment::TYPE_PAYMENT, $cents, ['method' => $method, 'confirmation_source' => $source, 'reference' => $reference, 'note' => $note]);
             $order->payment_method ??= $method;
-            $order->payment_confirmation_source = $source;
+            // The order field is part of API v1 (enum without admin_recorded); the ledger entry keeps the full source.
+            $order->payment_confirmation_source = in_array($source, self::CONFIRMATION_SOURCES, true) ? $source : null;
             $this->event($order, $actor, 'payment_recorded', Rupiah::format(Rupiah::decimal($cents)).' · '.OnlineOrder::PAYMENT_METHODS[$method]);
         });
     }

@@ -157,6 +157,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('courier-responsibility', 'courierResponsibility')->name('courier-responsibility');
             Route::post('courier', 'courier')->name('courier');
             Route::post('jnt', 'jnt')->name('jnt');
+            // ORD-03: optional J&T QR (private file) and the customer-charged shipping fee.
+            Route::post('jnt/qr', 'jntQr')->name('jnt.qr');
+            Route::get('jnt/qr', 'showJntQr')->name('jnt.qr.show');
+            Route::post('shipping', 'shipping')->name('shipping');
             Route::post('handover', 'handover')->name('handover');
             Route::post('delivery', 'delivery')->name('delivery');
             Route::post('issues', 'openIssue')->name('issues');

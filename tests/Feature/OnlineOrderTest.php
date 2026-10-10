@@ -83,7 +83,7 @@ class OnlineOrderTest extends TestCase
         $this->assertSame('Bondan Dwi', $order->customer_name);
         $this->assertSame('081234567890', $order->customer_phone);
         $this->assertNull($order->postcode, 'Local delivery does not keep an intercity postcode.');
-        $this->get(route('orders.customer.show', $token))->assertSee('Kirim lokasi lewat WhatsApp')->assertSee('Perjalanan pesanan')
+        $this->get(route('orders.customer.show', $token))->assertSee('Kirim Sharelok')->assertSee('Perjalanan pesanan')
             ->assertSee('https://wa.me/', false);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Orders;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CustomerOrderDetailsRequest extends FormRequest
 {
@@ -15,7 +16,9 @@ class CustomerOrderDetailsRequest extends FormRequest
 
     public function rules(): array
     {
-        return $this->customerDetailRules();
+        // ORD-03 (flag): the customer's preferred payment method; a preference, never a payment.
+        return $this->customerDetailRules() + (config('orders.simple_ux')
+            ? ['payment_preference' => ['required', Rule::in(array_keys(config('orders.payment_preferences')))]] : []);
     }
 
     protected function prepareForValidation(): void
@@ -25,11 +28,11 @@ class CustomerOrderDetailsRequest extends FormRequest
 
     public function attributes(): array
     {
-        return $this->customerDetailAttributes();
+        return $this->customerDetailAttributes() + ['payment_preference' => 'metode pembayaran'];
     }
 
     public function messages(): array
     {
-        return $this->customerDetailMessages();
+        return $this->customerDetailMessages() + ['payment_preference.required' => 'Pilih metode pembayaran.'];
     }
 }

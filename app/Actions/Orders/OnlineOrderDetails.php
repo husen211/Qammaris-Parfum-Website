@@ -7,6 +7,7 @@ use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OrderActionNotAllowed;
 use App\Models\OnlineOrder;
 use App\Models\User;
+use App\Support\Rupiah;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -42,6 +43,10 @@ class OnlineOrderDetails
         }
         $this->mutateV2($order, null, null, function (OnlineOrder $order) use ($details): bool {
             $order->fill(array_intersect_key($details, array_flip(self::CUSTOMER_FIELDS)));
+            // ORD-03: a preference only while unpaid; the admin still records the payment itself.
+            if (isset($details['payment_preference']) && $order->payment_status === 'unpaid') {
+                $order->payment_preference = $details['payment_preference'];
+            }
             if ($order->lifecycle === 'awaiting_customer') {
                 $order->stage = OnlineOrder::STAGE_DETAILS_RECEIVED;
                 $this->orderEvent($order, null, 'advance', 'Data penerima dikirim customer');
@@ -63,8 +68,13 @@ class OnlineOrderDetails
         return $this->mutateV2($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $data): bool {
             $order->fill(array_intersect_key($data, array_flip(self::ADMIN_FIELDS)));
             if (! Gate::forUser($actor)->allows('orders.finance')) {
-                if ($order->isDirty(self::FINANCIAL_FIELDS)) {
-                    throw new OrderActionNotAllowed('Perubahan ongkir atau pendanaan driver hanya dapat dilakukan Super Admin.');
+                if ($order->isDirty('driver_funding')) {
+                    throw new OrderActionNotAllowed('Pendanaan driver hanya dapat diubah Super Admin.');
+                }
+                if ($order->isDirty(['shipping_fee', 'shipping_payer']) && ! Gate::forUser($actor)->allows('orders.charge-shipping', $order)) {
+                    throw new OrderActionNotAllowed(config('orders.simple_ux')
+                        ? 'Ongkir hanya bisa diubah sebelum ada pembayaran. Setelah itu, ajukan penyesuaian harga untuk disetujui Super Admin.'
+                        : 'Perubahan ongkir atau pendanaan driver hanya dapat dilakukan Super Admin.');
                 }
                 if ($order->isDirty([...self::CUSTOMER_FIELDS, 'location_url'])
                     && (in_array($order->lifecycle, ['completed', 'cancelled'], true) || $order->handover_status === 'handed_over')) {
@@ -77,7 +87,11 @@ class OnlineOrderDetails
             if (! $order->isDirty()) {
                 return false;
             }
-            $this->orderEvent($order, $actor, 'details_updated', 'Diubah: '.implode(', ', array_keys($order->getDirty())));
+            // ORD-03 audit: the shipping charge is money, so its old and new value are written out.
+            $shipping = $order->isDirty('shipping_fee')
+                ? ' · ongkir '.($order->getOriginal('shipping_fee') === null ? '-' : Rupiah::format((string) $order->getOriginal('shipping_fee'))).' → '.($order->shipping_fee === null ? '-' : Rupiah::format((string) $order->shipping_fee))
+                : '';
+            $this->orderEvent($order, $actor, 'details_updated', 'Diubah: '.implode(', ', array_keys($order->getDirty())).$shipping);
             if ($order->lifecycle === 'awaiting_customer' && $order->hasCustomerDetails() && $order->customer_phone && $order->packaging) {
                 $order->stage = OnlineOrder::STAGE_DETAILS_RECEIVED;
             }

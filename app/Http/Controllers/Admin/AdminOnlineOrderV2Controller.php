@@ -28,6 +28,8 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /**
@@ -112,9 +114,11 @@ class AdminOnlineOrderV2Controller extends Controller
             'revision' => ['required', 'integer'], 'amount' => ['required', 'string', 'max:15'],
             // Not named "method": a field called method shadows form.method in the browser DOM.
             'payment_method' => ['required', Rule::in(array_keys(OnlineOrder::PAYMENT_METHODS))],
-            'confirmation_source' => ['required', Rule::in(RecordOnlineOrderMoney::CONFIRMATION_SOURCES)],
+            // ORD-03: no visible source choice; Majoo when ticked, otherwise "recorded by admin" in the ledger.
+            'confirmation_source' => ['nullable', Rule::in(RecordOnlineOrderMoney::CONFIRMATION_SOURCES)],
             'reference' => ['nullable', 'string', 'max:80'], 'recorded_in_majoo' => ['nullable', 'boolean'],
-        ], ['confirmation_source.required' => 'Pilih dari mana pembayaran dikonfirmasi.'], ['amount' => 'nominal', 'payment_method' => 'metode']);
+        ], [], ['amount' => 'nominal', 'payment_method' => 'metode']);
+        $data['confirmation_source'] ??= $request->boolean('recorded_in_majoo') ? 'majoo' : RecordOnlineOrderMoney::ADMIN_RECORDED;
 
         return $this->attempt($order, 'pembayaran', function () use ($request, $order, $data) {
             $updated = $this->money->recordPayment($order, (int) $data['revision'], $request->user(), $this->rupiah($data['amount']), $data['payment_method'], $data['confirmation_source'], $data['reference'] ?? null);
@@ -132,7 +136,7 @@ class AdminOnlineOrderV2Controller extends Controller
     public function pack(Request $request, OnlineOrder $order): RedirectResponse
     {
         $data = $request->validate(['revision' => ['required', 'integer'], 'packed' => ['required', 'array'], 'packed.*' => ['nullable', 'integer', 'min:0', 'max:99']],
-            ['packed.required' => 'Isi jumlah yang sudah dipacking untuk setiap barang.']);
+            ['packed.required' => 'Centang semua barang yang sudah masuk paket.']);
         $items = collect($data['packed'])->map(fn ($quantity, $lineId) => ['line_id' => (string) $lineId, 'quantity' => (int) $quantity])->values()->all();
 
         return $this->attempt($order, 'packing', fn () => $this->fulfillment->pack($order, (int) $data['revision'], $this->actor($request), $items), 'Packing dikonfirmasi.');
@@ -161,6 +165,46 @@ class AdminOnlineOrderV2Controller extends Controller
 
         return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->recordJnt($order, (int) $data['revision'], $this->actor($request), $data['status'] ?? null, filled($data['tracking_number'] ?? null) ? trim($data['tracking_number']) : null),
             ($data['status'] ?? null) === 'picked_up' ? 'Dipickup J&T — pesanan tercatat diserahkan.' : 'Data J&T disimpan.');
+    }
+
+    /** ORD-03: optional J&T QR photo, stored privately; never required for pickup. */
+    public function jntQr(Request $request, OnlineOrder $order): RedirectResponse
+    {
+        $data = $request->validate(['revision' => ['required', 'integer'], 'qr' => ['required', 'file', 'mimetypes:image/png,image/jpeg', 'max:2048']],
+            ['qr.required' => 'Pilih foto QR J&T.', 'qr.mimetypes' => 'QR harus foto PNG atau JPG.', 'qr.max' => 'Foto QR maksimal 2 MB.']);
+        $file = $request->file('qr');
+
+        return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->storeJntQr($order, (int) $data['revision'], $this->actor($request),
+            (string) $file->get(), $file->getMimeType() === 'image/png' ? 'image/png' : 'image/jpeg'), 'QR J&T disimpan.');
+    }
+
+    public function showJntQr(OnlineOrder $order): Response
+    {
+        abort_unless($order->jnt_qr_path && Storage::disk('local')->exists($order->jnt_qr_path), 404);
+
+        return response(Storage::disk('local')->get($order->jnt_qr_path), 200, [
+            'Content-Type' => $order->jnt_qr_mime ?: 'image/png', 'Cache-Control' => 'no-store, private', 'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
+     * ORD-03: the shipping fee charged to the customer (and, for finance roles, driver funding). Who may change it
+     * and when is decided in OnlineOrderDetails::updateByAdmin (orders.charge-shipping / orders.finance).
+     */
+    public function shipping(Request $request, OnlineOrder $order): RedirectResponse
+    {
+        $data = $request->validate(['revision' => ['required', 'integer'], 'shipping_fee' => ['nullable', 'string', 'max:15'],
+            'shipping_payer' => ['nullable', Rule::in(array_keys(OnlineOrder::SHIPPING_PAYERS))],
+            'driver_funding' => ['nullable', Rule::in(array_keys(OnlineOrder::DRIVER_FUNDING))]], [], ['shipping_fee' => 'ongkir', 'shipping_payer' => 'ongkir dibayar']);
+
+        return $this->attempt($order, 'pembayaran', function () use ($request, $order, $data) {
+            $changes = ['shipping_fee' => filled($data['shipping_fee'] ?? null) ? $this->rupiah($data['shipping_fee'], true) : null,
+                'shipping_payer' => $data['shipping_payer'] ?? null];
+            if ($request->has('driver_funding')) {
+                $changes['driver_funding'] = $data['driver_funding'] ?? null;
+            }
+            $this->details->updateByAdmin($order, (int) $data['revision'], $request->user(), $changes);
+        }, 'Ongkir disimpan.');
     }
 
     public function handover(Request $request, OnlineOrder $order): RedirectResponse

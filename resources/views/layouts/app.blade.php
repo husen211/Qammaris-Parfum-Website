@@ -83,13 +83,22 @@
         Lewati ke konten utama
     </a>
 
-    @include('components.navbar')
+    {{-- ORD-03: task pages (the customer order link) show only the brand, no site navigation. --}}
+    @hasSection('minimal_chrome')
+        <header class="border-b border-gray-200 bg-white px-4 py-4">
+            <div class="mx-auto flex max-w-xl items-center"><img src="{{ asset('images/logo-black2.png') }}" alt="Qammaris Perfumes" class="h-8 w-auto"></div>
+        </header>
+    @else
+        @include('components.navbar')
+    @endif
     
     <main data-navigation-content id="main-content" tabindex="-1" class="flex-grow focus:outline-none">
         @yield('content')
     </main>
     
-    @include('components.footer')
+    @unless (View::hasSection('minimal_chrome'))
+        @include('components.footer')
+    @endunless
     
     
     @stack('scripts')

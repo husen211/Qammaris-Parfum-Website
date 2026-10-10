@@ -32,6 +32,18 @@ class AuthorizationServiceProvider extends ServiceProvider
         Gate::define('orders.manage', fn (User $user) => $has($user, self::ORDER_ROLES));
         // Money changes (shipping charge/funding, reimbursements, step corrections) are not Staff Order work.
         Gate::define('orders.finance', fn (User $user) => $has($user, self::FULL_ADMIN));
+        // ORD-03 (flag): Staff Order may set the shipping fee charged to the customer while the transaction is not final:
+        // V2, open, nothing handed over and no money recorded at all. Afterwards a change is a price adjustment that
+        // Super Admin approves. Driver funding stays orders.finance.
+        Gate::define('orders.charge-shipping', function (User $user, OnlineOrder $order) use ($has): bool {
+            if ($has($user, self::FULL_ADMIN)) {
+                return true;
+            }
+
+            return $has($user, [User::ROLE_STAFF_ORDER]) && config('orders.simple_ux') && $order->isV2()
+                && in_array($order->lifecycle, ['awaiting_customer', 'active'], true) && $order->handover_status === 'pending'
+                && OnlineOrderMoney::totals($order)['received'] === 0;
+        });
         // Refund decisions, refund payouts, ledger reversals and reconciliation: Super Admin only (Owner 2026-10-09).
         Gate::define('orders.refund', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // Price adjustments and cost-relevant customer changes need Super Admin approval (plan §5.1, D5).

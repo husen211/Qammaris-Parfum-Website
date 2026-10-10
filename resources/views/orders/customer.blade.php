@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Pesanan '.$order->code.' - Qammaris Perfumes')
 @section('robots', 'noindex,nofollow')
+@section('minimal_chrome', '1')
 @push('meta')
     <meta name="referrer" content="no-referrer">
 @endpush
@@ -13,7 +14,7 @@
 @endphp
 
 @section('content')
-<section class="min-h-screen bg-white px-4 pb-16 pt-28 md:pt-32" aria-labelledby="order-title">
+<section class="bg-white px-4 pb-16 pt-6 md:pt-10" aria-labelledby="order-title" data-order-page>
     <div class="mx-auto max-w-xl">
         <p class="text-sm text-gray-600">Pesanan {{ $order->code }}</p>
         <h1 id="order-title" class="mt-1 font-mayluxa text-3xl text-brand-black md:text-4xl">
@@ -89,8 +90,8 @@
                     <div class="mt-3 space-y-3">
                         @foreach ([
                             'pickup' => ['Ambil di toko', 'Datang dan ambil sendiri di toko Qammaris.'],
-                            'local_delivery' => ['Kirim dalam Kota Palu', 'Diantar Maxim/GoSend. Lokasi dikirim lewat WhatsApp.'],
-                            'intercity' => ['Kirim ke luar kota', 'Dikirim lewat J&T ke alamat lengkap Anda.'],
+                            'local_delivery' => ['Kirim dalam Kota Palu', 'Diantar kurir. Lokasi lewat Sharelok.'],
+                            'intercity' => ['Kirim ke luar kota', 'Dikirim J&T ke alamat Anda.'],
                         ] as $value => [$title, $hint])
                             <label class="{{ $choiceClass }}">
                                 <input type="radio" name="fulfillment" value="{{ $value }}" @checked($fulfillment === $value) required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-fulfillment>
@@ -108,7 +109,7 @@
                     </label>
                     <textarea id="address" name="address" rows="3" maxlength="500" autocomplete="street-address" aria-invalid="{{ $errors->has('address') ? 'true' : 'false' }}" aria-describedby="{{ $describedBy('address', 'address-help') }}" class="{{ $fieldClass }} resize-y leading-6" @if ($fulfillment === 'intercity') required @endif>{{ old('address', $order->address) }}</textarea>
                     <p id="address-help" class="mt-2 text-sm leading-5 text-gray-600" data-address-help>
-                        {{ $fulfillment === 'intercity' ? 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.' : 'Untuk dalam Kota Palu, cukup patokan. Lokasi tepat dikirim lewat WhatsApp setelah ini.' }}
+                        {{ $fulfillment === 'intercity' ? 'Jalan, nomor rumah, dan kota.' : 'Cukup patokan. Lokasi tepat lewat Sharelok.' }}
                     </p>
                     @error('address') <p id="address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                 </div>
@@ -131,6 +132,22 @@
                     </div>
                     @error('packaging') <p class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                 </fieldset>
+
+                @if (config('orders.simple_ux') && $order->payment_status === 'unpaid')
+                    <fieldset aria-describedby="payment-help{{ $errors->has('payment_preference') ? ' payment_preference-error' : '' }}">
+                        <legend class="text-base font-medium text-brand-black">Pembayaran</legend>
+                        <div class="mt-3 grid grid-cols-2 gap-3">
+                            @foreach (config('orders.payment_preferences') as $value => $title)
+                                <label class="{{ $choiceClass }} items-center">
+                                    <input type="radio" name="payment_preference" value="{{ $value }}" @checked(old('payment_preference', $order->payment_preference) === $value) required class="h-5 w-5 shrink-0 accent-brand-black">
+                                    <span class="text-base text-brand-black">{{ $title }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <p id="payment-help" class="mt-2 text-sm text-gray-600">Detail pembayaran dikirim admin.</p>
+                        @error('payment_preference') <p id="payment_preference-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                    </fieldset>
+                @endif
 
                 <div>
                     <label for="customer_note" class="block text-base font-medium text-brand-black">Catatan <span class="font-normal text-gray-600">(opsional)</span></label>
@@ -163,9 +180,9 @@
 
             @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="location-title">
-                    <h2 id="location-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim lokasi</h2>
-                    <p class="mt-1 text-sm leading-6 text-gray-700">Tekan tombol di bawah. Setelah WhatsApp terbuka, tekan Kirim, lalu bagikan lokasi lewat ikon lampiran → Lokasi.</p>
-                    <a href="{{ $locationUrl }}" target="_blank" rel="noopener noreferrer" class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Kirim lokasi lewat WhatsApp</a>
+                    <h2 id="location-title" class="text-base font-semibold text-brand-black">Kirim Sharelok</h2>
+                    <p class="mt-1 text-sm leading-6 text-gray-700">Supaya kurir tepat sampai ke lokasi Anda.</p>
+                    <a href="{{ $locationUrl }}" target="_blank" rel="noopener noreferrer" class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Kirim Sharelok</a>
                 </section>
             @endif
 
@@ -183,6 +200,7 @@
                         <div><dt class="text-sm text-gray-600">Cara menerima</dt><dd>{{ \App\Models\OnlineOrder::FULFILLMENTS[$order->fulfillment] ?? '-' }}</dd></div>
                         @if ($order->address)<div><dt class="text-sm text-gray-600">Alamat</dt><dd class="break-words">{{ $order->address }}@if ($order->postcode) {{ $order->postcode }}@endif</dd></div>@endif
                         <div><dt class="text-sm text-gray-600">Paperbag</dt><dd>{{ \App\Models\OnlineOrder::PACKAGING[$order->packaging] ?? '-' }}</dd></div>
+                        @if ($order->payment_preference)<div><dt class="text-sm text-gray-600">Pembayaran</dt><dd>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</dd></div>@endif
                         @if ($order->customer_note)<div><dt class="text-sm text-gray-600">Catatan</dt><dd class="break-words">{{ $order->customer_note }}</dd></div>@endif
                     </dl>
                     @if ($pendingChange)
@@ -235,8 +253,8 @@ document.querySelector('[data-received-form]')?.addEventListener('submit', (even
         label.textContent = intercity ? 'Alamat lengkap' : 'Alamat / patokan';
         optional.hidden = intercity;
         help.textContent = intercity
-            ? 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.'
-            : 'Untuk dalam Kota Palu, cukup patokan. Lokasi tepat dikirim lewat WhatsApp setelah ini.';
+            ? 'Jalan, nomor rumah, dan kota.'
+            : 'Cukup patokan. Lokasi tepat lewat Sharelok.';
     };
     form.querySelectorAll('[data-fulfillment]').forEach((input) => input.addEventListener('change', sync));
     sync();

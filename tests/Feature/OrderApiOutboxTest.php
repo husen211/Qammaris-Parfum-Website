@@ -176,14 +176,14 @@ class OrderApiOutboxTest extends TestCase
         $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
         $issue = ['revision' => $order->revision, '_section' => 'kendala', 'type' => 'stock_problem', 'note' => 'Stok kurang'];
 
-        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('kendala baru dicatat dari Qammaris App')->assertDontSee('+ Catat kendala');
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('kendala baru dicatat dari Qammaris App')->assertDontSee('Catat kendala</button>', false);
         $this->actingAs($owner)->post(route('admin.orders.v2.issues', $order), $issue)->assertSessionHas('order_notice.type', 'error');
         $this->assertSame(0, $order->issues()->count());
         $this->assertMatchesApiSchema($this->orderApi('GET', '/orders')->assertOk(), 'OrderListPage');
 
         // r4.2: once the App reads opened_by_source, the Admin PWA may record issues while the API stays on.
         config(['orders_api.website_issues' => true]);
-        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('+ Catat kendala');
+        $this->actingAs($owner)->get(route('admin.orders.show', $order))->assertSee('Catat kendala</button>', false);
         $this->actingAs($owner)->post(route('admin.orders.v2.issues', $order), $issue)->assertSessionHas('order_notice.type', 'success');
         $this->assertSame(1, $order->issues()->count());
     }

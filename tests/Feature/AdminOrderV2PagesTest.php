@@ -73,8 +73,11 @@ class AdminOrderV2PagesTest extends TestCase
 
         $page = $this->get(route('admin.orders.show', $order))->assertOk();
         $this->assertStringContainsString('no-store', $page->headers->get('Cache-Control'));
-        $page->assertSee('data-order-v2', false)->assertSee('Berikutnya: Mulai siapkan pesanan.')
-            ->assertSee('Salin link')->assertSee('Salin untuk grup')->assertSee('Konfirmasi packing')
+        // ORD-03: the current step (payment, unpaid order) is open first with one primary action; later steps follow collapsed.
+        $page->assertSee('data-order-v2', false)
+            ->assertSeeInOrder(['data-next-step', 'Pembayaran', 'Tandai Lunas', 'id="packing"', 'id="pengiriman"', 'id="link"'], false)
+            ->assertSee('Salin Link')->assertSee('Pesan untuk grup staf')->assertSee('Konfirmasi packing')
+            ->assertDontSee('Dikonfirmasi dari')->assertDontSee('Mulai siapkan')
             ->assertSee(route('admin.orders.show', $order), false)
             ->assertDontSee('/tugas-pesanan/', false)
             ->assertDontSee('Keuangan · Super Admin');
@@ -95,7 +98,9 @@ class AdminOrderV2PagesTest extends TestCase
         $order = OnlineOrder::sole();
         $this->assertSame(['awaiting_customer', $customer->id, $address->id, 'intercity', 'Jl. Makassar 10', '90111'],
             [$order->lifecycle, $order->customer_id, $order->customer_address_id, $order->fulfillment, $order->address, $order->postcode]);
-        $this->get(route('admin.orders.show', $order))->assertOk()->assertSee('Kirim link ini agar customer mengisi data')->assertSee('Pesan untuk customer');
+        // ORD-03 "Link Pesanan": copy link, copy message, native share; WhatsApp is not required.
+        $this->get(route('admin.orders.show', $order))->assertOk()->assertSee('Link Pesanan')->assertSee('Customer mengisi data lewat link ini')
+            ->assertSee('Salin Link')->assertSee('Salin Pesan')->assertSee('data-share="#invite-message"', false)->assertDontSee('Kirim via WhatsApp');
 
         $stranger = CustomerAddress::forceCreate(['customer_id' => Customer::create(['name' => 'Lain', 'phone' => '6281111111111', 'created_by' => $this->owner->id])->id,
             'label' => 'X', 'type' => 'local', 'address' => 'Jl. Lain', 'confirmed_by' => $this->owner->id]);
@@ -118,7 +123,7 @@ class AdminOrderV2PagesTest extends TestCase
         $this->post(route('admin.orders.v2.payments', $order), ['revision' => 1, 'amount' => '400000', 'payment_method' => 'qris', 'confirmation_source' => 'majoo'])
             ->assertSessionHas('order_notice.type', 'conflict');
         $this->assertSame(1, OnlineOrderPayment::count());
-        $this->get(route('admin.orders.show', $order))->assertSee('Lunas.')->assertSee('Majoo');
+        $this->get(route('admin.orders.show', $order))->assertSee('Lunas · tercatat di Majoo');
 
         [$alpha, $beta] = $order->items->pluck('line_id')->all();
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, '_section' => 'packing', 'packed' => [$alpha => 1, $beta => 1]])
@@ -153,7 +158,8 @@ class AdminOrderV2PagesTest extends TestCase
         $this->post(route('admin.orders.v2.issues', $order), ['type' => 'stock_problem', 'note' => 'Beta tinggal 0', 'line_id' => $order->items->last()->line_id, 'reported_quantity' => 0])
             ->assertSessionHas('order_notice.type', 'success');
         $issue = $order->issues()->sole();
-        $this->get(route('admin.orders.show', $order))->assertSee('1 kendala')->assertSee('Berikutnya: Selesaikan kendala dulu.');
+        // An open issue becomes the current step: "Ada masalah" is first and open.
+        $this->get(route('admin.orders.show', $order))->assertSee('1 kendala')->assertSeeInOrder(['id="kendala"', '1 kendala terbuka', 'id="pembayaran"'], false);
         $this->post(route('admin.orders.v2.issues.resolve', [$order, $issue->public_id]), ['note' => 'Diganti varian']);
         $this->assertSame('resolved', $issue->fresh()->status);
 
