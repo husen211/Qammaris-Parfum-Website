@@ -40,7 +40,7 @@ class FragrancePreferenceHttpTest extends TestCase
 
     private function answers(): array
     {
-        return ['budget_max' => 300000, 'likes' => ['citrus'], 'avoid' => [], 'use' => 'any', 'environment' => 'any', 'sweetness' => 'any', 'projection' => 'strong', 'longevity' => 'not_priority', 'gender' => 'all', 'favorite_product_id' => null];
+        return ['time' => 'day', 'budget_max' => 300000, 'likes' => ['citrus'], 'avoid' => [], 'use' => 'any', 'environment' => 'any', 'sweetness' => 'any', 'projection' => 'strong', 'longevity' => 'not_priority', 'gender' => 'all', 'favorite_product_id' => null];
     }
 
     private function submit(): FragranceQuizResult
@@ -52,7 +52,7 @@ class FragrancePreferenceHttpTest extends TestCase
 
     public function test_wizard_and_result_keep_anonymous_ownership_private_cache_and_answers(): void
     {
-        $this->get('/fragrance-quiz')->assertOk()->assertSee('Pertanyaan 1 dari 10')->assertSee('versi uji');
+        $this->get('/fragrance-quiz')->assertOk()->assertSee('Pertanyaan 1 dari 11')->assertSee('versi uji');
         $stored = $this->submit();
         $this->assertEquals($this->answers(), array_intersect_key($stored->answers, $this->answers()));
         $this->assertNotSame(str_repeat('a', 64), $stored->browser_hash);
@@ -174,8 +174,37 @@ class FragrancePreferenceHttpTest extends TestCase
     {
         $stored = $this->submit();
         config(['fragrance_preference.enabled' => false]);
-        $this->get('/fragrance-quiz')->assertOk()->assertSee('1 dari 6')->assertDontSee('Pertanyaan 1 dari 10');
+        $this->get('/fragrance-quiz')->assertOk()->assertSee('1 dari 6')->assertDontSee('Pertanyaan 1 dari 11');
         $this->get('/fragrance-quiz/results/'.$stored->id)->assertNotFound();
         $this->post('/fragrance-quiz', ['activity' => 'office', 'time' => 'morning', 'intensity' => 'soft', 'scent' => 'fresh', 'mood' => 'clean', 'gender' => 'all'])->assertRedirect(route('quiz.result'));
+    }
+
+    public function test_dynamic_skip_is_server_enforced_and_does_not_require_hidden_answers(): void
+    {
+        $data = $this->answers();
+        unset($data['sweetness']);
+        $this->postJson('/fragrance-quiz', [...$data, 'avoid_sweet' => true])->assertStatus(303);
+        $this->assertSame('none', FragranceQuizResult::latest()->first()->answers['sweetness']);
+        $this->get('/fragrance-quiz/results/'.FragranceQuizResult::latest()->first()->id)->assertOk()->assertSee('Kemanisan belum diketahui.');
+        $this->postJson('/fragrance-quiz', [...$data, 'avoid' => ['gourmand']])->assertStatus(303);
+        $this->assertSame('any', FragranceQuizResult::orderByDesc('created_at')->get()->firstWhere('answers.avoid', ['gourmand'])->answers['sweetness']);
+        $this->postJson('/fragrance-quiz', $data)->assertUnprocessable();
+        $this->postJson('/fragrance-quiz', [...$this->answers(), 'budget_min' => 400000])->assertUnprocessable();
+        $this->postJson('/fragrance-quiz', [...$this->answers(), 'avoid_sweet' => ['bad']])->assertUnprocessable();
+        $this->postJson('/fragrance-quiz', [...$this->answers(), 'time' => 'not-a-time'])->assertUnprocessable();
+    }
+
+    public function test_old_result_recalculation_preserves_snapshot_and_defaults_only_unasked_time(): void
+    {
+        $stored = $this->submit();
+        $oldAnswers = $stored->answers;
+        unset($oldAnswers['time'], $oldAnswers['budget_min'], $oldAnswers['avoid_sweet']);
+        $stored->update(['answers' => $oldAnswers, 'question_version' => 'preference-v1.1']);
+        $this->post('/fragrance-quiz/results/'.$stored->id.'/recalculate')->assertStatus(303);
+        $new = FragranceQuizResult::where('id', '!=', $stored->id)->firstOrFail();
+        $this->assertSame('any', $new->answers['time']);
+        $this->assertSame('preference-v1.1', $stored->fresh()->question_version);
+        $this->assertSame($oldAnswers, $stored->fresh()->answers);
+        $this->get('/fragrance-quiz?edit='.$stored->id)->assertOk()->assertSee('Biasanya dipakai kapan?');
     }
 }

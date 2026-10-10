@@ -7,7 +7,7 @@ use InvalidArgumentException;
 
 final class RecommendationEngine
 {
-    public const VERSION = 'pref-02.3-provisional';
+    public const VERSION = 'pref-03.2-provisional';
 
     private const WEIGHTS = ['aroma' => 50, 'sweetness' => 15, 'projection' => 10, 'longevity' => 10, 'context' => 10, 'gender' => 5];
 
@@ -43,6 +43,10 @@ final class RecommendationEngine
             if (array_intersect($answers['avoid'], $attributes['families'])) {
                 continue;
             }
+            // A preference for non-sweet rejects detected sweetness, never treats unknown as proof.
+            if (($answers['avoid_sweet'] || $answers['sweetness'] === 'none') && in_array($attributes['sweetness'], ['light', 'medium', 'sweet'], true)) {
+                continue;
+            }
             $components = $this->score($answers, $row, $favoriteFamilies);
             // No padding: personal choices need aroma support; exploration needs answered context support.
             if (array_sum($components) <= 0 || (! $exploration && $components['aroma'] === 0) || ($exploration && $components['context'] === 0)) {
@@ -60,6 +64,9 @@ final class RecommendationEngine
                 continue;
             }
             $price = $row['price_minor'];
+            if ($price < $answers['budget_min'] * 100) {
+                continue;
+            }
             if ($budgetMinor === null || $price <= $budgetMinor) {
                 if (count($main) < 3) {
                     $main[] = $row;
@@ -83,7 +90,12 @@ final class RecommendationEngine
             }
         }
 
-        return ['engine_fingerprint' => ProfileBuilder::hash([self::VERSION, self::WEIGHTS, hash_file('sha256', __FILE__), $this->builder->parserFingerprint()]), 'engine_version' => self::VERSION, 'answers' => $answers, 'mode' => $exploration ? 'exploration' : 'personal', 'title' => $exploration ? 'Pilihan awal untuk dieksplorasi' : 'Pilihan berdasarkan preferensi', 'main' => $main, 'alternative' => $alternative, 'empty' => ! $main && ! $alternative, 'empty_actions' => ['Ubah budget', 'Ubah preferensi'], 'ready_only' => $readyOnly, 'limitations' => $answers['favorite_product_id'] !== null && ! $favorite ? ['Parfum favorit tidak tersedia sebagai profil publik terkini; tidak dipakai dalam penilaian.'] : []];
+        $globalLimits = $answers['favorite_product_id'] !== null && ! $favorite ? ['Parfum favorit tidak tersedia sebagai profil publik terkini; tidak dipakai dalam penilaian.'] : [];
+        if ($answers['time'] === 'any') {
+            $globalLimits[] = 'Waktu pemakaian belum dipilih pada jawaban sebelumnya. Ubah jawaban untuk menambahkannya.';
+        }
+
+        return ['engine_fingerprint' => ProfileBuilder::hash([self::VERSION, self::WEIGHTS, hash_file('sha256', __FILE__), $this->builder->parserFingerprint()]), 'engine_version' => self::VERSION, 'answers' => $answers, 'mode' => $exploration ? 'exploration' : 'personal', 'title' => $exploration ? 'Pilihan awal untuk dieksplorasi' : 'Pilihan berdasarkan preferensi', 'main' => $main, 'alternative' => $alternative, 'empty' => ! $main && ! $alternative, 'empty_actions' => ['Ubah budget', 'Ubah preferensi'], 'ready_only' => $readyOnly, 'limitations' => $globalLimits];
     }
 
     private function eligible(array $row): bool
@@ -134,7 +146,7 @@ final class RecommendationEngine
         };
         // Fixed maxima, never divide by the number of known product attributes.
         $score['aroma'] = (int) floor(1000 * ($likes ? (($favorite ? 45 : 50) * $overlap($likes) + ($overlap($likes) > 0 ? 5 * $overlap($favorite) : 0)) : 50 * $overlap($favorite)));
-        foreach (['sweetness' => ['light', 'medium', 'sweet'], 'projection' => ['close', 'medium', 'strong']] as $key => $levels) {
+        foreach (['sweetness' => ['none', 'light', 'medium', 'sweet'], 'projection' => ['close', 'medium', 'strong']] as $key => $levels) {
             if (in_array($answers[$key], ['any', 'unknown'], true) || $a[$key] === null || empty($row['profile']['evidence'][$key])) {
                 continue;
             }
@@ -162,9 +174,9 @@ final class RecommendationEngine
             }
             // A range crossing the requested threshold does not establish either support or conflict.
         }
-        $contexts = array_values(array_filter([$answers['use'], $answers['environment']], fn ($v) => $v !== 'any'));
+        $contexts = array_values(array_filter([$answers['use'], $answers['environment'], $answers['time']], fn ($v) => $v !== 'any'));
         if ($contexts && ! empty($row['profile']['evidence']['context'])) {
-            $supported = count(array_filter($contexts, fn ($context) => in_array($context, $a['context'], true) || ($context === 'mixed' && in_array('ac', $a['context'], true) && in_array('outdoor', $a['context'], true))));
+            $supported = count(array_filter($contexts, fn ($context) => in_array($context, $a['context'], true) || ($context === 'mixed' && in_array('ac', $a['context'], true) && in_array('outdoor', $a['context'], true)) || ($context === 'both' && in_array('day', $a['context'], true) && in_array('night', $a['context'], true))));
             $score['context'] = (int) floor(10000 * $supported / count($contexts));
         }
         if ($answers['gender'] !== 'all' && mb_strtolower($row['gender'] ?? '') === $answers['gender']) {
@@ -187,15 +199,15 @@ final class RecommendationEngine
                 $limitations[] = 'Arah aroma '.implode(', ', array_map($this->familyLabel(...), $unmatched)).' yang dipilih belum didukung profil katalog.';
             }
         }
-        foreach (['sweetness' => 'Kemanisan yang diminta tercantum dalam data katalog.', 'projection' => 'Sebaran yang diminta tercantum dalam data katalog.', 'longevity' => 'Klaim ketahanan katalog mendukung kebutuhan waktu yang dipilih.', 'context' => 'Konteks pemakaian yang dipilih disebut dalam katalog.'] as $key => $text) {
+        foreach (['sweetness' => 'Kemanisan yang diminta tercantum dalam data katalog.', 'projection' => 'Cara aroma tercium yang dipilih didukung informasi katalog.', 'longevity' => 'Informasi ketahanan di katalog ikut mendukung pilihan ini.', 'context' => 'Konteks pemakaian yang dipilih disebut dalam katalog.'] as $key => $text) {
             if ($components[$key] > 0) {
                 if ($key === 'context') {
-                    $matchedContexts = array_filter([$answers['use'], $answers['environment']], fn ($context) => $context !== 'any' && (in_array($context, $attributes['context'], true) || ($context === 'mixed' && in_array('ac', $attributes['context'], true) && in_array('outdoor', $attributes['context'], true))));
+                    $matchedContexts = array_filter([$answers['use'], $answers['environment'], $answers['time']], fn ($context) => $context !== 'any' && (in_array($context, $attributes['context'], true) || ($context === 'mixed' && in_array('ac', $attributes['context'], true) && in_array('outdoor', $attributes['context'], true)) || ($context === 'both' && in_array('day', $attributes['context'], true) && in_array('night', $attributes['context'], true))));
                     $text = 'Katalog menyebut pemakaian '.implode(', ', array_map($this->contextLabel(...), $matchedContexts)).'.';
                 }
                 $reasons[] = ['code' => $key, 'text' => $text, 'evidence_keys' => [$key]];
             }
-            $requested = $key === 'context' ? ($answers['use'] !== 'any' || $answers['environment'] !== 'any') : ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true);
+            $requested = $key === 'context' ? ($answers['use'] !== 'any' || $answers['environment'] !== 'any' || $answers['time'] !== 'any') : ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true);
             if ($requested && empty($attributes[$key])) {
                 $limitations[] = 'Data '.$this->attributeLabel($key).' belum diketahui.';
             } elseif (in_array($key, ['sweetness', 'projection', 'longevity'], true) && ! in_array($answers[$key], ['any', 'unknown', 'not_priority'], true) && $components[$key] <= 0) {
@@ -207,7 +219,10 @@ final class RecommendationEngine
         $price = Rupiah::minorUnits($row['price']);
         if (count($reasons) < 2) {
             $within = $answers['budget_max'] === null || $price <= $answers['budget_max'] * 100;
-            $reasons[] = ['code' => 'budget', 'text' => $answers['budget_max'] === null ? 'Harga katalog '.Rupiah::format($row['price']).'; budget tidak dibatasi.' : ($within ? 'Harga sesuai budget yang dipilih.' : 'Harga berada dalam batas alternatif +10%.'), 'evidence_keys' => [], 'catalog_evidence' => ['price' => $row['price'], 'budget_max' => $answers['budget_max']]];
+            $reasons[] = ['code' => 'budget', 'text' => $answers['budget_max'] === null ? ($answers['budget_min'] > 0 ? 'Harga masuk rentang budget '.Rupiah::format((string) $answers['budget_min']).' ke atas.' : 'Harga katalog '.Rupiah::format($row['price']).'; budget tidak dibatasi.') : ($within ? 'Harga sesuai budget yang dipilih.' : 'Harga berada dalam batas alternatif +10%.'), 'evidence_keys' => [], 'catalog_evidence' => ['price' => $row['price'], 'budget_max' => $answers['budget_max'], 'budget_min' => $answers['budget_min']]];
+        }
+        if (($answers['avoid_sweet'] || $answers['sweetness'] === 'none') && $attributes['sweetness'] === null) {
+            $limitations[] = 'Tingkat kemanisan belum diketahui; pilihan ini belum dapat dipastikan tidak manis.';
         }
         if ($profile['review_issues']) {
             $limitations[] = 'Ada data katalog yang belum lengkap atau memerlukan review; catatan ini tidak membuktikan bebas karakter/bahan tertentu.';
@@ -215,7 +230,7 @@ final class RecommendationEngine
         $limitations[] = 'Karakter dan performa berasal dari katalog, belum pengujian aroma langsung.';
         $identity = $profile['verified_identity'] ?? null;
 
-        return ['product_id' => $row['id'], 'name' => $row['name'] ?? '', 'price' => $row['price'], 'price_minor' => $price, 'size_ml' => $row['size_ml'], 'availability' => $row['availability'] ?? 'unknown', 'score_internal' => array_sum($components), 'score_components_internal' => $components, 'evidence_completeness' => count(array_filter([$attributes['families'], $attributes['sweetness'], $attributes['projection'], $attributes['longevity'], $attributes['context']])), 'identity_key' => is_array($identity) && ($identity['status'] ?? '') === 'verified' && ! empty($identity['evidence']) ? $identity['key'] : null, 'source_fingerprint' => $profile['source_fingerprint'], 'profile_fingerprint' => ProfileBuilder::hash($profile), 'reasons' => array_slice($reasons, 0, 2), 'limitations' => array_values(array_unique($limitations)), 'evidence' => $profile['evidence'], 'mode' => $exploration ? 'exploration' : 'personal'];
+        return ['product_id' => $row['id'], 'name' => $row['name'] ?? '', 'price' => $row['price'], 'price_minor' => $price, 'size_ml' => $row['size_ml'], 'availability' => $row['availability'] ?? 'unknown', 'score_internal' => array_sum($components), 'score_components_internal' => $components, 'evidence_completeness' => count(array_filter([$attributes['families'], $attributes['sweetness'], $attributes['projection'], $attributes['longevity'], $attributes['context']])), 'identity_key' => is_array($identity) && ($identity['status'] ?? '') === 'verified' && ! empty($identity['evidence']) ? $identity['key'] : null, 'source_fingerprint' => $profile['source_fingerprint'], 'profile_fingerprint' => ProfileBuilder::hash($profile), 'reasons' => array_slice($reasons, 0, 2), 'limitations' => array_values(array_unique($limitations)), 'evidence' => $profile['evidence'], 'mode' => $exploration ? 'exploration' : 'personal', 'sweetness_uncertain' => ($answers['avoid_sweet'] || $answers['sweetness'] === 'none') && $attributes['sweetness'] === null];
     }
 
     private function familyLabel(string $family): string
@@ -225,7 +240,7 @@ final class RecommendationEngine
 
     private function contextLabel(string $context): string
     {
-        return ['daily' => 'harian', 'office' => 'kantor/kuliah', 'casual' => 'santai', 'event' => 'acara/date', 'ac' => 'ruangan ber-AC', 'outdoor' => 'luar ruangan', 'mixed' => 'dalam dan luar ruangan'][$context];
+        return ['daily' => 'harian', 'office' => 'kantor/kuliah', 'casual' => 'santai', 'event' => 'acara/date', 'ac' => 'ruangan ber-AC', 'outdoor' => 'luar ruangan', 'mixed' => 'dalam dan luar ruangan', 'day' => 'pagi/siang', 'night' => 'sore/malam', 'both' => 'pagi hingga malam'][$context];
     }
 
     private function attributeLabel(string $key): string

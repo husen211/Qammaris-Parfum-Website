@@ -1,6 +1,6 @@
 # Qammaris — Tes preferensi parfum V1
 
-Approved Owner plan, 2026-10-09. Status/execution authority: [BACKLOG](BACKLOG.md). Active item **PREF-02 IN_REVIEW** after explicit Owner continuation2026-10-10; PREF-01 human acceptance still IN_REVIEW, not whole V1 complete. [Provisional engine evidence](../verification/pref-02/README.md). [Audit receipt](../verification/pref-01/README.md), [Owner review worksheet](fragrance-preference/REVIEW.md), [versioned 30 scenarios](fragrance-preference/scenarios.json). One item at a time; do not start the next phase automatically. Production release requires separate authorization after acceptance.
+Approved Owner plan, 2026-10-09. Status/execution authority: [BACKLOG](BACKLOG.md). Active item **PREF-03 IN_REVIEW** after explicit Owner continuation2026-10-10; PREF-01 human acceptance still IN_REVIEW, not whole V1 complete. [Provisional engine evidence](../verification/pref-02/README.md). [Audit receipt](../verification/pref-01/README.md), [Owner review worksheet](fragrance-preference/REVIEW.md), [versioned 30 scenarios](fragrance-preference/scenarios.json). One item at a time; do not start the next phase automatically. Production release requires separate authorization after acceptance.
 
 ## Scope and quality reference
 
@@ -34,7 +34,7 @@ Overall relevance: Sesuai / Sebagian sesuai / Kurang sesuai. Optional per-perfum
 |---|---|---|
 | PREF-01 | Full read-only audit, dictionary/ambiguities, 30 cases with Owner/staff labels | IN_REVIEW; human labels/semantic decisions pending |
 | PREF-02 | Derived profiles/ranking/review and calibrated comparison meets quality targets | IN_REVIEW; code/offline source comparison prepared, human calibration/acceptance pending |
-| PREF-03 | Wizard, seven-day secure results, relevance feedback, existing admin reports | Website beta implemented; technical release pending under explicit Owner trial-release permission |
+| PREF-03 | Wizard, seven-day secure results, relevance feedback, existing admin reports | Website beta live under explicit Owner trial-release permission; independent quality acceptance pending |
 | PREF-04 | Final human review, staging, CI, additive migrations, authorized deployment/live verification | Not started |
 
 Feature flag keeps legacy engine available during development. Production profile build preview/idempotent apply writes only new recommendation tables; preserve catalog IDs/slugs/descriptions/notes/prices/status/media. Additive staging/production migrations after review/authorization. Rollback flag returns legacy quiz and retains new tables/feedback.
@@ -42,3 +42,5 @@ Feature flag keeps legacy engine available during development. Production profil
 Technical verification: normalization/negation/dedup/unknowns/profile invalidation/stable ranking; cross-browser result ownership, expiry, feedback replay/CSRF/limits/storage failure. Browser390px touch/1440desktop/320overflow: complete flow, keyboard/back-refresh/edit/retry/feedback. Focused tests first, then CI suite/build once stable. These later checks are not claimed performed during audit. Monitor completion/empty/overall relevance/per-product rejection/errors after release; any next engine version repeats evaluation. Document provenance/ranking/questions/matrix/admin review/retention/runbook before release.
 
 Owner2026-10-10 explicitly requests a usable trial release before independent quality acceptance. [ADR039](../architecture/decisions/ADR-039-preference-website-beta.md) allows labelled beta technical release; no18/20 or16/20 sensory target or final PREF-04 acceptance is inferred.
+
+Owner feedback2026-10-10 revises the questions/conditional flow within PREF-03. [Updated question contract](fragrance-preference/question-revision/QUESTION_FLOW_REVISION.md) supersedes original question wording/count on the correction branch; beta production remains the previous version until a separately recorded release. [Verification and quality limits](../verification/pref-03/question-revision/README.md).

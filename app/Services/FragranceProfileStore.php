@@ -173,9 +173,9 @@ final class FragranceProfileStore
         foreach ($changes as $key => $value) {
             $valid = match ($key) {
                 'aroma_target' => is_array($value) && array_is_list($value) && count($value) > 0 && count($value) <= 12 && ! array_filter($value, fn ($v) => ! is_string($v) || ! in_array($v, PreferenceAnswers::FAMILIES, true)),
-                'sweetness' => $value === null || in_array($value, ['light', 'medium', 'sweet'], true),
+                'sweetness' => $value === null || in_array($value, ['none', 'light', 'medium', 'sweet'], true),
                 'projection' => $value === null || in_array($value, ['close', 'medium', 'strong'], true),
-                'context' => is_array($value) && array_is_list($value) && count($value) <= 7 && ! array_filter($value, fn ($v) => ! is_string($v) || ! in_array($v, ['daily', 'office', 'casual', 'event', 'ac', 'outdoor', 'mixed'], true)),
+                'context' => is_array($value) && array_is_list($value) && count($value) <= 9 && ! array_filter($value, fn ($v) => ! is_string($v) || ! in_array($v, ['daily', 'office', 'casual', 'event', 'ac', 'outdoor', 'mixed', 'day', 'night'], true)),
                 'longevity' => $value === null || (is_array($value) && array_keys($value) === ['min_hours', 'max_hours'] && is_int($value['min_hours']) && ($value['max_hours'] === null || is_int($value['max_hours'])) && $value['min_hours'] >= 1 && $value['min_hours'] <= 48 && ($value['max_hours'] === null || ($value['max_hours'] >= $value['min_hours'] && $value['max_hours'] <= 48))),
                 'identity' => $value === null || (is_string($value) && preg_match('/^[a-z0-9][a-z0-9-]{2,63}$/D', $value)),
                 default => false,
