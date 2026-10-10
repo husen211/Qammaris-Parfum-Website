@@ -64,6 +64,32 @@ Real headless Chrome, `APP_ENV=uat`, isolated local instance, 390 (touch) and 14
 
 Headless Chrome denies clipboard access, so the copy button used its fallback: the text is selected with "Salin secara manual". Clipboard copy on a real phone over UAT HTTPS is not yet confirmed.
 
+## Manual UAT switch and joint verification (2026-10-10)
+
+Owner approved moving the Manual UAT from ORD-03 to ORD-04. The work was coordinated step by step with the App agent.
+
+1. App backend stopped and App UAT cleaned (`--clean`; 3 App accounts kept).
+2. Website stopped. `qam_uat` identity checked (port 3397, MariaDB 11.8.9, UAT account present), then backed up to `backups\qam_uat-pre-ord04-20261010-202527.sql` (dump complete).
+3. Earlier ORD-03 test data removed from `qam_uat` only: 3 orders and 2 customers, plus all events, claims, outbox, idempotency keys, jobs and QR files. Kept: 2 accounts, 8 products/variants. The smoke-evidence databases (`qam_e2e`, `qam_e2e_r42`) live on a different server and were not touched.
+4. UAT worktree switched to `0ba294a`. `ORDERS_WEBSITE_CHECKOUT=true` set in the UAT environment script only. Additive migration `2026_10_10_100001` applied. No store WhatsApp number in UAT.
+5. App started. Connection check passed: signed sync 200, 0 orders, contract r4.2 `b0e1f5d5…cb88`.
+6. One temporary checkout order through the HTTPS tunnel:
+   - **6a** phone 390, touch: catalog → 2 products → checkout ("Pesan sekarang") → **QAM-0001** draft, `source=website`, no creator, no customer record.
+     - No `wa.me` request; store number absent from catalog, product, checkout and success pages.
+     - "Salin pesan" preview shown; back to checkout lands on the empty cart.
+     - App: webhook processed, projection `draft`/`queue=null`, not listed, detail 409 "belum siap". **4/4 PASS**.
+   - **6b** laptop 1440, Staff Order: ongkir Rp 15.000 while draft (rev 2) → **Konfirmasi pesanan** (rev 3, `website_confirmed`) → Aktif, Pembayaran Rp 250.000. Customer page shows "Dikonfirmasi toko".
+     - App: rev 1–3 processed, listed `needs_handling`, detail 200. **PASS**.
+   - **6c** App finish_packing plus a replay with the same key: rev 5, exactly 2 new events, 2 idempotency rows, nothing from the replay. **PASS** on both sides.
+7. Final clean on both sides; the verification order was removed. See the final state in the report.
+
+Screenshots via the tunnel:
+- [phone checkout](uat-tunnel-phone-checkout.jpg)
+- [phone saved](uat-tunnel-phone-success.jpg)
+- [laptop list](uat-tunnel-laptop-orders.jpg)
+- [laptop confirm](uat-tunnel-laptop-confirm.jpg)
+- [laptop confirmed](uat-tunnel-laptop-confirmed.jpg)
+
 ## Tests
 
 - `tests/Feature/StoreWhatsappEnvironmentTest.php`: 4 tests.
@@ -94,6 +120,5 @@ Headless Chrome denies clipboard access, so the copy button used its fallback: t
 
 ## Not verified / limits
 
-- **Shared Owner UAT not used.** It was not switched to this branch, at the App agent's request: the Owner is doing their own ORD-03 test there and wants to create the first order themselves. A UAT run needs Owner approval and the two-sided clean afterwards.
 - **No real phone or WhatsApp.** No real iPhone Safari or Android WhatsApp hand-off was tested. The automatic WhatsApp open uses a normal navigation and may land on the wa.me web page first.
 - **Store number pinned (resolved, ORD-07).** Test environments now use `STORE_WHATSAPP_TEST_NUMBER` or a copyable message; see the section above.

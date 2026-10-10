@@ -45,7 +45,7 @@ Owner requested and approved ORD-01 on 2026-10-07, developed in parallel with th
 - **Integration.** API r4.2 unchanged; App confirmed draft handling (`c098e81`).
 - **Flag.** `ORDERS_WEBSITE_CHECKOUT`.
 
-Branch `modernization/ord-04-cart-checkout`; [evidence](../verification/ord-04/README.md), [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md). Next: Owner-approved UAT run (shared UAT not switched). The earlier "ORD-04 authenticated staff" item was absorbed into ORD-02. |
+Branch `modernization/ord-04-cart-checkout`; [evidence](../verification/ord-04/README.md), [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md). Manual UAT switched to ORD-04 on 2026-10-10 (joint verification with the App passed, then both sides cleaned to 0 orders). The earlier "ORD-04 authenticated staff" item was absorbed into ORD-02. |
 | ORD-06 | Alias | → ORD-04 (cart checkout creates the same online order) |
 | ORD-07 | IN_REVIEW | Owner 2026-10-10: test environments (`local`, `development`, `testing`, `uat`, `staging`) never use the production store WhatsApp number.
 - With `STORE_WHATSAPP_TEST_NUMBER` set, links go to that number. Without it, no `wa.me` link is built and the checkout success page shows a copyable message.
