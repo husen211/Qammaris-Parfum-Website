@@ -46,7 +46,8 @@ final class OnlineOrderState
         return [
             'unpaid' => $order->payment_status === 'unpaid',
             'open_refund' => $order->payment_status === 'refund_pending',
-            'open_reimbursement' => $order->needsReimbursement(),
+            // Same rule as API v1 `flags`: an ORD-01 staff advance or an App cost whose reimbursement is still open.
+            'open_reimbursement' => $order->needsReimbursement() || $order->costs()->get()->contains(fn ($cost) => $cost->reimbursementOpen()),
         ];
     }
 

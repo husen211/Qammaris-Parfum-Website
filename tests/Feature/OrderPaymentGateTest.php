@@ -95,6 +95,10 @@ class OrderPaymentGateTest extends TestCase
             'source_version' => 1, 'actor' => $this->actor(),
         ], ['Idempotency-Key' => Str::random(24)])->assertOk();
 
+        // The Admin page flags an App cost whose reimbursement is still open, like API v1 does.
+        $this->assertTrue(OnlineOrderState::flags($unpaid->fresh())['open_reimbursement']);
+        $this->actingAs($this->staff)->get(route('admin.orders.show', $unpaid))->assertSee('Talangan belum diganti');
+
         // Delivery confirmation after a handover stays possible even if the payment is later corrected.
         $paid = $this->paidV2Order('local_delivery');
         $ops = app(OnlineOrderFulfillment::class);
