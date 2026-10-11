@@ -37,7 +37,7 @@ RC branch: `modernization/rc-ord-pwa-2026-10-11` = PWA-01 + a trial merge of cur
 The values never go in Git, chat or logs.
 
 - Keep: `APP_ENV=production`, `APP_DEBUG=false`, HTTPS `APP_URL`.
-- `SESSION_LIFETIME=720` or more (admin 12-hour idle, ADR-038); `ADMIN_IDLE_MINUTES=720`.
+- `SESSION_LIFETIME=720` or more (admin 12-hour idle, ADR-049); `ADMIN_IDLE_MINUTES=720`.
 - First deploy with every new feature **off**:
 
   ```
@@ -94,5 +94,5 @@ Each step is a separate Owner go-ahead. Destructive rollback (restoring a backup
 
 ## 7. Before merging to `main` (housekeeping found by the RC)
 
-- ADR numbers collide between the two lines. Both lines use ADR-035, 037, 038, 039 and 040 with different files. The decisions index currently lists both. Renumber the order ADRs (keeping aliases, as was done for 034→037) in the RC PR.
+- Done in the RC: the colliding order ADRs are now ADR-048–051, with aliases at every old filename (DOC-ADR-01).
 - `main`-only tests that fail on MariaDB (`BlogAutomationTest` SQLite trigger, `StoreAboutTest` address escape) are recorded in the backlog. CI runs SQLite.

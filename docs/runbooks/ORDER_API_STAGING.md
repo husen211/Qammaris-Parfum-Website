@@ -8,7 +8,7 @@ For the Website operator and the Qammaris App agent. Decision: [ADR-041](../arch
 
 | Variable | Meaning | Staging |
 |---|---|---|
-| `ORDERS_V2_ENABLED` | New orders use the V2 model (ADR-040) | `true` |
+| `ORDERS_V2_ENABLED` | New orders use the V2 model (ADR-051) | `true` |
 | `QAMMARIS_ORDER_API_ENABLED` | API v1 answers (otherwise 503) | `true` |
 | `QAMMARIS_ORDER_API_CLIENT_ID` / `_SECRET` / `_SECRET_PREVIOUS` | App → Website HMAC | shared with the App out of band |
 | `QAMMARIS_ORDER_WEBHOOK_ENABLED` | Website → App events | `true` |

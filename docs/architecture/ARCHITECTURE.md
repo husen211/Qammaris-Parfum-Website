@@ -130,7 +130,7 @@ GET/POST /tugas-pesanan/{token}  -> OnlineOrderStaffController (shipping steps +
 Views: OnlineOrderTimeline (per-audience allowlist) + x-order-timeline, OnlineOrderMessages -> copy/wa.me
 ```
 
-Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; the cart checkout path is unchanged and still stores nothing. No package, queue, scheduler, payment, or Majoo integration. [ADR-037](decisions/ADR-037-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
+Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; the cart checkout path is unchanged and still stores nothing. No package, queue, scheduler, payment, or Majoo integration. [ADR-048](decisions/ADR-048-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
 
 ## Admin access — ORD-02a review branch, not deployed
 
@@ -143,7 +143,7 @@ ManageAdminUser: lock all Super Admins + target, last-Super-Admin guard, auth_ve
 qammaris:grant-super-admin: explicit, previewed, audited bootstrap (actor null)
 ```
 
-A route-table test fails if any new `admin.*` route lacks its area ability. ORD-01 order operations use `orders.manage`, `orders.finance`, and the order-aware `orders.cancel`. [ADR-038](decisions/ADR-038-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md), [verification](../verification/ord-02a/README.md).
+A route-table test fails if any new `admin.*` route lacks its area ability. ORD-01 order operations use `orders.manage`, `orders.finance`, and the order-aware `orders.cancel`. [ADR-049](decisions/ADR-049-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md), [verification](../verification/ord-02a/README.md).
 
 ### Order state dimensions (ORD-02c slice 1, branch review)
 
@@ -155,7 +155,7 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - their timestamps.
 - `App\Support\OnlineOrderLegacyState` maps ORD-01 `stage` to these columns. One class serves both the backfill (event times) and a transitional `OnlineOrder::saving` hook.
 - The sync is one-way while the ORD-01 screens still drive `stage`. ORD-02d reverses the authority and removes the hook.
-- Slice 2 ([ADR-040](decisions/ADR-040-order-cutover-and-money-ledger.md)):
+- Slice 2 ([ADR-051](decisions/ADR-051-order-cutover-and-money-ledger.md)):
   - `state_model` (`legacy`|`v2`) is fixed per order. The stage hook runs for legacy rows only; ORD-01 step operations refuse V2 rows.
   - `online_order_payments` is an append-only ledger with reversal rows.
   - `App\Actions\Orders\RecordOnlineOrderMoney` handles payments, refund decisions, payouts, reversals and reconciliation. Gate `orders.refund` = Super Admin.
@@ -221,7 +221,7 @@ admin group + login: cache.headers no_store;private
 - Logout and forced logout land on `/admin/login` with a flag. That page then deletes `qammaris-admin-*` caches. `Clear-Site-Data` is not used.
 - `ADMIN_PWA_ENABLED=false` ships an unregistering worker.
 - Order creation dedupes by `online_orders.submission_token` per creator.
-- [ADR-039](decisions/ADR-039-admin-pwa.md), [verification](../verification/ord-02b/README.md).
+- [ADR-050](decisions/ADR-050-admin-pwa.md), [verification](../verification/ord-02b/README.md).
 
 ### Public website PWA (PWA-01, branch review)
 

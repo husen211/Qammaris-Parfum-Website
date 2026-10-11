@@ -2,11 +2,11 @@
 
 Status: Proposed 2026-10-11 (PWA-01). Branch `modernization/pwa-01-public-pwa`, built on ORD-04. Not merged, not deployed. Flag `PUBLIC_PWA_ENABLED`, default off.
 
-ADR number: 047 is the first number free on both lines (main ends at ADR-040, the order line at ADR-046). See the RC notes in [verification](../../verification/pwa-01/README.md) for the ADR-035–040 collision between the two lines.
+ADR number: 047 was the first number free on both lines. In the release candidate the colliding order ADRs became 048–051 (aliases kept); see the [index](README.md).
 
 ## Context
 
-The Owner wants the public site installable in Chrome on Windows, Android and iPhone. The same origin already serves the Admin PWA "Qammaris Admin": scope `/admin`, worker `/admin/sw.js`, caches `qammaris-admin-*` ([ADR-039](ADR-039-admin-pwa.md)). The public site serves the cart, guest checkout, order status links and Pesanan Saya, so private data must not be cached. No push notifications are wanted.
+The Owner wants the public site installable in Chrome on Windows, Android and iPhone. The same origin already serves the Admin PWA "Qammaris Admin": scope `/admin`, worker `/admin/sw.js`, caches `qammaris-admin-*` ([ADR-050](ADR-050-admin-pwa.md)). The public site serves the cart, guest checkout, order status links and Pesanan Saya, so private data must not be cached. No push notifications are wanted.
 
 ## Decision
 

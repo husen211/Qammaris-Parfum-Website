@@ -37,10 +37,6 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-029 | [Shared admin editor save and Shopee guards](ADR-029-shared-product-editor-save.md) |
 | ADR-030 | [Whole rupiah and current-catalog cart totals](ADR-030-whole-rupiah-and-current-cart-totals.md) |
 | ADR-031 | [Narrow admin product change history](ADR-031-admin-product-change-history.md) |
-| ADR-037 | [Online order links, tracking, and staff task links](ADR-037-online-order-links-and-tracking.md) (alias: [ADR-034 filename](ADR-034-online-order-links-and-tracking.md) on the ORD-01 branch) |
-| ADR-038 | [Admin roles, abilities, and user management](ADR-038-admin-roles-and-user-management.md) (alias: [ADR-035 filename](ADR-035-admin-roles-and-user-management.md) on the ORD-02 branch) |
-| ADR-039 | [Qammaris Admin PWA](ADR-039-admin-pwa.md) |
-| ADR-040 | [Order state cutover and payment/refund ledger](ADR-040-order-cutover-and-money-ledger.md) |
 | ADR-032 | [Blog write foundation](ADR-032-blog-write-foundation.md) |
 | ADR-033 | [Blog editorial CMS and transient preview](ADR-033-blog-editorial-cms.md) |
 | ADR-034 | [Public Journal search, rendering and SEO](ADR-034-public-journal-search-seo.md) |
@@ -48,6 +44,18 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-036 | [Journal scoped draft automation](ADR-036-journal-draft-automation.md) |
 | ADR-037 | [Source-derived fragrance profiles and human reference first](ADR-037-fragrance-preference-review-first.md) |
 | ADR-038 | [Isolated provisional preference engine](ADR-038-provisional-preference-engine.md) |
+| ADR-039 | [Explicit Owner-authorized preference beta](ADR-039-preference-website-beta.md) |
+| ADR-040 | [Adaptive preference questions with factual evidence](ADR-040-adaptive-preference-questions.md) |
+| ADR-041 | [Private Order API v1 implementation](ADR-041-order-api-v1-implementation.md) |
+| ADR-042 | [Order API contract r4.2](ADR-042-order-api-r4-2-draft.md) |
+| ADR-043 | [Operational UX simplification for online orders](ADR-043-order-operational-ux.md) |
+| ADR-044 | [Website cart checkout saves a guest order](ADR-044-website-checkout-orders.md) |
+| ADR-045 | [Payment before fulfillment and the order stepper](ADR-045-payment-gate-and-order-stepper.md) |
+| ADR-046 | [Guest order history, paperbag charge, direct WhatsApp and App task links](ADR-046-order-ux-polish-history-paperbag.md) |
 | ADR-047 | [Installable public website (Qammaris Perfumes PWA)](ADR-047-public-website-pwa.md) |
+| ADR-048 | [Online order links, tracking, and staff task links](ADR-048-online-order-links-and-tracking.md) (aliases: [ADR-034](ADR-034-online-order-links-and-tracking.md), [ADR-037](ADR-037-online-order-links-and-tracking.md) filenames) |
+| ADR-049 | [Admin roles, abilities, and user management](ADR-049-admin-roles-and-user-management.md) (aliases: [ADR-035](ADR-035-admin-roles-and-user-management.md), [ADR-038](ADR-038-admin-roles-and-user-management.md) filenames) |
+| ADR-050 | [Qammaris Admin PWA](ADR-050-admin-pwa.md) (alias: [ADR-039 filename](ADR-039-admin-pwa.md)) |
+| ADR-051 | [Order state cutover and payment/refund ledger](ADR-051-order-cutover-and-money-ledger.md) (alias: [ADR-040 filename](ADR-040-order-cutover-and-money-ledger.md)) |
 
-Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. ADR-032–036 belong to the Journal on main; the order ADRs were renumbered to 037/038 when the branches met. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.
+Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. ADR-032–040 belong to the Journal and fragrance preference on main. The order line first used 034/035, then 037–040; for the release candidate (2026-10-11) those order decisions became ADR-048–051, and every old order filename stays as an alias. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.

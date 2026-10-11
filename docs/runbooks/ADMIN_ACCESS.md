@@ -1,6 +1,6 @@
 # Akses admin — Super Admin, Staff Order, dan akun lama
 
-Keputusan: [ADR-038](../architecture/decisions/ADR-038-admin-roles-and-user-management.md). Runbook ini tidak memberi izin deploy; rilis tetap menunggu persetujuan Owner (D1: ORD-01 + ORD-02 dirilis bersama).
+Keputusan: [ADR-049](../architecture/decisions/ADR-049-admin-roles-and-user-management.md). Runbook ini tidak memberi izin deploy; rilis tetap menunggu persetujuan Owner (D1: ORD-01 + ORD-02 dirilis bersama).
 
 ## Sebelum/sesudah rilis
 
@@ -23,7 +23,7 @@ Keputusan: [ADR-038](../architecture/decisions/ADR-038-admin-roles-and-user-mana
 
 ## Aplikasi Qammaris Admin (ORD-02b)
 
-Keputusan: [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md).
+Keputusan: [ADR-050](../architecture/decisions/ADR-050-admin-pwa.md).
 
 - Env: `ADMIN_PWA_ENABLED=true` (default). Halaman masuk sekarang `/admin/login`; `/login` dialihkan ke sana.
 - Migrasi additive `2026_10_08_200001_add_submission_token_to_online_orders` ikut dijalankan bersama migrasi ORD-02 lainnya di target yang disetujui.

@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 /**
  * Price adjustments after the order was agreed (ORD-02c slice 5). Anyone with order access may request one;
  * only Super Admin approves. An approved discount that leaves the customer overpaid is shown as such — a refund
- * still needs its own Super Admin decision (ADR-040), nothing is returned automatically.
+ * still needs its own Super Admin decision (ADR-051), nothing is returned automatically.
  */
 class OnlineOrderAdjustments
 {

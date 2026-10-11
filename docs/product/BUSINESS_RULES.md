@@ -178,7 +178,7 @@ Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-st
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 
-Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
+Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-048](../architecture/decisions/ADR-048-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
 
 - Admin membuat pesanan dari produk published dengan offer aktif berharga positif. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok, diskon, atau edit item setelah dibuat (batalkan lalu buat ulang).
 - **Data customer (nama, HP, alamat, catatan) disimpan di DB tanpa hapus otomatis**, hanya terlihat oleh admin dan link tugas staf pesanan itu. Ini pengecualian terarah dari aturan checkout keranjang.
@@ -191,7 +191,7 @@ Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-037](../architectur
 
 ## Akses admin dan data pelanggan (ORD-02a, branch review)
 
-Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/ADR-038-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
+Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/ADR-049-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
 
 - Role admin: **Super Admin** (akses penuh, mengelola pengguna, menyetujui perubahan finansial), **Staff Order** (hanya Pesanan Online), dan **Admin (lama)** untuk akun sebelum ORD-02. Akun lama tetap bekerja seperti sebelumnya tanpa menu pengguna sampai dikonversi. Role lama tidak bisa diberikan ke akun baru.
 - Super Admin pertama hanya lewat bootstrap eksplisit di server setelah Owner memverifikasi identitas. Tidak ada promosi otomatis.
@@ -274,7 +274,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
   - nama akun yang sedang masuk selalu terlihat;
   - **Keluar** selalu tersedia;
   - setelah keluar, tombol Kembali tidak menampilkan halaman admin lagi.
-- [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md).
+- [ADR-050](../architecture/decisions/ADR-050-admin-pwa.md).
 
 ### Aplikasi website Qammaris Perfumes (PWA-01, branch review, saklar `PUBLIC_PWA_ENABLED`)
 

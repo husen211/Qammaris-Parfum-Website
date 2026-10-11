@@ -1,5 +1,5 @@
 {{--
-    Super Admin money panel (ORD-02d, ADR-040): refund decision, refund payout, reconciliation. Also included on ORD-01
+    Super Admin money panel (ORD-02d, ADR-051): refund decision, refund payout, reconciliation. Also included on ORD-01
     pages, because a legacy cancel after payment needs reconciliation. Nothing here is ever assumed.
 --}}
 @use('App\Models\OnlineOrder')

@@ -569,7 +569,7 @@ class OnlineOrderFulfillment
 
     /**
      * Staff Order cancels only orders without any money and not handed over (D4). If money was received, a
-     * Super Admin must state how much is returned in the same step (ADR-040); nothing is assumed.
+     * Super Admin must state how much is returned in the same step (ADR-051); nothing is assumed.
      */
     public function cancel(OnlineOrder $order, int $revision, OrderActor $actor, string $reason, ?string $refundDue = null): OnlineOrder
     {

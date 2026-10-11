@@ -1,6 +1,6 @@
 # Public website PWA — enable, check, disable (PWA-01)
 
-Decision: [ADR-047](../architecture/decisions/ADR-047-public-website-pwa.md). Evidence: [verification](../verification/pwa-01/README.md). Admin PWA: [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md).
+Decision: [ADR-047](../architecture/decisions/ADR-047-public-website-pwa.md). Evidence: [verification](../verification/pwa-01/README.md). Admin PWA: [ADR-050](../architecture/decisions/ADR-050-admin-pwa.md).
 
 ## Switch
 

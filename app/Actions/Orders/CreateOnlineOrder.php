@@ -95,7 +95,7 @@ class CreateOnlineOrder
             $order->created_by = $actor->id;
             $order->submission_token = $submissionToken;
             $order->source = $options['source'] ?? 'whatsapp';
-            // Cutover point (ADR-040): the state model is fixed when the order is created.
+            // Cutover point (ADR-051): the state model is fixed when the order is created.
             $order->state_model = config('orders.v2_enabled') ? OnlineOrder::STATE_V2 : OnlineOrder::STATE_LEGACY;
             $order->save();
             $order->code = 'QAM-'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT);

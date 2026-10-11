@@ -1,6 +1,6 @@
 # Pesanan Online — cara pakai harian
 
-Untuk Owner/admin dan staf toko. Aturan: [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md). Menu admin: **Pesanan Online**.
+Untuk Owner/admin dan staf toko. Aturan: [ADR-048](../architecture/decisions/ADR-048-online-order-links-and-tracking.md). Menu admin: **Pesanan Online**.
 
 ## Alur baru (V2, setelah `ORDERS_V2_ENABLED=true` disetujui untuk dirilis)
 

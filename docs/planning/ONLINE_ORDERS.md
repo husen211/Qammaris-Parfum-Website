@@ -1,6 +1,6 @@
 # Pesanan Online — program
 
-Owner meminta fitur ini pada 2026-10-07 dan menyetujui rencana ORD-01 di sesi yang sama. Fitur dikerjakan paralel dengan Qammaris Journal (Codex mengerjakan BLOG-02 di worktree terpisah). Program ini terpisah dari P9 dan Journal. Status current ada di [BACKLOG](BACKLOG.md), aturan di [BUSINESS_RULES](../product/BUSINESS_RULES.md), keputusan di [ADR-037](../architecture/decisions/ADR-037-online-order-links-and-tracking.md).
+Owner meminta fitur ini pada 2026-10-07 dan menyetujui rencana ORD-01 di sesi yang sama. Fitur dikerjakan paralel dengan Qammaris Journal (Codex mengerjakan BLOG-02 di worktree terpisah). Program ini terpisah dari P9 dan Journal. Status current ada di [BACKLOG](BACKLOG.md), aturan di [BUSINESS_RULES](../product/BUSINESS_RULES.md), keputusan di [ADR-048](../architecture/decisions/ADR-048-online-order-links-and-tracking.md).
 
 ## Masalah
 

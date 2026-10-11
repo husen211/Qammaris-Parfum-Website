@@ -62,7 +62,7 @@ class OrderApiFixtures extends Command
             $existing = $this->fixtures($scenario);
             if ($this->option('reset')) {
                 foreach ($existing->whereIn('lifecycle', ['awaiting_customer', 'active']) as $old) {
-                    // Fixture payments are synthetic; a reset decides "nothing to return" explicitly (ADR-040).
+                    // Fixture payments are synthetic; a reset decides "nothing to return" explicitly (ADR-051).
                     $orders->cancel($old, $old->revision, OrderActor::user($actor), 'E2E reset', OnlineOrderMoney::totals($old)['received'] > 0 ? '0' : null);
                 }
                 $existing = collect();
