@@ -165,6 +165,17 @@ Tests: `OrderPolishTest` (10) — history 20/10 days/other browser/forged key/de
 
 Total consistency: the Website total, the payment instructions and API r4.4 `totals.total` all include the same paperbag snapshot (tested). The Majoo cashier record is manual and must carry the same Rp4.000 line; it was not verified here.
 
+## Manual UAT switch to the polish release, r4.4, without data reset (2026-10-11)
+
+Owner approved; coordinated with the App agent; no clean on either side.
+
+1. Website web/worker/scheduler stopped (queue empty: 0 jobs, 0 undelivered webhooks); App backend stopped; both tunnels kept, so both URLs stayed the same.
+2. `qam_uat` identity checked (127.0.0.1:3397, MariaDB 11.8.9, UAT owner account); backup `qam_uat-pre-ord04-polish-20261011-140011.sql`; per-order snapshot before (`snapshot-orders.php`, read-only). App backup `db-pre-r44-20261011-140020`.
+3. UAT worktree → `79402c4`; only the two additive migrations, each by file path (`guest_order_histories`, `packaging_fee`); no fresh/reset.
+4. Snapshot after = before: orders 2, items 3, events 26, payments 2, claims 6, costs 2, outbox 26, users 2, products 8; QAM-0001 Rp 97.000 (paperbag chosen earlier, stays Rp0), QAM-0002 Rp 435.000, both r13 paid. App: identical counts (orders 2, expenses 2, reimbursements 1, actions 12, webhook events 26, users 3).
+5. Smoke on copies (`qam_uat_smoke` :8150 ↔ App copy :8001, webhook local): new QAM-0003 with paperbag → API r4.4 totals {235000, 0, 20000, packaging_fee 4000, total 259000}; unpaid refusals; bill with the test account; Pesanan Saya cookie HttpOnly 10 days; status → Katalog → Pesanan Saya → detail; App: deep link login return, cost prefill 20.000 (ongkir only), three funding sources, reimbursement "Menunggu bukti"; completed with "Talangan belum diganti"; 11/11 webhooks. Copies deleted afterwards.
+6. Final start: Website `79402c4`, App `5f1525f` (OpenAPI copy byte-identical, sha `10dcfa50…c5b5`); signed sync without error, old orders in r4.4 form with `packaging_fee 0`; staff link "Buka di Qammaris App" → App UAT URL; status-uat: only the documented UAT exception (task links on); no production connection.
+
 ## Tests
 
 - `tests/Feature/StoreWhatsappEnvironmentTest.php`: 4 tests.

@@ -177,6 +177,7 @@ Saklar yang aktif di UAT: `ORDERS_WEBSITE_CHECKOUT=true`, bersama `ORDERS_V2_ENA
 - Foto produk dummy tidak ada (tampil placeholder).
 - Produk dummy memakai stok manual yang kedaluwarsa 36 jam setelah dicek (aturan katalog). Bila katalog menampilkan "Konfirmasi stok" dan checkout tertolak, jalankan `.
 efresh-uat-stock.ps1` (hanya produk "UAT …" di `qam_uat`).
+- Pindah versi tanpa menghapus data: hentikan kedua sisi, backup, `snapshot-orders.php` sebelum/sesudah (harus identik), migrasi tambahan per file (`--path`), lalu nyalakan lagi.
 - Smoke test terpadu Website↔App memakai database sementara (`.\smoke-start.ps1` → `qam_uat_smoke` di port 8150; `.\smoke-stop.ps1` menghapusnya). Database UAT final tidak tersentuh.
 - Rekening di UAT hanya rekening sintetis "BANK UJI - BUKAN REKENING ASLI" (`add-test-account.php`); jangan memasukkan rekening production.
 - Alamat tunnel `trycloudflare.com` bersifat sementara dan berganti setiap tunnel dibuat ulang. PWA App yang terpasang dari alamat lama tidak menangkap link baru; production butuh domain App tetap (rencana `https://qammarisapp.com/orders`, dikonfirmasi saat rilis).
