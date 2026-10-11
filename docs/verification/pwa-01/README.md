@@ -24,6 +24,8 @@
 | PWA-01 branch, full | SQLite **575 passed** / 7 MariaDB-only skips; MariaDB 11.8.9 **582/582**; JS **52/52**; Pint clean on changed PHP. |
 | RC (with `main`), full | SQLite **742 passed** / 7 skips; JS **59/59**; MariaDB 11.8.9 **739/742**. One was a random-ULID flake in `OrderApiOutboxTest` (fixed on both branches). Two are pre-existing on `origin/main` itself on MariaDB (`BlogAutomationTest` uses a SQLite trigger; `StoreAboutTest` address escape), reproduced on a clean `origin/main` checkout. |
 
+**GitHub CI (PHP 8.2, SQLite):** green on ORD-04 `b9f39ef`, PWA-01 `6e50ee1` and the RC `5dcd9be`. ORD-04's CI had been red since `6f82acc`: `OrderPaymentGateTest` rendered an admin page without `withoutVite()`, and CI runs PHP tests before `npm run build`. The test-only fix is on ORD-04, PWA-01 and the RC. Local runs did not show it because `public/build` existed.
+
 Local note: `php artisan test` starts a child process without `-d memory_limit`, so the RC's image tests (from `main`) hit Herd's 128 MB limit. CI's PHP has no limit. Run `vendor/bin/phpunit` with `-d memory_limit=1G` locally.
 
 ## 3. Real Chrome (headless Chrome, Windows 11, CDP)
