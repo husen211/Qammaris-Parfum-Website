@@ -84,7 +84,7 @@ Generate secrets on the server, show them to the Owner offline, and enter them i
 | `SESSION_SECURE_COOKIE` | `true` | same | Session shared by the two PWAs |
 | `SESSION_LIFETIME` / `ADMIN_IDLE_MINUTES` | `720` / `720` | same | Admin idle 12 h (ADR-049) |
 | `QUEUE_CONNECTION` | `database` (confirm) | same | Webhook jobs go to queue `qammaris-app` (production worker). With `sync`, delivery would run inside the request (up to 10 s). |
-| `ADMIN_PWA_ENABLED` | `false` (code default is `true`, so set explicitly) | `true` | Step 4 |
+| `ADMIN_PWA_ENABLED` | `false` (code default since RC `de303af`+1; set explicitly anyway) | `true` | Step 4 |
 | `ORDERS_V2_ENABLED` | `false` | `true` | Step 5 |
 | `ORDERS_SIMPLE_UX` | `false` | `true` | Step 5 (ORD-03 staff UX) |
 | `ORDERS_WEBSITE_CHECKOUT` | `false` | `true` | Step 8; **also the emergency checkout stop** |

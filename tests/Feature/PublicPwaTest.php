@@ -169,6 +169,8 @@ class PublicPwaTest extends TestCase
     public function test_the_switch_is_off_unless_configured(): void
     {
         $this->assertStringContainsString("env('PUBLIC_PWA_ENABLED', false)", File::get(config_path('store.php')));
+        // Dark launch: the Admin PWA is also off unless the server enables it.
+        $this->assertStringContainsString("env('ADMIN_PWA_ENABLED', false)", File::get(config_path('admin.php')));
     }
 
     public function test_private_pages_stay_uncacheable_with_the_pwa_on(): void
