@@ -1,6 +1,6 @@
 # ADR-046: Guest order history, paperbag charge, direct WhatsApp and App task links
 
-Status: Proposed 2026-10-11 (ORD-04 polish after Owner UAT r4.3). Branch `modernization/ord-04-cart-checkout`. Not merged, not deployed. The paperbag API field is the r4.4 draft ([R4_4_DRAFT_PACKAGING_FEE](../../integrations/R4_4_DRAFT_PACKAGING_FEE.md)), pending App sign-off.
+Status: Proposed 2026-10-11 (ORD-04 polish after Owner UAT r4.3). Branch `modernization/ord-04-cart-checkout`. Not merged, not deployed. The paperbag API field is r4.4 ([R4_4_DRAFT_PACKAGING_FEE](../../integrations/R4_4_DRAFT_PACKAGING_FEE.md)), signed by both agents on 2026-10-11.
 
 ## Decisions
 

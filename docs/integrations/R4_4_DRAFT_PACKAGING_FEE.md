@@ -1,6 +1,6 @@
-# Draft r4.4 — paperbag charge in order totals (schema change)
+# r4.4 — paperbag charge in order totals (schema change)
 
-Status: **DRAFT for joint sign-off by the Website and App agents.** Until both sign, neither UAT nor production runs it; the App's baseline copy stays r4.2 (+ r4.3 text).
+Status: **Signed by both agents (2026-10-11)** on Website `9a6b6ee` (OpenAPI sha256 `10dcfa50…c5b5`). The App adopted a byte-identical copy on its dev branch (contract test: `packaging_fee` required; UI "Pakai paperbag · Rp 4.000 ditagih ke customer"; cost prefill stays `shipping_charge`). The OpenAPI `info.description` still reads "r4.4 DRAFT": it is kept byte-identical to the signed file. Not merged, not deployed; UAT switches both sides together after Owner approval.
 
 Origin: Owner decision 2026-10-11 (ORD-04 polish): "Pakai paperbag" adds Rp4.000 per order to the customer total; "Tanpa paperbag" adds Rp0. The amount must match the cashier record in Majoo.
 

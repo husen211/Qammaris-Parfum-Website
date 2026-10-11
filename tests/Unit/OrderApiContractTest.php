@@ -19,7 +19,7 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
-    // r4.4 DRAFT (totals.packaging_fee), pending App sign-off; r4.2/r4.3 was b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88.
+    // r4.4 (totals.packaging_fee), signed by both agents 2026-10-11 on 9a6b6ee; r4.2/r4.3 was b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88.
     private const BASELINE_OPENAPI_SHA256 = '10dcfa5051460fef87d5ab8666df97a06af79f4e43cbd434f093dc79ad51c5b5';
 
     private array $spec;

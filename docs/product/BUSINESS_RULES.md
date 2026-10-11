@@ -161,7 +161,7 @@ Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.m
 - **Copy pengiriman:** "Pengiriman Dalam Kota" — "Tiba 1–2 jam setelah pesanan diproses" (enum `local_delivery` tetap). Halaman status: tombol **Pesanan sudah saya terima** di atas, ikon motor (dalam kota) atau truk (J&T) dengan teks; timeline "Menunggu konfirmasi penerimaan dari Anda."
 - **Link tugas grup staf:** "Buka di Qammaris App" langsung ke detail pesanan App ({URL App}/orders/{id}) di lingkungan yang sama; tidak pernah dari UAT ke App production atau sebaliknya. Login App kembali ke pesanan; tanpa PWA terbuka di browser.
 
-Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-stepper.md), [ADR-046](../architecture/decisions/ADR-046-order-ux-polish-history-paperbag.md) (Pesanan Saya, paperbag, WhatsApp, link App; paperbag di API = draf [r4.4](../integrations/R4_4_DRAFT_PACKAGING_FEE.md)); kontrak App: [r4.3](../integrations/R4_3_DRAFT_PAYMENT_GATE.md) (teks saja, ditandatangani kedua agen 2026-10-11; skema OpenAPI tidak berubah).
+Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-stepper.md), [ADR-046](../architecture/decisions/ADR-046-order-ux-polish-history-paperbag.md) (Pesanan Saya, paperbag, WhatsApp, link App; paperbag di API = [r4.4](../integrations/R4_4_DRAFT_PACKAGING_FEE.md), ditandatangani kedua agen); kontrak App: [r4.3](../integrations/R4_3_DRAFT_PAYMENT_GATE.md) (teks saja, ditandatangani kedua agen 2026-10-11; skema OpenAPI tidak berubah).
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 
