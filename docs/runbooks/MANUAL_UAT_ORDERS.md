@@ -165,4 +165,7 @@ Saklar yang aktif di UAT: `ORDERS_WEBSITE_CHECKOUT=true`, bersama `ORDERS_V2_ENA
 - Pengiriman WhatsApp hanya membuka aplikasi dengan teks terisi. Website tidak mengirim pesan sendiri.
 - Di UAT tanpa nomor uji, tombol WhatsApp toko (katalog, footer, lokasi toko, checkout) tidak tampil atau nonaktif. Ini disengaja (ORD-07).
 - Foto produk dummy tidak ada (tampil placeholder).
+- Produk dummy memakai stok manual yang kedaluwarsa 36 jam setelah dicek (aturan katalog). Bila katalog menampilkan "Konfirmasi stok" dan checkout tertolak, jalankan `.efresh-uat-stock.ps1` (hanya produk "UAT …" di `qam_uat`).
+- Smoke test terpadu Website↔App memakai database sementara (`.\smoke-start.ps1` → `qam_uat_smoke` di port 8150; `.\smoke-stop.ps1` menghapusnya). Database UAT final tidak tersentuh.
+- Rekening di UAT hanya rekening sintetis "BANK UJI - BUKAN REKENING ASLI" (`add-test-account.php`); jangan memasukkan rekening production.
 - Alamat tunnel `trycloudflare.com` bersifat sementara dan berganti setiap tunnel dibuat ulang.

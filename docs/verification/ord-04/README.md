@@ -128,6 +128,22 @@ Tests for this revision:
 - 23 older tests that packed or shipped before payment were rewritten to pay first (same intent); one renamed ("completes at handover of a paid order").
 - Full suite: SQLite 556 passed / 7 MariaDB-only skipped; JS 42/42; Pint clean; **MariaDB 11.8.9 563/563** (includes 6-process concurrency races and the migration rehearsal with rollback guard).
 
+## Manual UAT restart on ORD-04 revision + r4.3 (2026-10-11)
+
+Owner approved; coordinated step by step with the App agent; no new Website code ran next to old App code.
+
+1. Website UAT worktree → `54c2942`, later `67595ad`. App UAT → `9bfcd1e` (P0 + r4.3), later `c2f4886` (same App code plus smoke-instance support).
+2. `qam_uat` identity checked (127.0.0.1:3397, MariaDB 11.8.9, UAT owner account), backup `qam_uat-pre-ord04-r2-20261011-091453.sql`, transaction data cleaned (3 earlier test orders), additive migration `store_payment_accounts`, one synthetic verified account ("BANK UJI - BUKAN REKENING ASLI"). App UAT backed up and cleaned (3 users kept).
+3. Dummy products' manual stock check had expired (36 h rule); refreshed for the 6 published "UAT …" products only (`refresh-uat-stock.ps1`).
+4. **Joint smoke on temporary databases** (Website `qam_uat_smoke` on :8150 ↔ App `qammaris_uat_smoke` on :8001; webhook local):
+   - QAM-0001 local delivery: phone checkout → confirm with ongkir 44.000 → instructions with the test account → unpaid: Admin, signed API and App API/UI all refused (`payment_required`; the App sent nothing) → Tandai Lunas → App packing → courier → handover with the cost dialog (44.000, personal money) → completed; Website costs `staff_advance 44.000`, reimbursement `awaiting_proof`; App 1 expense + 1 reimbursement "Submitted"; revision 11 on both sides; 11/11 webhooks delivered.
+   - QAM-0002 J&T: same unpaid refusals → paid → pack → picked up without QR/resi → completed → resi `UJI123456` by an employee without a claim (r4.3); cashier-cash cost, no reimbursement.
+   - Event order on the Website: payment before any claim/packing; cost before handover.
+   - Found and fixed: the Admin "Talangan belum diganti" chip ignored App cost reimbursements (API flag did) → `67595ad`, test added, verified on the smoke instance.
+   - Teardown: smoke instance stopped, `qam_uat_smoke` dropped, smoke storage removed; App removed its smoke data.
+5. Final start: Website on a new tunnel, App on a new tunnel, task links set to the new App URL. Read-only checks through the tunnel: logins (Super Admin phone, Staff Order laptop), 0 orders, product search, catalog labels, checkout page (3 delivery options, no store number), only the test account, no mixed content. `status-uat`: webhook target local, catalog sync off, mail log, no pending migrations; the only FAIL is the documented UAT exception (task links on).
+6. Final counts: Website orders 0 (events, claims, costs, outbox, idempotency, jobs 0); App orders 0, reimbursements 0.
+
 ## Tests
 
 - `tests/Feature/StoreWhatsappEnvironmentTest.php`: 4 tests.
