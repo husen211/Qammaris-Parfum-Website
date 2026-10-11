@@ -95,6 +95,25 @@ class FragranceProfileStoreTest extends TestCase
         $this->store->review($this->product->id, 1, $profile->source_fingerprint, ['sweetness' => 'sweet'], 'Attempt against obsolete revision.', $this->admin);
     }
 
+    public function test_order_rbac_roles_super_admin_may_review_and_staff_order_may_not(): void
+    {
+        // RC 2026-10-11: the order line's RBAC adds super_admin and staff_order next to the legacy admin role.
+        $profile = $this->build();
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER]);
+        try {
+            $this->store->review($this->product->id, $profile->revision, $profile->source_fingerprint, ['sweetness' => 'light'], 'Staff Order is not a catalog role.', $staff);
+            $this->fail('Staff Order review accepted.');
+        } catch (DomainException) {
+            $this->assertDatabaseCount('fragrance_profile_revisions', 1);
+        }
+        $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN]);
+        $reviewed = $this->store->review($this->product->id, $profile->revision, $profile->source_fingerprint, ['sweetness' => 'light'], 'Synthetic Super Admin review evidence.', $owner);
+        $this->assertSame(2, $reviewed->revision);
+        $owner->forceFill(['is_active' => false])->save();
+        $this->expectException(DomainException::class);
+        $this->store->review($this->product->id, $reviewed->revision, $profile->source_fingerprint, ['sweetness' => 'sweet'], 'Deactivated account must be refused.', $owner);
+    }
+
     public function test_source_change_blocks_profile_and_old_override_is_retained_for_review_only(): void
     {
         $profile = $this->build();

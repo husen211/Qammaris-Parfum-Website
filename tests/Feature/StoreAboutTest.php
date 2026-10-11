@@ -67,6 +67,8 @@ class StoreAboutTest extends TestCase
     public function test_stored_address_is_escaped_in_markup_and_json_ld(): void
     {
         StoreInfo::create(['whatsapp_number' => '6285144924931', 'address' => '</script><script>alert("address")</script>']);
+        // The app caches store_info at boot; on a persistent test database that happens before this row exists.
+        cache()->forget('store_info');
         $response = $this->get('/store/about')->assertOk();
         $response->assertDontSee('</script><script>alert("address")</script>', false)
             ->assertSee('&lt;/script&gt;', false)
