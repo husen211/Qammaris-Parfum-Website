@@ -256,6 +256,25 @@ class WebsiteCheckoutOrderTest extends TestCase
         $this->get(route('cart.checkout.show'))->assertDontSee('checkout_key')->assertDontSee('Cara pengiriman');
     }
 
+    public function test_emergency_stop_of_new_checkouts_keeps_existing_website_orders_working(): void
+    {
+        // Release runbook: ORDERS_WEBSITE_CHECKOUT=false stops new saved checkouts; nothing already received is touched.
+        $this->review([$this->variant('Stop Sintetis', 70000)->id => 1]);
+        $history = $this->post(route('cart.checkout'), $this->form('pickup'))->getCookie('qam_orders');
+        $order = OnlineOrder::sole();
+        $link = route('orders.customer.show', $order->customer_token_encrypted);
+
+        config(['orders.website_checkout' => false]);
+        $this->get($link)->assertOk()->assertSee($order->code);
+        $this->withCookie('qam_orders', $history->getValue())->get(route('orders.customer.mine'))->assertOk()->assertSee($order->code);
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER]);
+        $this->actingAs($staff)->get(route('admin.orders.show', $order))->assertOk()->assertSee($order->code);
+        $this->actingAs($staff)->post(route('admin.orders.v2.confirm-website', $order), ['revision' => $order->revision])
+            ->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame('active', $order->fresh()->lifecycle);
+        $this->assertSame(1, OnlineOrder::count());
+    }
+
     public function test_checkout_creation_is_rate_limited_per_client(): void
     {
         $this->review([$this->variant('Limit Sintetis', 50000)->id => 1]);

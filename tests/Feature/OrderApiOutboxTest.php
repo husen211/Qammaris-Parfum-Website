@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\DeliverOrderWebhook;
 use App\Models\IntegrationOutbox;
 use App\Models\OnlineOrder;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\Concerns\BuildsV2Orders;
 use Tests\Concerns\SignsOrderApiRequests;
@@ -34,6 +36,15 @@ class OrderApiOutboxTest extends TestCase
             'orders_api.webhook_enabled' => true, 'orders_api.webhook_url' => self::HOOK, 'orders_api.webhook_secret' => self::HOOK_SECRET,
             'orders_api.webhook_client_id' => 'qammaris-website-test',
         ]);
+    }
+
+    public function test_webhook_jobs_use_the_integration_queue_the_production_worker_consumes(): void
+    {
+        Queue::fake();
+        $this->v2Order();
+        Queue::assertPushedOn(config('qammaris_app.queue'), DeliverOrderWebhook::class);
+        Queue::assertPushed(DeliverOrderWebhook::class, fn (DeliverOrderWebhook $job) => $job->queue === 'qammaris-app');
+        $this->assertStringContainsString('--queue=qammaris-app', file_get_contents(base_path('tools/hostinger/production-qammaris-worker-watchdog.sh')));
     }
 
     public function test_every_v2_revision_is_delivered_once_with_a_signed_minimal_body(): void
