@@ -1,7 +1,7 @@
 # PWA-01 — verification and release-candidate report (2026-10-11)
 
 - Branch `modernization/pwa-01-public-pwa`, on top of ORD-04 `50c43d6`.
-- Release candidate `release/rc-ord-pwa-2026-10-11` = PWA-01 + a trial merge of `origin/main`.
+- Release candidate `modernization/rc-ord-pwa-2026-10-11` = PWA-01 + a trial merge of `origin/main`.
 - Synthetic data only, on an isolated SQLite instance (:8190) and an isolated MariaDB 11.8.9 (:3398). No UAT, dev or production database was used.
 - Decision: [ADR-047](../../architecture/decisions/ADR-047-public-website-pwa.md). Operations: [PUBLIC_PWA](../../runbooks/PUBLIC_PWA.md), [release plan](../../runbooks/RELEASE_ORD_PWA_RC.md).
 

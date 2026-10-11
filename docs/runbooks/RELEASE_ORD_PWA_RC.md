@@ -13,9 +13,9 @@ Status: **plan only, NOT approved.** Nothing is merged to `main`, nothing is dep
 | ORD-04 | Guest checkout, payment gate, stepper, payment accounts, Pesanan Saya, paperbag (r4.4) | `modernization/ord-04-cart-checkout` |
 | PWA-01 | Installable public website | `modernization/pwa-01-public-pwa` |
 
-RC branch: `release/rc-ord-pwa-2026-10-11` = PWA-01 + a trial merge of current `origin/main`, with every conflict resolved and reviewed (see the verification page).
+RC branch: `modernization/rc-ord-pwa-2026-10-11` = PWA-01 + a trial merge of current `origin/main`, with every conflict resolved and reviewed (see the verification page).
 
-**Proposed integration (needs Owner approval):** one PR `release/rc-ord-pwa-2026-10-11` → `main`, reviewed as a whole. #27 and #32 are then closed as superseded, with a link to the RC PR. Merging #27 and #32 one by one is not recommended: #27 conflicts with `main` and #32 targets the ORD-01 branch, not `main`.
+**Proposed integration (needs Owner approval):** one PR `modernization/rc-ord-pwa-2026-10-11` → `main`, reviewed as a whole. #27 and #32 are then closed as superseded, with a link to the RC PR. Merging #27 and #32 one by one is not recommended: #27 conflicts with `main` and #32 targets the ORD-01 branch, not `main`.
 
 ## 2. Release gates
 
