@@ -56,9 +56,10 @@ class OrderApiOutboxTest extends TestCase
                 && $request->header('Idempotency-Key')[0] === $body->event_id
                 && $request->header('X-Qammaris-Client')[0] === 'qammaris-website-test'
                 && hash_equals(OrderApiSignature::sign(self::HOOK_SECRET, (int) $request->header('X-Qammaris-Timestamp')[0], 'POST', $path, $request->body()), $request->header('X-Qammaris-Signature')[0]);
-            // No order or customer data in a webhook.
-            $this->assertStringNotContainsString('E2E', $request->body());
-            $this->assertStringNotContainsString('0812', $request->body());
+            // No order or customer data in a webhook. Random ULIDs are left out: they can contain "E2E" or "0812" by chance.
+            $content = json_encode(array_diff_key((array) $body, array_flip(['event_id', 'order_id'])));
+            $this->assertStringNotContainsString('E2E', $content);
+            $this->assertStringNotContainsString('0812', $content);
 
             return $valid && $body->order_id === $order->public_id;
         });
