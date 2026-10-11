@@ -33,6 +33,8 @@ class OrderPaymentGateTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // CI runs PHP tests before the Vite build exists.
+        $this->withoutVite();
         $this->enableOrderApi();
         Storage::fake('local');
         $this->staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh();
