@@ -144,6 +144,27 @@ Owner approved; coordinated step by step with the App agent; no new Website code
 5. Final start: Website on a new tunnel, App on a new tunnel, task links set to the new App URL. Read-only checks through the tunnel: logins (Super Admin phone, Staff Order laptop), 0 orders, product search, catalog labels, checkout page (3 delivery options, no store number), only the test account, no mixed content. `status-uat`: webhook target local, catalog sync off, mail log, no pending migrations; the only FAIL is the documented UAT exception (task links on).
 6. Final counts: Website orders 0 (events, claims, costs, outbox, idempotency, jobs 0); App orders 0, reimbursements 0.
 
+## UX polish after Owner UAT r4.3 (2026-10-11)
+
+Isolated local instance (temporary SQLite, synthetic data, real headless Chrome, 390×844 touch), run twice: `APP_ENV=uat` (no test number) and `APP_ENV=production` (official number; WhatsApp requests blocked inside the test browser, so nothing was sent).
+
+| Check | Result |
+|---|---|
+| Catalog navigation (phone) | Pesanan Saya icon next to the cart; "Pesanan Saya" in the Belanja menu; no overflow |
+| Checkout paperbag | Pakai paperbag: Paperbag Rp 4.000, running total Rp 199.000; Tanpa paperbag: Rp 0, Rp 195.000; local delivery label "Pengiriman Dalam Kota — Kurir online, Kota Palu. Tiba 1–2 jam setelah pesanan diproses." |
+| Success page, production | "Kirim ke WhatsApp"; WhatsApp opened once to `wa.me/6285144924931` with the prefilled order message; reload: no reopen; no copy fallback, no [UAT] |
+| Success page, UAT | Store number never shown; copy fallback (no test number) |
+| UAT opt-in (Super Admin, own browser) | Link becomes `wa.me/6285144924931?text=[UAT] Halo Qammaris…`; a normal visitor's page still has no store number |
+| Status → Katalog → Pesanan Saya → detail | Works; list shows the order with total incl. paperbag; another browser: 0 orders |
+| Received panel (local / J&T) | Above the items; motorbike / truck icon with text; timeline "Menunggu konfirmasi penerimaan dari Anda." |
+| Admin order | Summary shows Paperbag; group message "Buka di Qammaris App: https://…/orders/{ULID}" (UAT: tunnel App URL; production: qammarisapp.com) |
+
+Screenshots ([r3/](r3/)): [catalog](r3/production-catalog-390.jpg), [menu](r3/production-catalog-menu-390.jpg), [checkout paperbag](r3/production-checkout-paperbag-390.jpg), [success production](r3/production-success-390.jpg), [success UAT](r3/uat-success-390.jpg), [Pesanan Saya](r3/production-mine-390.jpg), [received local](r3/production-received-courier-390.jpg), [received J&T](r3/production-received-jnt-390.jpg), [admin](r3/uat-admin-order-390.jpg), [UAT opt-in](r3/uat-uat-optin-390.jpg).
+
+Tests: `OrderPolishTest` (10) — history 20/10 days/other browser/forged key/delete/no session; paperbag 0/4.000, snapshot, replay, change after payment (Super Admin, overpayment, refund decision), API r4.4 totals; production WhatsApp; UAT opt-in (Super Admin only, per browser, [UAT], 404 in production); receipt panel/icons/copy; task links per environment; navigation. Full suite: SQLite 566 passed / 7 skipped, **MariaDB 11.8.9 573/573**, JS 42/42, build OK.
+
+Total consistency: the Website total, the payment instructions and API r4.4 `totals.total` all include the same paperbag snapshot (tested). The Majoo cashier record is manual and must carry the same Rp4.000 line; it was not verified here.
+
 ## Tests
 
 - `tests/Feature/StoreWhatsappEnvironmentTest.php`: 4 tests.

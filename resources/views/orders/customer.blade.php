@@ -32,8 +32,8 @@
                         <svg data-shipping-icon="jnt" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
                         <span>Dikirim lewat J&amp;T</span>
                     @else
-                        {{-- Lucide "bike" style motorbike outline; docs/licenses/lucide.txt --}}
-                        <svg data-shipping-icon="motor" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l3 11.5"/><path d="M5.5 17.5 9 10h6l3.5 7.5"/><path d="M9 10 7.5 6H5"/></svg>
+                        {{-- Tabler Icons "motorbike" (MIT); docs/licenses/tabler-icons.txt --}}
+                        <svg data-shipping-icon="motor" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M16 16a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M7.5 14h5l4 -4h-10.5m1.5 4l4 -4"/><path d="M13 6h2l1.5 3l2 4"/></svg>
                         <span>Dalam pengiriman kurir dalam kota</span>
                     @endif
                 </p>
