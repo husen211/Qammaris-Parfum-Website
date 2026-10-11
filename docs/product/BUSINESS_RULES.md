@@ -19,7 +19,7 @@ Keputusan: [ADR-004](../architecture/decisions/ADR-004-drafts-and-single-offer-p
 
 - Majoo tetap sistem operasional; aplikasi internal menyediakan feed website. Website tidak membaca MySQL sumber secara langsung dan tidak mendapat jumlah stok aktual.
 - Status produk terhubung diterima apa adanya: `available` → **Tersedia**, `sold_out` → **Habis**, `unknown` → **Tanyakan ketersediaan**. ETA/OTW menambah **Restok segera** pada Habis, bukan mengubahnya menjadi Tersedia.
-- Tidak ada kedaluwarsa 36 jam/N hari, downgrade otomatis, atau teks waktu pemeriksaan pada produk terhubung. Koneksi putus mempertahankan status terakhir. Freshness 36 jam legacy/manual hanya berlaku pada produk yang tidak memakai sumber aplikasi; sold_out tetap eksplisit sampai pembaruan berikutnya.
+- Tidak ada kedaluwarsa 36 jam/N hari atau downgrade otomatis pada produk terhubung. Sejak ORD-04 (Owner 2026-10-11): label tidak mengklaim stok terkini bila feed basi (sinkron sukses terakhir > 120 menit atau gagal) → **Tersedia · stok belum diperbarui**, tetap bisa dipesan; produk manual menampilkan tanggal dicek. Koneksi putus mempertahankan status terakhir. Freshness 36 jam legacy/manual hanya berlaku pada produk yang tidak memakai sumber aplikasi; sold_out tetap eksplisit sampai pembaruan berikutnya.
 - Feed nonaktif/merged/departemen lainnya tetap menjadi hidden tombstone. `active`, `merged_into`, dan `hidden` tidak boleh diabaikan. Departemen bukan kategori website.
 - Webhook HMAC adalah pemicu utama; rekonsiliasi setiap 30 menit jaring pengaman. Revision lama/ganda no-op; checkpoint hanya maju bersama transaksi perubahan yang diterima. Retry tidak boleh menggandakan produk/identitas/audit.
 - Kredensial mesin hanya baca, terpisah dari akun karyawan. Bukti foto karyawan, harga modal, dan keuangan bukan bagian kontrak website. Nilai secret tidak masuk Git/chat/log.
@@ -143,6 +143,22 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
   - Tidak ada panggilan Maxim, GoSend, atau RajaOngkir.
 
 Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md).
+
+### Pembayaran sebelum packing dan pengiriman; tahapan pesanan (ORD-04 revisi, Owner 2026-10-11)
+
+- **Wajib lunas.** Packing (mulai/konfirmasi), klaim tugas App, pesan kurir, request/QR J&T, pickup J&T, dan serah terima hanya bisa setelah status pembayaran **Lunas**. Ditolak di server (Admin PWA dan API App), bukan hanya tombol yang disembunyikan.
+  - Bayar sebagian, refund tertunda, atau pembayaran yang dibatalkan = belum lunas; langkah berikutnya menunggu lagi.
+  - Keep boleh tanpa bayar (stok dipisahkan), tetapi tidak pernah membolehkan packing atau pengiriman.
+  - Tidak dibatasi: lepas klaim, catat kendala, catat biaya ongkir/reimburse, konfirmasi diterima, dan nomor resi J&T setelah pickup.
+  - Karena serah terima butuh lunas, pesanan biasanya **Selesai** saat diserahkan. Tombol customer "Pesanan sudah saya terima" mengikuti status pengiriman, bukan status selesai.
+- **Tahapan (sama di Website dan App):** Konfirmasi pesanan → Pembayaran → Siapkan pesanan → Pengiriman → Selesai, dihitung dari data server. Halaman pesanan hanya membuka satu tahap aktif dengan satu tombol utama; tahap selesai diringkas satu baris; kendala, keep, link, opsi lanjutan, dan riwayat lewat disclosure.
+- **Instruksi pembayaran.** Setelah ongkir dan pembayarnya diisi (atau ambil di toko), staf menyalin "Total & Instruksi Pembayaran" (nomor pesanan, subtotal, ongkir, total, rekening resmi, cara kirim bukti) atau mengirimnya ke chat customer. Pilihan Transfer/QRIS customer hanya preferensi; boleh berubah lewat chat. Tidak ada tanda Lunas otomatis.
+- **Rekening resmi** diatur Super Admin di Pesanan Online → Rekening pembayaran: tambah → verifikasi (ketik ulang nomor + centang) → baru dipakai. Rekening tidak bisa diubah/dihapus, hanya dinonaktifkan. Rekening belum terverifikasi tidak pernah ditampilkan.
+- **Halaman customer:** setelah total final, tampil total pembayaran, rekening resmi terverifikasi (dengan Salin nomor), dan tombol **Kirim bukti lewat WhatsApp**. Ada tautan **Katalog** dan **Pesanan Saya**.
+- **Pesanan Saya tanpa login:** daftar pesanan yang dibuka di browser ini (sesi). Detail tetap lewat link aman per pesanan. Daftar hilang bila sesi berakhir dan bisa dihapus dari perangkat.
+- **WhatsApp:** production membuka WhatsApp toko dengan pesan terisi. UAT/staging memakai nomor uji (`STORE_WHATSAPP_TEST_NUMBER`); pratinjau + Salin pesan hanya cadangan uji bila nomor uji kosong, bukan alur customer production.
+
+Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-stepper.md); kontrak App: draf teks [r4.3](../integrations/R4_3_DRAFT_PAYMENT_GATE.md) menunggu tanda tangan kedua agen.
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 

@@ -90,6 +90,44 @@ Screenshots via the tunnel:
 - [laptop confirm](uat-tunnel-laptop-confirm.jpg)
 - [laptop confirmed](uat-tunnel-laptop-confirmed.jpg)
 
+## Revision after Owner UAT (2026-10-11): payment gate, stepper, payment instructions
+
+Isolated local instance (temporary SQLite, synthetic data, `APP_ENV=uat`, synthetic WhatsApp test number), real headless Chrome, 390×844 touch and 1440×900. Before = the UAT version `0ba294a` with its own `vendor`/autoloader; after = this branch. Same seed for both: five orders, one per step (unpaid without ongkir, unpaid with ongkir, paid, packed J&T, done pickup).
+
+| Check | Before (`0ba294a`) | After |
+|---|---|---|
+| Unpaid order, Admin PWA "preparation" request | Order became `preparing` | Refused: "Pesanan belum lunas…", shown at the top; order stays `not_started` |
+| Primary action per state (390 and 1440) | Unpaid without ongkir already offered **Tandai Lunas** | Simpan ongkir → Tandai Lunas → Konfirmasi packing → Request pickup J&T → none (done) |
+| Stepper (backend state) | none | `dcttt`, `dcttt`, `ddctt`, `dddct`, `ddddd` (done/current/todo) |
+| Customer link, total final | no payment block | Total Rp 925.000, verified BCA account with Salin nomor, **Kirim bukti lewat WhatsApp** → `wa.me/6280000009999` (test number) |
+| Pesanan Saya | – | Two orders opened in that browser, with status "Menunggu pembayaran" / "Sedang disiapkan" |
+| Catalog labels (feed fresh) | "Tersedia saat diperiksa" (manual) | "Tersedia · dicek 10 Okt" (manual), "Tersedia" (connected) |
+| Overflow / inputs < 16 px on touch | 0 / none | 0 / none (catalog search field is pre-existing and unchanged) |
+
+Screenshots ([r2/](r2/)):
+
+| | Before 390 | After 390 | After 1440 |
+|---|---|---|---|
+| Unpaid, no ongkir | [img](r2/before-admin-unpaidNoOngkir-390.jpg) | [img](r2/after-admin-unpaidNoOngkir-390.jpg) | [img](r2/after-admin-unpaidNoOngkir-1440.jpg) |
+| Unpaid, ongkir set (instructions) | [img](r2/before-admin-unpaidWithOngkir-390.jpg) | [img](r2/after-admin-unpaidWithOngkir-390.jpg) | [img](r2/after-admin-unpaidWithOngkir-1440.jpg) |
+| Paid → packing | [img](r2/before-admin-paid-390.jpg) | [img](r2/after-admin-paid-390.jpg) | [img](r2/after-admin-paid-1440.jpg) |
+| Packed J&T → shipping | [img](r2/before-admin-packed-390.jpg) | [img](r2/after-admin-packed-390.jpg) | [img](r2/after-admin-packed-1440.jpg) |
+| Done | [img](r2/before-admin-done-390.jpg) | [img](r2/after-admin-done-390.jpg) | [img](r2/after-admin-done-1440.jpg) |
+| Customer link with payment | [img](r2/before-customer-payment-390.jpg) | [img](r2/after-customer-payment-390.jpg) | [img](r2/after-customer-payment-1440.jpg) |
+| Pesanan Saya | – | [img](r2/after-mine-390.jpg) | [img](r2/after-mine-1440.jpg) |
+| Catalog | [img](r2/before-catalog-390.jpg) | [img](r2/after-catalog-390.jpg) | [img](r2/after-catalog-1440.jpg) |
+| Rekening pembayaran (Super Admin) | – | [img](r2/after-accounts-390.jpg) | – |
+
+In the full-page admin captures at 390 the fixed bottom navigation appears mid-page; that is a capture artifact, not the layout.
+
+Note on the first-round "before" images (2026-10-10): that worktree shared `vendor` through a junction, so its server code was the new branch while views were the old ones. The images show the old views correctly; the round-2 comparison above uses a fully separate old version.
+
+Tests for this revision:
+- `OrderPaymentGateTest` (10): signed API and Admin PWA bypass attempts on unpaid, reversed, short-paid and refund-pending orders; not-gated actions; resi after pickup without a claim; paid pickup/local/J&T end-to-end; keep; concurrent staff.
+- `OrderStepperAndPaymentInstructionsTest` (4): one current step per state; one primary action on the page; verified accounts only; instructions after the ongkir.
+- 23 older tests that packed or shipped before payment were rewritten to pay first (same intent); one renamed ("completes at handover of a paid order").
+- Full suite: SQLite 556 passed / 7 MariaDB-only skipped; JS 42/42; Pint clean; **MariaDB 11.8.9 563/563** (includes 6-process concurrency races and the migration rehearsal with rollback guard).
+
 ## Tests
 
 - `tests/Feature/StoreWhatsappEnvironmentTest.php`: 4 tests.

@@ -160,6 +160,9 @@ class OrderPaymentGateTest extends TestCase
                 ->assertSessionHas('order_notice', fn ($notice) => $notice['type'] === 'error' && str_contains($notice['message'], 'belum lunas'));
         }
         $this->assertSame([1, 'not_started', 'unassigned', 'pending'], [$order->fresh()->revision, $order->fresh()->preparation_status, $order->fresh()->courier_status, $order->fresh()->handover_status]);
+        // The refusal is visible even though the packing step itself is not shown before payment.
+        $this->followingRedirects()->post(route('admin.orders.v2.preparation', $order), ['revision' => $order->fresh()->revision])
+            ->assertSee('Pesanan belum lunas. Catat pembayaran lunas dulu')->assertSee('data-step="pembayaran" data-state="current"', false);
     }
 
     public function test_paid_orders_run_every_step_for_pickup_local_and_jnt(): void

@@ -144,6 +144,16 @@ Saklar yang aktif di UAT: `ORDERS_WEBSITE_CHECKOUT=true`, bersama `ORDERS_V2_ENA
 - [ ] Tekan **Konfirmasi pesanan**: status Aktif, lanjut Pembayaran. Di App pesanan muncul sebagai perlu ditangani.
 - [ ] Coba juga **Opsi lanjutan → Batalkan** untuk pesanan website yang tidak jadi.
 
+### I3. Pembayaran dan tahapan (ORD-04 revisi)
+
+- [ ] Super Admin: Pesanan Online → **Rekening pembayaran**: tambah rekening uji, lalu verifikasi (ketik ulang nomor). Sebelum terverifikasi, rekening tidak muncul di mana pun.
+- [ ] Pesanan belum lunas: halaman pesanan hanya menampilkan tahap **Pembayaran**. Packing/kurir/serah tidak tersedia; percobaan lewat App ditolak "Pesanan belum lunas".
+- [ ] Isi ongkir → muncul total dan **Salin Total & Instruksi Pembayaran** / **Kirim ke WhatsApp customer**.
+- [ ] Link customer menampilkan total, rekening resmi, dan **Kirim bukti lewat WhatsApp**.
+- [ ] **Tandai Lunas** → tahap **Siapkan pesanan** → **Pengiriman** → **Selesai**. Tahap yang selesai diringkas satu baris.
+- [ ] Link customer: **Katalog** dan **Pesanan Saya** (daftar pesanan yang dibuka di browser itu).
+- [ ] Nomor WhatsApp uji untuk HP sungguhan: `.\set-wa-test-number.ps1 -Number 08xxxxxxxxxx` (nomor milik Owner, bukan nomor toko; nomor toko ditolak). `-Clear` kembali ke pratinjau + Salin pesan.
+
 ### J. Lain-lain
 - [ ] Mode pesawat di HP: halaman offline Admin tampil; tidak ada data pesanan lama yang tampil dari cache.
 - [ ] Riwayat pesanan mencatat setiap langkah beserta pelakunya.

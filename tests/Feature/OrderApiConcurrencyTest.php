@@ -49,7 +49,7 @@ class OrderApiConcurrencyTest extends TestCase
 
     public function test_six_simultaneous_claims_have_exactly_one_holder(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $results = $this->race(array_map(fn ($i) => $this->api('POST', $order, '/claims', [
             'task' => 'preparation', 'actor' => $this->actor(sprintf('%024x', 1000 + $i), 'Staf '.$i),
         ]), range(1, 6)));
@@ -63,7 +63,7 @@ class OrderApiConcurrencyTest extends TestCase
 
     public function test_six_identical_requests_with_one_key_apply_once(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $key = 'race-key-'.Str::random(16);
         $job = $this->api('POST', $order, '/claims', ['task' => 'handover', 'actor' => $this->actor()], $key);
         $results = $this->race(array_fill(0, 6, $job));
@@ -77,7 +77,7 @@ class OrderApiConcurrencyTest extends TestCase
 
     public function test_six_packs_with_the_same_expected_revision_have_one_winner(): void
     {
-        $order = $this->v2Order();
+        $order = $this->paidV2Order();
         $this->race([$this->api('POST', $order, '/claims', ['task' => 'preparation', 'actor' => $this->actor()])]);
         $revision = $order->fresh()->revision;
         $items = $order->items->map(fn ($item) => ['line_id' => $item->line_id, 'quantity' => $item->quantity])->all();

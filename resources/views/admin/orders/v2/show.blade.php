@@ -136,6 +136,11 @@
             @if ($order->lifecycle === 'cancelled')
                 <p class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" data-next-step>Pesanan dibatalkan {{ $time($order->closed_at) }}: {{ $order->cancel_reason }}</p>
             @endif
+            {{-- A refused action for a step that is not shown (e.g. packing before payment) still reports its reason here. --}}
+            @php($shownStepSection = ['konfirmasi' => $order->lifecycle === 'draft' ? 'konfirmasi' : 'link', 'pembayaran' => 'pembayaran', 'persiapan' => 'packing', 'pengiriman' => 'pengiriman', 'selesai' => 'pengiriman'][$currentStep ?? 'selesai'])
+            @if (session('order_notice.type') === 'error' && in_array(session('order_notice.section'), ['konfirmasi', 'pembayaran', 'packing', 'pengiriman'], true) && session('order_notice.section') !== $shownStepSection)
+                <div role="alert" data-order-notice="error" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{{ session('order_notice.message') }}</div>
+            @endif
             {{-- An open issue comes first; the step stays where it is. --}}
             @if ($openIssues > 0)
                 @include('admin.orders.v2.sections.kendala')
