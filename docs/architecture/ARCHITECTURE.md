@@ -213,6 +213,20 @@ admin group + login: cache.headers no_store;private
 - Order creation dedupes by `online_orders.submission_token` per creator.
 - [ADR-039](decisions/ADR-039-admin-pwa.md), [verification](../verification/ord-02b/README.md).
 
+### Public website PWA (PWA-01, branch review)
+
+```text
+routes/public-pwa.php (no web group, no cookies): /manifest.webmanifest (404 when off), /sw.js, /offline
+layouts/app.blade.php only: pwa._head + resources/js/public-pwa.js; data-public-pwa/sw/scope on <html>
+PublicPwaController: identity "Qammaris Perfumes", id/scope/start "/", icons /images/pwa/public-*
+```
+
+- The worker's scope is `/`. It caches only `/build/assets/*`, `/images/pwa/public-*` and `/offline`, in `qammaris-public-static-<version>`. Navigations go to the network only.
+- It never intercepts `/admin*`, `/login`, `/logout`, `/tugas-pesanan*`, `/integrations*`, `/api*`, cross-origin or non-GET requests. On `/admin`, the more specific Admin worker wins once registered.
+- `PUBLIC_PWA_ENABLED` (default false) ships a worker that removes only `qammaris-public-*` caches and the `/` registration. There is no `Clear-Site-Data`.
+- The checkout form refuses to submit while offline.
+- [ADR-047](decisions/ADR-047-public-website-pwa.md), [verification](../verification/pwa-01/README.md).
+
 ## Runtime, deployment, and verification boundaries
 
 GitHub stores code/locks/docs, not .env/database/uploads. CI builds/tests; production workflow accepts successful same-repo main-push CI, enable flag and production environment; server activation marker/current revision/pending-migration guards apply. Feature-branch build cannot deploy. Even documentation merged to main can trigger this configured path; Owner release approval remains separate.

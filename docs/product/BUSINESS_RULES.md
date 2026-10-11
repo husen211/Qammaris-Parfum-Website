@@ -254,7 +254,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
 
 ### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)
 
-- Admin bisa dipasang sebagai aplikasi "Qammaris Admin" dan dibuka dari `/admin/login`. Website publik tidak berubah dan tidak dipasang sebagai aplikasi.
+- Admin bisa dipasang sebagai aplikasi "Qammaris Admin" dan dibuka dari `/admin/login`. Website publik adalah aplikasi terpisah (PWA-01, di bawah).
 - Data pesanan dan customer **tidak disimpan di HP**. Setiap halaman admin diambil langsung dari server; tanpa internet hanya muncul halaman "Tidak ada koneksi".
 - Perubahan hanya bisa dikirim saat online. Satu formulir Buat pesanan menghasilkan paling banyak satu pesanan, walaupun tombol ditekan dua kali atau dikirim ulang.
 - HP toko dipakai bersama:
@@ -262,6 +262,15 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-038](../architecture/decisions/A
   - **Keluar** selalu tersedia;
   - setelah keluar, tombol Kembali tidak menampilkan halaman admin lagi.
 - [ADR-039](../architecture/decisions/ADR-039-admin-pwa.md).
+
+### Aplikasi website Qammaris Perfumes (PWA-01, branch review, saklar `PUBLIC_PWA_ENABLED`)
+
+- Pengunjung bisa memasang website sebagai aplikasi "Qammaris Perfumes" (ikon logo hitam di atas krem). Aplikasi ini terpisah dari "Qammaris Admin".
+- Katalog, keranjang, checkout, status pesanan, dan Pesanan Saya **selalu diambil langsung dari server**; data pesanan dan penerima tidak disimpan oleh aplikasi.
+- Tanpa internet hanya muncul halaman "Tidak ada koneksi". Pesanan tidak bisa dikirim, diantrikan, atau dikirim ulang otomatis saat offline.
+- Tidak ada notifikasi atau permintaan izin notifikasi.
+- Saklar mati (default): website tampil seperti sebelumnya dan aplikasi yang sudah terpasang melepas dirinya sendiri tanpa menghapus login admin, keranjang, atau Pesanan Saya.
+- [ADR-047](../architecture/decisions/ADR-047-public-website-pwa.md).
 
 ## UI, akses, dan batas program
 
