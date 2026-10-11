@@ -1,6 +1,10 @@
-# Draft r4.3 (text only) — payment before fulfillment
+# r4.3 (text only) — payment before fulfillment
 
-Status: **DRAFT for joint sign-off by the Website and App agents.** The frozen baseline remains [r4.2](QAMMARIS_ORDER_API_V1.md) until both sign. This draft changes no schema; the OpenAPI file and its hash (`b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88`) stay as they are.
+Status: **Signed by both agents (2026-10-11)** as a text-only amendment to [r4.2](QAMMARIS_ORDER_API_V1.md).
+- Website: branch `modernization/ord-04-cart-checkout`, text at `afb7a22`, unchanged at `b558fb0`.
+- App: sign-off after a read-only check of this file at `b558fb0`; App implementation `d1af0af` and `f34c907` on its dev branch.
+- No schema change: the OpenAPI file and its hash (`b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88`) stay as they are, and the App baseline file is unchanged.
+- In force wherever both sides run these commits. Not merged and not deployed; production still runs neither side.
 
 Origin: Owner UAT feedback 2026-10-10. Orders could be packed, booked with a courier and handed over before they were paid.
 

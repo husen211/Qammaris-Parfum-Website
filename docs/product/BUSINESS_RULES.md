@@ -158,7 +158,7 @@ Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.m
 - **Pesanan Saya tanpa login:** daftar pesanan yang dibuka di browser ini (sesi). Detail tetap lewat link aman per pesanan. Daftar hilang bila sesi berakhir dan bisa dihapus dari perangkat.
 - **WhatsApp:** production membuka WhatsApp toko dengan pesan terisi. UAT/staging memakai nomor uji (`STORE_WHATSAPP_TEST_NUMBER`); pratinjau + Salin pesan hanya cadangan uji bila nomor uji kosong, bukan alur customer production.
 
-Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-stepper.md); kontrak App: draf teks [r4.3](../integrations/R4_3_DRAFT_PAYMENT_GATE.md) menunggu tanda tangan kedua agen.
+Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-stepper.md); kontrak App: [r4.3](../integrations/R4_3_DRAFT_PAYMENT_GATE.md) (teks saja, ditandatangani kedua agen 2026-10-11; skema OpenAPI tidak berubah).
 
 ## Pesanan Online dari WhatsApp (ORD-01, branch review)
 

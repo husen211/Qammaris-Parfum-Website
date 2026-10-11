@@ -1,6 +1,6 @@
 # ADR-045: Payment before fulfillment and the order stepper
 
-Status: Proposed 2026-10-11 (ORD-04 revision after Owner UAT feedback). Branch `modernization/ord-04-cart-checkout`. Not merged, not deployed. API contract: text-only r4.3 draft ([R4_3_DRAFT_PAYMENT_GATE](../../integrations/R4_3_DRAFT_PAYMENT_GATE.md)) awaiting joint sign-off; the r4.2 baseline and its OpenAPI hash are unchanged.
+Status: Proposed 2026-10-11 (ORD-04 revision after Owner UAT feedback). Branch `modernization/ord-04-cart-checkout`. Not merged, not deployed. API contract: text-only r4.3 ([R4_3_DRAFT_PAYMENT_GATE](../../integrations/R4_3_DRAFT_PAYMENT_GATE.md)), signed by the Website and App agents on 2026-10-11; the OpenAPI schema and hash are unchanged.
 
 ## Problem
 
