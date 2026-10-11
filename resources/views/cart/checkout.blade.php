@@ -72,7 +72,7 @@
                         <div>
                             <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
                             <textarea id="customer_address" name="customer_address" rows="4" @if (! $savesOrder || $isDelivery) required @endif minlength="{{ $savesOrder ? 10 : 15 }}" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address') }}</textarea>
-                            <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">{{ $savesOrder ? 'Isi jalan, nomor rumah, dan patokan. Untuk Kota Palu, kirim juga Sharelok di WhatsApp.' : 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.' }}</p>
+                            <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">{{ $savesOrder ? 'Isi jalan, nomor rumah, dan patokan. Untuk pengiriman dalam kota, kirim juga Sharelok di WhatsApp.' : 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.' }}</p>
                             @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </div>
                         @if ($savesOrder)
@@ -99,8 +99,8 @@
                             <div class="mt-3 grid grid-cols-2 gap-3">
                                 @foreach (\App\Models\OnlineOrder::PACKAGING as $value => $title)
                                     <label class="{{ $choiceClass }} items-center">
-                                        <input type="radio" name="packaging" value="{{ $value }}" @checked(old('packaging') === $value) required class="h-5 w-5 shrink-0 accent-brand-black">
-                                        <span class="text-base text-brand-black">{{ $title }}</span>
+                                        <input type="radio" name="packaging" value="{{ $value }}" @checked(old('packaging') === $value) required class="h-5 w-5 shrink-0 accent-brand-black" data-packaging>
+                                        <span class="text-base text-brand-black">{{ $title }}<span class="block text-sm text-gray-600">{{ $value === 'paperbag' ? '+ '.format_rupiah($paperbagFee) : 'Rp 0' }}</span></span>
                                     </label>
                                 @endforeach
                             </div>
@@ -147,8 +147,15 @@
                     <span class="text-sm text-gray-600">Subtotal produk</span><strong class="text-xl tabular-nums">{{ format_rupiah($subtotal) }}</strong>
                 </div>
                 @if ($savesOrder)
+                    {{-- ORD-04: paperbag Rp4.000 per order; the server snapshots the same amount on the order. --}}
+                    <div class="mt-2 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700" data-paperbag-summary data-fee="{{ (int) $paperbagFee }}" data-subtotal="{{ (int) \App\Support\Rupiah::minorUnits($subtotal) / 100 }}">
+                        <span>Paperbag</span><span class="tabular-nums" data-paperbag-amount>{{ old('packaging') === 'paperbag' ? format_rupiah($paperbagFee) : 'Pilih di atas' }}</span>
+                    </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700">
                         <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
+                    </div>
+                    <div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-3">
+                        <span class="text-sm text-gray-600">Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span></span><strong class="text-lg tabular-nums" data-running-total>{{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($subtotal) + (old('packaging') === 'paperbag' ? $paperbagFee * 100 : 0))) }}</strong>
                     </div>
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
@@ -183,6 +190,18 @@ const syncDelivery = () => {
 };
 orderForm?.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncDelivery));
 syncDelivery();
+// ORD-04: show the paperbag charge and running total for the chosen option (display only; the server computes).
+const paperbagSummary = document.querySelector('[data-paperbag-summary]');
+const rupiah = (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+const syncPaperbag = () => {
+    if (!paperbagSummary) return;
+    const choice = orderForm.querySelector('[data-packaging]:checked')?.value;
+    const fee = choice === 'paperbag' ? Number(paperbagSummary.dataset.fee) : 0;
+    paperbagSummary.querySelector('[data-paperbag-amount]').textContent = choice ? rupiah(fee) : 'Pilih di atas';
+    document.querySelector('[data-running-total]').textContent = rupiah(Number(paperbagSummary.dataset.subtotal) + fee);
+};
+orderForm?.querySelectorAll('[data-packaging]').forEach((input) => input.addEventListener('change', syncPaperbag));
+syncPaperbag();
 orderForm?.addEventListener('submit', () => {
     // A repeated tap resends the same checkout key; the server answers with the same order.
     orderSubmit.disabled = true;

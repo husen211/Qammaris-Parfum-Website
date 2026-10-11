@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Qammaris Order API (Website ↔ Qammaris App)
-  version: 1.0.0-rc.4.2
+  version: 1.0.0-rc.4.4
   description: |
     r4.2 baseline matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2, signed off by the App agent (draft ff3532c).
     r4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver
@@ -9,6 +9,8 @@ info:
     (structure -> validation_failed, approval requirement -> proof_required, unauthorized waiver -> 403);
     OrderListPage.unavailable and serialization_failed so one unreadable order cannot fail the list.
     r4.1 history: K-A (webhook signature path + vectors) and K-B (new timestamp and signature on every webhook retry).
+    r4.3 (text only): payment before fulfillment (payment_required). r4.4 DRAFT (ORD-04, Owner 2026-10-11): Order.totals.packaging_fee,
+    the paperbag charge snapshotted on the order; total = subtotal + adjustments + shipping_charge + packaging_fee.
     The Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.
     The App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that
     permission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles
@@ -584,11 +586,12 @@ components:
         totals:
           type: object
           additionalProperties: false
-          required: [subtotal, adjustments, shipping_charge, total]
+          required: [subtotal, adjustments, shipping_charge, packaging_fee, total]
           properties:
             subtotal: { $ref: '#/components/schemas/Money' }
             adjustments: { type: integer }
             shipping_charge: { $ref: '#/components/schemas/Money' }
+            packaging_fee: { $ref: '#/components/schemas/Money', description: 'Paperbag charge to the customer (r4.4); never an expense or reimbursement' }
             total: { $ref: '#/components/schemas/Money' }
         payment:
           type: object

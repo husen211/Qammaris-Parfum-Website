@@ -23,6 +23,7 @@ use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderState;
 use App\Support\OnlineOrderStepper;
 use App\Support\OrderActor;
+use App\Support\OrderTaskLink;
 use App\Support\PhoneNumber;
 use App\Support\Rupiah;
 use App\Support\SearchMatcher;
@@ -53,7 +54,8 @@ class AdminOnlineOrderV2Controller extends Controller
     {
         $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses', 'claims']);
         $customerUrl = route('orders.customer.show', $order->customer_token_encrypted);
-        $groupMessage = $messages->staffGroupV2($order, route('admin.orders.task', $order->public_id));
+        $taskLink = OrderTaskLink::for($order);
+        $groupMessage = $messages->staffGroupV2($order, $taskLink['url'], $taskLink['in_app']);
         $inviteMessage = $messages->customerInvite($order, $customerUrl);
         $totals = OnlineOrderMoney::totals($order);
         $totalCents = Rupiah::minorUnits($order->customerTotal());

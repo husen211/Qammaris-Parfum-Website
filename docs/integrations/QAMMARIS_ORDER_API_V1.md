@@ -158,7 +158,7 @@ App tidak menyimpan `recipient` di database; data penerima diambil langsung saat
       "volume_ml": 100, "unit_price": 650000, "quantity": 2, "line_total": 1300000 }
   ],
   "packaging": "no_paperbag",
-  "totals": { "subtotal": 1300000, "adjustments": 0, "shipping_charge": 15000, "total": 1315000 },
+  "totals": { "subtotal": 1300000, "adjustments": 0, "shipping_charge": 15000, "packaging_fee": 0, "total": 1315000 },
   "payment": { "status": "paid", "method": "qris", "confirmation_source": "majoo", "confirmed_at": "2026-10-08T02:00:00Z", "recorded_in_majoo": true },
   "fulfillment": {
     "type": "local_delivery",

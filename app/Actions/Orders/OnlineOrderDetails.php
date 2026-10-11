@@ -7,6 +7,7 @@ use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OrderActionNotAllowed;
 use App\Models\OnlineOrder;
 use App\Models\User;
+use App\Support\OnlineOrderMoney;
 use App\Support\Rupiah;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -83,6 +84,11 @@ class OnlineOrderDetails
                     && (in_array($order->lifecycle, ['completed', 'cancelled'], true) || $order->handover_status === 'handed_over')) {
                     throw new OrderActionNotAllowed('Data penerima tidak dapat diubah setelah pesanan diserahkan atau ditutup. Hubungi Super Admin.');
                 }
+            }
+            // ORD-04: switching paperbag changes the total; after money came in that is a Super Admin correction.
+            if ($order->isDirty('packaging') && ($order->getOriginal('packaging') === 'paperbag') !== ($order->packaging === 'paperbag')
+                && OnlineOrderMoney::totals($order)['received'] > 0 && ! Gate::forUser($actor)->allows('orders.finance')) {
+                throw new OrderActionNotAllowed('Paperbag mengubah total pesanan yang sudah dibayar. Minta Super Admin mengubahnya.');
             }
             if ($order->isDirty('fulfillment') && $order->handover_status === 'handed_over') {
                 throw new InvalidOrderTransition('Cara pengiriman tidak dapat diubah setelah diserahkan.');

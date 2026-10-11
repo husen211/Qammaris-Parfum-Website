@@ -21,14 +21,35 @@
             {{ $editing ? ($order->stage === 'awaiting_customer' ? 'Lengkapi data pesanan' : 'Ubah data pesanan') : ($order->lifecycle === 'draft' ? 'Pesanan tersimpan' : 'Status pesanan') }}
         </h1>
 
+        {{-- ORD-04: receipt confirmation stays at the top while the parcel is on its way. --}}
+        @if ($order->isV2() ? ($order->handover_status === 'handed_over' && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled') : ($order->stage === 'shipped' && $order->fulfillment !== 'pickup'))
+            @php($jnt = $order->fulfillment === 'intercity')
+            <form method="POST" action="{{ route('orders.customer.received', $token) }}" class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" data-received-form>
+                @csrf
+                <p class="flex items-center gap-3 text-base font-semibold text-brand-black">
+                    @if ($jnt)
+                        {{-- Lucide "truck"; docs/licenses/lucide.txt --}}
+                        <svg data-shipping-icon="jnt" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                        <span>Dikirim lewat J&amp;T</span>
+                    @else
+                        {{-- Lucide "bike" style motorbike outline; docs/licenses/lucide.txt --}}
+                        <svg data-shipping-icon="motor" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l3 11.5"/><path d="M5.5 17.5 9 10h6l3.5 7.5"/><path d="M9 10 7.5 6H5"/></svg>
+                        <span>Dalam pengiriman kurir dalam kota</span>
+                    @endif
+                </p>
+                <p class="mt-1 text-sm leading-6 text-gray-700">Sudah sampai di tangan Anda?</p>
+                <button type="submit" class="mt-3 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-gray-700 hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:bg-gray-500">Pesanan sudah saya terima</button>
+            </form>
+        @endif
+
         {{-- ORD-04: the order exists before WhatsApp opens. Opening WhatsApp is not a confirmation; the store confirms. --}}
         @if ($order->lifecycle === 'draft')
             <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="next-title" data-checkout-next>
                 <h2 id="next-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim pesan WhatsApp</h2>
                 <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok, ongkir, dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
                 @if ($checkoutWhatsappUrl)
-                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">{{ session('checkout_placed') ? 'Buka WhatsApp' : 'Buka WhatsApp lagi' }}</a>
-                    <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan tombol di atas lagi. Pesanan Anda tetap tersimpan.</p>
+                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Kirim ke WhatsApp</a>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan Kirim ke WhatsApp lagi. Pesanan Anda tetap tersimpan.</p>
                 @else
                     {{-- ORD-07: no store number here (test environment): never fall back to the real store chat. --}}
                     <p class="mt-2 text-sm leading-6 text-gray-700">WhatsApp toko tidak tersedia di sini. Salin pesan berikut dan kirim ke admin Qammaris. Pesanan Anda tetap tersimpan.</p>
@@ -38,7 +59,7 @@
                     <p data-copy-feedback role="status" aria-live="polite" class="mt-1 min-h-5 text-sm text-gray-600"></p>
                 @endif
                 @if ($order->fulfillment === 'local_delivery')
-                    <p class="mt-3 text-sm leading-6 text-gray-600">Pengiriman Kota Palu: kirim juga Sharelok di chat yang sama supaya kurir tepat sampai.</p>
+                    <p class="mt-3 text-sm leading-6 text-gray-600">Pengiriman Dalam Kota: kirim juga Sharelok di chat yang sama supaya kurir tepat sampai.</p>
                 @endif
                 <p class="mt-3 text-sm leading-6 text-gray-600">Simpan halaman ini untuk melihat status pesanan.</p>
             </section>
@@ -100,20 +121,27 @@
                 <span class="text-sm text-gray-600">Subtotal produk</span>
                 <strong class="text-lg tabular-nums">{{ format_rupiah($order->subtotal()) }}</strong>
             </div>
+            @if (\App\Support\Rupiah::minorUnits($order->packagingFee()) > 0)
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700" data-paperbag-row>
+                    <span>Paperbag</span><span class="tabular-nums">{{ format_rupiah($order->packagingFee()) }}</span>
+                </div>
+            @endif
             @if ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
                     <span>Ongkir</span><span class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</span>
                 </div>
+            @elseif ($order->fulfillment !== 'pickup' && $order->shipping_fee === null && $order->payment_status !== 'paid')
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
+                    <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
+                </div>
+            @endif
+            @if (\App\Support\OnlineOrderStepper::totalIsFinal($order))
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
                     <span class="text-sm text-gray-600">Total pembayaran</span>
                     <strong class="text-lg tabular-nums">{{ format_rupiah($order->customerTotal()) }}</strong>
                 </div>
-            @elseif ($order->lifecycle === 'draft' && $order->fulfillment !== 'pickup')
-                <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
-                    <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
-                </div>
             @else
-                <p class="mt-2 text-sm leading-6 text-gray-600">Ongkir dan pembayaran dikonfirmasi admin.</p>
+                <p class="mt-2 text-sm leading-6 text-gray-600">Total final setelah ongkir dikonfirmasi admin.</p>
             @endif
         </section>
 
@@ -147,7 +175,7 @@
                     <div class="mt-3 space-y-3">
                         @foreach ([
                             'pickup' => ['Ambil di toko', 'Datang dan ambil sendiri di toko Qammaris.'],
-                            'local_delivery' => ['Kirim dalam Kota Palu', 'Diantar kurir. Lokasi lewat Sharelok.'],
+                            'local_delivery' => ['Pengiriman Dalam Kota', 'Tiba 1–2 jam setelah pesanan diproses. Lokasi lewat Sharelok.'],
                             'intercity' => ['Kirim ke luar kota', 'Dikirim J&T ke alamat Anda.'],
                         ] as $value => [$title, $hint])
                             <label class="{{ $choiceClass }}">
@@ -226,14 +254,6 @@
                 </div>
             </form>
         @else
-            @if ($order->isV2() ? ($order->handover_status === 'handed_over' && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled') : ($order->stage === 'shipped' && $order->fulfillment !== 'pickup'))
-                <form method="POST" action="{{ route('orders.customer.received', $token) }}" class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" data-received-form>
-                    @csrf
-                    <p class="text-base font-semibold text-brand-black">Pesanan sedang dikirim</p>
-                    <p class="mt-1 text-sm leading-6 text-gray-700">Sudah sampai di tangan Anda? Tekan tombol di bawah supaya kami tahu.</p>
-                    <button type="submit" class="mt-3 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-gray-700 hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:bg-gray-500">Pesanan sudah saya terima</button>
-                </form>
-            @endif
 
             @if ($locationUrl && $order->lifecycle !== 'draft' && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="location-title">
@@ -273,8 +293,14 @@
             @endif
         @endif
 
+        {{-- ORD-04: a way back after reading the status (also in the header). --}}
+        <nav aria-label="Lanjut dari halaman ini" class="mt-10 grid gap-3 sm:grid-cols-2" data-status-nav>
+            <a href="{{ route('products.index') }}" class="flex min-h-12 items-center justify-center border border-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Kembali ke Katalog</a>
+            <a href="{{ route('orders.customer.mine') }}" class="flex min-h-12 items-center justify-center border border-gray-300 px-4 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Pesanan Saya</a>
+        </nav>
+
         @if ($whatsappUrl)
-            <p class="mt-10 text-sm text-gray-600">Ada pertanyaan? <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center text-brand-black underline underline-offset-4">Chat Qammaris di WhatsApp</a></p>
+            <p class="mt-6 text-sm text-gray-600">Ada pertanyaan? <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center text-brand-black underline underline-offset-4">Chat Qammaris di WhatsApp</a></p>
         @endif
     </div>
 </section>

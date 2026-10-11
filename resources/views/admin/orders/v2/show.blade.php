@@ -236,6 +236,7 @@
                     @endforeach
                 </ul>
                 <dl class="mt-2 space-y-1 border-t border-gray-100 pt-2 text-sm">
+                    @if (Rupiah::minorUnits($order->packagingFee()) > 0)<div class="flex justify-between"><dt class="text-gray-600">Paperbag</dt><dd class="tabular-nums">{{ format_rupiah($order->packagingFee()) }}</dd></div>@endif
                     @if ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)<div class="flex justify-between"><dt class="text-gray-600">Ongkir</dt><dd class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</dd></div>@endif
                     @if ($order->approvedAdjustmentCents() !== 0)<div class="flex justify-between"><dt class="text-gray-600">Penyesuaian</dt><dd class="tabular-nums">{{ $rp($order->approvedAdjustmentCents()) }}</dd></div>@endif
                     <div class="flex justify-between text-base font-semibold"><dt>Total</dt><dd class="tabular-nums">{{ $rp($totalCents) }}</dd></div>

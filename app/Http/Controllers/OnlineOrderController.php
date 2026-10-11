@@ -32,7 +32,7 @@ class OnlineOrderController extends Controller
             return $this->private(response()->view('orders.unavailable', ['whatsappUrl' => $this->storeChatUrl($whatsApp)], 404));
         }
         $order->load(['items', 'events']);
-        CustomerOrderHistory::remember($order, $token);
+        CustomerOrderHistory::remember($order);
         // ORD-04: once the total is final, the official (verified) accounts and the way to send the proof.
         $showPayment = $order->isV2() && $order->lifecycle === 'active' && $order->payment_status !== 'paid' && OnlineOrderStepper::totalIsFinal($order);
         $proofMessage = 'Halo Qammaris, saya sudah membayar pesanan '.$order->code.' sebesar '.Rupiah::format($order->customerTotal()).'. Berikut bukti pembayarannya.';

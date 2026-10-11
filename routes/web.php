@@ -154,6 +154,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
                 Route::post('{account}/verify', 'verify')->name('verify');
                 Route::post('{account}/deactivate', 'deactivate')->name('deactivate');
             });
+        // ORD-04: UAT-only opt-in of this browser to the official store WhatsApp number (Super Admin).
+        Route::post('orders/uat-whatsapp', [AdminStorePaymentAccountController::class, 'uatWhatsapp'])->middleware('can:orders.payment-accounts')->name('orders.uat-whatsapp');
         Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
         Route::get('orders/customer-search', [AdminOnlineOrderV2Controller::class, 'customerSearch'])->name('orders.customer-search');
 

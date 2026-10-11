@@ -19,7 +19,8 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
-    private const BASELINE_OPENAPI_SHA256 = 'b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88';
+    // r4.4 DRAFT (totals.packaging_fee), pending App sign-off; r4.2/r4.3 was b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88.
+    private const BASELINE_OPENAPI_SHA256 = '10dcfa5051460fef87d5ab8666df97a06af79f4e43cbd434f093dc79ad51c5b5';
 
     private array $spec;
 
@@ -50,8 +51,10 @@ class OrderApiContractTest extends TestCase
 
     public function test_versions_match_and_contract_is_the_r4_2_baseline(): void
     {
-        $this->assertSame('1.0.0-rc.4.2', $this->spec['info']['version']);
+        // r4.4 draft on top of the r4.2 baseline (r4.3 was text only); the version moves only with a schema change.
+        $this->assertSame('1.0.0-rc.4.4', $this->spec['info']['version']);
         $this->assertStringContainsString('r4.2 baseline', $this->spec['info']['description']);
+        $this->assertStringContainsString('r4.4 DRAFT', $this->spec['info']['description']);
         // The App review commit is still local to the App machine; it must not be presented as a GitHub link.
         $this->assertStringNotContainsString('github.com/husen211/qammaris-reimbursement-management-system', $this->markdown);
     }

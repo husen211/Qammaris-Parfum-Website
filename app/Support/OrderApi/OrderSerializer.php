@@ -28,6 +28,7 @@ final class OrderSerializer
         $itemsCents = $order->items->sum(fn (OnlineOrderItem $item) => Rupiah::minorUnits($item->lineTotal()));
         $shippingCents = $order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null ? Rupiah::minorUnits($order->shipping_fee) : 0;
         $adjustmentCents = $order->adjustments->where('status', 'approved')->sum(fn ($adjustment) => Rupiah::minorUnits($adjustment->amount));
+        $packagingCents = Rupiah::minorUnits($order->packagingFee());
 
         return [
             'id' => $order->public_id,
@@ -55,7 +56,9 @@ final class OrderSerializer
                 'subtotal' => self::cents($itemsCents),
                 'adjustments' => self::cents($adjustmentCents),
                 'shipping_charge' => self::cents($shippingCents),
-                'total' => self::cents(max(0, $itemsCents + $shippingCents + $adjustmentCents)),
+                // r4.4 draft: paperbag charge (customer pays it; not an expense).
+                'packaging_fee' => self::cents($packagingCents),
+                'total' => self::cents(max(0, $itemsCents + $shippingCents + $packagingCents + $adjustmentCents)),
             ],
             'payment' => [
                 'status' => $order->payment_status,

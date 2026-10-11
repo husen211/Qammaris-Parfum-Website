@@ -101,7 +101,7 @@ final class OnlineOrderTimeline
             OnlineOrder::STAGE_PAID => $audience === 'customer' ? 'Ongkir dan pembayaran dikonfirmasi lewat WhatsApp.' : 'Menunggu pembayaran.',
             OnlineOrder::STAGE_SHIPPED => 'Pesanan sedang disiapkan untuk dikirim.',
             OnlineOrder::STAGE_COMPLETED => $pickup ? 'Pesanan siap diambil di toko.'
-                : ($audience === 'customer' ? 'Sudah menerima pesanan? Tekan tombol di bawah.' : 'Pesanan dalam perjalanan.'),
+                : ($audience === 'customer' ? 'Menunggu konfirmasi penerimaan dari Anda.' : 'Pesanan dalam perjalanan.'),
             default => null,
         };
     }

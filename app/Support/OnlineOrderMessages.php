@@ -66,7 +66,7 @@ final class OnlineOrderMessages
      * V2 group message (ORD-02d). Staff act in the Admin PWA after signing in, so the message links to the order
      * page there instead of a bearer task link (D6).
      */
-    public function staffGroupV2(OnlineOrder $order, string $adminUrl): string
+    public function staffGroupV2(OnlineOrder $order, string $adminUrl, bool $inApp = false): string
     {
         $local = $order->fulfillment === 'local_delivery';
         $storeBooks = $local && $order->courier_booking_responsibility === 'store' && $order->courier_status === 'unassigned';
@@ -110,7 +110,8 @@ final class OnlineOrderMessages
             $lines[] = 'Catatan customer: '.$this->text($order->customer_note);
         }
         $lines[] = '';
-        $lines[] = 'Buka tugas (login akun masing-masing): '.$adminUrl;
+        // ORD-04: straight to the App order page when App task links are on (see OrderTaskLink).
+        $lines[] = ($inApp ? 'Buka di Qammaris App: ' : 'Buka tugas (login akun masing-masing): ').$adminUrl;
 
         return implode("\n", $lines);
     }
@@ -136,6 +137,9 @@ final class OnlineOrderMessages
         $received = OnlineOrderMoney::totals($order)['received'];
         $total = Rupiah::minorUnits($order->customerTotal());
         $lines = ['Pesanan *'.$order->code.'*', 'Subtotal produk: '.Rupiah::format($order->subtotal())];
+        if (Rupiah::minorUnits($order->packagingFee()) > 0) {
+            $lines[] = 'Paperbag: '.Rupiah::format($order->packagingFee());
+        }
         $lines[] = match (true) {
             $order->fulfillment === 'pickup' => 'Ongkir: - (ambil di toko)',
             $order->shipping_payer === 'added_to_transfer' => 'Ongkir: '.Rupiah::format($order->shipping_fee),

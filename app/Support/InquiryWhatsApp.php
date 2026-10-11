@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\StoreInfo;
 
 final class InquiryWhatsApp
 {
@@ -99,6 +100,7 @@ final class InquiryWhatsApp
             'Nama: '.$this->plainText((string) $order->customer_name),
             'Pengiriman: '.$delivery,
             'Subtotal produk: '.Rupiah::format($order->subtotal()),
+            ...(Rupiah::minorUnits($order->packagingFee()) > 0 ? ['Paperbag: '.Rupiah::format($order->packagingFee())] : []),
             '',
             'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
         ]);
@@ -128,6 +130,10 @@ final class InquiryWhatsApp
     /** Prefilled message without a recipient; WhatsApp lets the sender choose a chat or group. */
     public function shareUrl(string $message): string
     {
+        if (StoreInfo::usesTestWhatsapp() && ! str_starts_with($message, '[UAT]')) {
+            $message = '[UAT] '.$message;
+        }
+
         return 'https://wa.me/?'.http_build_query(['text' => $message], '', '&', PHP_QUERY_RFC3986);
     }
 
@@ -136,6 +142,10 @@ final class InquiryWhatsApp
         $normalized = $this->normalizeNumber($number);
         if ($normalized === null) {
             return null;
+        }
+        // ORD-04: a message from a test environment is always recognisable as such.
+        if (StoreInfo::usesTestWhatsapp() && ! str_starts_with($message, '[UAT]')) {
+            $message = '[UAT] '.$message;
         }
 
         return 'https://wa.me/'.$normalized.'?'.http_build_query(

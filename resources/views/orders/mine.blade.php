@@ -24,7 +24,7 @@
 <section class="bg-white px-4 pb-16 pt-6 md:pt-10" aria-labelledby="mine-title" data-order-page>
     <div class="mx-auto max-w-xl">
         <h1 id="mine-title" class="font-mayluxa text-3xl text-brand-black md:text-4xl">Pesanan Saya</h1>
-        <p class="mt-2 text-sm leading-6 text-gray-600">Pesanan yang dibuka di browser ini. Tanpa akun: daftar ini hilang bila sesi browser berakhir. Simpan link pesanan Anda.</p>
+        <p class="mt-2 text-sm leading-6 text-gray-600">Pesanan yang dibuat atau dibuka di browser ini dalam 10 hari terakhir. Tanpa akun dan tanpa login; daftar tidak muncul di HP atau browser lain. Simpan juga link pesanan Anda.</p>
 
         @if (session('success'))
             <div role="status" class="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-base text-emerald-900">{{ session('success') }}</div>
@@ -50,7 +50,7 @@
         @if ($entries->isNotEmpty())
             <form method="POST" action="{{ route('orders.customer.forget') }}" class="mt-8">
                 @csrf
-                <button class="inline-flex min-h-11 items-center text-sm text-gray-700 underline underline-offset-4">Hapus daftar ini dari perangkat (mis. HP orang lain)</button>
+                <button class="inline-flex min-h-11 items-center text-sm text-gray-700 underline underline-offset-4">Hapus Riwayat dari Perangkat</button>
             </form>
         @endif
     </div>

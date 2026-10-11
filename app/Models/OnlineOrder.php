@@ -28,7 +28,7 @@ class OnlineOrder extends Model
 
     public const FULFILLMENTS = [
         'pickup' => 'Ambil di toko',
-        'local_delivery' => 'Kirim dalam Kota Palu',
+        'local_delivery' => 'Pengiriman Dalam Kota',
         'intercity' => 'Kirim ke luar kota',
     ];
 
@@ -67,6 +67,7 @@ class OnlineOrder extends Model
         'staff_token_encrypted' => 'encrypted',
         'customer_link_expires_at' => 'datetime',
         'shipping_fee' => 'decimal:2',
+        'packaging_fee' => 'decimal:2',
         'staff_advance_amount' => 'decimal:2',
         'staff_reimbursed_at' => 'datetime',
         'recorded_in_majoo' => 'boolean',
@@ -297,10 +298,16 @@ class OnlineOrder extends Model
         return Rupiah::sum($this->items->map(fn (OnlineOrderItem $item) => $item->lineTotal())->all());
     }
 
+    /** ORD-04: paperbag charge for this order (snapshot; 0 without paperbag or for older orders). */
+    public function packagingFee(): string
+    {
+        return Rupiah::decimal(Rupiah::minorUnits($this->packaging_fee ?? '0'));
+    }
+
     /** Shipping is only part of the customer's payment when it was added to the transfer. */
     public function customerTotal(): string
     {
-        $cents = Rupiah::minorUnits($this->subtotal());
+        $cents = Rupiah::minorUnits($this->subtotal()) + Rupiah::minorUnits($this->packagingFee());
         if ($this->shipping_payer === 'added_to_transfer' && $this->shipping_fee !== null) {
             $cents += Rupiah::minorUnits($this->shipping_fee);
         }

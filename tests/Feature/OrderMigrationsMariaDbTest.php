@@ -27,6 +27,7 @@ class OrderMigrationsMariaDbTest extends TestCase
         '2026_10_09_300001_add_keep_adjustments_and_change_requests', '2026_10_09_400001_create_order_api_tables',
         '2026_10_09_500001_add_delivery_to_online_order_events', '2026_10_10_000001_add_payment_preference_to_online_orders',
         '2026_10_10_100001_add_website_checkout_to_online_orders', '2026_10_10_200001_create_store_payment_accounts',
+        '2026_10_11_100001_create_guest_order_histories', '2026_10_11_100002_add_packaging_fee_to_online_orders',
     ];
 
     protected function setUp(): void
@@ -86,8 +87,8 @@ class OrderMigrationsMariaDbTest extends TestCase
         $this->assertNull($order->created_by);
 
         try {
-            // Step 1 drops the (empty) payment accounts table; step 2 reaches the ORD-04 checkout migration and must stop.
-            Artisan::call('migrate:rollback', ['--step' => 2, '--force' => true]);
+            // Steps 1-3 drop later empty additions; step 4 reaches the ORD-04 checkout migration and must stop.
+            Artisan::call('migrate:rollback', ['--step' => 4, '--force' => true]);
             $this->fail('Rollback must stop while guest orders exist.');
         } catch (\RuntimeException $stopped) {
             $this->assertStringContainsString('rollback ORD-04 dihentikan', $stopped->getMessage());

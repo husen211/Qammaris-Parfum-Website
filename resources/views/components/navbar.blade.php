@@ -15,6 +15,7 @@
             'textColor' => '#FFFFFF',
             'links' => [
                 ['label' => 'Katalog', 'href' => route('products.index'), 'ariaLabel' => 'Katalog'],
+                ['label' => 'Pesanan Saya', 'href' => route('orders.customer.mine'), 'ariaLabel' => 'Pesanan Saya'],
                 ['label' => 'Lokasi', 'href' => route('store.location'), 'ariaLabel' => 'Lokasi'],
             ],
         ],
@@ -44,6 +45,7 @@
     data-active-url="{{ url()->current() }}"
     data-cart-count="{{ cart_count() }}"
     data-cart-href="{{ route('cart.index') }}"
+    data-orders-href="{{ route('orders.customer.mine') }}"
     data-cart-data-url="{{ route('cart.data') }}"
     data-home-href="{{ route('home') }}"
 ></div>

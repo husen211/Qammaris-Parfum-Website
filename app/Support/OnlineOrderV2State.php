@@ -14,6 +14,14 @@ final class OnlineOrderV2State
     public static function normalize(OnlineOrder $order): void
     {
         $order->lifecycle ??= 'awaiting_customer';
+        // ORD-04: the paperbag charge is a snapshot taken when the packaging is chosen or changed, never added twice.
+        if ($order->isDirty('packaging')) {
+            $order->packaging_fee = match ($order->packaging) {
+                'paperbag' => Rupiah::decimal((int) config('orders.paperbag_fee') * 100),
+                'no_paperbag' => '0.00',
+                default => null,
+            };
+        }
         // Shared customer/admin detail code marks arrival by setting stage; for V2 that activates the order.
         if ($order->lifecycle === 'awaiting_customer' && $order->isDirty('stage') && $order->stage === OnlineOrder::STAGE_DETAILS_RECEIVED) {
             $order->lifecycle = 'active';

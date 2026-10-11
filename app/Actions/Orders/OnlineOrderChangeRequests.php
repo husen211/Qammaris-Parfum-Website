@@ -8,6 +8,7 @@ use App\Exceptions\OrderActionNotAllowed;
 use App\Exceptions\OrderValidationFailed;
 use App\Models\OnlineOrder;
 use App\Models\User;
+use App\Support\OnlineOrderMoney;
 use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -59,6 +60,10 @@ class OnlineOrderChangeRequests
             $request = $this->pending($order, $requestId);
             $this->assertChangeable($order);
             $changes = $this->validated($order, $request->changes, allowUnchanged: true);
+            if (array_key_exists('packaging', $changes) && ($changes['packaging'] === 'paperbag') !== ($order->packaging === 'paperbag')
+                && OnlineOrderMoney::totals($order)['received'] > 0 && ! Gate::forUser($actor)->allows('orders.approve-adjustment')) {
+                throw new OrderActionNotAllowed('Perubahan paperbag mengubah total yang sudah dibayar, jadi harus disetujui Super Admin.');
+            }
             if (array_key_exists('fulfillment', $changes) && $changes['fulfillment'] !== $order->fulfillment) {
                 if (! Gate::forUser($actor)->allows('orders.approve-adjustment')) {
                     throw new OrderActionNotAllowed('Perubahan cara pengiriman bisa mengubah biaya, jadi harus disetujui Super Admin.');

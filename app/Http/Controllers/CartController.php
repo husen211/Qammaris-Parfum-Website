@@ -157,7 +157,9 @@ class CartController extends Controller
         $subtotal = Rupiah::sum(array_column($items, 'line_total'));
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
 
-        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey'))
+        $paperbagFee = (int) config('orders.paperbag_fee');
+
+        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey', 'paperbagFee'))
             ->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
@@ -198,7 +200,7 @@ class CartController extends Controller
                 ->with('error', 'Sesi checkout sudah berakhir. Periksa ringkasan pesanan, lalu kirim lagi.'));
         }
         if ($order = OnlineOrder::where('checkout_key', $key)->first()) {
-            CustomerOrderHistory::remember($order, $order->customer_token_encrypted);
+            CustomerOrderHistory::remember($order);
 
             return $this->placed($order->customer_token_encrypted);
         }
@@ -219,7 +221,7 @@ class CartController extends Controller
 
         try {
             [$order, $token] = $create->fromWebsiteCheckout($lines, $request->orderDetails(), $key);
-            CustomerOrderHistory::remember($order, $token);
+            CustomerOrderHistory::remember($order);
         } catch (CheckoutChanged $changed) {
             return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())->with('error', $changed->getMessage()));
         } catch (OnlineOrderRejected $rejected) {

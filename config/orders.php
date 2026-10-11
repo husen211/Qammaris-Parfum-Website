@@ -8,6 +8,9 @@ return [
     // customer-charged shipping fee while no payment is recorded. Off unless the environment enables it.
     'simple_ux' => (bool) env('ORDERS_SIMPLE_UX', false),
 
+    // ORD-04: "Pakai paperbag" adds this many rupiah per order to the customer total (snapshotted on the order).
+    'paperbag_fee' => 4000,
+
     // Payment methods a customer may prefer on the order link. A preference never marks an order paid.
     'payment_preferences' => ['transfer' => 'Transfer bank', 'qris' => 'QRIS'],
 
@@ -18,7 +21,7 @@ return [
     // Delivery choices offered at checkout, mapped to order fulfillment types. The instant courier is chosen by staff.
     'checkout_deliveries' => [
         'pickup' => ['label' => 'Ambil di toko', 'help' => 'Ambil sendiri di toko Qammaris setelah pesanan dikonfirmasi.'],
-        'local_delivery' => ['label' => 'Pengiriman Instan — Kota Palu', 'help' => 'Dikirim kurir online (ojol). Perkiraan 1–2 jam setelah pembayaran dikonfirmasi.'],
+        'local_delivery' => ['label' => 'Pengiriman Dalam Kota', 'help' => 'Kurir online, Kota Palu. Tiba 1–2 jam setelah pesanan diproses.'],
         'intercity' => ['label' => 'Pengiriman Luar Kota — J&T', 'help' => 'Dikirim lewat J&T. Ongkir dihitung staf sesuai alamat.'],
     ],
 

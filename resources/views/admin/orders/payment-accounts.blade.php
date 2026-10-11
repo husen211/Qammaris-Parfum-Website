@@ -55,6 +55,21 @@
         @endforelse
     </section>
 
+    @if (\App\Models\StoreInfo::usesTestWhatsapp())
+        <section class="rounded-xl border border-amber-300 bg-amber-50 p-4 sm:p-5" aria-labelledby="uat-wa-title" data-uat-whatsapp>
+            <h2 id="uat-wa-title" class="text-base font-semibold text-gray-900">Uji WhatsApp nomor resmi (khusus UAT)</h2>
+            @php($officialOn = \App\Models\StoreInfo::usesOfficialInTest())
+            <p class="mt-1 text-sm text-amber-900">
+                {{ $officialOn ? 'Aktif di browser ini: checkout membuka WhatsApp resmi toko, pesan diawali [UAT].' : 'Nonaktif: pengunjung UAT tidak pernah diarahkan ke nomor toko.' }}
+                Hanya berlaku di browser ini selama {{ config('store.uat_official_minutes') }} menit; pengunjung lain tetap terlindungi.
+            </p>
+            <form method="POST" action="{{ route('admin.orders.uat-whatsapp') }}" class="mt-3">
+                @csrf <input type="hidden" name="on" value="{{ $officialOn ? 0 : 1 }}">
+                <button class="inline-flex min-h-11 items-center justify-center rounded-lg border border-amber-400 bg-white px-4 text-sm font-semibold text-amber-900 hover:bg-amber-100">{{ $officialOn ? 'Matikan uji nomor resmi' : 'Uji nomor resmi di browser ini' }}</button>
+            </form>
+        </section>
+    @endif
+
     <section class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5" aria-labelledby="add-title">
         <h2 id="add-title" class="text-base font-semibold text-gray-900">Tambah rekening</h2>
         <form method="POST" action="{{ route('admin.orders.payment-accounts.store') }}" class="mt-3 space-y-3">

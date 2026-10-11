@@ -77,7 +77,7 @@ class WebsiteCheckoutOrderTest extends TestCase
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('data-auto-open="1"', false);
         // Later visit (WhatsApp closed, nothing sent): no automatic reopen, a retry button instead.
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertOk()
-            ->assertSee('Buka WhatsApp lagi')->assertDontSee('data-auto-open="1"', false)->assertSee('Pesanan Anda tetap tersimpan')
+            ->assertSee('Kirim ke WhatsApp')->assertDontSee('data-auto-open="1"', false)->assertSee('Pesanan Anda tetap tersimpan')
             ->assertSee('Menunggu konfirmasi staf');
         $this->assertSame('draft', $order->fresh()->lifecycle, 'opening or not opening WhatsApp changes nothing');
     }
@@ -197,7 +197,9 @@ class WebsiteCheckoutOrderTest extends TestCase
         $this->post(route('admin.orders.v2.confirm-website', $order), ['revision' => $order->revision])->assertSessionHas('order_notice.type', 'error');
 
         // Then the existing payment flow: total includes the confirmed ongkir.
-        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '215000', 'payment_method' => 'qris'])->assertSessionHas('order_notice.type', 'success');
+        // Product 200.000 + ongkir 15.000 + paperbag 4.000 (ORD-04, chosen at checkout).
+        $this->assertSame(['4000.00', '219000.00'], [$order->packagingFee(), $order->customerTotal()]);
+        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '219000', 'payment_method' => 'qris'])->assertSessionHas('order_notice.type', 'success');
         $this->assertSame('paid', $order->fresh()->payment_status);
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('Dikonfirmasi toko')->assertDontSee('Pesanan tersimpan');
     }
@@ -275,7 +277,7 @@ class WebsiteCheckoutOrderTest extends TestCase
         if (! $savesOrder) {
             return;
         }
-        $page->assertSee('Pengiriman Instan — Kota Palu')->assertSee('Menunggu konfirmasi staf');
+        $page->assertSee('Pengiriman Dalam Kota')->assertSee('Menunggu konfirmasi staf');
     }
 
     private function form(string $delivery, array $overrides = []): array

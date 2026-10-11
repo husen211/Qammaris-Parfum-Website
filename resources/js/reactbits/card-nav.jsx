@@ -23,6 +23,7 @@ if (mount) {
       activeUrl={mount.dataset.activeUrl || ''}
       cartCount={cartCount}
       cartHref={mount.dataset.cartHref || '/cart'}
+      ordersHref={mount.dataset.ordersHref || '/pesanan-saya'}
       cartDataUrl={mount.dataset.cartDataUrl}
     />
   );

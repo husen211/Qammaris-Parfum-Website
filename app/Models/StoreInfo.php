@@ -55,9 +55,18 @@ class StoreInfo extends Model
         return app()->environment(config('store.test_environments', []));
     }
 
+    /** ORD-04: this browser deliberately tests the official number in a test environment (Super Admin opt-in). */
+    public static function usesOfficialInTest(): bool
+    {
+        return self::usesTestWhatsapp() && app()->bound('request') && request()->cookie(config('store.uat_official_cookie')) === '1';
+    }
+
     public function getWhatsappNumberAttribute($value): string
     {
         if (self::usesTestWhatsapp()) {
+            if (self::usesOfficialInTest()) {
+                return self::DEFAULT_WHATSAPP_NUMBER;
+            }
             $test = PhoneNumber::normalize(config('store.whatsapp_test_number'));
 
             // No test number (or the store number by mistake): no destination at all.
