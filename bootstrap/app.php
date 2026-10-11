@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware([])->group(__DIR__.'/../routes/sitemap.php');
             Route::middleware([])->group(__DIR__.'/../routes/integrations.php');
             Route::middleware([])->group(__DIR__.'/../routes/admin-pwa.php');
+            Route::middleware([])->group(__DIR__.'/../routes/public-pwa.php');
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

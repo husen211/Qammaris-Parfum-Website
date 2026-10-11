@@ -203,7 +203,7 @@ class AdminPwaTest extends TestCase
     {
         foreach (['/', '/products', '/cart', '/blog'] as $path) {
             $response = $this->get($path)->assertOk();
-            foreach (['data-admin-pwa', 'manifest.webmanifest', '/admin/sw.js', 'admin-apple-touch-icon'] as $needle) {
+            foreach (['data-admin-pwa', '/admin/manifest.webmanifest', '/admin/sw.js', 'admin-apple-touch-icon'] as $needle) {
                 $response->assertDontSee($needle, false);
             }
             $this->assertStringNotContainsString('no-store', (string) $response->headers->get('Cache-Control'), $path);

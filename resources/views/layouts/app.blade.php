@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="qammaris" class="scroll-smooth">
+<html lang="id" data-theme="qammaris" class="scroll-smooth" data-public-pwa="{{ config('store.pwa_enabled') ? 'on' : 'off' }}" data-public-sw="{{ route('pwa.service-worker', [], false) }}" data-public-scope="{{ \App\Http\Controllers\PublicPwaController::SCOPE }}">
 <head>
     @php
         $decodeSection = static fn (string $value): string => html_entity_decode(
@@ -42,7 +42,7 @@
     <title>{{ $pageTitle }}</title>
 
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav.jpg') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logofav.jpg') }}">
+    @include('pwa._head')
     <link rel="canonical" href="{{ url()->current() }}">
 
     <meta property="og:site_name" content="Qammaris Perfumes">

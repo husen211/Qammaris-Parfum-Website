@@ -202,7 +202,13 @@ const syncPaperbag = () => {
 };
 orderForm?.querySelectorAll('[data-packaging]').forEach((input) => input.addEventListener('change', syncPaperbag));
 syncPaperbag();
-orderForm?.addEventListener('submit', () => {
+orderForm?.addEventListener('submit', (event) => {
+    // PWA-01: offline, nothing is sent or queued; the customer presses the button again once online.
+    if (navigator.onLine === false) {
+        event.preventDefault();
+        orderFeedback.textContent = 'Tidak ada koneksi internet. Pesanan belum dikirim; sambungkan internet lalu tekan tombol lagi.';
+        return;
+    }
     // A repeated tap resends the same checkout key; the server answers with the same order.
     orderSubmit.disabled = true;
     orderSubmit.textContent = @json($savesOrder ? 'Menyimpan pesanan…' : 'Membuka WhatsApp…');

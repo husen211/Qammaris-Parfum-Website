@@ -13,4 +13,8 @@ return [
     // cookie). Everyone else keeps the protection; every test-environment message starts with "[UAT]".
     'uat_official_cookie' => 'qam_uat_wa_official',
     'uat_official_minutes' => 120,
+
+    // PWA-01 kill switch for the installable public website. Off by default: nothing is registered until enabled,
+    // and while off, installed copies replace their worker with one that removes itself and the public caches.
+    'pwa_enabled' => (bool) env('PUBLIC_PWA_ENABLED', false),
 ];
