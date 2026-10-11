@@ -25,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(30)->by('checkout-hour|'.$request->ip()),
         ]);
 
+        foreach (['fragrance-submit' => 10, 'fragrance-feedback' => 20] as $name => $limit) {
+            RateLimiter::for($name, fn ($request) => [Limit::perMinute($limit)->by($name.':browser:'.$request->attributes->get('preference_browser_hash')), Limit::perMinute($limit * 3)->by($name.':ip:'.hash('sha256', $request->ip()))]);
+        }
+        RateLimiter::for('blog-automation', fn ($request) => Limit::perMinute(60)->by('blog-actor:'.$request->user()->id));
+        RateLimiter::for('blog-automation-media', fn ($request) => Limit::perMinute(10)->by('blog-media-actor:'.$request->user()->id));
         if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
             return;
         }

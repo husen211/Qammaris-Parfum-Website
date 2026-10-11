@@ -1,0 +1,12 @@
+{
+  "height": 14398,
+  "viewport": 844,
+  "bodyOverflow": "visible",
+  "touchPoints": 1,
+  "hover": false,
+  "before": 0,
+  "after": 360,
+  "singleTapPhoto": true,
+  "singleTapFAQ": true,
+  "singleTapNavigation": true
+}

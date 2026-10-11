@@ -1,0 +1,35 @@
+[
+  {
+    "width": 390,
+    "status": 200,
+    "genuineTouch": true,
+    "opening": {
+      "duration": 400,
+      "height": 47.3125,
+      "fullHeight": 147,
+      "opacity": 0.32195
+    },
+    "switchCloseRapidReversal": true,
+    "copy": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "status": 200,
+    "genuineTouch": false,
+    "opening": {
+      "duration": 400,
+      "height": 27.78125,
+      "fullHeight": 93,
+      "opacity": 0.298778
+    },
+    "switchCloseRapidReversal": true,
+    "copy": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "health": 200
+  }
+]

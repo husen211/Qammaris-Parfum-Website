@@ -1,0 +1,176 @@
+{
+  "released_at_utc": "2026-10-10T05:37:06+00:00",
+  "verification_at_utc": "2026-10-10T05:46:10+00:00",
+  "pull_request": "https://github.com/husen211/Qammaris-Parfum-Website/pull/51",
+  "revision": "ec3999367c8f94c70ad1ef60f4ce4b9486754a1f",
+  "question_version": "preference-v1.2",
+  "engine_version": "pref-03.2-provisional",
+  "main_ci": {
+    "run_id": 38027974630,
+    "conclusion": "success",
+    "laravel_tests": 542,
+    "assertions": 4112,
+    "node_tests": 34,
+    "vite": "passed"
+  },
+  "production_workflow": {
+    "run_id": 38028011115,
+    "conclusion": "success"
+  },
+  "staging_candidate_workflow": {
+    "run_id": 38027567411,
+    "build": "success",
+    "production_deploy": "skipped"
+  },
+  "candidate_sha256": "8901eacb4bd884074bd8a65ab13bfe6132142e44af26ad1015fbf83a9cd77be7",
+  "recovery": {
+    "reference": "1a33c707830f88d845cf433849cf329345890e50-question-revision-20261010053025",
+    "dump_bytes": 10493180,
+    "dump_sha256": "ae5472dbf36e1f465727de93f32b1651e3b3f975918b89f6319e1832fa25d882",
+    "completion_marker_verified": true,
+    "private_server_copy_retained": true
+  },
+  "staging": {
+    "canonical_hidden_answer": "none",
+    "result_feedback_json_roundtrip": true,
+    "temporary_rows_rolled_back": true,
+    "catalog_media_users_preserved": true,
+    "staging_actor_created": false,
+    "admin_apply": "not run: no existing staging admin"
+  },
+  "production_profiles": {
+    "preview": {
+      "fingerprint": "2ed31bd5c00e2a0dfe0f89017a2c6c50e16651584fe741948830170be02f705e",
+      "count": 381,
+      "builds": 381
+    },
+    "apply": {
+      "changed": 381,
+      "unchanged": 0,
+      "preview_fingerprint": "2ed31bd5c00e2a0dfe0f89017a2c6c50e16651584fe741948830170be02f705e"
+    },
+    "replay": {
+      "changed": 0,
+      "unchanged": 381,
+      "preview_fingerprint": "7b18127fd6c95939674b86f23f33aaea7d4a21923c843a708798203645ba8aad"
+    },
+    "profile_actor_id": 1,
+    "catalog_media_users_preserved": true,
+    "history_preserved": true,
+    "tables": {
+      "fragrance_profiles": 381,
+      "fragrance_profile_revisions": 762,
+      "fragrance_quiz_results": 8,
+      "fragrance_quiz_feedback": 1
+    },
+    "parser_fingerprint": "6b1661622b36c3be9b8b17bb9e9f147c42e71aa6ec9312d8120d47ab7f72e63a"
+  },
+  "live": {
+    "revision": "ec3999367c8f94c70ad1ef60f4ce4b9486754a1f",
+    "at": "2026-10-10T05:46:10+00:00",
+    "enabled": true,
+    "question_version": "preference-v1.2",
+    "engine": "pref-03.2-provisional",
+    "probe_result_sha256": "49708f6ff9d60bbce841e1ca7c18a68edffd7923b3a81ef7034d3b631c8244dc",
+    "probe_answers": {
+      "budget_min": 200000,
+      "budget_max": 300000,
+      "time": "day",
+      "avoid_sweet": true,
+      "sweetness": "none"
+    },
+    "probe_main": [
+      {
+        "product_id": 532,
+        "price": "269000.00",
+        "size_ml": 100,
+        "availability": "available"
+      },
+      {
+        "product_id": 645,
+        "price": "209000.00",
+        "size_ml": 50,
+        "availability": "available"
+      },
+      {
+        "product_id": 673,
+        "price": "239000.00",
+        "size_ml": 100,
+        "availability": "available"
+      }
+    ],
+    "probe_feedback_rows": 1,
+    "probe_feedback_overall": "partly",
+    "probe_product_feedback": [
+      {
+        "product_id": 532,
+        "rating": "neutral",
+        "reasons": [
+          "unfamiliar"
+        ]
+      }
+    ],
+    "probe_excluded_from_quality_acceptance": true,
+    "http": {
+      "health": {
+        "status": 200,
+        "safe_headers": {
+          "cache-control": "no-cache, private"
+        }
+      },
+      "quiz": {
+        "status": 200,
+        "safe_headers": {
+          "cache-control": "max-age=0, no-store, private",
+          "x-robots-tag": "noindex, nofollow"
+        }
+      },
+      "unowned_result": {
+        "status": 404,
+        "safe_headers": {
+          "cache-control": "max-age=0, no-store, private",
+          "x-robots-tag": "noindex, nofollow"
+        }
+      }
+    },
+    "recent_production_errors": {
+      "since_utc": "2026-10-10T05:34:00+00:00",
+      "laravel_files_checked": 1,
+      "entries": 0
+    },
+    "public_profiles": 381,
+    "stale_profiles": 0
+  },
+  "browser": {
+    "nominal_viewports": [
+      390,
+      1440,
+      320
+    ],
+    "observed_content_widths": [
+      375,
+      1425,
+      305
+    ],
+    "overflow": false,
+    "console_errors": 0,
+    "input_modes": [
+      "mouse",
+      "keyboard"
+    ],
+    "genuine_touch_safari": "not verified",
+    "hidden_tab_full_flow_content_width": 1265,
+    "visible_mobile_result_and_edit_checked": true
+  },
+  "quality": {
+    "human_acceptance": "pending",
+    "accuracy_80_90_percent": "not established",
+    "held_out_cases_opened": false,
+    "next_phase_started": false
+  },
+  "screenshots": {
+    "live-budget-free-390.png": "3288dfb9b26b5459b6019dec1bd4d88b1c87b1a060e169023a6839f5cb60eb3f",
+    "live-result-390.png": "79c0ded701c683b609e401611ebdb661ec491b48f72bf9439fe5e6990051a3fd",
+    "live-result-1440.png": "65972e66f685dea8cb5bef428f6a1d7a62e19b0236a0a09bed4079837704c35a"
+  }
+}

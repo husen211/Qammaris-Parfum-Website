@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-08",
+  "configured_windows_sandbox": "elevated",
+  "default_exec": {
+    "status": "failed_before_process_start",
+    "code": "helper_unknown_error",
+    "message": "setup refresh had errors"
+  },
+  "log_diagnosis": {
+    "operation": "sandbox ACL refresh",
+    "windows_error": 32,
+    "sharing_violation_confirmed": true,
+    "runtime_target": "cua_node/node_repl.exe"
+  },
+  "browser_kernel_reset": {
+    "completed": true,
+    "default_exec_after_reset": "same_startup_failure"
+  },
+  "approved_exec": {
+    "sandbox_permissions": "require_escalated",
+    "powershell_process_started": true,
+    "credentials_printed": false,
+    "read_checks": {
+      "blog-taxonomy": 200,
+      "blog-posts": 200,
+      "products": 200
+    },
+    "owned_drafts": 0
+  },
+  "native_sandbox_repaired": false,
+  "other_agent_session_tested": false,
+  "article_write_or_publish": false,
+  "policy_change": false
+}

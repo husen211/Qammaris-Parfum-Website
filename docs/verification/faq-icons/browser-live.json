@@ -1,0 +1,191 @@
+[
+  {
+    "surface": "about",
+    "width": 390,
+    "status": 200,
+    "genuineTouch": true,
+    "faqOneTap": true,
+    "faqKeyboardExclusive": true,
+    "galleryCount": 9,
+    "images": [
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      }
+    ],
+    "dialogNextEscapeFocus": true,
+    "dates": [
+      "2024",
+      "Gagasan di Palu",
+      "Persiapan toko",
+      "Februari 2026"
+    ],
+    "reviewCount": 6,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "surface": "blog",
+    "width": 390,
+    "status": 200,
+    "articles": [
+      {
+        "url": "https://qammarisparfum.id/blog/afnan-historic-olmeda-rempah-dan-citrus-di-balik-botol-biru",
+        "status": 200,
+        "faqCount": 0,
+        "svgCount": 10,
+        "overflow": false
+      },
+      {
+        "url": "https://qammarisparfum.id/blog/solid-perfume-cara-pakai-dan-hal-yang-perlu-dicek-sebelum-mencoba",
+        "status": 200,
+        "faqCount": 0,
+        "svgCount": 8,
+        "overflow": false
+      },
+      {
+        "url": "https://qammarisparfum.id/blog/afnan-supremacy-not-only-intense-buah-oakmoss-dan-identitasnya",
+        "status": 200,
+        "faqCount": 0,
+        "svgCount": 11,
+        "overflow": false
+      }
+    ],
+    "errors": []
+  },
+  {
+    "surface": "about",
+    "width": 1440,
+    "status": 200,
+    "genuineTouch": false,
+    "faqOneTap": true,
+    "faqKeyboardExclusive": true,
+    "galleryCount": 9,
+    "images": [
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      },
+      {
+        "loaded": true,
+        "fit": "contain"
+      }
+    ],
+    "dialogNextEscapeFocus": true,
+    "dates": [
+      "2024",
+      "Gagasan di Palu",
+      "Persiapan toko",
+      "Februari 2026"
+    ],
+    "reviewCount": 6,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "surface": "blog",
+    "width": 1440,
+    "status": 200,
+    "articles": [
+      {
+        "url": "https://qammarisparfum.id/blog/afnan-historic-olmeda-rempah-dan-citrus-di-balik-botol-biru",
+        "status": 200,
+        "faqCount": 0,
+        "svgCount": 10,
+        "overflow": false
+      },
+      {
+        "url": "https://qammarisparfum.id/blog/solid-perfume-cara-pakai-dan-hal-yang-perlu-dicek-sebelum-mencoba",
+        "status": 200,
+        "faqCount": 0,
+        "svgCount": 8,
+        "overflow": false
+      },
+      {
+        "url": "https://qammarisparfum.id/blog/afnan-supremacy-not-only-intense-buah-oakmoss-dan-identitasnya",
+        "status": 200,
+        "faqCount": 0,
+        "svgCount": 11,
+        "overflow": false
+      }
+    ],
+    "errors": []
+  },
+  {
+    "surface": "health",
+    "checks": [
+      {
+        "url": "/up",
+        "status": 200
+      },
+      {
+        "url": "/store/location",
+        "status": 200
+      },
+      {
+        "url": "/sitemap.xml",
+        "status": 200
+      }
+    ]
+  }
+]

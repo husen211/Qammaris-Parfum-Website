@@ -1,0 +1,32 @@
+{
+  "secret_absent_from_changed_docs": true,
+  "anonymous_checks": [
+    {
+      "url": "https://qammarisparfum.id/up",
+      "status": 200
+    },
+    {
+      "url": "https://qammarisparfum.id/blog",
+      "status": 200
+    },
+    {
+      "url": "https://qammarisparfum.id/api/automation/v1/blog-posts",
+      "status": 401
+    }
+  ],
+  "runtime": {
+    "api_enabled": true,
+    "actor_active": true,
+    "token_abilities": [
+      "blog:read",
+      "blog:write",
+      "blog:media",
+      "catalog:read"
+    ],
+    "token_hash_length": 64,
+    "token_expires_at": "2027-01-06T04:47:58+00:00",
+    "owned_drafts": 0,
+    "published_articles": 3,
+    "catalog_products": 453
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "qammaris-pref-02-quality-receipt-v1",
+  "date": "2026-10-10",
+  "engine_version": "pref-02.3-provisional",
+  "engine_fingerprint": "c67463c97562d7a74d5d8bc910a3217175c27c97395ce53a723667c739abf4af",
+  "parser_fingerprint": "e5d6c2e86bafd83fc54df5925306cca8e98d4cc2f7b627264856460ae608bed8",
+  "source_capture": {
+    "captured_at": "2026-10-09T09:54:52+00:00",
+    "revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+    "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d"
+  },
+  "focused_tests": {
+    "runner": "PHPUnit 11.5.56 / PHP 8.2.12, --filter=Fragrance --display-warnings",
+    "tests": 53,
+    "assertions": 265,
+    "result": "passed_without_warnings"
+  },
+  "formatting": "Pint changed PHP files passed",
+  "holdout_cases_evaluated_this_revision": 0,
+  "human_quality_acceptance": "pending_not_claimed",
+  "persistent_database_writes": 0,
+  "new_public_callers": 0,
+  "traceability_checks": {
+    "cases": 15,
+    "selected_cards": 49,
+    "budget_or_avoid_violations": 0,
+    "missing_reason_evidence": 0,
+    "fingerprint_mismatch": 0,
+    "nonpositive_candidates_selected": 0,
+    "negative_component_used_as_positive_reason": 0
+  },
+  "files_sha256": {
+    "app/Support/FragrancePreference/RecommendationEngine.php": "b0ef9df7c57218fe3b9d874b806af374f4925f72d8727e66e17ac3e55de1604c",
+    "config/fragrance_preference.php": "c806a4a6a5daf6d2ab1d8519807cf9b357ac03de220502856ec1fd8069b83a05",
+    "resources/data/fragrance-profile-rules.json": "d914c2254aa1f9e145e672dafa37363f0d2af5ae6d0a792fbe7ccb39ae5718f5",
+    "tests/Unit/FragrancePreferenceEngineTest.php": "2880c160381a3cba2d4c34246d138fa9516bdc346f1e83889b5d39511f76f8a3"
+  },
+  "artifacts_sha256": {
+    "evaluation.json": "5695e86a85654bdf5c86dd62ffbcacdb22e084ec6aa93a5e7e81ffd7a1b826aa",
+    "RESULTS.md": "326e4ae5f74f8ac4dcab1a52556eef584477c6bef587e10502da291dd8baf457"
+  }
+}

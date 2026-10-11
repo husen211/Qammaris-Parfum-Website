@@ -1,0 +1,23 @@
+# ADR-035 — Journal owned media and complete components
+
+Date: 2026-10-07. Status: accepted for BLOG-04 review implementation; not deployed. Depends on ADR-032/033/034. Owner selected the next blog item; order development remains separate.
+
+## Decision
+
+Keep sanitized HTML and the existing Blade renderer. Canonical div markers hold owned media IDs, ordered gallery IDs, catalog/article IDs, or bounded callout/CTA/YouTube attributes. Sanitization discards submitted child markup and arbitrary iframe/script. Server validation checks media ownership/active state, existing product/article IDs, self-references and component/list limits. Tiptap atomic nodes preserve these markers across visual/HTML edits; native structured repeaters manage ordered related products/articles, FAQ and references. No JSON-body conversion or new package.
+
+Add blog_media and nullable featured_media_id/structured JSON lists to blog_posts. Lists are small and ordered: products12, articles3, FAQ12, references20; gallery2–8 distinct media; maximum50 body components. This avoids unnecessary relation-management tables for bounded editorial choices. Referenced catalog/article data is resolved again on read, so disappeared/private targets degrade safely. Media has a real parent FK and all write/lookups scope to that article. A guarded hero accessor also checks ownership after eager loading.
+
+BlogMediaStorage still validates and stores uploaded originals through Laravel disks. BlogImageProcessor verifies original bytes/checksum and creates fresh WebP generations at bounded480/768/1200/1600 widths without upscaling. One uncropped set and one selected original/16:9/4:3/1:1 presentation are generated; focal percentages are clamped to the source rectangle. Originals and previous generations remain. Disk verification and DB/audit failure compensate only newly created paths. Small images show a quality warning; unavailable GD/WebP uses the original with an explicit warning. Limits:5MB,6000px/side,12MP and an estimated memory budget before decoding. Processing is synchronous and upload/update routes are throttled10/minute; the current bounded workload does not justify a queue system.
+
+SaveBlogMedia shares article revision/row locking and the existing transactional admin audit. Metadata/crop/upload/archive advances editorial time/revision; no-op does not. Featured media cannot be archived until replaced. Alt changes synchronize between featured media and the article field. Audit records media metadata collectively as a hash, FAQ/reference hashes and ordered relation IDs; no file bodies/paths/source URLs/full request or secrets. API actor attribution/idempotency remain BLOG-05.
+
+Public and authenticated preview use the same component renderer. Catalog cards read current eligible products with offer/image/brand and availability; draft/hidden/archive targets are excluded, Habis remains eligible. Rendering never writes catalog prices/stock. Body components do not pollute the heading TOC. Gallery uses native horizontal scroll, keyboard arrows and44px previous/next controls; FAQ uses native details. YouTube embeds are generated only from a validated11-character ID at a fixed youtube-nocookie host. CTA permits HTTPS or a local root path; references require HTTPS without credentials/fragments. No arbitrary remote image acquisition.
+
+## Tradeoffs and rollout
+
+Immutable generations consume storage; purge/retention requires separate approval. Only the selected crop is generated now, avoiding three unused crop sets per upload. Media management is a separate article page: save writing first, then manage media and return to reload the new revision. Preview remains sandboxed without scripts; native gallery/FAQ/content works, JavaScript controls and embedded-video playback are checked on the public surface instead.
+
+Historical rows/images/HTML are not converted or backfilled. Existing remote inline image behavior is retained for compatibility; new owned media blocks use stored files. Uploaders must review visual orientation and external-photo permissions; EXIF auto-rotation is not implemented. Staging MySQL/GD/WebP/memory/filesystem, native file chooser, genuine touch and Owner review remain release gates. Application rollback must understand the new schema/markers; retain files/tables and prefer compatible forward fixes, never populated migration down.
+
+References: [Tiptap custom nodes](https://tiptap.dev/docs/editor/extensions/custom-extensions/create-new/node), [PHP image resampling](https://www.php.net/manual/en/function.imagecopyresampled.php), [media runbook](../../runbooks/JOURNAL_MEDIA.md), [verification](../../verification/blog-04/README.md).

@@ -1,0 +1,52 @@
+{
+  "schema": "qammaris-agent-semantic-review-v1",
+  "reviewer": "Codex",
+  "prepared_at": "2026-10-09T10:42:42.437893+00:00",
+  "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d",
+  "writeback": "none",
+  "conflicts": [
+    {
+      "product_id": 455,
+      "name": "Khadlaj Shiyaaka Silver Edp 100 Ml",
+      "issue": "Narrative dry down lists violet/musk/sandalwood, but formal notes list cedar/vetiver/patchouli. Do not silently combine or choose source.",
+      "status": "agent_detected_requires_semantic_review",
+      "excerpts": [
+        "a refined base of violet, musk, sandalwood, and cedarwood",
+        "Base Notes : Cedar, Vetiver, Patchouli"
+      ],
+      "source_sha256": "ec7262a2de82ccd2c453bec7717c54069201c43984f92da4cf6892dc50dfb227"
+    },
+    {
+      "product_id": 887,
+      "name": "Royal Blend Extrait De Parfum 100 Ml",
+      "issue": "Two factual-looking longevity ranges (8–10 and10–12 hours), plus differing narrative/formal materials. Unknown/conflict, not a proven wrong catalog.",
+      "status": "agent_detected_requires_semantic_review",
+      "excerpts": [
+        "Longevity: 8–10 hours",
+        "Ketahanan Aroma: 10-12 jam"
+      ],
+      "source_sha256": "70da6c0a21b3e7e5ecaaa50e6a08186e3b280ca457c0745aacf72abc2218a36e"
+    },
+    {
+      "product_id": 668,
+      "name": "BSP Blue Point 100ML Him",
+      "issue": "Catalog gender Pria but description says unisex. Catalog field remains current authority; no rewrite.",
+      "status": "agent_detected_requires_semantic_review",
+      "excerpts": [
+        "Parfum unisex"
+      ],
+      "source_sha256": "fd1f2d6e0639cbb795d8b95ca57e530f7f1913058413fa91c00d1ce8876ebaa4"
+    },
+    {
+      "product_id": 834,
+      "name": "Rhea by Ahmed Al Maghribi",
+      "issue": "Narrative opening citrus/nectarine differs from formal top notes apple/black currant/dragon fruit. Not enough evidence to resolve.",
+      "status": "agent_detected_requires_semantic_review",
+      "excerpts": [
+        "Trio jeruk, nektarin, dan apel",
+        "Top Notes : Apple, Black Currant, Dragron Fruit"
+      ],
+      "source_sha256": "e647b672b5aced52510b6f5e2a909645c786ea4f6fd39e35df3650fa919718f6"
+    }
+  ]
+}

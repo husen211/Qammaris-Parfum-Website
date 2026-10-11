@@ -1,0 +1,48 @@
+{
+  "widths": [
+    {
+      "width": 320,
+      "overflow": false,
+      "selectHeight": 44,
+      "buttonHeight": 44
+    },
+    {
+      "width": 375,
+      "overflow": false,
+      "selectHeight": 44,
+      "buttonHeight": 44
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "selectHeight": 44,
+      "buttonHeight": 44
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "selectHeight": 44,
+      "buttonHeight": 44
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "selectHeight": 44,
+      "buttonHeight": 44
+    }
+  ],
+  "errors": [],
+  "touch": [
+    {
+      "singleTapNavigation": true,
+      "hasTouch": true,
+      "hover": false
+    }
+  ],
+  "touchScroll": {
+    "scrolled": true,
+    "keptEditorRoute": true
+  },
+  "staleRevision": true,
+  "noConsoleErrors": true
+}

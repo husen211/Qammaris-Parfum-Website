@@ -1,0 +1,89 @@
+[
+  {
+    "width": 320,
+    "genuineTouch": true,
+    "oneHeroPhoto": true,
+    "geometry": {
+      "width": 270,
+      "height": 470,
+      "naturalWidth": 272,
+      "naturalHeight": 473,
+      "fit": "contain",
+      "src": "http://127.0.0.1:8787/images/store/storefront-hero-480.webp"
+    },
+    "noCrop": true,
+    "noPinOrGsap": true,
+    "revealDuration": 500,
+    "twoNativeCtas": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "genuineTouch": true,
+    "oneHeroPhoto": true,
+    "geometry": {
+      "width": 340,
+      "height": 591,
+      "naturalWidth": 342,
+      "naturalHeight": 594,
+      "fit": "contain",
+      "src": "http://127.0.0.1:8787/images/store/storefront-hero-480.webp"
+    },
+    "noCrop": true,
+    "noPinOrGsap": true,
+    "revealDuration": 500,
+    "twoNativeCtas": true,
+    "overflow": false,
+    "errors": [],
+    "sharedSmoke": "FAQ400ms and gallery open/Escape"
+  },
+  {
+    "width": 768,
+    "genuineTouch": false,
+    "oneHeroPhoto": true,
+    "geometry": {
+      "width": 358,
+      "height": 623,
+      "naturalWidth": 360,
+      "naturalHeight": 626,
+      "fit": "contain",
+      "src": "http://127.0.0.1:8787/images/store/storefront-hero-480.webp"
+    },
+    "noCrop": true,
+    "noPinOrGsap": true,
+    "revealDuration": 500,
+    "twoNativeCtas": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "genuineTouch": false,
+    "oneHeroPhoto": true,
+    "geometry": {
+      "width": 358,
+      "height": 623,
+      "naturalWidth": 360,
+      "naturalHeight": 626,
+      "fit": "contain",
+      "src": "http://127.0.0.1:8787/images/store/storefront-hero-480.webp"
+    },
+    "noCrop": true,
+    "noPinOrGsap": true,
+    "revealDuration": 500,
+    "twoNativeCtas": true,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "mode": "nojs",
+    "readable": true,
+    "noHeroAnimation": true
+  },
+  {
+    "mode": "reduced",
+    "readable": true,
+    "noHeroAnimation": true
+  }
+]

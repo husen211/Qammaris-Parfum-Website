@@ -8,6 +8,10 @@ Website Laravel untuk discovery dan pemesanan WhatsApp, admin sederhana, bulk en
 
 Majoo tetap sistem operasional. Qammaris App mengirim UUID/status/harga, website mengelola publication/konten/media; tidak menggantikan POS atau mendapat stok numerik. Tidak ada SPA rewrite, generic repository, microservice, event bus, autonomous AI atau payment gateway pada program current.
 
+## Separate approved preference program
+
+[V1 preference plan](../planning/QAMMARIS_FRAGRANCE_PREFERENCE.md) approved2026-10-09. PREF-01 audit/tooling/scenario packet is IN_REVIEW pending actual Owner/staff labels and semantic/reference freeze. Owner explicitly continued PREF-02 implementation2026-10-10; separate profile/engine code and offline evaluation are IN_REVIEW with independent calibration/quality gates pending ([evidence](../verification/pref-02/README.md)). PREF-03 website/feedback/admin beta is live under separate Owner trial-release permission; its v1.2 question/flow correction is live after separate Owner approval, staging and profile rebuild/replay ([release evidence](../verification/pref-03/question-revision/RELEASE.md)). PREF-03 remains active/IN_REVIEW; PREF-04 final acceptance/release is not started. No phase advances automatically. Preserve existing catalog/site/legacy quiz and operational integrations. Previous blog/About release scopes do not authorize this deployment; post-acceptance quiz release needs separate permission. This program does not close original P9 or initiate offline-store V2.
+
 ## Hasil current dan dependency
 
 ```text
@@ -53,6 +57,12 @@ The original program is **not 100% closed**. Outstanding evidence/acceptance:
 
 Use the README read path. Existing current documents have distinct owners; historical snapshots, ADR decision text and dated verification retain provenance. Future features update only affected rules/boundaries/operational steps plus item status/evidence. Audit proposals remain proposals until approved. Every report distinguishes source proof, runtime observations and Not confirmed.
 
-## Later programs, not started
+## Qammaris Journal — separate approved program
+
+Owner approved [the Journal plan](../planning/QAMMARIS_JOURNAL.md), BLOG-01–05 implementation and the blog-only release. PR31 installed foundation/CMS/public Journal/SEO/media/components/draft API code in production on2026-10-08 after authorized MySQL staging rehearsal and targeted production migrations. [Release evidence](../verification/blog-06/README.md) and [board](../planning/BACKLOG.md) distinguish delivered code from remaining Owner/editorial/device/credential review. Order PR27/32 are explicitly excluded.
+
+Preserve `/blog/...`, HTML, IDs/authors/content/media. Tiptap vanilla is admin-only; Sanctum is implemented with separate machine identity/ownership, strict draft-only abilities and no catalog writes. Production machine API/local actor and token were subsequently enabled in the separately approved2026-10-08 [activation operation](../verification/journal-activation/README.md). Cloud-only secret provisioning is not configured. Original P9 remains open. This completed release is not permission for later automatic deployment, new credential grants or article rewrites.
+
+## Other later programs, not started
 
 Website machine-write API requires revocable/scoped actor identity, field allowlists, shared tested operations, idempotency/conflict handling and audit; automation never gets unrestricted MySQL access. Payment gateway requires Owner decisions on acceptance/shipping/quantity, persistent order/line/payment lifecycle, signed/idempotent provider notifications and sandbox testing. These are separately scoped programs, not prerequisites invented for the existing WhatsApp order flow. [ADR-028](decisions/ADR-028-whatsapp-order-checkout.md) records the bounded future payment considerations.

@@ -1,0 +1,17 @@
+{
+    "environment": "staging",
+    "driver": "mysql",
+    "mysql_version": "11.8.9-MariaDB-log",
+    "pending": [],
+    "blog_count": 0,
+    "gd": true,
+    "webp": true,
+    "memory_limit": "1536M",
+    "upload_max_filesize": "1536M",
+    "post_max_size": "1536M",
+    "cache": "file",
+    "disk": "public",
+    "automation_enabled": false,
+    "products": 446,
+    "images": 1017
+}

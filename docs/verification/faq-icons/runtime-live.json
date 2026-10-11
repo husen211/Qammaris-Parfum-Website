@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-10-08T13:47:45+00:00",
+  "revision": "3063d630460e0775064c8f73a23bbde8ae673fec",
+  "counts": {
+    "products": 453,
+    "product_images": 1131,
+    "product_variants": 411,
+    "blog_posts": 31,
+    "blog_automation_actors": 1,
+    "personal_access_tokens": 1
+  },
+  "worker_count": 1,
+  "workers_current": true,
+  "watchdog_heartbeat": "2026-10-08T13:47:01Z",
+  "scheduler_heartbeat": "2026-10-08T13:47:01Z",
+  "latest_deployment_at": "2026-10-08T13:44:13Z",
+  "laravel_errors_since_latest_deployment": 1,
+  "known_read_only_checker_errors": 1,
+  "other_laravel_errors": 0,
+  "pending_migrations": 0
+}

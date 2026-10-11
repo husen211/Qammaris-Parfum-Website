@@ -1,0 +1,57 @@
+{
+  "schema": "qammaris-fragrance-audit-report-v1",
+  "captured_at": "2026-10-09T09:54:52+00:00",
+  "source_label": "production-public-read-only",
+  "source_revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+  "snapshot_file_sha256": "cf6e61a2dbe0c23f459a5f6180c97b00866b9b74c35b87e26f13b854eb7c3401",
+  "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d",
+  "legacy_input_sha256": "a3f92b9f4850405de305d8dd97fed0634533b11824767a584e227db0a399c963",
+  "dictionary_version": "pref-01.1",
+  "dictionary_sha256": "7ffb2432421d7cb828add6db9fd12269b2669b1d1af1c4e288a390feda905117",
+  "summary": {
+    "products": 378,
+    "descriptions_present": 378,
+    "all_note_layers_filled": 378,
+    "placeholder_products": 25,
+    "note_entries": 3306,
+    "recognized_entries": 3237,
+    "partial_entries": 7,
+    "unmapped_entries": 26,
+    "offer_issues": 0,
+    "projection_cue_products": 89,
+    "longevity_cue_products": 198,
+    "availability": {
+      "available": 260,
+      "sold_out": 118
+    },
+    "gender": {
+      "Wanita": 65,
+      "Unisex": 203,
+      "Pria": 110
+    }
+  },
+  "limits": [
+    "Notes are exact search groups, not performance facts or interchangeable ingredients.",
+    "Description cue counts are not validated attribute values.",
+    "Identical notes are not proof of the same fragrance.",
+    "No Owner reviews, calibration, new ranking or public UI are implemented."
+  ],
+  "raw_note_written_forms": 750,
+  "unmapped_terms_count": 29,
+  "identical_notes_groups_unverified": 19,
+  "placeholder_entries": 36,
+  "scenario_file_sha256": "4116d77e1e7b94ea4b3926fa1542f7cae291e15c30afe7a3196e164eb8075215",
+  "export_script_sha256": "83f8823a9a420e89d1e97466d3e279c720454f798b15639376409a4fa3792864",
+  "full_offline_report_sha256": "d839e1ab18fcaed453b88531050e988524e29244a9132afdf65dfdcfc6186d16",
+  "artifacts_sha256": {
+    "agent-reference.json": "ad2ef28351779b8402e2037c0b9d9425a78981661e893a0f47fa4e2e5670f6ea",
+    "agent-semantic-review.json": "f54605ba3ab0f92ea3123eb8f9ca093e9152ac24e41f73c95056ff574fbe567d",
+    "ambiguities.json": "fee65f94f7ac734ae329f91af69798634de07f0690c025d8676bc64c35f7f82d",
+    "description-review.json": "7848418f226d0148354e5ebf7bac1b93ac9cd787b20f2dee2b6b2c56f446fe96",
+    "legacy-baseline.json": "c2b7bec352f9350591ee49d12ffa4f0ff3ef93a1c1bac3bbb6ae25786d5b9ba6",
+    "note-vocabulary.json": "876603759cece404d7bd8832d1d052cea60ed328d2f3a576862424075a34c56e",
+    "product-index.csv": "88541ad49007cd2ddb52d56c106e148455011e4deab8cb44f3b3d5336378c26e",
+    "product-review.json": "5b0fbfaa57f4fb96d3c511ea126b46c456c49b9bf2029375106cf08dbfb06423"
+  },
+  "agent_reference_version": "pref-01-agent-reference.1"
+}

@@ -1,0 +1,18 @@
+# UI-21ST-01 — approved production release
+
+2026-10-08. Owner explicitly approved the concrete PR39 release question with “saya izinkan”. [PR39](https://github.com/husen211/Qammaris-Parfum-Website/pull/39) merged as `3063d630460e0775064c8f73a23bbde8ae673fec`; main [CI37786415557](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37786415557) passed **471 Laravel tests /3695 assertions**, **31 Node tests /0 failures**, and Vite. [Production37786512525](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37786512525) build/deploy succeeded. Independent server revision matches, deployed13:44:13UTC. This supersedes implementation-time pending-release statements only for UI-21ST-01.
+
+## Live result
+
+- About HTTP200 at **390 genuine Chromium touch /1440 desktop**. Shared FAQ opens on one tap/click, Enter opens the second exclusively, Space collapses. Gallery has all nine decoded photos using `contain`; desktop expansion/collapse works. One tap opens full photo, next changes position, Escape closes, focus returns. Timeline shows2024 and February2026 with four decoded `contain` images. Six review cards have thirty SVG stars. No horizontal overflow or JavaScript page errors. [Browser results](browser-live.json).
+- `/blog` and three currently linked public articles returned200 at both widths, valid JSON-LD, proper SVGs and no overflow/errors. Those three articles have no structured FAQ; shared Journal FAQ/preview behavior was verified locally, not claimed as production article interaction.
+- `/up`, `/store/location` and `/sitemap.xml` returned200. Visible About hours remain Saturday–Thursday09–21WITA /Friday closed. No checkout/order/API mutation or synthetic production article was submitted.
+- [Final runtime](runtime-live.json): one actual PHP worker on current revision, fresh scheduler/watchdog minute heartbeats, zero pending migrations. One Laravel ERROR is from the initial read-only checker calling a protected Migrator method; checker corrected to public migration-file/repository APIs. **Zero other Laravel ERROR entries** since deployment. No application fix, log deletion or guard bypass used.
+
+Live screenshots: [FAQ mobile](screenshots/live-faq-390.png), [gallery mobile](screenshots/live-gallery-390.png), [desktop expansion](screenshots/live-gallery-expanded-1440.png), [timeline mobile](screenshots/live-timeline-390.png), [timeline desktop](screenshots/live-timeline-1440.png), [SVG review icons](screenshots/live-icons-390.png). Initial timeline capture ran before lazy images decoded; replaced with decoded-image capture and visually inspected. All live390/1440 captures are in screenshots.
+
+## Data and recovery
+
+The two aggregate reads after deployment and after browser checks both show453products,1131product-image rows,411variants,31articles,one machine actor/token. There is no before-deployment DB snapshot in this release proof; earlier historical counts are not a frozen baseline. Release code performs no business-data write, migration, credential change or photo replacement. Normal public article GET can increment internal views. Existing media originals, URLs and persistent env/storage retained; no orders included.
+
+Prior code release `e7b52a6525bc3499cc015a60a0393351cb08079e` remains retained for scoped code rollback; DB/media rollback is unnecessary. Documentation-only successors retain the same application tree and use the normal gated pipeline. Physical iPhone Safari remains untested; older browsers may allow multiple native FAQ answers open. BLOG/P9 acceptance limits remain separate. Next: Owner visual review at https://qammarisparfum.id/store/about; no next implementation phase started.

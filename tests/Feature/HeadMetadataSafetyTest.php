@@ -44,7 +44,8 @@ class HeadMetadataSafetyTest extends TestCase
             $matches
         );
 
-        $this->assertCount(2, $matches[1]);
+        $types = array_map(fn ($json) => json_decode($json, true, 512, JSON_THROW_ON_ERROR)['@type'], $matches[1]);
+        $this->assertEqualsCanonicalizing(['Organization', 'WebSite', 'BlogPosting', 'BreadcrumbList'], $types);
 
         foreach ($matches[1] as $json) {
             $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);

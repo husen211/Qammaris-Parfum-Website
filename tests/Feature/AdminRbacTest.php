@@ -216,7 +216,8 @@ class AdminRbacTest extends TestCase
             str_starts_with($name, 'admin.orders.') => 'orders.manage',
             str_starts_with($name, 'admin.users.') => 'users.manage',
             str_starts_with($name, 'admin.integrations.') => 'integrations.manage',
-            str_starts_with($name, 'admin.blog-posts.') => 'blog.manage',
+            str_starts_with($name, 'admin.blog-posts.'), str_starts_with($name, 'admin.blog-automation.'),
+            str_starts_with($name, 'admin.blog-media.'), str_starts_with($name, 'admin.blog-taxonomy.') => 'blog.manage',
             default => 'catalog.manage',
         };
     }

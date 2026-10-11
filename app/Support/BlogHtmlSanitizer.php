@@ -75,6 +75,21 @@ final class BlogHtmlSanitizer
             }
 
             $tag = strtolower($node->tagName);
+            if ($tag === 'div' && $this->component($node)) {
+                continue;
+            }
+            if ($tag === 'div' && preg_match('/^[1-9][0-9]{0,17}$/', $node->getAttribute('data-qammaris-product'))) {
+                $id = $node->getAttribute('data-qammaris-product');
+                foreach (iterator_to_array($node->attributes) as $attribute) {
+                    $node->removeAttributeNode($attribute);
+                }
+                while ($node->firstChild) {
+                    $node->removeChild($node->firstChild);
+                }
+                $node->setAttribute('data-qammaris-product', $id);
+
+                continue;
+            }
 
             if (in_array($tag, self::BLOCKED_TAGS, true)) {
                 $parent->removeChild($node);
@@ -102,12 +117,21 @@ final class BlogHtmlSanitizer
         $allowedAttributes = match ($tag) {
             'a' => ['href', 'title', 'target'],
             'img' => ['alt', 'height', 'loading', 'src', 'title', 'width'],
+            'td', 'th' => ['colspan', 'rowspan'],
             default => [],
         };
 
         foreach (iterator_to_array($element->attributes) as $attribute) {
             if (! in_array(strtolower($attribute->name), $allowedAttributes, true)) {
                 $element->removeAttributeNode($attribute);
+            }
+        }
+        if (in_array($tag, ['td', 'th'], true)) {
+            foreach (['colspan', 'rowspan'] as $span) {
+                $value = $element->getAttribute($span);
+                if (! ctype_digit($value) || (int) $value < 1 || (int) $value > 50) {
+                    $element->removeAttribute($span);
+                }
             }
         }
 
@@ -138,6 +162,50 @@ final class BlogHtmlSanitizer
                 }
             }
         }
+    }
+
+    private function component(DOMElement $node): bool
+    {
+        foreach (['media', 'gallery', 'article', 'youtube', 'callout', 'cta'] as $kind) {
+            $key = 'data-qammaris-'.$kind;
+            if (! $node->hasAttribute($key)) {
+                continue;
+            }
+            $value = trim($node->getAttribute($key));
+            $attributes = [$key => $value];
+            $valid = match ($kind) {
+                'media', 'article' => (bool) preg_match('/^[1-9][0-9]{0,17}$/', $value),
+                'gallery' => (bool) preg_match('/^[1-9][0-9]{0,17}(,[1-9][0-9]{0,17}){1,7}$/', $value) && count(explode(',', $value)) === count(array_unique(explode(',', $value))),
+                'youtube' => (bool) preg_match('/^[a-zA-Z0-9_-]{11}$/', $value),
+                'callout' => in_array($value, ['note', 'tip', 'warning'], true),
+                'cta' => $value !== '' && strlen($value) <= 2048 && (JournalMetadata::validHttps($value) || (str_starts_with($value, '/') && ! str_starts_with($value, '//') && ! preg_match('/[\\\\\x00-\x20\x7f]/', $value))),
+            };
+            if ($kind === 'callout' || $kind === 'cta') {
+                foreach ($kind === 'callout' ? ['title' => 200, 'text' => 2000] : ['label' => 200] as $field => $max) {
+                    $text = trim($node->getAttribute('data-'.$field));
+                    $valid = $valid && $text !== '' && mb_strlen($text) <= $max;
+                    $attributes['data-'.$field] = $text;
+                }
+            }
+            if (! $valid) {
+                $node->parentNode->removeChild($node);
+
+                return true;
+            }
+            foreach (iterator_to_array($node->attributes) as $attribute) {
+                $node->removeAttributeNode($attribute);
+            }
+            while ($node->firstChild) {
+                $node->removeChild($node->firstChild);
+            }
+            foreach ($attributes as $attribute => $text) {
+                $node->setAttribute($attribute, $text);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private function isSafeUrl(string $url, bool $allowContactSchemes): bool

@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
-use Illuminate\Support\Str;
 
 class BlogPost extends Model
 {
@@ -14,7 +18,10 @@ class BlogPost extends Model
 
     public const CATEGORY_OPTIONS = ['Tips', 'Review', 'Panduan', 'Berita'];
 
+    protected $attributes = ['seo_indexable' => true, 'seo_followable' => true];
+
     protected $fillable = [
+        'featured_media_id', 'related_product_ids', 'related_article_ids', 'faqs', 'references',
         'title',
         'slug',
         'excerpt',
@@ -26,12 +33,31 @@ class BlogPost extends Model
         'published_at',
         'view_count',
         'meta_description',
+        'subtitle',
+        'featured_image_alt',
+        'is_featured',
+        'seo_title',
+        'canonical_url',
+        'seo_indexable',
+        'seo_followable',
+        'og_title',
+        'og_description',
+        'og_image_url',
     ];
 
     protected $casts = [
+        'automation_actor_id' => 'integer',
+        'featured_media_id' => 'integer',
+        'related_product_ids' => 'array', 'related_article_ids' => 'array', 'faqs' => 'array', 'references' => 'array',
         'is_published' => 'boolean',
         'published_at' => 'datetime',
         'view_count' => 'integer',
+        'revision' => 'integer',
+        'archived_at' => 'datetime',
+        'content_updated_at' => 'datetime',
+        'is_featured' => 'boolean',
+        'seo_indexable' => 'boolean',
+        'seo_followable' => 'boolean',
     ];
 
     public function getSlugOptions(): SlugOptions
@@ -42,6 +68,23 @@ class BlogPost extends Model
             ->doNotGenerateSlugsOnUpdate();
     }
 
+    public function media(): HasMany
+    {
+        return $this->hasMany(BlogMedia::class);
+    }
+
+    public function featuredMedia(): BelongsTo
+    {
+        return $this->belongsTo(BlogMedia::class)->whereNull('archived_at');
+    }
+
+    public function getHeroMediaAttribute(): ?BlogMedia
+    {
+        $media = $this->featuredMedia;
+
+        return $media && $media->blog_post_id === $this->id ? $media : null;
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -49,7 +92,7 @@ class BlogPost extends Model
 
     public function isPubliclyVisible(): bool
     {
-        return $this->is_published
+        return $this->archived_at === null && $this->is_published
             && $this->published_at !== null
             && $this->published_at->lte(now());
     }
@@ -68,8 +111,9 @@ class BlogPost extends Model
     public function getReadingTimeAttribute(): string
     {
         $wordCount = str_word_count(strip_tags($this->content));
-        $minutes = ceil($wordCount / 200); // Rata-rata 200 kata/menit
-        return $minutes . ' menit';
+        $minutes = max(1, (int) ceil($wordCount / 200));
+
+        return $minutes.' menit';
     }
 
     /**
@@ -77,7 +121,10 @@ class BlogPost extends Model
      */
     public function getFeaturedImageUrlAttribute(): string
     {
-        if (!$this->featured_image) {
+        if ($this->featured_image && $this->featured_image_disk) {
+            return Storage::disk($this->featured_image_disk)->url($this->featured_image);
+        }
+        if (! $this->featured_image) {
             return asset('images/about-section.jpg');
         }
 
@@ -97,7 +144,7 @@ class BlogPost extends Model
             return asset($this->featured_image);
         }
 
-        return asset('images/' . $this->featured_image);
+        return asset('images/'.$this->featured_image);
     }
 
     /**
@@ -105,9 +152,9 @@ class BlogPost extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('is_published', true)
-                     ->whereNotNull('published_at')
-                     ->where('published_at', '<=', now());
+        return $query->whereNull('archived_at')->where('is_published', true)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 
     /**
@@ -117,7 +164,25 @@ class BlogPost extends Model
     {
         $normalized = str_replace('-', ' ', Str::lower($category));
 
-        return $query->whereRaw('lower(category) = ?', [$normalized]);
+        return $query->where(function ($query) use ($category, $normalized) {
+            $query->whereHas('editorialCategory', fn ($taxonomy) => $taxonomy->where('slug', Str::slug($category)))
+                ->orWhere(fn ($legacy) => $legacy->whereNull('category_id')->whereRaw('lower(category) = ?', [$normalized]));
+        });
+    }
+
+    public function editorialCategory(): BelongsTo
+    {
+        return $this->belongsTo(BlogCategory::class, 'category_id');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(BlogTag::class, 'blog_post_tag');
+    }
+
+    public function getCategoryAttribute(?string $value): ?string
+    {
+        return $this->category_id ? $this->editorialCategory?->name : $value;
     }
 
     /**

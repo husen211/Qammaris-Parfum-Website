@@ -28,7 +28,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mbstring, pdo_sqlite, sqlite3, zip, simplexml, xmlreader
+          extensions: mbstring, pdo_sqlite, sqlite3, zip, simplexml, xmlreader, gd
           coverage: none
           tools: composer:v2
 

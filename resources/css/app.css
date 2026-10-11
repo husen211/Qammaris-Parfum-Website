@@ -1,6 +1,8 @@
+@import './preference-quiz.css';
 @import "tailwindcss";
 @import "./catalog.css";
 @import "./footer.css";
+@import "./faq.css";
 @import "./cart-interactions.css";
 @import "./navigation-skeleton.css";
 
@@ -306,3 +308,17 @@ a[data-catalog-return][data-catalog-pressed] {
         font-size: max(1rem, 16px);
     }
 }
+
+/* Quiz fields communicate inactive state without relying only on a disabled attribute. */
+.pref-budget-input:disabled {
+    color: rgb(30 30 30 / .55);
+    background: rgb(30 30 30 / .06);
+    border-color: rgb(30 30 30 / .12);
+    cursor: not-allowed;
+}
+.pref-option[aria-pressed="true"] {
+    background: rgb(197 160 89 / .12);
+    border-color: var(--color-brand-gold);
+}
+
+[data-preference-form] :is(legend, [data-preference-summary] h2) { scroll-margin-top: 7rem; }

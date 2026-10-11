@@ -46,13 +46,24 @@ class OrderMigrationsMariaDbTest extends TestCase
         parent::tearDown();
     }
 
+    private function rollbackOrd02(): void
+    {
+        $paths = array_map(fn (string $migration) => database_path("migrations/{$migration}.php"), self::ORD02);
+        Artisan::call('migrate:rollback', ['--path' => $paths, '--realpath' => true, '--step' => 1000, '--force' => true]);
+    }
+
     public function test_ord02_migrations_backfill_ord01_data_and_roll_back_without_losing_it(): void
     {
         $files = collect(glob(database_path('migrations/*.php')))->map(fn ($file) => basename($file, '.php'))->sort()->values();
-        $this->assertSame(self::ORD02, $files->slice(-count(self::ORD02))->values()->all(), 'ORD-02 migrations are the newest ones');
+        // Main's preference migrations (2026_10_10_00000x) interleave by date; they are independent of the order tables,
+        // so the rehearsal rolls back exactly the ORD-02+ files by path instead of the last N steps.
+        foreach (self::ORD02 as $migration) {
+            $this->assertContains($migration, $files->all());
+        }
+        $this->assertSame(array_slice(self::ORD02, -4), $files->slice(-4)->values()->all(), 'ORD-04 migrations are the newest ones');
 
         Artisan::call('migrate:fresh', ['--force' => true]);
-        Artisan::call('migrate:rollback', ['--step' => count(self::ORD02), '--force' => true]);
+        $this->rollbackOrd02();
         $this->assertFalse(Schema::hasColumn('online_orders', 'lifecycle'));
         $this->assertFalse(Schema::hasColumn('users', 'username'));
 
@@ -63,7 +74,7 @@ class OrderMigrationsMariaDbTest extends TestCase
         $this->assertBackfilled($ids);
         $this->assertNoImplicitTimestampUpdates();
 
-        Artisan::call('migrate:rollback', ['--step' => count(self::ORD02), '--force' => true]);
+        $this->rollbackOrd02();
         $this->assertSame($before, $this->ord01Snapshot(), 'Rollback keeps every ORD-01 row and value');
         foreach (['online_order_payments', 'online_order_issues', 'customers', 'online_order_claims', 'integration_outbox', 'integration_idempotency_keys', 'online_order_costs'] as $table) {
             $this->assertFalse(Schema::hasTable($table), $table);

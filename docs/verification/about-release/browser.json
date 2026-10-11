@@ -1,0 +1,736 @@
+{
+  "base": "https://qammarisparfum.id",
+  "widths": [
+    {
+      "width": 320,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "reviews": 6,
+      "gallery": 9,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "https://qammarisparfum.id/store/about#webpage",
+              "url": "https://qammarisparfum.id/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "https://qammarisparfum.id/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "https://qammarisparfum.id/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "https://qammarisparfum.id/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "https://qammarisparfum.id/store/location",
+              "image": "https://qammarisparfum.id/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://qammarisparfum.id/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "https://qammarisparfum.id"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "https://qammarisparfum.id/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://qammarisparfum.id/store/about",
+      "heavy3D": false,
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "reviews": 6,
+      "gallery": 9,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "https://qammarisparfum.id/store/about#webpage",
+              "url": "https://qammarisparfum.id/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "https://qammarisparfum.id/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "https://qammarisparfum.id/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "https://qammarisparfum.id/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "https://qammarisparfum.id/store/location",
+              "image": "https://qammarisparfum.id/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://qammarisparfum.id/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "https://qammarisparfum.id"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "https://qammarisparfum.id/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://qammarisparfum.id/store/about",
+      "heavy3D": false,
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "reviews": 6,
+      "gallery": 9,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "https://qammarisparfum.id/store/about#webpage",
+              "url": "https://qammarisparfum.id/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "https://qammarisparfum.id/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "https://qammarisparfum.id/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "https://qammarisparfum.id/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "https://qammarisparfum.id/store/location",
+              "image": "https://qammarisparfum.id/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://qammarisparfum.id/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "https://qammarisparfum.id"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "https://qammarisparfum.id/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://qammarisparfum.id/store/about",
+      "heavy3D": false,
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 768,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "reviews": 6,
+      "gallery": 9,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "https://qammarisparfum.id/store/about#webpage",
+              "url": "https://qammarisparfum.id/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "https://qammarisparfum.id/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "https://qammarisparfum.id/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "https://qammarisparfum.id/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "https://qammarisparfum.id/store/location",
+              "image": "https://qammarisparfum.id/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://qammarisparfum.id/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "https://qammarisparfum.id"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "https://qammarisparfum.id/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://qammarisparfum.id/store/about",
+      "heavy3D": false,
+      "touch": 0,
+      "hover": true,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "h1": 1,
+      "reviews": 6,
+      "gallery": 9,
+      "broken": [],
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "AboutPage",
+              "@id": "https://qammarisparfum.id/store/about#webpage",
+              "url": "https://qammarisparfum.id/store/about",
+              "name": "Tentang Qammaris — Experience Store Parfum di Palu",
+              "inLanguage": "id-ID",
+              "mainEntity": {
+                "@id": "https://qammarisparfum.id/store/location#store"
+              },
+              "breadcrumb": {
+                "@id": "https://qammarisparfum.id/store/about#breadcrumb"
+              }
+            },
+            {
+              "@type": "Store",
+              "@id": "https://qammarisparfum.id/store/location#store",
+              "name": "Qammaris Perfumes",
+              "url": "https://qammarisparfum.id/store/location",
+              "image": "https://qammarisparfum.id/images/store/facade-1200.webp",
+              "telephone": "+6285144924931",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111",
+                "addressLocality": "Palu",
+                "addressRegion": "Sulawesi Tengah",
+                "addressCountry": "ID"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": [
+                    "Saturday",
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday"
+                  ],
+                  "opens": "09:00",
+                  "closes": "21:00"
+                }
+              ],
+              "sameAs": [
+                "https://www.instagram.com/qammaris",
+                "https://www.linkedin.com/company/qammaris-perfumes"
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://qammarisparfum.id/store/about#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Beranda",
+                  "item": "https://qammarisparfum.id"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Tentang Qammaris",
+                  "item": "https://qammarisparfum.id/store/about"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://qammarisparfum.id/store/about",
+      "heavy3D": false,
+      "touch": 0,
+      "hover": true,
+      "errors": []
+    }
+  ],
+  "routes": [
+    {
+      "path": "/up",
+      "status": 200
+    },
+    {
+      "path": "/store/location",
+      "status": 200
+    },
+    {
+      "path": "/blog",
+      "status": 200
+    },
+    {
+      "path": "/products",
+      "status": 200
+    },
+    {
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200
+    }
+  ],
+  "articles": [
+    {
+      "url": "https://qammarisparfum.id/blog/parfum-cherry-dari-asam-manis-hingga-kayu-berasap",
+      "status": 200,
+      "h1": "Parfum Cherry: Dari Asam-Manis hingga Kayu Berasap",
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "Parfum Cherry: Dari Asam-Manis hingga Kayu Berasap",
+          "description": "Cherry bisa mengingatkan pada buah segar, manisan, atau minuman pekat. Pendampingnya menentukan cerita yang berbeda di dalam parfum.",
+          "mainEntityOfPage": "https://qammarisparfum.id/blog/parfum-cherry-dari-asam-manis-hingga-kayu-berasap",
+          "url": "https://qammarisparfum.id/blog/parfum-cherry-dari-asam-manis-hingga-kayu-berasap",
+          "author": {
+            "@type": "Organization",
+            "name": "Qammaris Editorial"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Qammaris Perfumes"
+          },
+          "image": "https://qammarisparfum.id/storage/blog/xE8ZMfi8P2aJ567qYquB1QEqop9XkUvqwmD6ve03.jpg",
+          "datePublished": "2026-10-08T08:30:01+00:00",
+          "dateModified": "2026-10-08T08:30:01+00:00"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Qammaris Journal",
+              "item": "https://qammarisparfum.id/blog"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Panduan",
+              "item": "https://qammarisparfum.id/blog/category/panduan"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Parfum Cherry: Dari Asam-Manis hingga Kayu Berasap",
+              "item": "https://qammarisparfum.id/blog/parfum-cherry-dari-asam-manis-hingga-kayu-berasap"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://qammarisparfum.id/blog/afnan-historic-sahara-menjelajahi-manis-rempah-dan-kayu",
+      "status": 200,
+      "h1": "Afnan Historic Sahara: Menjelajahi Manis, Rempah, dan Kayu",
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "Afnan Historic Sahara: Menjelajahi Manis, Rempah, dan Kayu",
+          "description": "Di balik nama Sahara, ada vanilla, almond, dan praline. Mengenal Historic Sahara lewat hubungan antara selera gourmand, rempah, dan kayu.",
+          "mainEntityOfPage": "https://qammarisparfum.id/blog/afnan-historic-sahara-menjelajahi-manis-rempah-dan-kayu",
+          "url": "https://qammarisparfum.id/blog/afnan-historic-sahara-menjelajahi-manis-rempah-dan-kayu",
+          "author": {
+            "@type": "Organization",
+            "name": "Qammaris Editorial"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Qammaris Perfumes"
+          },
+          "image": "https://qammarisparfum.id/storage/blog/6odQ6IQBPWR5RVT2VvjX4umPVJGmbeESKlRBNEaI.jpg",
+          "datePublished": "2026-10-08T08:29:55+00:00",
+          "dateModified": "2026-10-08T08:29:55+00:00"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Qammaris Journal",
+              "item": "https://qammarisparfum.id/blog"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Review",
+              "item": "https://qammarisparfum.id/blog/category/review"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Afnan Historic Sahara: Menjelajahi Manis, Rempah, dan Kayu",
+              "item": "https://qammarisparfum.id/blog/afnan-historic-sahara-menjelajahi-manis-rempah-dan-kayu"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://qammarisparfum.id/blog/memilih-parfum-untuk-hadiah-tanpa-menebak-selera",
+      "status": 200,
+      "h1": "Memilih Parfum untuk Hadiah Tanpa Menebak Selera",
+      "schema": [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id",
+          "logo": "https://qammarisparfum.id/images/logo.png",
+          "image": "https://qammarisparfum.id/images/logo.png"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Qammaris Perfumes",
+          "url": "https://qammarisparfum.id"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "Memilih Parfum untuk Hadiah Tanpa Menebak Selera",
+          "description": "Hadiah parfum terasa lebih personal ketika dimulai dari kebiasaan penerima, bukan daftar aroma yang sedang ramai.",
+          "mainEntityOfPage": "https://qammarisparfum.id/blog/memilih-parfum-untuk-hadiah-tanpa-menebak-selera",
+          "url": "https://qammarisparfum.id/blog/memilih-parfum-untuk-hadiah-tanpa-menebak-selera",
+          "author": {
+            "@type": "Organization",
+            "name": "Qammaris Editorial"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Qammaris Perfumes"
+          },
+          "image": "https://qammarisparfum.id/storage/blog/2dME1BgtiOZRsKqi0q3cpRsoiOSe2OxMeUlRwWut.jpg",
+          "datePublished": "2026-10-08T08:29:50+00:00",
+          "dateModified": "2026-10-08T08:29:50+00:00"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Qammaris Journal",
+              "item": "https://qammarisparfum.id/blog"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Panduan",
+              "item": "https://qammarisparfum.id/blog/category/panduan"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Memilih Parfum untuk Hadiah Tanpa Menebak Selera",
+              "item": "https://qammarisparfum.id/blog/memilih-parfum-untuk-hadiah-tanpa-menebak-selera"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interactions": {
+    "touch_gallery": true,
+    "touch_faq": true,
+    "location_hours": true,
+    "anonymous_api_status": 401
+  },
+  "articleUrls": [
+    "https://qammarisparfum.id/blog/parfum-cherry-dari-asam-manis-hingga-kayu-berasap",
+    "https://qammarisparfum.id/blog/afnan-historic-sahara-menjelajahi-manis-rempah-dan-kayu",
+    "https://qammarisparfum.id/blog/memilih-parfum-untuk-hadiah-tanpa-menebak-selera"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "qammaris-pref-02-receipt-v1",
+  "source_capture": {
+    "captured_at": "2026-10-09T09:54:52+00:00",
+    "revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+    "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d"
+  },
+  "engine_fingerprint": "ee40b47a16eea3b1e23123c7b1b0d544d5f38adc5af4014a48f74ea0e8ec505c",
+  "parser_fingerprint": "1efac65610b4560fd3eb97b051f9cc9547a535b0d88edb4f7540d34448424c93",
+  "training_before_holdout": true,
+  "focused_tests": {
+    "tests": 42,
+    "assertions": 191,
+    "result": "passed"
+  },
+  "human_quality_acceptance": "pending_not_claimed",
+  "persistent_database_writes": 0,
+  "new_public_callers": 0,
+  "files_sha256": {
+    "app/Support/FragrancePreference/PreferenceAnswers.php": "92cd28c1e2cac36adddbd5c8c0a3933b8c62f2b516b559d6ac046dc3f509a568",
+    "app/Support/FragrancePreference/ProfileBuilder.php": "9aebbea1cbd344e6a7f264e460352aaf41987520246abdb5c191ba4f2e1cf289",
+    "app/Support/FragrancePreference/RecommendationEngine.php": "a98e1bef2fd839af6ee35a0870ddca72c7494402bb5e234cc159fb288695187f",
+    "app/Services/FragranceProfileStore.php": "2f5c9754a86c00ff0215166103a7f508b69c6be1707174451bfb32f79d0ffa3c",
+    "app/Services/FragrancePreferenceCatalog.php": "c00c61fc03d3ee0c9f7eb41d8ce38430aa99c1d692b934fef2b111c4a982e8d9",
+    "app/Console/Commands/BuildFragranceProfiles.php": "4cbf8ccecab155eb3a947eaf2ef74078e454bbcc7ee76c0aebd13fb82231843c",
+    "app/Models/FragranceProfile.php": "a08642897c8133089f40ce022d10713712560b17424b917f12eed7112f3e9448",
+    "app/Models/FragranceProfileRevision.php": "dc0ab44b9a02574ccc3aa64c86bba1914efcf3d0d6de1a76ef996fea5da3ba49",
+    "config/fragrance_preference.php": "2c0d857de782c21fc400d2f0ca09959dabc1d27329d390e4777e403db6da3559",
+    "resources/data/fragrance-profile-rules.json": "dde6c1f3dc84039b28ae54f04a77e5adcc62aa36cb8f265b0d7ab222fe2bcebc",
+    "database/migrations/2026_10_10_000001_create_fragrance_profiles.php": "19e160bde78ec895977ce68587506ad21c726c0fbfdc61612d4a20438228056c",
+    "tools/fragrance-quiz/evaluate.php": "8fb27744475ac06a43d83fd541b2cff2714f1a2a9aa5a514975c868f50fba596"
+  },
+  "artifacts_sha256": {
+    "profiles.json": "e586b7a54b20adc2fc00cdaa58cf6f3affe3ff19c7570c40843b5225406013b1",
+    "evaluation.json": "d35ac346ec91933ae30a1b01ec0d9d52e4cd2b066982365d097a5b6a46e692ae",
+    "RESULTS.md": "6405bc2dcc5186ab5359b9fce30ebb21174a6dfbbaa63255c9b1bd7ce9e39593"
+  }
+}

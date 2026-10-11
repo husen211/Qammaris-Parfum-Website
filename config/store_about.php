@@ -1,0 +1,33 @@
+<?php
+
+return [
+    // Owner confirmed the journey begins in 2024 and the store opened in February 2026.
+    'story_url' => 'https://www.linkedin.com/posts/qammaris-perfumes_why-qammaris-exists-a-few-years-ago-i-activity-7466129668660690944-KmjG',
+    'journey_url' => 'https://www.linkedin.com/posts/qammaris-perfumes_qammaris-entrepreneurship-retail-activity-7466133865032564736-yUbC',
+    'reel_url' => 'https://www.instagram.com/reel/Dd0iMrDJURL/',
+    'reel_embed_url' => 'https://www.instagram.com/reel/Dd0iMrDJURL/embed/',
+    'reviews_url' => 'https://share.google/hkWHVisQuT9g3H78Y',
+    'google_rating' => '4,9',
+    'rating_checked_at' => '8 Oktober 2026',
+    // Transcribed from complete Google Maps reviews in Owner-provided screenshots.
+    'reviews' => [
+        ['author' => 'Owen Bryant Owen Bryant', 'stars' => 5, 'quote' => 'Saya ke sini bersama teman. Kami berdua berhasil menemukan parfum yang sesuai selera masing-masing. Stafnya membantu dan tokonya bersih serta wangi.'],
+        ['author' => 'Dede Persib', 'stars' => 5, 'quote' => 'Saya ke sini atas saran kolega. Tokonya memang bersih dan wangi seperti yang diceritakan. Varian parfumnya sangat banyak dan bisa dicoba semua. Harganya masih terjangkau.'],
+        ['author' => 'Derry Qlay', 'stars' => 5, 'quote' => 'Saya ke sini untuk mencari parfum sebagai kado. Stafnya sangat membantu mencarikan aroma yang sesuai untuk penerimanya. Tokonya bersih dan harganya terjangkau.'],
+        ['author' => 'Ria Rizki', 'stars' => 5, 'quote' => 'Baru tau ada toko parfum selengkap ini di Palu. Langsung nyoba sniff beberapa varian dan akhirnya dapet yang cocok.'],
+        ['author' => 'Muhammad Zaidan Mufid', 'stars' => 5, 'quote' => 'Bosen beli parfum online dan sering kecewa karena gak sesuai bayangan. Ke sini dan semua masalah itu selesai. Sniff dulu, cocok baru bayar.'],
+        ['author' => 'Ferdiansyah Cahyadi', 'stars' => 5, 'quote' => 'karyawan ramah, selalu menjelaskan setiap wangi wangi an yg kita mau'],
+    ],
+    'timeline' => [
+        ['date' => '2024', 'title' => 'Mengenal parfum saat merantau', 'text' => 'Saat merantau untuk kuliah, Husein bertemu teman-teman yang gemar berdiskusi tentang parfum. Dari sana, ia mulai mencoba parfum lokal, designer, niche, hingga Timur Tengah.'],
+        ['date' => 'Gagasan di Palu', 'title' => 'Ide membuka toko di Palu', 'text' => 'Saat kembali ke Palu, Husein ingin membuat tempat untuk mencoba parfum sebelum membeli. Pelanggan bisa membandingkan aroma dan meminta rekomendasi langsung.'],
+        ['date' => 'Persiapan toko', 'title' => 'Menyiapkan toko', 'text' => 'Persiapan mencakup rancangan interior, renovasi, pengerjaan rak, dan pengadaan koleksi parfum serta testernya.'],
+        ['date' => 'Februari 2026', 'title' => 'Toko Qammaris dibuka', 'text' => 'Qammaris mulai buka di Palu pada Februari 2026. Semua produk di toko tersedia testernya. Staf siap membantu pelanggan mencoba, membandingkan, dan memilih parfum sesuai kebutuhan.'],
+    ],
+    'gallery' => [
+        ['key' => 'construction', 'category' => 'Pembangunan', 'title' => 'Proses pembangunan toko', 'alt' => 'Pengerjaan rak kayu dan interior toko Qammaris sebelum selesai', 'caption' => 'Dokumentasi pengerjaan interior sebelum ruang siap menyambut pelanggan.', 'fit' => 'contain'],
+        ['key' => 'design-board', 'category' => 'Rancangan', 'title' => 'Rancangan awal interior', 'alt' => 'Gambar rancangan rak dan visualisasi interior Qammaris yang ditempel di dinding', 'caption' => 'Rancangan menjadi panduan untuk membangun pengalaman di dalam toko.', 'fit' => 'contain'],
+        ['key' => 'shelf-plan', 'category' => 'Rancangan', 'title' => 'Detail rancangan rak', 'alt' => 'Gambar desain rak lengkung Qammaris beserta ukuran pengerjaannya', 'caption' => 'Detail rak lengkung yang menjadi bagian dari identitas ruang Qammaris.', 'fit' => 'contain'],
+        ['key' => 'floor-plan', 'category' => 'Rancangan', 'title' => 'Merencanakan alur ruang', 'alt' => 'Denah rancangan toko Qammaris dengan posisi rak dan meja display', 'caption' => 'Penataan rak dan meja direncanakan sejak awal pembangunan.', 'fit' => 'contain'],
+    ],
+];

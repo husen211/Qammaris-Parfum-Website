@@ -1,0 +1,10 @@
+[
+  {
+    "endpoint": "blog-taxonomy",
+    "status": 200
+  },
+  {
+    "endpoint": "blog-posts",
+    "status": 200
+  }
+]

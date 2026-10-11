@@ -1,0 +1,228 @@
+{
+  "schema": "qammaris-preference-evaluation-v1",
+  "engine_version": "pref-03.2-provisional",
+  "engine_fingerprint": "fecce889d9899daeadee7b6f7b102fb5c5cd08e5e18f910e4254176b71a42b38",
+  "parser_fingerprint": "6b1661622b36c3be9b8b17bb9e9f147c42e71aa6ec9312d8120d47ab7f72e63a",
+  "source_capture": {
+    "captured_at": "2026-10-09T09:54:52+00:00",
+    "revision": "71a4c2e66c7405b48fd8afe3a77bfcf3a12bb213",
+    "catalog_sha256": "17177ad2d54045c3639c3e9ed12c102d0c779468e93c96959f15374ceb476d2d"
+  },
+  "scenario_sha256": "4116d77e1e7b94ea4b3926fa1542f7cae291e15c30afe7a3196e164eb8075215",
+  "includes_holdout": false,
+  "summary": {
+    "normal_cases_evaluated": 15,
+    "empty_results": 0,
+    "agent_proposal_overlap_at_least_one": 9,
+    "agent_proposal_overlap_at_least_two": 2,
+    "legacy_proposal_overlap_at_least_one": 3,
+    "legacy_proposal_overlap_at_least_two": 1,
+    "legacy_above_budget_choices": 34,
+    "legacy_detected_avoid_choices": 8,
+    "human_labels_available": 0
+  },
+  "quality_acceptance": "not_established_requires_independent_human_labels_and_all_edge_checks",
+  "limits": [
+    "Overlap with agent proposals is a source-derived self-comparison, not accuracy or independent relevance.",
+    "Legacy cannot express these answers exactly; mapped baseline only.",
+    "Prices/status are dated snapshot values; live adapter rechecks the catalog.",
+    "No weights tuned using hold-out; engine is provisional, not release accepted."
+  ],
+  "profile_coverage": {
+    "families": 378,
+    "sweetness": 28,
+    "projection": 54,
+    "longevity": 117,
+    "context": 135
+  },
+  "cases": [
+    {
+      "case_id": "N01",
+      "held_out": false,
+      "main_ids": [
+        472,
+        673,
+        755
+      ],
+      "alternative_ids": [
+        634
+      ],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N02",
+      "held_out": false,
+      "main_ids": [
+        714,
+        886,
+        616
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 0,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N03",
+      "held_out": false,
+      "main_ids": [
+        821,
+        469,
+        472
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N04",
+      "held_out": false,
+      "main_ids": [
+        773,
+        755,
+        818
+      ],
+      "alternative_ids": [
+        656
+      ],
+      "agent_proposal_overlap": 0,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N05",
+      "held_out": false,
+      "main_ids": [
+        765,
+        494,
+        705
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N06",
+      "held_out": false,
+      "main_ids": [
+        537,
+        660,
+        462
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N07",
+      "held_out": false,
+      "main_ids": [
+        744,
+        776,
+        578
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N08",
+      "held_out": false,
+      "main_ids": [
+        877,
+        476,
+        823
+      ],
+      "alternative_ids": [
+        507
+      ],
+      "agent_proposal_overlap": 0,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N09",
+      "held_out": false,
+      "main_ids": [
+        705,
+        472,
+        505
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N10",
+      "held_out": false,
+      "main_ids": [
+        486,
+        823,
+        532
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 0,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N11",
+      "held_out": false,
+      "main_ids": [
+        650,
+        744,
+        613
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 2,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N12",
+      "held_out": false,
+      "main_ids": [
+        472,
+        823,
+        877
+      ],
+      "alternative_ids": [
+        503
+      ],
+      "agent_proposal_overlap": 0,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N13",
+      "held_out": false,
+      "main_ids": [
+        656,
+        572,
+        817
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 0,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N14",
+      "held_out": false,
+      "main_ids": [
+        702,
+        620,
+        616
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 1,
+      "human_relevant_overlap": null
+    },
+    {
+      "case_id": "N15",
+      "held_out": false,
+      "main_ids": [
+        744,
+        600,
+        454
+      ],
+      "alternative_ids": [],
+      "agent_proposal_overlap": 2,
+      "human_relevant_overlap": null
+    }
+  ]
+}

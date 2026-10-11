@@ -1,6 +1,8 @@
 # Hostinger melalui GitHub — deployment dan riwayat
 
-**Latest audit release:** PR24 / `9325df4` is active after explicitly approved targeted migration; [release proof](../verification/audit-release/README.md). Pending-migration guards and code-only recovery remain.
+**Latest application release:** Journal PR31 / `3c8d35f` is active after five explicitly approved targeted migrations; [Journal release proof](../verification/blog-06/README.md). Agent API gate remains OFF. Order work excluded.
+
+**Earlier audit release:** PR24 / `9325df4` is active after explicitly approved targeted migration; [release proof](../verification/audit-release/README.md). Pending-migration guards and code-only recovery remain.
 
 **Status current (AUD-02, 2026-10-07):** workflow production GitHub sudah aktif/diamati; bukan rencana belum terpasang. [Cutover proof](../verification/p1-04/PRODUCTION_CUTOVER.md) dan [P9 observation](../verification/p9-01/README.md) mencatat revision serta batas verifikasi pada tanggalnya.
 

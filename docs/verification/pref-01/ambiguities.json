@@ -1,0 +1,340 @@
+{
+  "schema": "qammaris-fragrance-ambiguities-v1",
+  "owner_review": "pending",
+  "placeholder_product_ids": [
+    463,
+    468,
+    488,
+    519,
+    532,
+    533,
+    568,
+    616,
+    620,
+    637,
+    645,
+    655,
+    682,
+    702,
+    709,
+    713,
+    740,
+    756,
+    769,
+    772,
+    795,
+    799,
+    814,
+    816,
+    829
+  ],
+  "unmapped_terms": {
+    "aromatic": [
+      {
+        "product_id": 615,
+        "layer": "middle",
+        "raw": "Aromatic Ambery"
+      },
+      {
+        "product_id": 616,
+        "layer": "middle",
+        "raw": "Aromatic"
+      },
+      {
+        "product_id": 799,
+        "layer": "middle",
+        "raw": "Aromatic"
+      },
+      {
+        "product_id": 806,
+        "layer": "top",
+        "raw": "Aromatic"
+      },
+      {
+        "product_id": 845,
+        "layer": "middle",
+        "raw": "Aromatic Spices and Vanilla"
+      }
+    ],
+    "bayleaf aromatic": [
+      {
+        "product_id": 778,
+        "layer": "middle",
+        "raw": "Bayleaf aromatic"
+      }
+    ],
+    "bean": [
+      {
+        "product_id": 513,
+        "layer": "base",
+        "raw": "Bean"
+      }
+    ],
+    "betahydrane": [
+      {
+        "product_id": 552,
+        "layer": "top",
+        "raw": "Betahydrane"
+      }
+    ],
+    "blue crystal": [
+      {
+        "product_id": 767,
+        "layer": "top",
+        "raw": "Blue Crystal"
+      }
+    ],
+    "creamy": [
+      {
+        "product_id": 679,
+        "layer": "base",
+        "raw": "Creamy"
+      }
+    ],
+    "crunch": [
+      {
+        "product_id": 867,
+        "layer": "middle",
+        "raw": "Green Crunch Accord"
+      }
+    ],
+    "effect": [
+      {
+        "product_id": 572,
+        "layer": "middle",
+        "raw": "Burnt Wood Effect"
+      }
+    ],
+    "flower prism": [
+      {
+        "product_id": 523,
+        "layer": "middle",
+        "raw": "Flower Prism"
+      }
+    ],
+    "gingerbread": [
+      {
+        "product_id": 531,
+        "layer": "top",
+        "raw": "Gingerbread"
+      }
+    ],
+    "granny smith": [
+      {
+        "product_id": 836,
+        "layer": "top",
+        "raw": "Granny Smith"
+      }
+    ],
+    "ice": [
+      {
+        "product_id": 571,
+        "layer": "top",
+        "raw": "Yuzu dan Ice"
+      }
+    ],
+    "living hinoki": [
+      {
+        "product_id": 890,
+        "layer": "base",
+        "raw": "Living Hinoki"
+      }
+    ],
+    "maderal": [
+      {
+        "product_id": 512,
+        "layer": "middle",
+        "raw": "Maderal"
+      }
+    ],
+    "mahonial": [
+      {
+        "product_id": 850,
+        "layer": "middle",
+        "raw": "Cedar and Mahonial"
+      }
+    ],
+    "mugane": [
+      {
+        "product_id": 552,
+        "layer": "middle",
+        "raw": "Mugane"
+      }
+    ],
+    "nectar": [
+      {
+        "product_id": 555,
+        "layer": "top",
+        "raw": "Nectar"
+      }
+    ],
+    "oriental": [
+      {
+        "product_id": 588,
+        "layer": "base",
+        "raw": "Oriental"
+      }
+    ],
+    "orientalgris": [
+      {
+        "product_id": 810,
+        "layer": "base",
+        "raw": "Orientalgris"
+      }
+    ],
+    "pomarose": [
+      {
+        "product_id": 628,
+        "layer": "middle",
+        "raw": "Pomarose"
+      }
+    ],
+    "roseraie de l hay": [
+      {
+        "product_id": 567,
+        "layer": "middle",
+        "raw": "Roseraie de L'Hay"
+      }
+    ],
+    "snowflakes": [
+      {
+        "product_id": 788,
+        "layer": "top",
+        "raw": "Snowflakes"
+      }
+    ],
+    "solar": [
+      {
+        "product_id": 884,
+        "layer": "middle",
+        "raw": "Solar"
+      }
+    ],
+    "stardust": [
+      {
+        "product_id": 523,
+        "layer": "middle",
+        "raw": "Stardust"
+      }
+    ],
+    "sweet notes": [
+      {
+        "product_id": 528,
+        "layer": "top",
+        "raw": "Sweet Notes"
+      }
+    ],
+    "tagetus": [
+      {
+        "product_id": 859,
+        "layer": "middle",
+        "raw": "Tagetus"
+      }
+    ],
+    "tropicalone": [
+      {
+        "product_id": 893,
+        "layer": "middle",
+        "raw": "Tropicalone"
+      }
+    ],
+    "velvet": [
+      {
+        "product_id": 523,
+        "layer": "base",
+        "raw": "Velvet Wood"
+      }
+    ],
+    "virginia": [
+      {
+        "product_id": 503,
+        "layer": "base",
+        "raw": "Virginia"
+      }
+    ]
+  },
+  "identical_notes_not_verified_identity": [
+    [
+      447,
+      497
+    ],
+    [
+      450,
+      870
+    ],
+    [
+      473,
+      794
+    ],
+    [
+      488,
+      519
+    ],
+    [
+      505,
+      842
+    ],
+    [
+      532,
+      620
+    ],
+    [
+      547,
+      617
+    ],
+    [
+      568,
+      814
+    ],
+    [
+      575,
+      843
+    ],
+    [
+      601,
+      760
+    ],
+    [
+      616,
+      799
+    ],
+    [
+      637,
+      756
+    ],
+    [
+      655,
+      702
+    ],
+    [
+      668,
+      886
+    ],
+    [
+      712,
+      871
+    ],
+    [
+      713,
+      772
+    ],
+    [
+      748,
+      851
+    ],
+    [
+      749,
+      833
+    ],
+    [
+      771,
+      812
+    ]
+  ],
+  "limits": [
+    "Notes are exact search groups, not performance facts or interchangeable ingredients.",
+    "Description cue counts are not validated attribute values.",
+    "Identical notes are not proof of the same fragrance.",
+    "No Owner reviews, calibration, new ranking or public UI are implemented."
+  ]
+}

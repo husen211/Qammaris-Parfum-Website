@@ -1,0 +1,135 @@
+{
+  "phase": "after",
+  "widths": [
+    {
+      "width": 320,
+      "status": 200,
+      "overflow": false,
+      "count": 6,
+      "names": [
+        "Owen Bryant Owen Bryant",
+        "Dede Persib",
+        "Derry Qlay",
+        "Ria Rizki",
+        "Muhammad Zaidan Mufid",
+        "Ferdiansyah Cahyadi"
+      ],
+      "stars": [
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang"
+      ],
+      "columns": "284px",
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "count": 6,
+      "names": [
+        "Owen Bryant Owen Bryant",
+        "Dede Persib",
+        "Derry Qlay",
+        "Ria Rizki",
+        "Muhammad Zaidan Mufid",
+        "Ferdiansyah Cahyadi"
+      ],
+      "stars": [
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang"
+      ],
+      "columns": "339px",
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "status": 200,
+      "overflow": false,
+      "count": 6,
+      "names": [
+        "Owen Bryant Owen Bryant",
+        "Dede Persib",
+        "Derry Qlay",
+        "Ria Rizki",
+        "Muhammad Zaidan Mufid",
+        "Ferdiansyah Cahyadi"
+      ],
+      "stars": [
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang"
+      ],
+      "columns": "354px",
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 768,
+      "status": 200,
+      "overflow": false,
+      "count": 6,
+      "names": [
+        "Owen Bryant Owen Bryant",
+        "Dede Persib",
+        "Derry Qlay",
+        "Ria Rizki",
+        "Muhammad Zaidan Mufid",
+        "Ferdiansyah Cahyadi"
+      ],
+      "stars": [
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang"
+      ],
+      "columns": "353px 353px",
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "count": 6,
+      "names": [
+        "Owen Bryant Owen Bryant",
+        "Dede Persib",
+        "Derry Qlay",
+        "Ria Rizki",
+        "Muhammad Zaidan Mufid",
+        "Ferdiansyah Cahyadi"
+      ],
+      "stars": [
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang",
+        "5 dari 5 bintang"
+      ],
+      "columns": "385.328px 385.328px 385.344px",
+      "touch": 1,
+      "hover": false,
+      "errors": []
+    }
+  ]
+}

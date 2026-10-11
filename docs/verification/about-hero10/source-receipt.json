@@ -1,0 +1,35 @@
+{
+  "source": "https://21st.dev/@felipemenezes098/components/hero-10",
+  "retrievedAt": "2026-10-09",
+  "demoId": 19079,
+  "componentId": 9670,
+  "componentCodeSha256": "4fcadf0d76ddd99bddb8755e17d00e0dd73863cedbb34a15978951d2a14eae1a",
+  "componentCodeBytes": 6629,
+  "demoCodeSha256": "07e4205e70a0e86fac3a29b1d87ff715e23dd3470ee605c934ea6a06b01b05d1",
+  "demoCodeBytes": 1182,
+  "photo": {
+    "originalSha256": "249ce28f9443891af931959b28ee1de69dd570182ccba72c4b78f09d8c954ab1",
+    "originalWidth": 920,
+    "originalHeight": 1600,
+    "derivatives": [
+      {
+        "file": "storefront-hero-480.webp",
+        "width": 480,
+        "height": 835,
+        "bytes": 48232
+      },
+      {
+        "file": "storefront-hero-768.webp",
+        "width": 768,
+        "height": 1336,
+        "bytes": 89832
+      },
+      {
+        "file": "storefront-hero-1200.webp",
+        "width": 920,
+        "height": 1600,
+        "bytes": 113244
+      }
+    ]
+  }
+}

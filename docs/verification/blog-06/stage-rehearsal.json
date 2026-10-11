@@ -1,0 +1,15 @@
+{
+    "mysql_writes": true,
+    "api_create_replay": true,
+    "api_revision_conflict": true,
+    "api_forbidden_publish": true,
+    "api_ownership": true,
+    "api_expired_token": true,
+    "api_upload_replay": true,
+    "gd_webp_variants": true,
+    "admin_noop_revision_slug": true,
+    "admin_publish_archive_restore": true,
+    "human_machine_audit": true,
+    "rollback_complete": true,
+    "fixture_files_removed": true
+}

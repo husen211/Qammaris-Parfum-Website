@@ -1,3 +1,4 @@
+import './ui/preference-quiz';
 import './bootstrap';
 import './ui/search-options';
 import './ui/product-cart';
@@ -11,6 +12,7 @@ import './ui/navbar';
 import './ui/navigation-skeleton';
 import './ui/reveal';
 import './ui/toast';
+import './ui/faq';
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 if (csrfToken) {

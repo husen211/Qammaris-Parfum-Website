@@ -59,7 +59,59 @@ class StoreController extends Controller
             return StoreInfo::first() ?? new StoreInfo;
         });
 
-        return view('store.about', compact('storeInfo'));
+        $aboutContent = config('store_about');
+        $aboutMedia = config('store_about_media');
+        $aboutAddress = trim((string) $storeInfo->address);
+        if ($aboutAddress === '' || str_contains(strtolower($aboutAddress), 'contoh')) {
+            $aboutAddress = 'Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111';
+        }
+        $storeId = route('store.location').'#store';
+        $aboutSchema = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'AboutPage',
+                    '@id' => route('store.about').'#webpage',
+                    'url' => route('store.about'),
+                    'name' => 'Tentang Qammaris — Experience Store Parfum di Palu',
+                    'inLanguage' => 'id-ID',
+                    'mainEntity' => ['@id' => $storeId],
+                    'breadcrumb' => ['@id' => route('store.about').'#breadcrumb'],
+                ],
+                [
+                    '@type' => 'Store',
+                    '@id' => $storeId,
+                    'name' => 'Qammaris Perfumes',
+                    'url' => route('store.location'),
+                    'image' => asset('images/store/facade-1200.webp'),
+                    'telephone' => '+'.$storeInfo->whatsapp_number,
+                    'address' => [
+                        '@type' => 'PostalAddress',
+                        'streetAddress' => $aboutAddress,
+                        'addressLocality' => 'Palu',
+                        'addressRegion' => 'Sulawesi Tengah',
+                        'addressCountry' => 'ID',
+                    ],
+                    'openingHoursSpecification' => [[
+                        '@type' => 'OpeningHoursSpecification',
+                        'dayOfWeek' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+                        'opens' => '09:00',
+                        'closes' => '21:00',
+                    ]],
+                    'sameAs' => ['https://www.instagram.com/qammaris', 'https://www.linkedin.com/company/qammaris-perfumes'],
+                ],
+                [
+                    '@type' => 'BreadcrumbList',
+                    '@id' => route('store.about').'#breadcrumb',
+                    'itemListElement' => [
+                        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Beranda', 'item' => url('/')],
+                        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Tentang Qammaris', 'item' => route('store.about')],
+                    ],
+                ],
+            ],
+        ];
+
+        return view('store.about', compact('storeInfo', 'aboutContent', 'aboutMedia', 'aboutAddress', 'aboutSchema'));
     }
 
     private function resolveMapsLink(?string $address, ?string $explicitEmbed = null): string

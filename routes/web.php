@@ -1,10 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAccountController;
+use App\Http\Controllers\Admin\AdminBlogAutomationController;
+use App\Http\Controllers\Admin\AdminBlogMediaController;
 use App\Http\Controllers\Admin\AdminBlogPostController;
+use App\Http\Controllers\Admin\AdminBlogTaxonomyController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminFragrancePreferenceController;
 use App\Http\Controllers\Admin\AdminOnlineOrderController;
 use App\Http\Controllers\Admin\AdminOnlineOrderV2Controller;
 use App\Http\Controllers\Admin\AdminOrderIntegrationController;
@@ -19,12 +23,14 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\FragrancePreferenceController;
 use App\Http\Controllers\FragranceQuizController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OnlineOrderController;
 use App\Http\Controllers\OnlineOrderStaffController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoreController;
+use App\Http\Middleware\FragranceBrowser;
 use Illuminate\Support\Facades\Route;
 
 // Homepage
@@ -75,10 +81,15 @@ Route::prefix('store')->name('store.')->group(function () {
     Route::get('/about', [StoreController::class, 'about'])->name('about');
 });
 
-// Fragrance Quiz
-Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('quiz.index');
-Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->name('quiz.store');
-Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
+// Anonymous preference access stays separate from account authentication.
+Route::middleware([FragranceBrowser::class])->group(function () {
+    Route::get('/fragrance-quiz', [FragranceQuizController::class, 'index'])->name('quiz.index');
+    Route::post('/fragrance-quiz', [FragranceQuizController::class, 'store'])->middleware('throttle:fragrance-submit')->name('quiz.store');
+    Route::get('/fragrance-quiz/result', [FragranceQuizController::class, 'result'])->name('quiz.result');
+    Route::get('/fragrance-quiz/results/{id}', [FragrancePreferenceController::class, 'show'])->whereUuid('id')->name('quiz.v1.show');
+    Route::post('/fragrance-quiz/results/{id}/recalculate', [FragrancePreferenceController::class, 'recalculate'])->whereUuid('id')->middleware('throttle:fragrance-submit')->name('quiz.v1.recalculate');
+    Route::post('/fragrance-quiz/results/{id}/feedback', [FragrancePreferenceController::class, 'feedback'])->whereUuid('id')->middleware('throttle:fragrance-feedback')->name('quiz.v1.feedback');
+});
 
 // Admin login/logout stay inside the installed PWA scope /admin (ORD-02b). Admin pages are never stored by browsers.
 Route::middleware(['guest', 'cache.headers:no_store;private'])->group(function () {
@@ -104,6 +115,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
         Route::post('app-products/preview', [AdminQammarisAppProductController::class, 'preview'])->middleware('throttle:6,1')->name('app-products.preview');
         Route::post('app-products/sync', [AdminQammarisAppProductController::class, 'sync'])->middleware('throttle:6,1')->name('app-products.sync');
         Route::post('app-products/{productImportBatch}/apply', [AdminQammarisAppProductController::class, 'apply'])->name('app-products.apply');
+
+        // Fragrance preference catalog profiles (merged from main): catalog data, same ability as products.
+        Route::get('fragrance-preference', [AdminFragrancePreferenceController::class, 'index'])->name('fragrance.index');
+        Route::post('fragrance-preference/preview', [AdminFragrancePreferenceController::class, 'preview'])->middleware('throttle:6,1')->name('fragrance.preview');
+        Route::post('fragrance-preference/apply', [AdminFragrancePreferenceController::class, 'apply'])->middleware('throttle:6,1')->name('fragrance.apply');
+        Route::get('fragrance-preference/profiles/{product:id}', [AdminFragrancePreferenceController::class, 'profile'])->name('fragrance.profile');
+        Route::post('fragrance-preference/profiles/{product:id}', [AdminFragrancePreferenceController::class, 'review'])->middleware('throttle:10,1')->name('fragrance.review');
 
         // === TAMBAHAN BARU (Untuk fitur hapus gambar saat Edit) ===
         Route::delete('products/image/{productImage}', [AdminProductController::class, 'destroyImage'])->name('products.delete-image');
@@ -207,6 +225,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
 
     // Blog
     Route::middleware('can:blog.manage')->group(function () {
+        // Journal editor, media and taxonomy (merged from main): same ability as blog posts.
+        Route::get('blog-posts/{blogPost}/automation', [AdminBlogAutomationController::class, 'edit'])->name('blog-automation.edit');
+        Route::put('blog-posts/{blogPost}/automation', [AdminBlogAutomationController::class, 'update'])->name('blog-automation.update');
+        Route::get('blog-posts/{blogPost}/media', [AdminBlogMediaController::class, 'index'])->name('blog-media.index');
+        Route::post('blog-posts/{blogPost}/media', [AdminBlogMediaController::class, 'store'])->middleware('throttle:10,1')->name('blog-media.store');
+        Route::patch('blog-posts/{blogPost}/media/{media}', [AdminBlogMediaController::class, 'update'])->middleware('throttle:10,1')->name('blog-media.update');
+        Route::patch('blog-posts/{blogPost}/media/{media}/archive', [AdminBlogMediaController::class, 'archive'])->name('blog-media.archive');
+        Route::get('blog-taxonomy', [AdminBlogTaxonomyController::class, 'index'])->name('blog-taxonomy.index');
+        Route::post('blog-taxonomy', [AdminBlogTaxonomyController::class, 'store'])->name('blog-taxonomy.store');
+        Route::patch('blog-taxonomy/{kind}/{id}/status', [AdminBlogTaxonomyController::class, 'status'])->name('blog-taxonomy.status');
+        Route::match(['post', 'put'], 'blog-posts/preview', [AdminBlogPostController::class, 'preview'])->name('blog-posts.preview');
+        Route::match(['post', 'put'], 'blog-posts/{blogPost}/preview', [AdminBlogPostController::class, 'preview'])->name('blog-posts.preview-existing');
+        Route::patch('blog-posts/{blogPost}/restore', [AdminBlogPostController::class, 'restore'])->name('blog-posts.restore');
         Route::resource('blog-posts', AdminBlogPostController::class)->except(['show']);
     });
 
