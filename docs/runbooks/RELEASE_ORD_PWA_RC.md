@@ -137,6 +137,40 @@ Each step needs its own Owner go-ahead. Run the check before moving on.
 
 Push notifications for new orders stay deferred (App and Website).
 
+## 5a. Step 1 in detail — controlled migrations before the release switch
+
+`tools/hostinger/deploy-production-release.sh` refuses a release with pending migrations and never migrates. So the 15 RC migrations run **first**, from the verified RC package in a private directory, while the old release stays live. All new columns on existing tables are nullable or defaulted (`users`, `product_variants`), so the old code keeps working. Then the merge deploys the same tree with nothing pending.
+
+Package: GitHub run `38199232634` (workflow_dispatch on the RC branch; build only, deploy skipped), artifact `production-73e2183467b371f9c506334406aa0d915736a375`. `production-release.tar.gz` has a `.sha256` and contains no `.env` or storage.
+
+On the server (Owner SSH), with `root=/home/u429527638/domains/qammarisparfum.id` and `shared=$root/shared/qammaris-website`:
+
+1. **Identity.**
+   - `hostname`; `readlink -f "$root/current"` (old release); `php -v`.
+   - From `current`: `php artisan about --only=environment` must show production with debug off.
+   - `php artisan db:show`: database `u429527638_qam_launch`, MariaDB 11.8.
+   - Run `grep -cE '^(ORDERS_|QAMMARIS_ORDER_|ADMIN_PWA|PUBLIC_PWA)' "$shared/.env"`. Only the count is printed, never values. Any line present must be set to `false` or left empty.
+   - Check `SESSION_SECURE_COOKIE`, `SESSION_LIFETIME`, `QUEUE_CONNECTION` and `APP_URL` by name only.
+   - `crontab -l`: scheduler entry present. Worker watchdog heartbeat present.
+2. **Backup present:** `QammarisBackups/production-2026-10-11` checksums OK. That backup passed the rehearsal. If any order or user changed since, take a fresh dump the same way.
+3. **Private copy:**
+   - `dir=$shared/rc-migrate-73e2183` (mode 0700, outside the web root); upload the archive and `.sha256` there; `sha256sum -c`; extract.
+   - `test "$(cat release-revision.txt)" = 73e2183467b371f9c506334406aa0d915736a375`.
+   - Link `.env` read-only: `ln -s "$shared/.env" .env`.
+   - Use a **private** `storage/` (`mkdir -p storage/{logs,framework/{cache,views,sessions}}`). Never the shared one.
+   - Never run `config:cache`, `optimize` or `queue:*` in this directory.
+4. **Status check (STOP on any difference):** `php artisan migrate:status --no-interaction` must list exactly the 15 names of the rehearsal, all Pending, and every other migration as Ran:
+   - `2026_10_08_000001_create_online_orders_tables`, `2026_10_08_100001…`, `2026_10_08_200001…`, `2026_10_08_300001…`;
+   - `2026_10_09_000001…`, `2026_10_09_100001…`, `2026_10_09_200001…`, `2026_10_09_300001…`, `2026_10_09_400001…`, `2026_10_09_500001…`;
+   - `2026_10_10_000001_add_payment_preference_to_online_orders`, `2026_10_10_100001…`, `2026_10_10_200001…`;
+   - `2026_10_11_100001…`, `2026_10_11_100002_add_packaging_fee_to_online_orders`.
+5. **Migrate:** `php artisan migrate --force --no-interaction` (rehearsal took about 1.6 s). Then `migrate:status` must show 0 pending.
+6. **Old release still healthy:** `curl -fsS https://qammarisparfum.id/up`, the home page and one product page return 200; `storage/logs` of the live release shows no new errors.
+7. **Clean up:** `rm -rf "$dir"`. The archive copy stays only in the GitHub artifact.
+8. Then merge PR #55. CI on `main` triggers the normal deploy: it finds nothing pending, switches `current`, runs the health check (it restores the previous code by itself if that fails) and restarts the worker.
+
+If step 4, 5 or 6 fails: STOP. Never `migrate:rollback` on production. Restore the database from the backup only with explicit Owner approval (no orders exist yet at this point).
+
 ## 6. Rollback
 
 ### 6.1 Code and schema
