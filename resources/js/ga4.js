@@ -23,7 +23,8 @@ export function createTracker(id, doc, win) {
     let pageViewSent = false;
     const valid = /^G-[A-Z0-9]{10}$/.test(id);
     const disableKey = `ga-disable-${id}`;
-    const command = (...args) => { win.dataLayer.push(args); };
+    // Match Google's command queue contract; arrays are interpreted as data-layer method calls.
+    function command() { win.dataLayer.push(arguments); }
 
     const allow = () => {
         if (!valid) return false;
