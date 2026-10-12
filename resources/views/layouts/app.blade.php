@@ -114,6 +114,5 @@
     @stack('scripts')
     @include('components.toast')
     @include('components.navigation-skeleton')
-    @include('partials.ga4')
 </body>
 </html>
