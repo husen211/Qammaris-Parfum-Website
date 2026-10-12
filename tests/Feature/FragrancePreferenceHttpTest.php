@@ -129,7 +129,7 @@ class FragrancePreferenceHttpTest extends TestCase
 
     public function test_admin_reports_require_existing_admin_and_profile_apply_is_actor_preview_bound(): void
     {
-        $this->get('/admin/fragrance-preference')->assertRedirect('/login');
+        $this->get('/admin/fragrance-preference')->assertRedirect('/admin/login');
         $this->actingAs(User::factory()->create(['role' => 'staff']))->get('/admin/fragrance-preference')->assertForbidden();
         $this->actingAs($this->admin)->get('/admin/fragrance-preference')->assertOk();
         $this->post('/admin/fragrance-preference/apply', ['fingerprint' => str_repeat('0', 64)])->assertStatus(409);

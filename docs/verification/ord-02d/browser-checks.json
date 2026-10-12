@@ -1,0 +1,80 @@
+{
+  "before-legacy-detail-390:overflow": 0,
+  "create-390:overflow": 0,
+  "createChosenCustomer": "Budi Langganan · 085200001111",
+  "create-customer-chosen-390:overflow": 0,
+  "orderA": {
+    "id": 3,
+    "path": "/admin/orders/3",
+    "next": "Berikutnya: Kirim link ke customer, atau lengkapi data di bagian Detail."
+  },
+  "detail-awaiting-link-390:overflow": 0,
+  "conflict": "Pesanan berubah Pesanan ini baru saja diubah oleh orang lain atau di tab lain. Data terbaru sudah ditampilkan — periksa dulu, lalu ulangi bila masih perlu.",
+  "conflict-390:overflow": 0,
+  "orderBSelected": 2,
+  "orderB": {
+    "id": 4,
+    "success": true
+  },
+  "detail-active-390:overflow": 0,
+  "paymentNotice": "Pembayaran dicatat.",
+  "packValidation": "Jumlah packing harus sama persis dengan pesanan untuk setiap barang. Harus 2 sesuai pesananHarus 1 sesuai pesanan",
+  "pack-validation-390:overflow": 0,
+  "packNotice": "Packing dikonfirmasi.",
+  "orderBAfterHandover": [
+    "Selesai",
+    "Lunas"
+  ],
+  "detail-completed-390:overflow": 0,
+  "keepIssue": [
+    "Belum lunas",
+    "1 kendala",
+    "Keep sampai 9 Okt 2026, 22.46"
+  ],
+  "keep-issue-390:overflow": 0,
+  "cancelDismissed": {
+    "stayed": "/admin/orders/5",
+    "revision": "4",
+    "revisionBefore": "4"
+  },
+  "adjustmentNotice": "Penyesuaian harga diajukan. Menunggu persetujuan Super Admin.",
+  "overflow 320 /admin/orders": 0,
+  "overflow 320 /admin/orders/create": 0,
+  "overflow 320 /admin/orders/3": 0,
+  "overflow 320 /admin/orders/4": 0,
+  "overflow 320 /admin/orders/5": 0,
+  "overflow 375 /admin/orders": 0,
+  "overflow 375 /admin/orders/create": 0,
+  "overflow 375 /admin/orders/3": 0,
+  "overflow 375 /admin/orders/4": 0,
+  "overflow 375 /admin/orders/5": 0,
+  "overflow 390 /admin/orders": 0,
+  "overflow 390 /admin/orders/create": 0,
+  "overflow 390 /admin/orders/3": 0,
+  "overflow 390 /admin/orders/4": 0,
+  "overflow 390 /admin/orders/5": 0,
+  "overflow 430 /admin/orders": 0,
+  "overflow 430 /admin/orders/create": 0,
+  "overflow 430 /admin/orders/3": 0,
+  "overflow 430 /admin/orders/4": 0,
+  "overflow 430 /admin/orders/5": 0,
+  "detail-keep-320:overflow": 0,
+  "index-390:overflow": 0,
+  "overpaid": true,
+  "partialRefund": "Refund sebagian",
+  "money-partial-refund-390:overflow": 0,
+  "legacy-reconcile-before-390:overflow": 0,
+  "reconciled": "Keuangan · Super Admin\nRefund selesai\n\nRekonsiliasi disimpan.\n\nDiterima\nRp 300.000\nHarus kembali\nRp 300.000\nSudah kembali\nRp 300.000\n\nAlasan: Dicek di mutasi BC",
+  "legacy-reconcile-after-390:overflow": 0,
+  "customerForm": {
+    "radios": 3,
+    "paperbag": 2,
+    "items": true
+  },
+  "customer-form-390:overflow": 0,
+  "index-1440:overflow": 0,
+  "detail-1440:overflow": 0,
+  "create-1440:overflow": 0,
+  "before-legacy-detail-1440:overflow": 0,
+  "jsErrors": []
+}

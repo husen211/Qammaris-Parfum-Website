@@ -240,14 +240,20 @@ class BlogAutomationTest extends TestCase
     public function test_failed_idempotency_completion_rolls_back_upload_and_retry_can_succeed(): void
     {
         $post = $this->draft();
-        DB::unprepared("CREATE TRIGGER fail_blog_completion BEFORE UPDATE ON blog_automation_requests BEGIN SELECT RAISE(ABORT, 'completion unavailable'); END");
+        // Driver-neutral failure of the completion UPDATE (a trigger would be SQLite-only DDL and commits on MariaDB).
+        $failCompletion = true;
+        DB::connection()->beforeExecuting(function (string $query) use (&$failCompletion): void {
+            if ($failCompletion && str_starts_with(strtolower(ltrim($query)), 'update') && str_contains($query, 'blog_automation_requests')) {
+                throw new RuntimeException('completion unavailable');
+            }
+        });
         $this->api('POST', '/blog-posts/'.$post->id.'/media', $this->mediaInput(), key: 'retry-completion-failure')->assertStatus(500)->assertDontSee('completion unavailable');
         $this->assertDatabaseCount('blog_media', 0);
         $this->assertDatabaseCount('blog_post_changes', 0);
         $this->assertDatabaseCount('blog_automation_requests', 0);
         $this->assertSame([], Storage::disk('public')->allFiles());
         $this->assertSame(1, $post->fresh()->revision);
-        DB::unprepared('DROP TRIGGER fail_blog_completion');
+        $failCompletion = false;
         $this->api('POST', '/blog-posts/'.$post->id.'/media', $this->mediaInput(), key: 'retry-completion-failure')->assertCreated();
     }
 

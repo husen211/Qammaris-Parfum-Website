@@ -15,6 +15,8 @@ export default defineConfig({
                 'resources/css/journal.css',
                 'resources/css/about.css',
                 'resources/js/app.js',
+                'resources/js/admin-pwa.js',
+                'resources/js/public-pwa.js',
                 'resources/js/journal.js',
                 'resources/js/about.js',
                 'resources/js/blog-editor.js',

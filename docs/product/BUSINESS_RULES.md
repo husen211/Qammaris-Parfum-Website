@@ -32,7 +32,7 @@ Keputusan: [ADR-004](../architecture/decisions/ADR-004-drafts-and-single-offer-p
 
 - Majoo tetap sistem operasional; aplikasi internal menyediakan feed website. Website tidak membaca MySQL sumber secara langsung dan tidak mendapat jumlah stok aktual.
 - Status produk terhubung diterima apa adanya: `available` → **Tersedia**, `sold_out` → **Habis**, `unknown` → **Tanyakan ketersediaan**. ETA/OTW menambah **Restok segera** pada Habis, bukan mengubahnya menjadi Tersedia.
-- Tidak ada kedaluwarsa 36 jam/N hari, downgrade otomatis, atau teks waktu pemeriksaan pada produk terhubung. Koneksi putus mempertahankan status terakhir. Freshness 36 jam legacy/manual hanya berlaku pada produk yang tidak memakai sumber aplikasi; sold_out tetap eksplisit sampai pembaruan berikutnya.
+- Tidak ada kedaluwarsa 36 jam/N hari atau downgrade otomatis pada produk terhubung. Sejak ORD-04 (Owner 2026-10-11): label tidak mengklaim stok terkini bila feed basi (sinkron sukses terakhir > 120 menit atau gagal) → **Tersedia · stok belum diperbarui**, tetap bisa dipesan; produk manual menampilkan tanggal dicek. Koneksi putus mempertahankan status terakhir. Freshness 36 jam legacy/manual hanya berlaku pada produk yang tidak memakai sumber aplikasi; sold_out tetap eksplisit sampai pembaruan berikutnya.
 - Feed nonaktif/merged/departemen lainnya tetap menjadi hidden tombstone. `active`, `merged_into`, dan `hidden` tidak boleh diabaikan. Departemen bukan kategori website.
 - Webhook HMAC adalah pemicu utama; rekonsiliasi setiap 30 menit jaring pengaman. Revision lama/ganda no-op; checkpoint hanya maju bersama transaksi perubahan yang diterima. Retry tidak boleh menggandakan produk/identitas/audit.
 - Kredensial mesin hanya baca, terpisah dari akun karyawan. Bukti foto karyawan, harga modal, dan keuangan bukan bagian kontrak website. Nilai secret tidak masuk Git/chat/log.
@@ -118,10 +118,174 @@ Keputusan: [ADR-020](../architecture/decisions/ADR-020-public-catalog-state-and-
 - Checkout wajib nama penerima, nomor HP dan alamat lengkap; kode pos/catatan opsional. Quantity defensif 1–99, bukan reservasi atau bukti jumlah stok aktual.
 - Server membaca ulang product/offer/harga/status/publication; session bukan authority harga. Review fingerprint mengikat isi/jumlah/harga/status; perubahan sebelum submit meminta review ringkasan terbaru.
 - Composer WhatsApp berisi item/jumlah/harga/subtotal/penerima. Customer menekan Kirim sendiri; membuka composer bukan bukti pesan terkirim/order diterima/pembayaran. Ongkir/pembayaran diselesaikan di WA, tidak diasumsikan gratis/lunas. Keranjang tetap untuk retry.
-- Tidak ada order/customer table, payment gateway atau quantity reservation. Data penerima tidak masuk DB/log aplikasi; validasi gagal dapat memakai old input session sementara. Checkout/redirect no-store/no-referrer; proxy/APM/browser/WhatsApp retention tidak diasumsikan terverifikasi.
+- Tanpa saklar ORD-04 (default): checkout keranjang tidak membuat order/customer record (Pesanan Online di bawah adalah jalur terpisah); tidak ada payment gateway atau quantity reservation. Data penerima checkout keranjang tidak masuk DB/log aplikasi; validasi gagal dapat memakai old input session sementara. Checkout/redirect no-store/no-referrer; proxy/APM/browser/WhatsApp retention tidak diasumsikan terverifikasi.
 - Add-to-cart memberi pending lalu sukses hanya setelah server menerima; animasi menuju ikon opsional menurut reduced motion. Failed action dapat retry tanpa sukses palsu.
 
 Keputusan current: [ADR-028](../architecture/decisions/ADR-028-whatsapp-order-checkout.md), menggantikan inquiry-only ADR-020. Filename checkout ADR-026 lama adalah alias, bukan keputusan kedua.
+
+### Checkout keranjang menjadi Pesanan Online (ORD-04, branch review, saklar `ORDERS_WEBSITE_CHECKOUT`)
+
+Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir checkout di atas. Saat saklar mati, checkout tetap seperti ADR-028.
+
+- **Tanpa login.** Customer checkout tanpa login/OTP. Pesanan langsung disimpan di domain Pesanan Online yang sama, dengan nomor `QAM-xxxx`, sebelum WhatsApp dibuka. Tidak ada akun admin pengganti: pembuatnya kosong dan riwayat mencatat "Customer".
+- **Pilihan pengiriman:**
+  - Ambil di toko (tanpa alamat).
+  - Pengiriman Instan — Kota Palu: kurir online (ojol) dipilih staf; info perkiraan 1–2 jam setelah pembayaran dikonfirmasi.
+  - Pengiriman Luar Kota — J&T.
+
+  Alamat hanya wajib untuk pengiriman. Kelurahan, kecamatan, dan kode pos opsional.
+- **Pilihan lain:** paperbag wajib dipilih. Preferensi pembayaran Transfer bank atau QRIS hanyalah preferensi, tidak menandai lunas. Ongkir tampil "Menunggu konfirmasi staf".
+- **Status awal "Menunggu konfirmasi website"** (lifecycle `draft`):
+  - belum menjadi tugas packing di Qammaris App;
+  - belum bisa dicatat pembayarannya;
+  - data tidak bisa diubah customer lewat link (perubahan lewat chat).
+
+  Staff Order boleh mengisi ongkir dan memperbaiki data. Setelah chat, Staff Order menekan **Konfirmasi pesanan**; pesanan lalu mengikuti alur biasa (pembayaran → packing → pengiriman → reimburse). Pesanan yang tidak jadi dibatalkan dengan alasan.
+- **Membuka WhatsApp bukan konfirmasi**, bukan bukti pesan terkirim, dan bukan pembayaran.
+  - Halaman sukses (link status pesanan, berlaku 7 hari selama belum dikonfirmasi) membuka WhatsApp sekali dan menyediakan **Buka WhatsApp lagi**.
+  - Pesanan tetap tersimpan walau WhatsApp gagal atau tidak dikirim.
+  - Pesan WhatsApp hanya berisi nomor pesanan, nama, cara pengiriman, dan subtotal.
+- **Katalog dicek ulang di server.** Saat simpan, harga dan status Tersedia dicek ulang. Bila berubah, pesanan tidak dibuat dan customer meninjau ringkasan terbaru.
+- **Kirim ganda aman.** Tekan dua kali, refresh, atau kirim ulang dengan sesi checkout yang sama menghasilkan satu pesanan yang sama.
+- **Batas kirim:** 6 checkout per menit dan 30 per jam per perangkat/IP.
+- **Pelanggan langganan.** Nomor HP checkout tidak otomatis membuat pelanggan langganan; menghubungkan pelanggan tetap aksi Staff Order.
+- **Privasi.** Data penerima checkout (nama, HP, alamat, kelurahan/kecamatan, catatan) disimpan seperti Pesanan Online lain: hanya untuk mengurus pesanan, terlihat oleh tim Qammaris dan detail tugas App setelah aktif. Belum ada penghapusan otomatis (ORD-05).
+- **Tahap 2 (belum dihitung):**
+  - Kolom estimasi ongkir dan sumbernya (manual/zona/jarak/API) serta berat produk/item tersedia tetapi kosong.
+  - Berat yang belum diketahui tetap kosong, tidak diisi 1 kg.
+  - Tidak ada panggilan Maxim, GoSend, atau RajaOngkir.
+
+Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md).
+
+### Pembayaran sebelum packing dan pengiriman; tahapan pesanan (ORD-04 revisi, Owner 2026-10-11)
+
+- **Wajib lunas.** Packing (mulai/konfirmasi), klaim tugas App, pesan kurir, request/QR J&T, pickup J&T, dan serah terima hanya bisa setelah status pembayaran **Lunas**. Ditolak di server (Admin PWA dan API App), bukan hanya tombol yang disembunyikan.
+  - Bayar sebagian, refund tertunda, atau pembayaran yang dibatalkan = belum lunas; langkah berikutnya menunggu lagi.
+  - Keep boleh tanpa bayar (stok dipisahkan), tetapi tidak pernah membolehkan packing atau pengiriman.
+  - Tidak dibatasi: lepas klaim, catat kendala, catat biaya ongkir/reimburse, konfirmasi diterima, dan nomor resi J&T setelah pickup.
+  - Karena serah terima butuh lunas, pesanan biasanya **Selesai** saat diserahkan. Tombol customer "Pesanan sudah saya terima" mengikuti status pengiriman, bukan status selesai.
+- **Tahapan (sama di Website dan App):** Konfirmasi pesanan → Pembayaran → Siapkan pesanan → Pengiriman → Selesai, dihitung dari data server. Halaman pesanan hanya membuka satu tahap aktif dengan satu tombol utama; tahap selesai diringkas satu baris; kendala, keep, link, opsi lanjutan, dan riwayat lewat disclosure.
+- **Instruksi pembayaran.** Setelah ongkir dan pembayarnya diisi (atau ambil di toko), staf menyalin "Total & Instruksi Pembayaran" (nomor pesanan, subtotal, ongkir, total, rekening resmi, cara kirim bukti) atau mengirimnya ke chat customer. Pilihan Transfer/QRIS customer hanya preferensi; boleh berubah lewat chat. Tidak ada tanda Lunas otomatis.
+- **Rekening resmi** diatur Super Admin di Pesanan Online → Rekening pembayaran: tambah → verifikasi (ketik ulang nomor + centang) → baru dipakai. Rekening tidak bisa diubah/dihapus, hanya dinonaktifkan. Rekening belum terverifikasi tidak pernah ditampilkan.
+- **Halaman customer:** setelah total final, tampil total pembayaran, rekening resmi terverifikasi (dengan Salin nomor), dan tombol **Kirim bukti lewat WhatsApp**. Ada tautan **Katalog** dan **Pesanan Saya**.
+- **Pesanan Saya tanpa login (10 hari):** maksimal 20 pesanan terbaru yang dibuat atau dibuka di browser ini, disimpan 10 hari lewat cookie aman + referensi di server (tanpa token pesanan atau data penerima di cookie/localStorage). Tidak muncul di browser/HP lain. Detail tetap lewat link aman per pesanan dan aturan masa berlakunya. Bisa dihapus lewat **Hapus Riwayat dari Perangkat**. Tombol Pesanan Saya ada di navigasi katalog (termasuk HP) dan halaman status.
+- **WhatsApp:** production menyimpan pesanan dulu, lalu membuka chat nomor resmi (6285144924931) dengan pesan terisi sekali dan menampilkan tombol utama **Kirim ke WhatsApp**; muat ulang tidak membuka lagi; customer tetap menekan Kirim sendiri. UAT/staging tidak pernah membuka nomor toko untuk pengunjung biasa (nomor uji atau pratinjau + Salin pesan). Super Admin boleh mengaktifkan uji nomor resmi **hanya di browsernya sendiri** selama 2 jam; semua pesan dari lingkungan uji diawali **[UAT]**.
+- **Paperbag:** Pakai paperbag = **Rp4.000 per pesanan**, tanpa paperbag = Rp0, sebagai komponen biaya tersendiri dalam total customer (checkout, halaman status, admin, instruksi pembayaran). Nilainya dikunci di pesanan saat paperbag dipilih/diubah; kirim ulang tidak menggandakan. Mengubah paperbag setelah ada pembayaran = koreksi total oleh Super Admin (lebih bayar → keputusan refund). Catatan kasir Majoo harus memuat Rp4.000 yang sama.
+- **Copy pengiriman:** "Pengiriman Dalam Kota" — "Tiba 1–2 jam setelah pesanan diproses" (enum `local_delivery` tetap). Halaman status: tombol **Pesanan sudah saya terima** di atas, ikon motor (dalam kota) atau truk (J&T) dengan teks; timeline "Menunggu konfirmasi penerimaan dari Anda."
+- **Link tugas grup staf:** "Buka di Qammaris App" langsung ke detail pesanan App ({URL App}/orders/{id}) di lingkungan yang sama; tidak pernah dari UAT ke App production atau sebaliknya. Login App kembali ke pesanan; tanpa PWA terbuka di browser.
+
+Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-stepper.md), [ADR-046](../architecture/decisions/ADR-046-order-ux-polish-history-paperbag.md) (Pesanan Saya, paperbag, WhatsApp, link App; paperbag di API = [r4.4](../integrations/R4_4_DRAFT_PACKAGING_FEE.md), ditandatangani kedua agen); kontrak App: [r4.3](../integrations/R4_3_DRAFT_PAYMENT_GATE.md) (teks saja, ditandatangani kedua agen 2026-10-11; skema OpenAPI tidak berubah).
+
+## Pesanan Online dari WhatsApp (ORD-01, branch review)
+
+Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-048](../architecture/decisions/ADR-048-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
+
+- Admin membuat pesanan dari produk published dengan offer aktif berharga positif. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok, diskon, atau edit item setelah dibuat (batalkan lalu buat ulang).
+- **Data customer (nama, HP, alamat, catatan) disimpan di DB tanpa hapus otomatis**, hanya terlihat oleh admin dan link tugas staf pesanan itu. Ini pengecualian terarah dari aturan checkout keranjang.
+- Link customer: tanpa login. Wajib nama, HP, cara menerima (ambil di toko / kirim dalam Kota Palu / luar kota), dan paperbag. Alamat lengkap wajib hanya untuk luar kota; kode pos opsional. Lokasi dalam kota dikirim lewat share location WhatsApp, bukan GPS browser.
+- Customer boleh mengubah data sampai admin menandai **Dibayar**; sesudahnya hanya status read-only. Link yang belum diisi kedaluwarsa 7 hari; link baru mematikan link lama.
+- Langkah dibuat singkat karena tracking manual: Pesanan dibuat → Data diterima → Dibayar → **Dikirim** (driver/J&T sudah dipesan dan barang jalan; wajib kurir, J&T wajib resi) → **Diterima**. Ambil di toko: Dibayar → **Sudah diambil**. Customer boleh menandai Diterima dari link-nya hanya saat status Dikirim; bila tidak, staf/admin yang menandai. Dibatalkan bersifat terminal tapi bisa dipulihkan admin. Dibayar hanya oleh admin setelah dana benar-benar diterima; bukti transfer bukan otomatis lunas.
+- Link tugas staf: tanpa login; pemegang link dapat menandai langkah pengiriman dan mencatat talangan ongkir, tetapi tidak dapat mengubah pembayaran, harga, atau data customer. Nama staf diketik dan tidak terautentikasi.
+- Ongkir memisahkan sisi customer (ditambahkan ke transfer / bayar ke driver / gratis) dari dana toko ke driver (cash kasir / GoPay staf dari admin / talangan staf → diganti admin).
+- Majoo tetap untuk QRIS, member, struk, dan poin; website hanya menandai "Sudah dicatat di Majoo". Pesan grup disalin manual, tidak dikirim otomatis. Customer tidak melihat nama staf, talangan, atau catatan internal.
+
+## Akses admin dan data pelanggan (ORD-02a, branch review)
+
+Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/ADR-049-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md).
+
+- Role admin: **Super Admin** (akses penuh, mengelola pengguna, menyetujui perubahan finansial), **Staff Order** (hanya Pesanan Online), dan **Admin (lama)** untuk akun sebelum ORD-02. Akun lama tetap bekerja seperti sebelumnya tanpa menu pengguna sampai dikonversi. Role lama tidak bisa diberikan ke akun baru.
+- Super Admin pertama hanya lewat bootstrap eksplisit di server setelah Owner memverifikasi identitas. Tidak ada promosi otomatis.
+- Login dengan email atau username, tanpa remember-me; sesi admin berakhir setelah 12 jam tidak aktif. Akun nonaktif tidak bisa masuk; nonaktif, ganti role, dan reset password mengakhiri semua sesi akun tersebut.
+- Super Admin aktif terakhir tidak dapat dinonaktifkan atau diturunkan.
+- Staff Order: membuat/mengubah pesanan, menandai Lunas, membatalkan pesanan yang belum Lunas dan belum diserahkan dengan alasan, dan mengubah alamat tanpa biaya sampai diserahkan. Perubahan ongkir/pendanaan, koreksi langkah, penggantian talangan, dan pembatalan setelah Lunas hanya Super Admin.
+- Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
+- **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
+
+### Layar pesanan V2 (ORD-02d, branch review)
+
+- Staff Order membuat pesanan dari chat WhatsApp/Instagram: pilih produk, pilih pelanggan lama (dan alamat tersimpan) atau pelanggan baru, lalu pilih **data sudah lengkap** atau **kirim link ke customer**.
+- Bila data sudah lengkap dari chat, customer **tidak perlu** membuka form. Link tetap bisa dipakai customer untuk melihat status.
+- Form customer tetap sederhana: produk sudah terisi, tiga cara menerima, dua pilihan paperbag. Setelah Lunas atau packing dimulai, perubahan dari customer menjadi permintaan yang ditinjau toko.
+- Staff Order boleh menandai Lunas dengan sumber konfirmasi (bukti di chat, bukti diunggah, Majoo).
+- Keputusan refund, pembayaran refund, pembatalan entri, rekonsiliasi, dan persetujuan penyesuaian harga hanya untuk Super Admin.
+- Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
+
+### Operasional pesanan yang disederhanakan (ORD-03, branch review)
+
+- Halaman pesanan menampilkan satu langkah saat ini (link, kendala, pembayaran, packing, atau pengiriman) dengan satu tombol utama. Langkah lain dilipat.
+- Pembayaran dicatat dengan nominal, metode, dan centang "Sudah dicatat di Majoo". Sumber konfirmasi tidak dipilih lagi; sistem mencatatnya secara internal (Majoo, atau "dicatat admin").
+- Packing: centang setiap barang sesuai jumlah pesanan, lalu konfirmasi. Barang yang kurang dilaporkan lewat "Ada masalah".
+- J&T: request pickup, menunggu kurir, lalu sudah di-pickup. QR dan nomor resi opsional dan tidak menghalangi pickup.
+- Ongkir (saklar UAT `ORDERS_SIMPLE_UX`): Staff Order boleh mengisi ongkir yang ditagihkan ke customer selama belum ada pembayaran sama sekali. Setelah ada pembayaran, perubahan total lewat penyesuaian harga yang disetujui Super Admin. Pendanaan driver, refund, dan persetujuan harga tetap Super Admin.
+- Customer boleh memilih metode pembayaran (Transfer bank atau QRIS) di link pesanan. Pilihan ini hanya preferensi: tidak menandai lunas dan tidak membuat QRIS Majoo.
+- Link pesanan dibagikan lewat Salin Link, Salin Pesan, atau menu bagikan bawaan HP. WhatsApp tidak wajib.
+
+### Integrasi pesanan dengan Qammaris App (ORD-02e, branch review)
+
+- Website tetap menjadi sumber data pesanan. App mengerjakan pesanan V2 lewat API v1 privat (kontrak r4.1); setiap perubahan dari App tercatat dengan nama staf App dan ID request.
+- Di App, staf harus **mengklaim** tugasnya lebih dulu (packing, pesan kurir/J&T, serah ke kurir). Satu tugas hanya dipegang satu orang.
+  - Admin PWA adalah jalur cadangan dan tidak dibatasi klaim.
+  - Super Admin bisa melepas klaim yang macet dengan alasan, dan alasan itu tercatat.
+- Link pesanan di grup WhatsApp membuka Admin PWA. Link baru membuka halaman pesanan di App setelah saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dinyalakan atas persetujuan Owner. Link ini tidak pernah berisi token akses.
+- Selama integrasi aktif, **kendala baru dicatat dari App**. Kendala yang sudah ada tetap bisa diselesaikan di Website. Aturan ini berlaku sampai kontrak r4.2 berlaku dan App mendukungnya (draf r4.2: kendala dari Website dikirim dengan `opened_by_source=website`).
+- **Pengecualian bukti reimburse (keputusan Owner 2026-10-09, draf r4.2):** hanya Owner App yang boleh membuat atau menyetujui pengecualian bukti. Backend App boleh mengirim ulang keputusan yang sudah sah tanpa Owner sedang melakukan request itu. Website memisahkan pemberi persetujuan, aktor request, dan jalur sinkronisasi. Keputusan baru tidak diterima hanya karena payload memuat nama atau ID Owner: Owner itu sendiri yang harus mengirim, dan ID-nya harus terdaftar di allowlist Website.
+- Bila App bermasalah, pesanan tetap dikerjakan di Admin PWA. Pemberitahuan ke App menunggu dan dicoba ulang. Setelah 24 jam, event yang gagal tampil di **Integrasi App** untuk dikirim ulang oleh Super Admin.
+
+### Status pesanan terpisah (ORD-02c, branch review)
+
+- Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.
+- Pesanan **selesai** bila sudah diserahkan, Lunas, tanpa kendala terbuka, dan tanpa refund terbuka.
+- Talangan/reimburse staf yang belum diganti **tidak** menahan status selesai, tetapi tetap tampil sebagai kewajiban terbuka (keputusan Owner R8).
+- **Refund tidak pernah diasumsikan** (koreksi Owner 2026-10-09):
+  - Pembatalan setelah Lunas tidak otomatis berarti ada utang refund.
+  - Super Admin menetapkan nominal yang harus dikembalikan (boleh 0, wajib alasan).
+  - Setiap pengembalian dicatat. Refund sebagian maupun penuh didukung.
+  - Pesanan tampil sebagai **refund belum selesai** hanya selama masih ada sisa yang benar-benar terutang.
+- **Pesanan ORD-01 yang dibatalkan setelah Lunas** ditandai **perlu rekonsiliasi**, karena riwayat refund-nya tidak tercatat. Super Admin mengisi nominal diterima, nominal yang harus dikembalikan, dan yang sudah dikembalikan. Bila belum diketahui, tanda tetap ada.
+- Catatan pembayaran/refund tidak pernah diubah atau dihapus. Salah catat dibatalkan dengan entri pembatalan beralasan.
+- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya oleh **Super Admin**, dan semuanya tercatat di riwayat pesanan. Staff Order boleh mencatat pembayaran masuk.
+- Packing baru dianggap selesai bila **setiap barang dikonfirmasi dengan jumlah persis sesuai pesanan**. Barang kurang dicatat sebagai **kendala stok**, bukan packing.
+- J&T: minta pickup, QR tersedia, dan dipickup adalah langkah terpisah. Saat dipickup, pesanan otomatis tercatat diserahkan ke J&T. Resi boleh ditambahkan kapan saja.
+- Kendala terbuka menahan status selesai. Kendala hanya bisa ditutup oleh pembukanya atau Owner/Super Admin.
+- Pesanan yang **sudah ada pembayaran** (walau sebagian) hanya bisa dibatalkan Super Admin. Saat membatalkan, ia wajib menetapkan nominal yang dikembalikan (boleh 0).
+- **Pelanggan langganan:**
+  - Admin menghubungkan pesanan ke pelanggan secara sadar. Pesanan tidak pernah otomatis digabung berdasarkan nomor, dan satu nomor boleh dimiliki beberapa pelanggan (misalnya keluarga).
+  - Alamat disimpan setelah dikonfirmasi admin dan dipakai ulang dengan memilihnya. Alamat itu disalin ke pesanan; mengubah pesanan tidak mengubah alamat tersimpan.
+  - Alamat diarsipkan, tidak dihapus, dan tidak bisa diganti setelah pesanan diserahkan.
+- **Keep (D9):**
+  - Default 24 jam (1–168 jam), boleh belum dibayar.
+  - Staf mengonfirmasi manual bahwa stok sudah dipisahkan.
+  - Lewat batas waktu, keep ditandai **perlu tindakan** dan tidak pernah dibatalkan otomatis.
+  - Keep berakhir sendiri saat pesanan Lunas atau diserahkan, dan dilepas bila pesanan dibatalkan.
+- **Penyesuaian harga:**
+  - Siapa pun dengan akses pesanan boleh mengajukan, dengan alasan; hanya Super Admin yang menyetujui. Total berubah setelah disetujui.
+  - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Pengembaliannya tetap butuh keputusan refund Super Admin.
+- **Permintaan perubahan customer:**
+  - Customer mengubah data langsung hanya selama belum Lunas dan packing belum dimulai. Setelah itu perubahan menjadi permintaan yang ditinjau admin.
+  - Staff Order menyetujui perubahan penerima/alamat sampai diserahkan. Perubahan cara pengiriman (bisa mengubah biaya) hanya oleh Super Admin, dan tidak bisa bila kurir/J&T sudah diminta.
+- Peralihan ke model status baru terjadi per pesanan saat dibuat. Pesanan lama menyelesaikan alurnya sendiri; dua alur tidak pernah mengubah satu pesanan yang sama.
+
+### Aplikasi Qammaris Admin di HP toko (ORD-02b, branch review)
+
+- Admin bisa dipasang sebagai aplikasi "Qammaris Admin" dan dibuka dari `/admin/login`. Website publik adalah aplikasi terpisah (PWA-01, di bawah).
+- Data pesanan dan customer **tidak disimpan di HP**. Setiap halaman admin diambil langsung dari server; tanpa internet hanya muncul halaman "Tidak ada koneksi".
+- Perubahan hanya bisa dikirim saat online. Satu formulir Buat pesanan menghasilkan paling banyak satu pesanan, walaupun tombol ditekan dua kali atau dikirim ulang.
+- HP toko dipakai bersama:
+  - nama akun yang sedang masuk selalu terlihat;
+  - **Keluar** selalu tersedia;
+  - setelah keluar, tombol Kembali tidak menampilkan halaman admin lagi.
+- [ADR-050](../architecture/decisions/ADR-050-admin-pwa.md).
+
+### Aplikasi website Qammaris Perfumes (PWA-01, branch review, saklar `PUBLIC_PWA_ENABLED`)
+
+- Pengunjung bisa memasang website sebagai aplikasi "Qammaris Perfumes" (ikon logo hitam di atas krem). Aplikasi ini terpisah dari "Qammaris Admin".
+- Katalog, keranjang, checkout, status pesanan, dan Pesanan Saya **selalu diambil langsung dari server**; data pesanan dan penerima tidak disimpan oleh aplikasi.
+- Tanpa internet hanya muncul halaman "Tidak ada koneksi". Pesanan tidak bisa dikirim, diantrikan, atau dikirim ulang otomatis saat offline.
+- Tidak ada notifikasi atau permintaan izin notifikasi.
+- Saklar mati (default): website tampil seperti sebelumnya dan aplikasi yang sudah terpasang melepas dirinya sendiri tanpa menghapus login admin, keranjang, atau Pesanan Saya.
+- [ADR-047](../architecture/decisions/ADR-047-public-website-pwa.md).
+
+## UI, akses, dan batas program
 
 ## Journal — implemented; production agent activation separate
 

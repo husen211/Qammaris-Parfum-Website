@@ -19,6 +19,7 @@ const CardNav = ({
   buttonHref = '#',
   cartCount = 0,
   cartHref = '/cart',
+  ordersHref = '/pesanan-saya',
   cartDataUrl,
   activeUrl,
   homeHref = '/'
@@ -135,6 +136,23 @@ const CardNav = ({
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </a>
+            {/* ORD-04: orders opened on this device (no login), next to the cart on every width. */}
+            <a
+              href={ordersHref}
+              aria-label="Pesanan Saya"
+              title="Pesanan Saya"
+              aria-current={isActiveLink(ordersHref) ? 'page' : undefined}
+              data-my-orders-link
+              className="inline-flex items-center justify-center h-11 w-11 border border-black/10 hover:border-black/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                {/* Lucide "receipt"; docs/licenses/lucide.txt. */}
+                <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+                  <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 17.5v-11" />
+                </g>
               </svg>
             </a>
             <a

@@ -8,7 +8,7 @@ class BlogPostRevisionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === 'admin';
+        return (bool) $this->user()?->can('blog.manage');
     }
 
     public function rules(): array

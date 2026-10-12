@@ -19,7 +19,8 @@ class StoreController extends Controller
         $defaultEmbedSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.3280930730352!2d119.85686147529862!3d-0.8981817990931196!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2d8bedf9428ef169%3A0xcc6edf75dd6bb931!2sQammaris%20Perfumes!5e0!3m2!1sid!2sid!4v1768991591896!5m2!1sid!2sid';
         $mapsEmbedRaw = $storeInfo->google_maps_embed ?: $defaultEmbedSrc;
         $mapsLink = $this->resolveMapsLink($addressText, $mapsEmbedRaw);
-        $whatsappNumber = $storeInfo->whatsapp_number ?: '6285144924931';
+        // Production always has a number; test environments may have none (ORD-07), then the link stays disabled.
+        $whatsappNumber = StoreInfo::usesTestWhatsapp() ? $storeInfo->whatsapp_number : ($storeInfo->whatsapp_number ?: '6285144924931');
         $whatsappLink = $this->resolveWhatsappLink($whatsappNumber);
         $phoneDisplay = $this->formatPhoneDisplay($whatsappNumber);
         $instagramUrl = $storeInfo->instagram_url ?: 'https://www.instagram.com/qammaris';

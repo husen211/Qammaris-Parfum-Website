@@ -133,7 +133,7 @@ class BlogEditorialCmsTest extends TestCase
         Storage::fake('public');
         $post = BlogPost::create($this->data());
         $before = $post->fresh()->getAttributes();
-        $this->post(route('admin.blog-posts.preview-existing', $post), [])->assertRedirect(route('login'));
+        $this->post(route('admin.blog-posts.preview-existing', $post), [])->assertRedirect(route('admin.login'));
         $this->actingAs(User::factory()->create(['role' => 'customer']))->post(route('admin.blog-posts.preview'), [])->assertForbidden();
         $response = $this->actingAs($this->admin())->post(route('admin.blog-posts.preview-existing', $post), $this->data(['title' => 'Preview baru', 'subtitle' => 'Pengantar preview', 'seo_title' => 'SEO preview']) + ['featured_image' => $this->image()]);
         $response->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow')->assertSee('Preview baru')->assertSee('Pengantar preview')->assertSee('SEO preview');

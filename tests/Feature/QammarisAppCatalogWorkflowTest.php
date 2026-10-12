@@ -178,7 +178,7 @@ class QammarisAppCatalogWorkflowTest extends TestCase
     public function test_admin_inbox_is_read_only_and_protected_and_shows_partial_draft_and_source_app_review(): void
     {
         $this->feed($this->source(['name' => 'Plain app product', 'source' => 'app', 'price' => null]));
-        $this->get(route('admin.app-products.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.app-products.index'))->assertRedirect(route('admin.login'));
         $this->actingAs(User::factory()->create())->get(route('admin.app-products.index'))->assertForbidden();
         $this->actingAs($this->admin())->get(route('admin.app-products.index', ['status' => 'draft']))
             ->assertOk()->assertSee('Plain app product')->assertSee('Lengkapi draft')->assertSee('Dibuat di aplikasi')->assertSee('Foto')->assertSee('Harga aplikasi');

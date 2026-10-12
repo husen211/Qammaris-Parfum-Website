@@ -17,6 +17,8 @@ class ConnectedAvailabilityPresentationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // ORD-04: connected labels say plain "Tersedia" only while the App feed is fresh.
+        \Illuminate\Support\Facades\DB::table('qammaris_app_sync_states')->where('id', 'products')->update(['last_synced_at' => now(), 'last_error' => null]);
         $this->withoutVite();
     }
 
@@ -90,7 +92,7 @@ class ConnectedAvailabilityPresentationTest extends TestCase
         ]];
         $this->withSession($session)->getJson(route('cart.data'))->assertOk()
             ->assertJsonPath('items.0.availability_label', 'Tersedia')
-            ->assertJsonPath('items.1.availability_label', 'Tersedia saat diperiksa')
+            ->assertJsonPath('items.1.availability_label', fn ($label) => str_starts_with($label, 'Tersedia · dicek'))
             ->assertJsonPath('notice', 'Lengkapi data penerima saat checkout. Ongkir dan pembayaran dilanjutkan di WhatsApp.');
         $this->withSession($session)->get(route('cart.index'))->assertOk()->assertDontSee('Admin akan mengonfirmasi stok')->assertSee('Lanjut ke checkout');
     }

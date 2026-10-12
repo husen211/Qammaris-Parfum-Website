@@ -2,8 +2,10 @@
 
 namespace App\Support;
 
+use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\StoreInfo;
 
 final class InquiryWhatsApp
 {
@@ -77,6 +79,33 @@ final class InquiryWhatsApp
         return $this->url($number, implode("\n", $lines));
     }
 
+    /**
+     * ORD-04: short message after a saved website checkout. The order already holds the recipient and address,
+     * so the chat only names the order for the admin to look up; no address or phone is repeated.
+     */
+    public function websiteOrderUrl(?string $number, OnlineOrder $order): ?string
+    {
+        return $this->url($number, $this->websiteOrderMessage($order));
+    }
+
+    /** The same text, shown for copying where no store number is available (test environments, ORD-07). */
+    public function websiteOrderMessage(OnlineOrder $order): string
+    {
+        $delivery = config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-';
+
+        return implode("\n", [
+            'Halo Qammaris, saya baru memesan lewat website.',
+            '',
+            'Nomor pesanan: *'.$order->code.'*',
+            'Nama: '.$this->plainText((string) $order->customer_name),
+            'Pengiriman: '.$delivery,
+            'Subtotal produk: '.Rupiah::format($order->subtotal()),
+            ...(Rupiah::minorUnits($order->packagingFee()) > 0 ? ['Paperbag: '.Rupiah::format($order->packagingFee())] : []),
+            '',
+            'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
+        ]);
+    }
+
     public function availabilityLabel(string $availability): string
     {
         return CatalogAvailability::legacyLabel($availability);
@@ -92,11 +121,31 @@ final class InquiryWhatsApp
         return $this->normalizeNumber($number) !== null;
     }
 
+    /** Prefilled chat to a known number, e.g. the store or a customer. */
+    public function textUrl(?string $number, string $message): ?string
+    {
+        return $this->url($number, $message);
+    }
+
+    /** Prefilled message without a recipient; WhatsApp lets the sender choose a chat or group. */
+    public function shareUrl(string $message): string
+    {
+        if (StoreInfo::usesTestWhatsapp() && ! str_starts_with($message, '[UAT]')) {
+            $message = '[UAT] '.$message;
+        }
+
+        return 'https://wa.me/?'.http_build_query(['text' => $message], '', '&', PHP_QUERY_RFC3986);
+    }
+
     private function url(?string $number, string $message): ?string
     {
         $normalized = $this->normalizeNumber($number);
         if ($normalized === null) {
             return null;
+        }
+        // ORD-04: a message from a test environment is always recognisable as such.
+        if (StoreInfo::usesTestWhatsapp() && ! str_starts_with($message, '[UAT]')) {
+            $message = '[UAT] '.$message;
         }
 
         return 'https://wa.me/'.$normalized.'?'.http_build_query(
@@ -109,19 +158,10 @@ final class InquiryWhatsApp
 
     private function normalizeNumber(?string $number): ?string
     {
-        $normalized = preg_replace('/\D+/', '', (string) $number);
-        if ($normalized === '') {
-            return null;
-        }
-
-        if (str_starts_with($normalized, '0')) {
-            $normalized = '62'.substr($normalized, 1);
-        }
-
-        return strlen($normalized) >= 8 && strlen($normalized) <= 15 ? $normalized : null;
+        return PhoneNumber::normalize($number);
     }
 
-    private function plainText(string $value): string
+    public function plainText(string $value): string
     {
         $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? '';
 

@@ -31,7 +31,7 @@ class AdminProductImportReportTest extends TestCase
         [$batch] = $this->auditBatch();
         $route = route('admin.product-imports.report', $batch);
 
-        $this->get($route)->assertRedirect(route('login'));
+        $this->get($route)->assertRedirect(route('admin.login'));
         $this->actingAs(User::factory()->create())->get($route)->assertForbidden();
         $this->actingAs($this->admin)->get(route('admin.product-imports.report', 999999))->assertNotFound();
 

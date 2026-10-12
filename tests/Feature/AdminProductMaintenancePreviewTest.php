@@ -34,10 +34,10 @@ class AdminProductMaintenancePreviewTest extends TestCase
         $product = $this->product();
         $file = $this->file([$this->row($product, ['nama_produk' => 'Nama Baru'])]);
 
-        $this->get(route('admin.product-maintenance.create'))->assertRedirect(route('login'));
-        $this->get(route('admin.product-maintenance.template'))->assertRedirect(route('login'));
+        $this->get(route('admin.product-maintenance.create'))->assertRedirect(route('admin.login'));
+        $this->get(route('admin.product-maintenance.template'))->assertRedirect(route('admin.login'));
         $this->post(route('admin.product-maintenance.preview'), ['maintenance_file' => $file])
-            ->assertRedirect(route('login'));
+            ->assertRedirect(route('admin.login'));
 
         $user = User::factory()->create();
         $this->actingAs($user)->get(route('admin.product-maintenance.create'))->assertForbidden();

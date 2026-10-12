@@ -1,0 +1,188 @@
+{
+    "generated_at": "2026-10-09T02:30:43+00:00",
+    "webhooks": {
+        "total": 36,
+        "delivered": 36,
+        "pending": 0,
+        "failed": 0,
+        "delivered_after_retry": 7,
+        "max_attempts": 3,
+        "last_statuses": {
+            "200": 36
+        }
+    },
+    "orders": {
+        "local": {
+            "id": "01M4F6YYAJ5BDSH20CCCFA0QGX",
+            "revision": 8,
+            "lifecycle": "active",
+            "preparation": "packed",
+            "handover": "handed_over",
+            "payment": "unpaid",
+            "jnt": null,
+            "claims": {
+                "courier_booking": "E2E Andi",
+                "handover": "E2E Andi",
+                "preparation": "E2E Ikrar"
+            },
+            "costs": 0,
+            "issues": 0,
+            "webhooks": {
+                "delivered": "8",
+                "failed": "0",
+                "total": 8
+            },
+            "events": [
+                "02:13:04 created [admin]",
+                "02:13:04 advance [admin]",
+                "02:18:16 claimed [app:E2E Ikrar] req=6ac84ee80bace6bbc43bff13",
+                "02:18:16 preparation_started [app:E2E Ikrar] req=6ac84ee80bace6bbc43bff16",
+                "02:18:16 packed [app:E2E Ikrar] req=6ac84ee80bace6bbc43bff1a",
+                "02:18:17 claimed [app:E2E Andi] req=6ac84ee80bace6bbc43bff1b",
+                "02:18:17 courier_requested [app:E2E Andi] req=6ac84ee90bace6bbc43bff1c",
+                "02:18:17 claimed [app:E2E Andi] req=6ac84ee90bace6bbc43bff1d",
+                "02:18:17 handed_over [app:E2E Andi] req=6ac84ee90bace6bbc43bff1e"
+            ]
+        },
+        "intercity": {
+            "id": "01M4F6YYC3RCJVGVS6GCKYP7V6",
+            "revision": 8,
+            "lifecycle": "active",
+            "preparation": "packed",
+            "handover": "handed_over",
+            "payment": "unpaid",
+            "jnt": "picked_up",
+            "claims": {
+                "courier_booking": "E2E Andi",
+                "handover": "E2E Andi",
+                "preparation": "E2E Andi"
+            },
+            "costs": 0,
+            "issues": 0,
+            "webhooks": {
+                "delivered": "8",
+                "failed": "0",
+                "total": 8
+            },
+            "events": [
+                "02:13:04 created [admin]",
+                "02:13:04 advance [admin]",
+                "02:18:19 claimed [app:E2E Andi] req=6ac84eeb0bace6bbc43bff30",
+                "02:18:19 preparation_started [app:E2E Andi] req=6ac84eeb0bace6bbc43bff31",
+                "02:18:19 packed [app:E2E Andi] req=6ac84eeb0bace6bbc43bff33",
+                "02:18:19 claimed [app:E2E Andi] req=6ac84eeb0bace6bbc43bff34",
+                "02:18:19 jnt_pickup_requested [app:E2E Andi] req=6ac84eeb0bace6bbc43bff35",
+                "02:18:19 claimed [app:E2E Andi] req=6ac84eeb0bace6bbc43bff36",
+                "02:18:19 jnt_picked_up [app:E2E Andi] req=6ac84eeb0bace6bbc43bff37"
+            ]
+        },
+        "customerCourier": {
+            "id": "01M4F6YYCC0KH41PG0EYMT82X1",
+            "revision": 7,
+            "lifecycle": "active",
+            "preparation": "packed",
+            "handover": "handed_over",
+            "payment": "unpaid",
+            "jnt": null,
+            "claims": {
+                "handover": "E2E Andi",
+                "preparation": "E2E Andi"
+            },
+            "costs": 0,
+            "issues": 0,
+            "webhooks": {
+                "delivered": "7",
+                "failed": "0",
+                "total": 7
+            },
+            "events": [
+                "02:13:04 created [admin]",
+                "02:13:04 advance [admin]",
+                "02:13:04 courier_responsibility [website]",
+                "02:18:17 claimed [app:E2E Andi] req=6ac84ee90bace6bbc43bff22",
+                "02:18:17 preparation_started [app:E2E Andi] req=6ac84ee90bace6bbc43bff23",
+                "02:18:18 packed [app:E2E Andi] req=6ac84ee90bace6bbc43bff25",
+                "02:18:18 claimed [app:E2E Andi] req=6ac84eea0bace6bbc43bff28",
+                "02:18:18 handed_over [app:E2E Andi] req=6ac84eea0bace6bbc43bff29"
+            ]
+        },
+        "pickup": {
+            "id": "01M4F6YYD4JE2AD1M1PX2B5DFF",
+            "revision": 6,
+            "lifecycle": "active",
+            "preparation": "packed",
+            "handover": "handed_over",
+            "payment": "unpaid",
+            "jnt": null,
+            "claims": {
+                "handover": "E2E Andi",
+                "preparation": "E2E Andi"
+            },
+            "costs": 0,
+            "issues": 0,
+            "webhooks": {
+                "delivered": "6",
+                "failed": "0",
+                "total": 6
+            },
+            "events": [
+                "02:13:04 created [admin]",
+                "02:13:04 advance [admin]",
+                "02:18:18 claimed [app:E2E Andi] req=6ac84eea0bace6bbc43bff2a",
+                "02:18:18 preparation_started [app:E2E Andi] req=6ac84eea0bace6bbc43bff2b",
+                "02:18:18 packed [app:E2E Andi] req=6ac84eea0bace6bbc43bff2d",
+                "02:18:18 claimed [app:E2E Andi] req=6ac84eea0bace6bbc43bff2e",
+                "02:18:19 handed_over [app:E2E Andi] req=6ac84eea0bace6bbc43bff2f"
+            ]
+        },
+        "issue": {
+            "id": "01M4F6YYDDBDCEJVJPNQ24YMXS",
+            "revision": 3,
+            "lifecycle": "active",
+            "preparation": "not_started",
+            "handover": "pending",
+            "payment": "unpaid",
+            "jnt": null,
+            "claims": {
+                "preparation": "E2E Andi"
+            },
+            "costs": 0,
+            "issues": 1,
+            "webhooks": {
+                "delivered": "3",
+                "failed": "0",
+                "total": 3
+            },
+            "events": [
+                "02:13:04 created [admin]",
+                "02:13:04 advance [admin]",
+                "02:18:17 claimed [app:E2E Andi] req=6ac84ee90bace6bbc43bff1f",
+                "02:18:17 issue_opened [app:E2E Andi] req=6ac84ee90bace6bbc43bff21"
+            ]
+        },
+        "costs": {
+            "id": "01M4F6YYDQEMKAA88H741EF8MX",
+            "revision": 4,
+            "lifecycle": "active",
+            "preparation": "not_started",
+            "handover": "pending",
+            "payment": "unpaid",
+            "jnt": null,
+            "claims": [],
+            "costs": 3,
+            "issues": 0,
+            "webhooks": {
+                "delivered": "4",
+                "failed": "0",
+                "total": 4
+            },
+            "events": [
+                "02:13:04 created [admin]",
+                "02:13:04 advance [admin]",
+                "02:18:20 cost_recorded [app:E2E Andi] req=cost-exp_260adbf4c7a145c19b061076d7dfc70e-v1",
+                "02:18:20 cost_recorded [app:E2E Andi] req=cost-exp_5ea646c23411490a898f377098b4455d-v1",
+                "02:19:36 cost_recorded [app:E2E Andi] req=cost-exp_6c48692e0876496fa80e932eb2e17b12-v1"
+            ]
+        }
+    }
+}

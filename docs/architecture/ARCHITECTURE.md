@@ -103,9 +103,141 @@ POST checkout -> CheckoutRequest -> current catalog + review guard
 
 `CartController`, `app/Http/Requests/Cart/`, and `app/Support/InquiryWhatsApp.php` retain routes and numeric cart JSON fields. Public labels use keranjang/pesanan; helper name is historical. Only available, published, positive-price offers proceed. Required name/phone/address and bounded optional postcode/note are not stored in order/customer tables or application logs; failed validation may use temporary session old input. No-store/no-referrer responses limit application/browser caching. Cart remains after redirect because actual WA sending is unobservable. No numeric reservation/payment/order ledger ([ADR-028](decisions/ADR-028-whatsapp-order-checkout.md)).
 
+ORD-04 (flag `ORDERS_WEBSITE_CHECKOUT` + `ORDERS_V2_ENABLED`): POST checkout → session `checkout_key` check → `CreateOnlineOrder::fromWebsiteCheckout()`.
+- **Creation.** Guest V2 order with `created_by` null, `source=website`, lifecycle `draft`. The catalog is re-read in the transaction, and the unique `checkout_key` makes it idempotent.
+- **After save.** The cart is cleared and the customer is redirected to `/pesanan/{token}`, which opens `InquiryWhatsApp::websiteOrderUrl` once.
+- **Confirmation.** `OnlineOrderFulfillment::confirmWebsiteOrder()` moves draft → active.
+- **Contract.** API v1 r4.2 unchanged; a draft has `queue=null`.
+- **Limits.** Throttled by the named limiter `website-checkout`.
+- **Phase-2 columns** (nullable): `district`, `subdistrict`, `shipping_estimate`, `shipping_estimate_source`, `weight_grams` on variants and order items.
+
+See [ADR-044](decisions/ADR-044-website-checkout-orders.md).
+
+ORD-04 revision (Owner UAT 2026-10-11): `OnlineOrderFulfillment::assertPaid` gates preparation, claims, courier/J&T and handover (`PaymentRequired` → API `409 invalid_transition`, `details.reason=payment_required`). `OnlineOrderStepper` derives the five-step stepper from backend state for the admin page; `OnlineOrderMessages::paymentInstructions` builds the copyable total with accounts from `store_payment_accounts` (verified, active only; `StorePaymentAccounts` operations, gate `orders.payment-accounts`). Customer side: `CustomerOrderHistory` (session-only Pesanan Saya). `CatalogAvailability::syncIsStale` reads `qammaris_app_sync_states`. [ADR-045](decisions/ADR-045-payment-gate-and-order-stepper.md).
+
 AUD-06: `Support/Rupiah` shares the whole-price input rule across editor/CSV/`SyncSingleOffer`, and converts stored decimal rupiah to integer hundredths for exact multiplication/sums. Canonical decimal strings bind the quote and feed Blade/WhatsApp formatting; numeric compatibility JSON casts occur only at output. Add/update/remove totals now resolve every remaining item from current catalog data; an unresolved cart returns `cart_total: null`, never a partial/stale total. `/cart/data` retains its 409 review response. The unused session-price `cart_total()` helper is removed after tracing consumers: product JS uses success/count, cart-page JS reloads, navbar history refresh uses count only. Whole prices display without decimals; hypothetical legacy fractions retain exact display/arithmetic and are flagged in the editor, with no data rewrite. Cart wrapping handles longer totals on small screens. [ADR-030](decisions/ADR-030-whole-rupiah-and-current-cart-totals.md), [verification](../verification/aud-06/README.md); [approved production release](../verification/audit-release/README.md).
 
 `product-cart.js` runs confirmed-success Web Animations flight with reduced-motion fallback; `cart-page.js` serializes quantity/removal mutation feedback. Header points directly to /cart, not drawer. Shared layout destination skeletons observe native same-tab links/valid submits; pageshow resets pending state and timeout recovery never replays POST. No HTML-fetch/swap router; Blade navigation recreates document/navbar DOM. Touch rules/device limits remain explicit, not inferred from mouse viewports.
+
+## Online orders — ORD-01 review branch, not deployed
+
+```text
+Admin session + auth/admin + CSRF -> AdminOnlineOrderController + OnlineOrder*Request
+  -> CreateOnlineOrder (published active offer -> item price snapshot, hashed + encrypted tokens)
+  -> OnlineOrderWorkflow (row lock, revision/from-stage guard, event in same transaction)
+GET/POST /pesanan/{token}        -> OnlineOrderController (customer details until paid, status)
+GET/POST /tugas-pesanan/{token}  -> OnlineOrderStaffController (shipping steps + fee advance only)
+Views: OnlineOrderTimeline (per-audience allowlist) + x-order-timeline, OnlineOrderMessages -> copy/wa.me
+```
+
+Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; the cart checkout path is unchanged and still stores nothing. No package, queue, scheduler, payment, or Majoo integration. [ADR-048](decisions/ADR-048-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
+
+## Admin access — ORD-02a review branch, not deployed
+
+```text
+Login (email|username, no remember-me) -> session auth_version + last activity
+admin.* routes -> auth + AdminMiddleware (active, auth_version, 12h idle, must-change-password)
+               -> can:{catalog|blog|orders|users}.manage (+ orders.finance) -> FormRequest gate -> action gate
+AuthorizationServiceProvider: super_admin | staff_order | admin (legacy) | customer
+ManageAdminUser: lock all Super Admins + target, last-Super-Admin guard, auth_version bump, user_admin_changes in transaction
+qammaris:grant-super-admin: explicit, previewed, audited bootstrap (actor null)
+```
+
+A route-table test fails if any new `admin.*` route lacks its area ability. ORD-01 order operations use `orders.manage`, `orders.finance`, and the order-aware `orders.cancel`. [ADR-049](decisions/ADR-049-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md), [verification](../verification/ord-02a/README.md).
+
+### Order state dimensions (ORD-02c slice 1, branch review)
+
+- `online_orders` gains these columns (migration `2026_10_08_300001`):
+  - `public_id` (ULID) and `source`;
+  - `lifecycle`, `payment_status`, `preparation_status`;
+  - courier: booking responsibility, provider, status;
+  - `jnt_status`, `handover_status`, `handed_to`, `delivery_status`;
+  - their timestamps.
+- `App\Support\OnlineOrderLegacyState` maps ORD-01 `stage` to these columns. One class serves both the backfill (event times) and a transitional `OnlineOrder::saving` hook.
+- The sync is one-way while the ORD-01 screens still drive `stage`. ORD-02d reverses the authority and removes the hook.
+- Slice 2 ([ADR-051](decisions/ADR-051-order-cutover-and-money-ledger.md)):
+  - `state_model` (`legacy`|`v2`) is fixed per order. The stage hook runs for legacy rows only; ORD-01 step operations refuse V2 rows.
+  - `online_order_payments` is an append-only ledger with reversal rows.
+  - `App\Actions\Orders\RecordOnlineOrderMoney` handles payments, refund decisions, payouts, reversals and reconciliation. Gate `orders.refund` = Super Admin.
+  - `App\Support\OnlineOrderMoney` derives `refund_status` and the refund part of `payment_status`.
+- Slice 3:
+  - `App\Actions\Orders\OnlineOrderFulfillment` holds the V2 operations: preparation, packing with exact per-line quantities, courier responsibility/request, J&T with atomic `picked_up` → handover and optional tracking, handover, delivery, issues, and cancel.
+  - The operations are shared by the Admin PWA (ORD-02d) and API v1 (ORD-02e). `App\Support\OrderActor` represents a Website user or an App employee.
+  - Typed exceptions map to the contract error codes: `OrderRevisionConflict`, `InvalidOrderTransition`, `OrderValidationFailed` (fields), `OrderActionNotAllowed`.
+  - One logical change = one revision + one event (ULID `public_id`). A repeated identical step is a no-op.
+  - `App\Support\OnlineOrderV2State` sets V2 defaults, derives `stage` for rollback, and auto-completes when the completion rule holds.
+  - New: `online_order_issues`; `line_id` on items; `packed_items`; App actor columns on events.
+  - `ORDERS_V2_ENABLED` (default false) is the cutover switch for new orders.
+- Slice 4:
+  - `customers` (normalized phone, indexed, not unique) and `customer_addresses` (confirmed, archived not deleted); `online_orders.customer_id` and `customer_address_id`.
+  - `App\Actions\Orders\OnlineOrderCustomers` links a customer, saves a confirmed address, and copies a saved address into an order. Nothing happens automatically.
+  - `App\Support\PhoneNumber` is the shared normalizer, also used by checkout.
+- Slice 5:
+  - Keep columns on `online_orders`. Ops live in `OnlineOrderFulfillment`; `keepState()` derives `expired`; the V2 normalizer converts/releases the keep.
+  - `online_order_adjustments` + `OnlineOrderAdjustments`: request; approve/reject under gate `orders.approve-adjustment`, Super Admin. Approved amounts enter `customerTotal()`.
+  - `online_order_change_requests` + `OnlineOrderChangeRequests`.
+  - Shared V2 lock/revision/settle: `Concerns\MutatesV2Order`.
+- `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
+
+### V2 order screens (ORD-02d, branch review)
+
+- `AdminOnlineOrderController@show` hands V2 orders to `AdminOnlineOrderV2Controller`.
+- Routes: `admin.orders.v2.*` (`can:orders.manage`); `admin.orders.money.*` (`can:orders.refund`, also for ORD-01 reconciliation); `admin.orders.customer-search` (JSON).
+- Each action calls exactly one V2 operation with the posted revision. Typed exceptions become a section-scoped `order_notice` (success / error / conflict) and field errors.
+- `OnlineOrderDetails` is the V2 counterpart of ORD-01 data edits, the customer form, and the customer link.
+- The ORD-01 workflow and bearer staff links refuse V2 orders.
+- `CreateOnlineOrder` options (source, repeat customer, saved address) apply in the order's transaction.
+- `OnlineOrderMessages::staffGroupV2` uses the stable task link `admin.orders.task`. It opens the Admin PWA order page, or the App page when `QAMMARIS_ORDER_APP_TASK_LINKS=true`.
+
+### Order API v1 for Qammaris App (ORD-02e, branch review)
+
+```text
+App -> /integrations/qammaris-app/orders/v1/* (routes/integrations.php)
+       AuthenticateOrderApi (flag, size, client, timestamp, HMAC current|previous, rate limit)
+       -> OrderApiReadController | OrderApiWriteController
+          writes: OrderApiIdempotency (key reserved in the effect's transaction, READ COMMITTED, deadlock retry)
+                  -> OnlineOrderFulfillment (same operations as the Admin PWA; OrderActor::app with key + X-Request-Id)
+       -> OrderSerializer -> envelope validated in tests against resources/order-api/openapi-v1.json
+OnlineOrder created/updated (V2) -> integration_outbox -> DeliverOrderWebhook / qammaris:orders:deliver-webhooks (every minute)
+       -> App events URL, fresh timestamp/signature per attempt, give-up 24 h -> Integrasi App (Super Admin) resend
+```
+
+- Tables: `online_order_claims` (unique order+task), `integration_idempotency_keys` (7 days), `integration_outbox`, `online_order_costs` (unique `expense_ref`). The J&T QR is stored on the private `local` disk.
+- App actors must hold the task claim (contract §8.1). Website users are not claim-gated. A Super Admin can release a stuck claim with a reason (`admin.orders.v2.claims.release`).
+- While the API is enabled, Website users cannot open V2 issues until contract r4.2 is approved.
+- `qammaris:order-api:fixtures` builds synthetic staging scenarios and refuses production.
+- [ADR-041](decisions/ADR-041-order-api-v1-implementation.md), [runbook](../runbooks/ORDER_API_STAGING.md), [verification](../verification/ord-02e/README.md).
+
+### Admin PWA (ORD-02b, branch review)
+
+```text
+routes/admin-pwa.php (no web group, no cookies): /admin/manifest.webmanifest, /admin/sw.js, /admin/offline
+admin layout + /admin/login: admin._pwa-head + resources/js/admin-pwa.js (public pages never load them)
+/admin/login, /admin/logout (web); /login -> /admin/login; guests on /admin/* -> /admin/login (bootstrap/app.php)
+admin group + login: cache.headers no_store;private
+```
+
+- The worker's scope is `/admin`. It caches only `/build/assets/*`, `/images/pwa/*` and the offline page, in `qammaris-admin-static-<version>`. Navigations go to the network only.
+- Logout and forced logout land on `/admin/login` with a flag. That page then deletes `qammaris-admin-*` caches. `Clear-Site-Data` is not used.
+- `ADMIN_PWA_ENABLED=false` ships an unregistering worker.
+- Order creation dedupes by `online_orders.submission_token` per creator.
+- [ADR-050](decisions/ADR-050-admin-pwa.md), [verification](../verification/ord-02b/README.md).
+
+### Public website PWA (PWA-01, branch review)
+
+```text
+routes/public-pwa.php (no web group, no cookies): /manifest.webmanifest (404 when off), /sw.js, /offline
+layouts/app.blade.php only: pwa._head + resources/js/public-pwa.js; data-public-pwa/sw/scope on <html>
+PublicPwaController: identity "Qammaris Perfumes", id/scope/start "/", icons /images/pwa/public-*
+```
+
+- The worker's scope is `/`. It caches only `/build/assets/*`, `/images/pwa/public-*` and `/offline`, in `qammaris-public-static-<version>`. Navigations go to the network only.
+- It never intercepts `/admin*`, `/login`, `/logout`, `/tugas-pesanan*`, `/integrations*`, `/api*`, cross-origin or non-GET requests. On `/admin`, the more specific Admin worker wins once registered.
+- `PUBLIC_PWA_ENABLED` (default false) ships a worker that removes only `qammaris-public-*` caches and the `/` registration. There is no `Clear-Site-Data`.
+- The checkout form refuses to submit while offline.
+- [ADR-047](decisions/ADR-047-public-website-pwa.md), [verification](../verification/pwa-01/README.md).
+
+## Runtime, deployment, and verification boundaries
 
 ## Blog foundation — BLOG-01 installed
 

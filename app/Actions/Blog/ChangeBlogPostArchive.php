@@ -15,7 +15,7 @@ class ChangeBlogPostArchive
 
     public function handle(BlogPost $post, int $revision, bool $archive, User $actor): BlogPost
     {
-        abort_unless($actor->exists && $actor->role === 'admin', 403);
+        abort_unless($actor->exists && $actor->can('blog.manage'), 403);
 
         return DB::transaction(function () use ($post, $revision, $archive, $actor): BlogPost {
             $post = BlogPost::query()->whereKey($post->getKey())->lockForUpdate()->firstOrFail();

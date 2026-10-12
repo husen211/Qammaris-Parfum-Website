@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="qammaris" class="scroll-smooth">
+<html lang="id" data-theme="qammaris" class="scroll-smooth" data-public-pwa="{{ config('store.pwa_enabled') ? 'on' : 'off' }}" data-public-sw="{{ route('pwa.service-worker', [], false) }}" data-public-scope="{{ \App\Http\Controllers\PublicPwaController::SCOPE }}">
 <head>
     @php
         $decodeSection = static fn (string $value): string => html_entity_decode(
@@ -45,7 +45,7 @@
     <title>{{ $pageTitle }}</title>
 
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav.jpg') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logofav.jpg') }}">
+    @include('pwa._head')
     <link rel="canonical" href="{{ $canonicalUrl }}">
 
     <meta property="og:site_name" content="Qammaris Perfumes">
@@ -86,13 +86,28 @@
         Lewati ke konten utama
     </a>
 
-    @include('components.navbar')
+    {{-- ORD-03: task pages (the customer order link) show only the brand, no site navigation. --}}
+    @hasSection('minimal_chrome')
+        <header class="border-b border-gray-200 bg-white px-4 py-4">
+            <div class="mx-auto flex max-w-xl items-center justify-between gap-3">
+                <a href="{{ route('products.index') }}" aria-label="Qammaris Perfumes, ke katalog"><img src="{{ asset('images/logo-black2.png') }}" alt="Qammaris Perfumes" class="h-8 w-auto"></a>
+                <nav aria-label="Navigasi pesanan" class="flex items-center gap-1 text-sm">
+                    <a href="{{ route('products.index') }}" class="inline-flex min-h-11 items-center px-2 text-gray-700 underline-offset-4 hover:underline" data-back-catalog>Katalog</a>
+                    <a href="{{ route('orders.customer.mine') }}" class="inline-flex min-h-11 items-center px-2 font-medium text-brand-black underline-offset-4 hover:underline" data-my-orders>Pesanan Saya</a>
+                </nav>
+            </div>
+        </header>
+    @else
+        @include('components.navbar')
+    @endif
     
     <main data-navigation-content id="main-content" tabindex="-1" class="flex-grow focus:outline-none">
         @yield('content')
     </main>
     
-    @include('components.footer')
+    @unless (View::hasSection('minimal_chrome'))
+        @include('components.footer')
+    @endunless
     
     
     @stack('scripts')

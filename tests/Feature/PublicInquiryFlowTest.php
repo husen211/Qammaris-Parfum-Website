@@ -16,6 +16,8 @@ class PublicInquiryFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // ORD-04: connected labels say plain "Tersedia" only while the App feed is fresh.
+        \Illuminate\Support\Facades\DB::table('qammaris_app_sync_states')->where('id', 'products')->update(['last_synced_at' => now(), 'last_error' => null]);
 
         $this->withoutVite();
     }

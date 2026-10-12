@@ -4,6 +4,8 @@ Status: Accepted 2026-10-06; released 2026-10-07 through PR13 (`d7a5115`).
 
 Reference correction (AUD-02): formerly checkout ADR-026, renumbered to avoid collision with Shopee ADR-026. The [old filename](ADR-026-whatsapp-order-checkout.md) remains an alias; [original text](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) is retained. Decision text below records the original approval/rollout scope, not a pending implementation. [Release evidence](../../verification/releases/2026-10-07/README.md); [P9 limits](../../verification/p9-01/README.md) retain unverified device/send scenarios.
 
+ORD-04 (2026-10-10): with the flag `ORDERS_WEBSITE_CHECKOUT`, checkout saves a guest Pesanan Online before WhatsApp; recipient data is then stored. See [ADR-044](ADR-044-website-checkout-orders.md). Without the flag this ADR applies unchanged.
+
 ## Problem and decision
 
 The existing basket asks customers about stock and omits recipient information, although the connected app already controls availability and price. Owner now requests direct ordering with name, phone and full shipping address, still delivered through WhatsApp. This explicitly supersedes ADR-020's inquiry-only public journey, not its route/query safety or current-database resolution.

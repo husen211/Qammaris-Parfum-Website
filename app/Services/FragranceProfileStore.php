@@ -160,7 +160,8 @@ final class FragranceProfileStore
 
     private function authorize(User $actor): void
     {
-        if (! $actor->exists || User::whereKey($actor->id)->value('role') !== 'admin') {
+        // Fresh row (not the possibly stale model); catalog.manage = Super Admin or legacy admin under the order RBAC.
+        if (! $actor->exists || ! User::find($actor->id)?->can('catalog.manage')) {
             throw new DomainException('Existing admin access required.');
         }
     }

@@ -1,0 +1,98 @@
+{
+  "guestLanding": "/admin/login",
+  "swScope": "http://127.0.0.1:8124/admin",
+  "login-390:overflow": 0,
+  "staffLanding": "/admin/orders",
+  "controlled": true,
+  "bottomNav": [
+    "Pesanan*",
+    "Buat",
+    "Akun"
+  ],
+  "headerIdentity": "Andi Uji · Staff Order",
+  "staffHasMenu": false,
+  "staff-orders-390:overflow": 0,
+  "staff-create-390:overflow": 0,
+  "afterCreate": "/admin/orders/1",
+  "ordersAfterDoubleTap": 1,
+  "duplicateReplay": [
+    "/admin/orders/2",
+    "/admin/orders/2"
+  ],
+  "ordersAfterReplay": 2,
+  "overflow 320 /admin/orders": 0,
+  "overflow 320 /admin/orders/create": 0,
+  "overflow 320 /admin/account": 0,
+  "overflow 320 /admin/orders/1": 0,
+  "overflow 375 /admin/orders": 0,
+  "overflow 375 /admin/orders/create": 0,
+  "overflow 375 /admin/account": 0,
+  "overflow 375 /admin/orders/1": 0,
+  "overflow 430 /admin/orders": 0,
+  "overflow 430 /admin/orders/create": 0,
+  "overflow 430 /admin/account": 0,
+  "overflow 430 /admin/orders/1": 0,
+  "staff-orders-320:overflow": 0,
+  "staff-account-390:overflow": 0,
+  "manifest": {
+    "url": "http://127.0.0.1:8124/admin/manifest.webmanifest",
+    "errors": [],
+    "parsedName": "Qammaris Admin"
+  },
+  "installabilityErrors": [],
+  "cachesWhileSignedIn": {
+    "qammaris-admin-static-89aa25371a2c": [
+      "/admin/offline",
+      "/images/pwa/admin-icon-192.png",
+      "/build/assets/admin-pwa-BEB-rWRB.js",
+      "/build/assets/app-0e9-fw39.css",
+      "/build/assets/app-DKvjYVO4.js"
+    ]
+  },
+  "bannerVisibleOffline": true,
+  "stayedOnPageAfterOfflineSubmit": "/admin/orders/1",
+  "offline-banner-390:overflow": 0,
+  "bannerHiddenOnline": true,
+  "offlineGet": {
+    "title": "Tidak ada koneksi - Qammaris Admin",
+    "method": "GET",
+    "retry": true
+  },
+  "offline-page-390:overflow": 0,
+  "offlinePost": {
+    "method": "POST",
+    "retry": false,
+    "orders": true
+  },
+  "offline-after-submit-390:overflow": 0,
+  "logoutLanding": "/admin/login",
+  "logoutStatus": "Anda sudah keluar. HP ini aman dipakai orang lain.",
+  "cachesAfterLogout": {
+    "qammaris-admin-static-89aa25371a2c": [
+      "/images/pwa/admin-icon-192.png"
+    ]
+  },
+  "publicSessionStorageAfterLogout": "kept",
+  "logout-390:overflow": 0,
+  "afterBackButton": "/admin/login",
+  "publicControlled": false,
+  "publicManifest": null,
+  "ownerLanding": "/admin",
+  "desktopBottomNavVisible": false,
+  "owner-orders-1440:overflow": 0,
+  "ownerAtLoginRedirectedTo": "/admin",
+  "ownerMobileMenu": [
+    "Dashboard",
+    "Products",
+    "Produk dari aplikasi",
+    "Brand",
+    "Kategori",
+    "Import Produk",
+    "Blog Posts",
+    "Pesanan Online",
+    "Pengguna & Role",
+    "Akun"
+  ],
+  "owner-orders-menu-390:overflow": 0,
+  "jsErrors": []
+}

@@ -11,7 +11,7 @@ final class BlogWriteAccess
     public static function assert(User|BlogAutomationActor $actor, ?BlogPost $post = null, bool $lock = false): void
     {
         if ($actor instanceof User) {
-            abort_unless($actor->exists && $actor->role === 'admin', 403);
+            abort_unless($actor->exists && $actor->can('blog.manage'), 403);
 
             return;
         }

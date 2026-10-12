@@ -1,0 +1,187 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Actions\Orders\CreateOnlineOrder;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * ORD-02 migrations on MySQL/MariaDB with existing ORD-01 data (ORD-02e): up, backfill, non-destructive rollback,
+ * up again. Run with DB_CONNECTION=mysql; skipped on SQLite.
+ */
+class OrderMigrationsMariaDbTest extends TestCase
+{
+    /** ORD-02a … ORD-02e, contract r4.2, ORD-03 and ORD-04, newest last. */
+    private const ORD02 = [
+        '2026_10_08_100001_add_admin_access_controls', '2026_10_08_200001_add_submission_token_to_online_orders',
+        '2026_10_08_300001_add_order_state_dimensions_to_online_orders', '2026_10_09_000001_add_order_cutover_and_money_ledger',
+        '2026_10_09_100001_add_order_issues_and_v2_operations', '2026_10_09_200001_create_customers_and_saved_addresses',
+        '2026_10_09_300001_add_keep_adjustments_and_change_requests', '2026_10_09_400001_create_order_api_tables',
+        '2026_10_09_500001_add_delivery_to_online_order_events', '2026_10_10_000001_add_payment_preference_to_online_orders',
+        '2026_10_10_100001_add_website_checkout_to_online_orders', '2026_10_10_200001_create_store_payment_accounts',
+        '2026_10_11_100001_create_guest_order_histories', '2026_10_11_100002_add_packaging_fee_to_online_orders',
+    ];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (DB::getDriverName() !== 'mysql') {
+            $this->markTestSkipped('Migration rehearsal runs on MySQL/MariaDB only.');
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if (DB::getDriverName() === 'mysql') {
+            Artisan::call('migrate:fresh', ['--force' => true]);
+        }
+        parent::tearDown();
+    }
+
+    private function rollbackOrd02(): void
+    {
+        $paths = array_map(fn (string $migration) => database_path("migrations/{$migration}.php"), self::ORD02);
+        Artisan::call('migrate:rollback', ['--path' => $paths, '--realpath' => true, '--step' => 1000, '--force' => true]);
+    }
+
+    public function test_ord02_migrations_backfill_ord01_data_and_roll_back_without_losing_it(): void
+    {
+        $files = collect(glob(database_path('migrations/*.php')))->map(fn ($file) => basename($file, '.php'))->sort()->values();
+        // Main's preference migrations (2026_10_10_00000x) interleave by date; they are independent of the order tables,
+        // so the rehearsal rolls back exactly the ORD-02+ files by path instead of the last N steps.
+        foreach (self::ORD02 as $migration) {
+            $this->assertContains($migration, $files->all());
+        }
+        $this->assertSame(array_slice(self::ORD02, -4), $files->slice(-4)->values()->all(), 'ORD-04 migrations are the newest ones');
+
+        Artisan::call('migrate:fresh', ['--force' => true]);
+        $this->rollbackOrd02();
+        $this->assertFalse(Schema::hasColumn('online_orders', 'lifecycle'));
+        $this->assertFalse(Schema::hasColumn('users', 'username'));
+
+        $ids = $this->seedOrd01();
+        $before = $this->ord01Snapshot();
+
+        Artisan::call('migrate', ['--force' => true]);
+        $this->assertBackfilled($ids);
+        $this->assertNoImplicitTimestampUpdates();
+
+        $this->rollbackOrd02();
+        $this->assertSame($before, $this->ord01Snapshot(), 'Rollback keeps every ORD-01 row and value');
+        foreach (['online_order_payments', 'online_order_issues', 'customers', 'online_order_claims', 'integration_outbox', 'integration_idempotency_keys', 'online_order_costs'] as $table) {
+            $this->assertFalse(Schema::hasTable($table), $table);
+        }
+
+        Artisan::call('migrate', ['--force' => true]);
+        $this->assertBackfilled($ids);
+        $this->assertSame($before, $this->ord01Snapshot(), 'Re-running the migrations changes no ORD-01 value');
+    }
+
+    public function test_ord04_rollback_stops_instead_of_inventing_creators_for_guest_orders(): void
+    {
+        Artisan::call('migrate:fresh', ['--force' => true]);
+        config(['orders.v2_enabled' => true, 'orders.website_checkout' => true]);
+        $brand = Brand::create(['name' => 'E2E Brand Sintetis', 'is_active' => true]);
+        $product = Product::create(['brand_id' => $brand->id, 'category_id' => Category::create(['name' => 'EDP'])->id, 'name' => 'Rollback Sintetis',
+            'description' => 'Sintetis.', 'base_price' => 50000, 'gender' => 'Unisex', 'is_active' => true, 'availability_status' => 'available', 'availability_source' => 'qammaris_app']);
+        $variant = ProductVariant::create(['product_id' => $product->id, 'volume' => 50, 'price' => 50000, 'sku' => 'ORD04-RB', 'stock' => 1, 'is_active' => true]);
+        [$order] = app(CreateOnlineOrder::class)->fromWebsiteCheckout([$variant->id => ['quantity' => 1, 'price' => '50000.00']],
+            ['customer_name' => 'E2E Pembeli Sintetis', 'customer_phone' => '080000000101', 'fulfillment' => 'pickup', 'packaging' => 'paperbag', 'payment_preference' => 'qris'], (string) Str::uuid());
+        $this->assertNull($order->created_by);
+
+        try {
+            // Steps 1-3 drop later empty additions; step 4 reaches the ORD-04 checkout migration and must stop.
+            Artisan::call('migrate:rollback', ['--step' => 4, '--force' => true]);
+            $this->fail('Rollback must stop while guest orders exist.');
+        } catch (\RuntimeException $stopped) {
+            $this->assertStringContainsString('rollback ORD-04 dihentikan', $stopped->getMessage());
+        }
+        $this->assertTrue(Schema::hasColumn('online_orders', 'checkout_key'));
+        $this->assertSame(1, DB::table('online_orders')->whereNull('created_by')->count());
+    }
+
+    /**
+     * MariaDB with explicit_defaults_for_timestamp=OFF silently gives the first NOT NULL TIMESTAMP column
+     * ON UPDATE CURRENT_TIMESTAMP (found here: customer_link_expires_at was reset on every order update).
+     */
+    private function assertNoImplicitTimestampUpdates(): void
+    {
+        $tables = ['online_orders', 'online_order_events', 'online_order_payments', 'online_order_claims', 'online_order_costs',
+            'integration_idempotency_keys', 'integration_outbox', 'user_admin_changes', 'online_order_issues', 'customers', 'customer_addresses'];
+        $auto = DB::table('information_schema.COLUMNS')->where('TABLE_SCHEMA', DB::getDatabaseName())->whereIn('TABLE_NAME', $tables)
+            ->where('EXTRA', 'like', '%on update%')->pluck('COLUMN_NAME', 'TABLE_NAME')->all();
+        $this->assertSame([], $auto, 'No column may change itself on UPDATE');
+
+        $id = DB::table('online_orders')->value('id');
+        $before = DB::table('online_orders')->where('id', $id)->value('customer_link_expires_at');
+        sleep(1);
+        DB::table('online_orders')->where('id', $id)->update(['customer_note' => 'cek timestamp']);
+        $this->assertSame($before, DB::table('online_orders')->where('id', $id)->value('customer_link_expires_at'));
+    }
+
+    private function seedOrd01(): array
+    {
+        $admin = DB::table('users')->insertGetId(['name' => 'Admin Lama', 'email' => 'lama@example.test', 'password' => bcrypt('x'), 'role' => 'admin', 'created_at' => now(), 'updated_at' => now()]);
+        $order = function (string $stage, string $fulfillment, ?string $courier) use ($admin) {
+            $id = DB::table('online_orders')->insertGetId([
+                'customer_token_hash' => hash('sha256', Str::random(40)), 'customer_token_encrypted' => 'x',
+                'staff_token_hash' => hash('sha256', Str::random(40)), 'staff_token_encrypted' => 'x', 'customer_link_expires_at' => now()->addDays(7),
+                'stage' => $stage, 'customer_name' => 'Legacy '.$stage, 'customer_phone' => '081200000000', 'fulfillment' => $fulfillment,
+                'packaging' => 'paperbag', 'courier' => $courier, 'payment_method' => 'transfer', 'created_by' => $admin,
+                'closed_at' => in_array($stage, ['cancelled', 'completed'], true) ? now() : null, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            DB::table('online_orders')->where('id', $id)->update(['code' => 'QAM-'.str_pad((string) $id, 4, '0', STR_PAD_LEFT)]);
+            DB::table('online_order_items')->insert(['online_order_id' => $id, 'product_id' => 1, 'variant_id' => 1, 'brand_name' => 'B', 'product_name' => 'P',
+                'volume' => 50, 'unit_price' => 150000, 'quantity' => 2, 'created_at' => now(), 'updated_at' => now()]);
+
+            return $id;
+        };
+        $event = fn (int $order, string $kind, string $stage, string $at) => DB::table('online_order_events')->insert(['online_order_id' => $order, 'kind' => $kind, 'stage' => $stage, 'actor_type' => 'admin', 'actor_user_id' => $admin, 'created_at' => $at]);
+
+        $shipped = $order('shipped', 'local_delivery', 'maxim');
+        $event($shipped, 'advance', 'paid', '2026-10-01 01:00:00');
+        $event($shipped, 'advance', 'shipped', '2026-10-01 02:00:00');
+        $cancelled = $order('cancelled', 'pickup', null);
+        $event($cancelled, 'advance', 'paid', '2026-10-02 01:00:00');
+        $event($cancelled, 'cancel', 'paid', '2026-10-02 03:00:00');
+        $waiting = $order('awaiting_customer', 'local_delivery', null);
+
+        return compact('shipped', 'cancelled', 'waiting');
+    }
+
+    private function assertBackfilled(array $ids): void
+    {
+        $rows = DB::table('online_orders')->whereIn('id', $ids)->get()->keyBy('id');
+        foreach ($rows as $row) {
+            $this->assertMatchesRegularExpression('/^[0-9A-HJKMNP-TV-Z]{26}$/', $row->public_id);
+            $this->assertSame('legacy', $row->state_model);
+        }
+        $shipped = $rows[$ids['shipped']];
+        $this->assertSame(['active', 'paid', 'packed', 'handed_over', 'courier', 'maxim', '2026-10-01 02:00:00'],
+            [$shipped->lifecycle, $shipped->payment_status, $shipped->preparation_status, $shipped->handover_status, $shipped->handed_to, $shipped->courier_provider, $shipped->handed_over_at]);
+        $cancelled = $rows[$ids['cancelled']];
+        $this->assertSame(['cancelled', 'paid', 'needs_reconciliation'], [$cancelled->lifecycle, $cancelled->payment_status, $cancelled->refund_status],
+            'A legacy cancel after payment is flagged for reconciliation, never assumed to owe a refund');
+        $this->assertSame(['awaiting_customer', 'unpaid'], [$rows[$ids['waiting']]->lifecycle, $rows[$ids['waiting']]->payment_status]);
+        $this->assertSame(0, DB::table('online_order_items')->whereNull('line_id')->count());
+        $this->assertSame(3, DB::table('online_order_items')->distinct()->count('line_id'));
+    }
+
+    private function ord01Snapshot(): array
+    {
+        return [
+            DB::table('online_orders')->orderBy('id')->get(['id', 'code', 'stage', 'customer_name', 'customer_phone', 'fulfillment', 'courier', 'payment_method', 'closed_at'])->map(fn ($r) => (array) $r)->all(),
+            DB::table('online_order_items')->orderBy('id')->get(['id', 'online_order_id', 'product_name', 'unit_price', 'quantity'])->map(fn ($r) => (array) $r)->all(),
+            DB::table('online_order_events')->orderBy('id')->get(['id', 'online_order_id', 'kind', 'stage', 'created_at'])->map(fn ($r) => (array) $r)->all(),
+            DB::table('users')->orderBy('id')->get(['id', 'email', 'role'])->map(fn ($r) => (array) $r)->all(),
+        ];
+    }
+}

@@ -31,7 +31,7 @@ class AdminProductImportPreviewTest extends TestCase
 
     public function test_only_admin_can_open_product_import_preview(): void
     {
-        $this->get(route('admin.product-imports.create'))->assertRedirect(route('login'));
+        $this->get(route('admin.product-imports.create'))->assertRedirect(route('admin.login'));
 
         $customer = User::factory()->create();
         $this->actingAs($customer)
