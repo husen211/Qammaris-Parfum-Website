@@ -201,6 +201,49 @@ select.catalog-filter-control {
     background: #fff;
 }
 
+/* UX-02: price range stacked (minimum above maximum) with an Rp prefix and room for 1.000.000. */
+.catalog-filter-dropdown__body:has(.catalog-price-range) {
+    padding: 16px;
+}
+
+.catalog-price-range {
+    display: grid;
+    gap: 16px;
+}
+
+.catalog-price-range__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #6b6b66;
+}
+
+.catalog-price-range__input {
+    position: relative;
+}
+
+.catalog-price-range__input > span {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #6b6b66;
+    pointer-events: none;
+}
+
+.catalog-price-range__input > input {
+    padding-left: 40px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+@media (pointer: coarse) {
+    .catalog-price-range__input > input {
+        font-size: 16px;
+    }
+}
+
 .catalog-brand-options {
     max-height: 240px;
     overflow-y: auto;

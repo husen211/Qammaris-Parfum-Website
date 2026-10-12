@@ -59,6 +59,17 @@
                     ])
                 </div>
             @endforeach
+            {{-- UX-02: the end of the rail leads on to the full catalog. --}}
+            <div class="flex-none w-[196px] sm:w-[224px] lg:w-[260px] snap-start flex">
+                <a href="{{ route('products.index') }}" data-best-seller-catalog-end
+                    class="group flex w-full flex-col items-center justify-center gap-5 border border-gray-200 bg-brand-cream px-6 py-10 text-center [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full border border-brand-black/20 text-brand-black transition-colors duration-300 [@media(hover:hover)_and_(pointer:fine)]:group-hover:border-brand-black [@media(hover:hover)_and_(pointer:fine)]:group-hover:bg-brand-black [@media(hover:hover)_and_(pointer:fine)]:group-hover:text-white" aria-hidden="true">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </span>
+                    <span class="font-mayluxa text-2xl leading-tight text-brand-black">Lihat Katalog Lengkap</span>
+                    <span class="text-xs leading-5 text-gray-500">Temukan pilihan parfum lainnya di katalog Qammaris.</span>
+                </a>
+            </div>
         </div>
         @else
             <p class="text-center text-sm text-gray-500">Pilihan produk terlaris sedang disiapkan. Jelajahi koleksi kami di katalog.</p>

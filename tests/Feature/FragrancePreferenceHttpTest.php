@@ -52,7 +52,9 @@ class FragrancePreferenceHttpTest extends TestCase
 
     public function test_wizard_and_result_keep_anonymous_ownership_private_cache_and_answers(): void
     {
-        $this->get('/fragrance-quiz')->assertOk()->assertSee('Pertanyaan 1 dari 11')->assertSee('versi uji');
+        $this->get('/fragrance-quiz')->assertOk()->assertSee('Pertanyaan 1 dari 11')->assertSee('versi uji')
+            // UX-02: the catalog has nothing above Rp1 juta, so the highest budget choice is Rp500 ribu–1 juta.
+            ->assertSee('Rp500 ribu–1 juta')->assertDontSee('Rp1 juta ke atas');
         $stored = $this->submit();
         $this->assertEquals($this->answers(), array_intersect_key($stored->answers, $this->answers()));
         $this->assertNotSame(str_repeat('a', 64), $stored->browser_hash);

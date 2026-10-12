@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
+use App\Models\Brand;
 use App\Models\Product;
 
 class HomeController extends Controller
@@ -23,7 +24,7 @@ class HomeController extends Controller
             $offset = $dayIndex % $eligibleIds->count();
             $selectedIds = $eligibleIds->slice($offset)
                 ->concat($eligibleIds->take($offset))
-                ->take(6)
+                ->take(10)
                 ->values();
             $positions = $selectedIds->flip();
 
@@ -41,6 +42,23 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
-        return view('home', compact('bestSellers', 'featuredPosts'));
+        // UX-02: every brand on sale; logos from public/images/brands/<slug>.webp, otherwise the brand name.
+        $distributorBrands = Brand::active()
+            ->withCount(['products as published_count' => fn ($products) => $products->published()])
+            ->get()
+            ->where('published_count', '>', 0)
+            ->map(function (Brand $brand) {
+                $file = "images/brands/{$brand->slug}.webp";
+                if (is_file(public_path($file))) {
+                    [$width, $height] = getimagesize(public_path($file));
+                    $brand->setAttribute('logo_mark', ['src' => asset($file), 'width' => intdiv($width, 2), 'height' => intdiv($height, 2)]);
+                }
+
+                return $brand;
+            })
+            ->sortBy([fn (Brand $a, Brand $b) => isset($b->logo_mark) <=> isset($a->logo_mark), ['published_count', 'desc'], ['name', 'asc']])
+            ->values();
+
+        return view('home', compact('bestSellers', 'featuredPosts', 'distributorBrands'));
     }
 }

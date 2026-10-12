@@ -19,11 +19,11 @@ class HomeBestSellersTest extends TestCase
         $this->withoutVite();
     }
 
-    public function test_six_unique_eligible_products_rotate_daily_with_no_merchandising_writes(): void
+    public function test_ten_unique_eligible_products_rotate_daily_with_no_merchandising_writes(): void
     {
         $brand = Brand::create(['name' => 'Test Brand', 'is_active' => true]);
         $eligible = collect();
-        foreach (range(1, 10) as $index) {
+        foreach (range(1, 14) as $index) {
             $eligible->push($this->product('Best Seller '.$index, ['brand_id' => $brand->id]));
         }
         $this->product('Ordinary', ['is_best_seller' => false]);
@@ -38,7 +38,7 @@ class HomeBestSellersTest extends TestCase
         $response->assertOk()->assertDontSee('Rp 150.000')->assertSee('100 ml');
         $selection = $response->viewData('bestSellers');
         $first = $selection->pluck('id')->all();
-        $this->assertCount(6, array_unique($first));
+        $this->assertCount(10, array_unique($first));
         foreach ($selection as $product) {
             $this->assertTrue($eligible->contains('id', $product->id));
             $this->assertTrue($product->relationLoaded('activeOffer'));
@@ -50,10 +50,10 @@ class HomeBestSellersTest extends TestCase
         foreach (range(1, 10) as $day) {
             $this->travelTo(Carbon::parse('2026-10-06 10:00:00', 'Asia/Makassar')->addDays($day));
             $current = $this->get(route('home'))->viewData('bestSellers')->pluck('id')->all();
-            $this->assertCount(6, array_unique($current));
+            $this->assertCount(10, array_unique($current));
             if ($day === 1) {
                 $this->assertNotSame($first, $current);
-                $this->assertSame(array_slice($first, 1), array_slice($current, 0, 5));
+                $this->assertSame(array_slice($first, 1), array_slice($current, 0, 9));
             }
             $seen = $seen->concat($current);
         }
@@ -97,6 +97,34 @@ class HomeBestSellersTest extends TestCase
         $response->assertOk()->assertSee('Pilihan produk terlaris sedang disiapkan.');
         $response->assertDontSee('data-product-card')->assertDontSee('data-best-seller-next');
         $this->assertCount(0, $response->viewData('bestSellers'));
+    }
+
+    public function test_rail_ends_with_full_catalog_link_and_distributor_section_lists_every_brand_on_sale(): void
+    {
+        // UX-02: logo for brands with a supplied mark, name otherwise; brands without published products are left out.
+        $afnan = Brand::create(['name' => 'Afnan', 'is_active' => true]);
+        $bali = Brand::create(['name' => 'Bali Surfer', 'is_active' => true]);
+        $empty = Brand::create(['name' => 'Brand Tanpa Produk', 'is_active' => true]);
+        $inactive = Brand::create(['name' => 'Brand Nonaktif', 'is_active' => false]);
+        $this->product('Afnan Satu', ['brand_id' => $afnan->id]);
+        $this->product('Bali Satu', ['brand_id' => $bali->id]);
+        $this->product('Bali Dua', ['brand_id' => $bali->id]);
+        $this->product('Draft Saja', ['brand_id' => $empty->id, 'publication_status' => Product::PUBLICATION_DRAFT]);
+        $this->product('Nonaktif', ['brand_id' => $inactive->id, 'is_best_seller' => false]);
+
+        $response = $this->get(route('home'))->assertOk();
+        $brands = $response->viewData('distributorBrands');
+        $this->assertSame(['Afnan', 'Bali Surfer'], $brands->pluck('name')->all(), 'logos first, then by product count');
+        $response->assertSee('src="'.asset('images/brands/afnan.webp').'"', false)->assertSee('alt="Afnan"', false)
+            ->assertSee('<span class="brand-carousel__name font-mayluxa">Bali Surfer</span>', false)
+            ->assertDontSee('Brand Tanpa Produk')->assertDontSee('Brand Nonaktif')
+            ->assertDontSee('animate-slide-pause')->assertSee('data-brand-carousel', false);
+
+        // The rail ends with a link to the full catalog; the button under the section stays.
+        $html = $response->getContent();
+        $this->assertSame(1, substr_count($html, 'data-best-seller-catalog-end'));
+        $this->assertGreaterThan(strrpos($html, 'data-product-card'), strpos($html, 'data-best-seller-catalog-end'));
+        $this->assertSame(2, substr_count($html, 'Lihat Katalog Lengkap'));
     }
 
     private function product(string $name, array $overrides = []): Product
