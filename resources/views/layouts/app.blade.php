@@ -46,6 +46,7 @@
 
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav.jpg') }}">
     @include('pwa._head')
+    @include('partials.analytics')
     <link rel="canonical" href="{{ $canonicalUrl }}">
 
     <meta property="og:site_name" content="Qammaris Perfumes">
