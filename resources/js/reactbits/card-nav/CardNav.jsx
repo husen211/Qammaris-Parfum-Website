@@ -148,10 +148,10 @@ const CardNav = ({
               className="inline-flex items-center justify-center h-11 w-11 border border-black/10 hover:border-black/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                {/* Lucide "receipt"; docs/licenses/lucide.txt. */}
+                {/* Lucide "clipboard-list" (order list, distinct from the cart bag); docs/licenses/lucide.txt. */}
                 <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
-                  <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
-                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 17.5v-11" />
+                  <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01" />
                 </g>
               </svg>
             </a>

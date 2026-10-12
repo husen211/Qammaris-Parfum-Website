@@ -76,18 +76,21 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-width="1.5" /></svg>
         </summary>
         <div class="catalog-filter-dropdown__body">
-            <div class="grid grid-cols-2 gap-2">
-                <div class="min-w-0">
-                    <label class="block text-xs text-gray-500 mb-2" for="{{ $filterSurface }}-price-min">Minimum (Rp)</label>
-                    <input id="{{ $filterSurface }}-price-min" type="number" name="price_min" value="{{ $catalogState->priceMin }}" min="0" step="1000" placeholder="0" class="catalog-filter-control">
-                </div>
-                <div class="min-w-0">
-                    <label class="block text-xs text-gray-500 mb-2" for="{{ $filterSurface }}-price-max">Maksimum (Rp)</label>
-                    <input id="{{ $filterSurface }}-price-max" type="number" name="price_max" value="{{ $catalogState->priceMax }}" min="0" step="1000" placeholder="Bebas" class="catalog-filter-control">
-                </div>
+            {{-- UX-02: stacked fields with room for Rp 1.000.000; JS adds thousands separators, the server accepts both forms. --}}
+            <div class="catalog-price-range">
+                @foreach (['min' => ['Harga minimum', $catalogState->priceMin, '0'], 'max' => ['Harga maksimum', $catalogState->priceMax, 'Tanpa batas']] as $bound => [$label, $amount, $placeholder])
+                    <div>
+                        <label class="catalog-price-range__label" for="{{ $filterSurface }}-price-{{ $bound }}">{{ $label }}</label>
+                        <div class="catalog-price-range__input">
+                            <span aria-hidden="true">Rp</span>
+                            <input id="{{ $filterSurface }}-price-{{ $bound }}" type="text" inputmode="numeric" autocomplete="off" maxlength="11" name="price_{{ $bound }}"
+                                value="{{ $amount !== null ? number_format($amount, 0, ',', '.') : '' }}" placeholder="{{ $placeholder }}" data-price-input class="catalog-filter-control">
+                        </div>
+                    </div>
+                @endforeach
             </div>
             @if ($autosubmit)
-                <button type="submit" class="catalog-filter-apply mt-3">Terapkan harga</button>
+                <button type="submit" class="catalog-filter-apply mt-5">Terapkan harga</button>
             @endif
         </div>
     </details>

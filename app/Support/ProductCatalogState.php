@@ -71,8 +71,8 @@ final class ProductCatalogState
         $sortInput = self::string($request->query('sort'));
         $sort = $sortInput !== null && in_array($sortInput, self::SORTS, true) ? $sortInput : self::DEFAULT_SORT;
 
-        $priceMin = self::integer($request->query('price_min'), 0);
-        $priceMax = self::integer($request->query('price_max'), 0);
+        $priceMin = self::integer(self::rupiahDigits($request->query('price_min')), 0);
+        $priceMax = self::integer(self::rupiahDigits($request->query('price_max')), 0);
         if ($priceMin !== null && $priceMax !== null && $priceMax < $priceMin) {
             $priceMax = null;
         }
@@ -150,6 +150,16 @@ final class ProductCatalogState
         }
 
         return is_scalar($value) ? [$value] : [];
+    }
+
+    /** UX-02: "200.000" or "Rp 200.000" (thousands dots from the price fields) reads as 200000; other input is unchanged. */
+    private static function rupiahDigits(mixed $value): mixed
+    {
+        if (! is_string($value) || ! preg_match('/^\s*(?:Rp\.?\s*)?\d{1,3}(?:\.\d{3})+\s*$/i', $value)) {
+            return $value;
+        }
+
+        return preg_replace('/\D/', '', $value);
     }
 
     private static function integer(mixed $value, int $minimum): ?int

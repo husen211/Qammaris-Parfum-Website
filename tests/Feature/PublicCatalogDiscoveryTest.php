@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\BestSellerArrangement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -101,7 +102,8 @@ class PublicCatalogDiscoveryTest extends TestCase
             $this->assertCount(2, $xpath->query($formPath.'//input[@name="brand[]" and @checked]'));
             $this->assertCount(0, $xpath->query($formPath.'//input[@name="brand[]" and @data-catalog-autosubmit]'));
             $this->assertCount(0, $xpath->query($formPath.'//input[@name="page"]'));
-            foreach (['search' => 'perfume', 'sort' => 'price_low', 'price_min' => '100000', 'price_max' => '300000'] as $name => $value) {
+            // UX-02: price fields show thousands separators; the submitted value is reduced to digits.
+            foreach (['search' => 'perfume', 'sort' => 'price_low', 'price_min' => '100.000', 'price_max' => '300.000'] as $name => $value) {
                 $this->assertSame($value, $xpath->query($formPath.'//input[@name="'.$name.'"]')->item(0)->getAttribute('value'));
             }
             foreach (['category' => (string) $this->category->id, 'gender' => 'Unisex', 'availability' => 'sold_out'] as $name => $value) {
@@ -286,15 +288,18 @@ class PublicCatalogDiscoveryTest extends TestCase
         $this->createProduct('Hidden Best Seller', ['is_best_seller' => true])->forceFill(['qammaris_app_hidden' => true])->save();
         $this->createProduct('Draft Best Seller', ['is_best_seller' => true, 'publication_status' => Product::PUBLICATION_DRAFT]);
 
+        // UX-02: best sellers follow the daily price-varied arrangement, then ordinary products.
+        $arranged = BestSellerArrangement::order($bestSellers->mapWithKeys(fn ($product) => [$product->id => 100000])->all(), now());
         $response = $this->get(route('products.index'));
         $response->assertOk();
         $this->assertSame([], $response->viewData('catalogState')->query());
-        $this->assertSame($bestSellers->reverse()->take(24)->pluck('id')->values()->all(), $response->viewData('products')->pluck('id')->all());
+        $this->assertSame(array_slice($arranged, 0, 24), $response->viewData('products')->pluck('id')->all());
         $this->assertStringNotContainsString('sort=', $response->viewData('products')->nextPageUrl());
 
         $secondPage = $this->get(route('products.index', ['page' => 2]));
-        $this->assertSame([$bestSellers[1]->id, $bestSellers[0]->id, $ordinary->id], $secondPage->viewData('products')->pluck('id')->all());
-        $detailUrl = route('products.show', ['product' => $bestSellers[1]->slug, 'page' => 2]);
+        $this->assertSame([...array_slice($arranged, 24), $ordinary->id], $secondPage->viewData('products')->pluck('id')->all());
+        $secondSlug = $bestSellers->firstWhere('id', $arranged[24])->slug;
+        $detailUrl = route('products.show', ['product' => $secondSlug, 'page' => 2]);
         $secondPage->assertSee($detailUrl);
         $this->get($detailUrl)->assertOk()->assertSee(route('products.index', ['page' => 2]));
 
@@ -304,12 +309,49 @@ class PublicCatalogDiscoveryTest extends TestCase
 
     public function test_default_order_uses_latest_then_id_within_each_group_and_null_dates_last(): void
     {
-        $older = $this->createProduct('Older Best Seller', ['is_best_seller' => true, 'published_at' => now()->subDay()]);
-        $newer = $this->createProduct('New Best Seller', ['is_best_seller' => true]);
-        $tie = $this->createProduct('Tied Best Seller', ['is_best_seller' => true, 'published_at' => $newer->published_at]);
-        $undated = $this->createProduct('Undated Best Seller', ['is_best_seller' => true, 'published_at' => null]);
-        $ordinary = $this->createProduct('New Ordinary');
-        $this->assertSame([$tie->id, $newer->id, $older->id, $undated->id, $ordinary->id], $this->get(route('products.index'))->viewData('products')->pluck('id')->all());
+        // Best sellers lead in their arranged order; ordinary products keep latest-then-id with undated last.
+        $bestSeller = $this->createProduct('Best Seller', ['is_best_seller' => true, 'published_at' => now()->subWeek()]);
+        $older = $this->createProduct('Older Ordinary', ['published_at' => now()->subDay()]);
+        $newer = $this->createProduct('New Ordinary');
+        $tie = $this->createProduct('Tied Ordinary', ['published_at' => $newer->published_at]);
+        $undated = $this->createProduct('Undated Ordinary', ['published_at' => null]);
+        $this->assertSame([$bestSeller->id, $tie->id, $newer->id, $older->id, $undated->id], $this->get(route('products.index'))->viewData('products')->pluck('id')->all());
+    }
+
+    public function test_default_best_sellers_put_affordable_picks_first_without_sorting_by_price(): void
+    {
+        $prices = [189000, 199000, 215000, 229000, 245000, 265000, 275000, 289000, 299000, 325000, 345000, 375000, 410000, 450000, 520000, 620000, 700000, 780000];
+        foreach ($prices as $index => $price) {
+            $this->createProduct('Priced Best Seller '.$index, ['is_best_seller' => true], $price);
+        }
+        $this->createProduct('Cheap Ordinary', [], 100000);
+        $shown = $this->get(route('products.index'))->viewData('products')->pluck('variants_min_price')->map(fn ($price) => (int) $price)->all();
+        $firstSix = array_slice($shown, 0, 6);
+        $this->assertCount(3, array_filter($firstSix, fn ($price) => $price <= 265000), 'affordable picks lead');
+        $this->assertCount(1, array_filter($firstSix, fn ($price) => $price >= 410000), 'a premium pick is mixed in early');
+        $sorted = array_slice($shown, 0, 18);
+        sort($sorted);
+        $this->assertNotSame($sorted, array_slice($shown, 0, 18), 'not ascending by price');
+        $this->assertSame(100000, $shown[18], 'ordinary products follow the best sellers');
+
+        // Other sorts are unchanged.
+        $low = $this->get(route('products.index', ['sort' => 'price_low']))->viewData('products')->pluck('variants_min_price')->map(fn ($price) => (int) $price)->all();
+        $this->assertSame([100000, 189000], array_slice($low, 0, 2));
+    }
+
+    public function test_price_filter_accepts_thousands_separators(): void
+    {
+        $this->createProduct('Under Range', [], 150000);
+        $inside = $this->createProduct('Inside Range', [], 250000);
+        $this->createProduct('Over Range', [], 1200000);
+        $response = $this->get('/products?price_min=200.000&price_max=Rp%201.000.000');
+        $state = $response->assertOk()->viewData('catalogState');
+        $this->assertSame([200000, 1000000], [$state->priceMin, $state->priceMax]);
+        $this->assertSame([$inside->id], $response->viewData('products')->pluck('id')->all());
+        $response->assertSee('value="200.000"', false)->assertSee('value="1.000.000"', false)->assertSee('inputmode="numeric"', false);
+        $this->assertSame(['price_min' => 200000, 'price_max' => 1000000], $state->query());
+        // Malformed values are still ignored.
+        $this->assertNull($this->get('/products?price_min=2.00.000')->viewData('catalogState')->priceMin);
     }
 
     private function createProduct(string $name, array $overrides = [], ?int $price = 100000): Product

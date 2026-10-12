@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\StoreInfo;
+use App\Support\BestSellerArrangement;
 use App\Support\InquiryWhatsApp;
 use App\Support\ProductCatalogState;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,7 +60,7 @@ class ProductController extends Controller
             $query->search($catalogState->search, $catalogState->sort === ProductCatalogState::DEFAULT_SORT);
         }
 
-        $this->applySort($query, $catalogState->sort);
+        $this->applySort($query, $catalogState->sort, $catalogState->search !== null);
 
         $products = $query
             ->paginate(24)
@@ -114,7 +115,26 @@ class ProductController extends Controller
         $query->effectiveAvailability($availability);
     }
 
-    private function applySort(Builder $query, string $sort): void
+    private function orderBestSellersForDiscovery(Builder $query): void
+    {
+        $prices = Product::query()->published()->bestSellers()
+            ->withMin(['variants as variants_min_price' => fn ($variants) => $variants->where('is_active', true)], 'price')
+            ->pluck('variants_min_price', 'id')
+            ->all();
+        $ids = BestSellerArrangement::order($prices, now());
+        if ($ids === []) {
+            return;
+        }
+
+        $cases = implode(' ', array_fill(0, count($ids), 'WHEN ? THEN ?'));
+        $bindings = [];
+        foreach ($ids as $position => $id) {
+            array_push($bindings, $id, $position);
+        }
+        $query->orderByRaw("CASE products.id {$cases} ELSE ".count($ids).' END', $bindings);
+    }
+
+    private function applySort(Builder $query, string $sort, bool $searching = false): void
     {
         if ($sort === 'price_low' || $sort === 'price_high') {
             $query->orderByRaw('CASE WHEN variants_min_price IS NULL THEN 1 ELSE 0 END')
@@ -132,6 +152,10 @@ class ProductController extends Controller
 
         if ($sort === ProductCatalogState::DEFAULT_SORT) {
             $query->orderByDesc('is_best_seller');
+            // UX-02: best sellers in a daily, price-varied order (search keeps its relevance order).
+            if (! $searching) {
+                $this->orderBestSellersForDiscovery($query);
+            }
         }
 
         $query->orderByRaw('CASE WHEN published_at IS NULL THEN 1 ELSE 0 END')

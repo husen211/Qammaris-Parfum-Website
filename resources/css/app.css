@@ -248,6 +248,71 @@ html { scroll-behavior: smooth; }
         animation: slide-pause-snap 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
 
+    /* UX-02: Distributor Resmi carousel. Pause, move one brand, pause again (brand-carousel.js). */
+    .brand-carousel {
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .brand-carousel.is-running {
+        overflow: hidden;
+    }
+
+    .brand-carousel__track {
+        display: flex;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .brand-carousel.is-running .brand-carousel__track {
+        transition: transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+    }
+
+    .brand-carousel__item {
+        flex: 0 0 33.333%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 72px;
+        padding: 0 12px;
+    }
+
+    @media (min-width: 768px) {
+        .brand-carousel__item { flex-basis: 25%; }
+    }
+
+    @media (min-width: 1024px) {
+        .brand-carousel__item { flex-basis: 16.666%; }
+    }
+
+    .brand-carousel__logo {
+        max-width: 100%;
+        height: auto;
+        max-height: 64px;
+        opacity: 0.6;
+        transition: opacity 300ms ease;
+    }
+
+    .brand-carousel__name {
+        font-size: 1.25rem;
+        line-height: 1.2;
+        color: #9ca3af;
+        text-align: center;
+        transition: color 300ms ease;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .brand-carousel__item:hover .brand-carousel__logo { opacity: 1; }
+        .brand-carousel__item:hover .brand-carousel__name { color: var(--color-brand-black); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .brand-carousel { overflow: visible; }
+        .brand-carousel__track { flex-wrap: wrap; justify-content: center; row-gap: 16px; }
+    }
+
     /* Font Fix untuk Mobile */
     .font-mayluxa {
         font-family: var(--font-sans);

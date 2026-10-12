@@ -31,7 +31,7 @@
     <p class="mt-2 text-sm text-brand-black/60">{{ $question['helper'] }}</p>
     @if($question['type'] === 'budget')
       <div class="pref-options pref-budget-options">
-       @foreach([[0, 100000, 'Sampai Rp100 ribu'], [100000, 200000, 'Rp100–200 ribu'], [200000, 300000, 'Rp200–300 ribu'], [300000, 500000, 'Rp300–500 ribu'], [500000, 1000000, 'Rp500 ribu–1 juta'], [1000000, null, 'Rp1 juta ke atas']] as [$minimum, $maximum, $label])
+       @foreach([[0, 100000, 'Sampai Rp100 ribu'], [100000, 200000, 'Rp100–200 ribu'], [200000, 300000, 'Rp200–300 ribu'], [300000, 500000, 'Rp300–500 ribu'], [500000, 1000000, 'Rp500 ribu–1 juta']] as [$minimum, $maximum, $label])
        <button type="button" data-budget="{{ $maximum }}" data-min="{{ $minimum }}" aria-pressed="false" class="pref-option">{{ $label }}</button>
        @endforeach
       </div>

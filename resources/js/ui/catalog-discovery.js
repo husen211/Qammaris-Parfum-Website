@@ -1,4 +1,5 @@
 import {searchScore} from './search-matcher';
+import {PRICE_FIELDS, bindPriceInput, formatPrice, priceDigits} from './price-input';
 
 const catalog = document.querySelector('[data-catalog-discovery]');
 
@@ -37,7 +38,7 @@ if (catalog) {
                     return;
                 }
 
-                control.value = nextValue;
+                control.value = control.hasAttribute('data-price-input') ? formatPrice(nextValue) : nextValue;
 
                 if (control instanceof HTMLInputElement) {
                     control.setAttribute('value', nextValue);
@@ -163,6 +164,10 @@ if (catalog) {
     document.querySelectorAll('[data-catalog-form]').forEach((form) => {
         form.addEventListener('submit', () => {
             syncHiddenControls(form);
+            // Readable 200.000 on screen, plain 200000 in the URL.
+            PRICE_FIELDS.forEach((name) => form.querySelectorAll(`[name="${name}"]`).forEach((control) => {
+                control.value = priceDigits(control.value);
+            }));
 
             form.querySelectorAll('[name]').forEach((control) => {
                 if (control.value === '' || (control.name === 'sort' && control.value === 'best_sellers')) {
@@ -172,6 +177,7 @@ if (catalog) {
         });
     });
 
+    document.querySelectorAll('[data-price-input]').forEach(bindPriceInput);
     syncControls();
     window.addEventListener('pageshow', syncControls);
 }
