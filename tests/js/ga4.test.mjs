@@ -39,6 +39,7 @@ test('no Google script or data is created before consent or after decline', () =
 test('accept records one safe page view with advertising and automatic page views disabled', () => {
   const f = fixture(); bootGa4(f.doc, f.win); f.handlers.accept(); f.handlers.accept();
   assert.equal(f.scripts.length, 1);
+  assert.ok(f.win.dataLayer.every(row => Object.prototype.toString.call(row) === '[object Arguments]'), 'Google command entries must follow the vendor snippet contract');
   assert.equal(f.scripts[0].src, `https://www.googletagmanager.com/gtag/js?id=${ID}`);
   const config = f.win.dataLayer.find(row => row[0] === 'config')[2];
   assert.equal(config.send_page_view, false); assert.equal(config.allow_google_signals, false); assert.equal(config.allow_ad_personalization_signals, false);
