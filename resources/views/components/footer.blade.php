@@ -63,6 +63,7 @@
                 <ul class="flex flex-wrap gap-x-6">
                     <li><a href="{{ route('store.about') }}" class="footer-link">Tentang Qammaris</a></li>
                     <li><a href="{{ route('cart.index') }}" class="footer-link">Keranjang</a></li>
+                    @include('partials.ga4')
                 </ul>
             </nav>
         </div>

@@ -32,7 +32,7 @@ Pesanan Online pages (`/pesanan/{token}`, Pesanan Saya) and the Admin never load
 
 GA4 is optional and defaults off. Set `GA4_MEASUREMENT_ID=G-XXXXXXXXXX` in the private server environment, then refresh configuration cache. The code accepts only a valid measurement ID in production. Do not put environment values in Git.
 
-The public visitor chooses **Izinkan** or **Lewati**. No Google script loads and no Google analytics data is sent before permission. The choice is remembered on that browser; **Pilihan analytics** allows changing it later. Withdrawal disables the tracker and removes only GA cookies, preserving login, cart, order-history and PWA storage.
+The public visitor chooses **Izinkan** or **Lewati**. No Google script loads and no Google analytics data is sent before permission. The choice is remembered on that browser; after either choice the banner disappears and no floating preference button remains. **Pilihan analytics** is an ordinary footer control for changing the choice later. Withdrawal disables the tracker and removes only GA cookies, preserving login, cart, order-history and PWA storage.
 
 Only home, product listings/details, blog listings/articles/categories and store information can load GA4. Cart, checkout, fragrance forms/results, customer/staff bearer links, Pesanan Saya and all Admin pages are excluded. Page URLs lose query strings/fragments; referrers contain only their origin; titles are fixed rather than user-supplied. No customer identity, order, payment or custom event data is sent.
 
