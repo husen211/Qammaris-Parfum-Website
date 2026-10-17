@@ -201,6 +201,7 @@ class OrderCourierCostTest extends TestCase
         $cost = $order->costs()->sole();
         $this->assertSame([[['source' => 'owner_fund', 'amount' => 20000]], null, 'not_applicable'], [$cost->funding, $cost->advanced_by_app_user_id, $cost->reimbursement_status]);
         $this->assertStringContainsString('ongkir kurir Rp20.000 · dana Owner', $order->events()->reorder('id', 'desc')->first()->note);
+        $this->get(route('admin.orders.show', $order))->assertSee('uang Owner (GoPay)')->assertDontSee('dibayar customer ke driver');
 
         // Staff still see the Owner's choice on the order and may correct it to an employee.
         $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertSee('value="owner"', false)->assertSee('Dana Owner');

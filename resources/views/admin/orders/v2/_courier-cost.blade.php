@@ -9,7 +9,7 @@
         default => null,
     } : null;
     $payerLabel = $courierCost ? ($courierCost->advanced_by_name !== null ? 'uang '.$courierCost->advanced_by_name
-        : (($courierCost->funding[0]['source'] ?? null) === 'cashier_cash' ? 'uang kasir' : 'dibayar customer ke driver')) : null;
+        : match ($courierCost->funding[0]['source'] ?? null) { 'owner_fund' => 'uang Owner (GoPay)', 'cashier_cash' => 'uang kasir', default => 'dibayar customer ke driver' }) : null;
     $locked = $courierCost?->reimbursement_status === 'paid';
 @endphp
 <div class="mt-4 border-t border-gray-100 pt-3" data-courier-cost>
