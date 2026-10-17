@@ -52,7 +52,7 @@ class AdminOnlineOrderV2Controller extends Controller
 
     public function show(OnlineOrder $order, OnlineOrderMessages $messages, InquiryWhatsApp $whatsApp)
     {
-        $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses', 'claims']);
+        $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses', 'claims', 'costs']);
         $customerUrl = route('orders.customer.show', $order->customer_token_encrypted);
         $taskLink = OrderTaskLink::for($order);
         $groupMessage = $messages->staffGroupV2($order, $taskLink['url'], $taskLink['in_app']);
@@ -86,6 +86,8 @@ class AdminOnlineOrderV2Controller extends Controller
             'inviteUrl' => $order->customer_phone ? $whatsApp->textUrl($order->customer_phone, $inviteMessage) : $whatsApp->shareUrl($inviteMessage),
             'customerChatUrl' => $order->customer_phone ? $whatsApp->textUrl($order->customer_phone, 'Halo Kak, terkait pesanan Qammaris '.$order->code.'.') : null,
             'customerMatches' => $order->customer_id ? collect() : $this->customers->matches($order->customer_phone),
+            'courierCost' => $order->costs->first(fn ($cost) => $cost->isWebsiteOrigin()),
+            'courierCostPayers' => OnlineOrderFulfillment::courierCostPayers(),
         ])->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
@@ -170,19 +172,34 @@ class AdminOnlineOrderV2Controller extends Controller
     public function courier(Request $request, OnlineOrder $order): RedirectResponse
     {
         $data = $request->validate(['revision' => ['required', 'integer'], 'provider' => ['required', Rule::in(OnlineOrderFulfillment::COURIER_PROVIDERS)],
-            'status' => ['required', Rule::in(['requested', 'arrived'])], 'reference' => ['nullable', 'string', 'max:80']]);
+            'status' => ['required', Rule::in(['requested', 'arrived'])], 'reference' => ['nullable', 'string', 'max:80']] + self::COST_RULES);
 
-        return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->requestCourier($order, (int) $data['revision'], $this->actor($request), $data['provider'], $data['status'], $data['reference'] ?? null),
-            $data['status'] === 'arrived' ? 'Kurir ditandai sudah tiba.' : 'Kurir ditandai sudah dipesan.');
+        // ORD-08: booking the courier on the Website also records what it costs and whose money pays it.
+        return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->requestCourier($order, (int) $data['revision'], $this->actor($request), $data['provider'], $data['status'], $data['reference'] ?? null,
+            $data['status'] === 'requested' ? $this->courierCost($data) : null),
+            $data['status'] === 'arrived' ? 'Kurir ditandai sudah tiba.' : 'Kurir ditandai sudah dipesan. Ongkir kurir dicatat.');
     }
 
     public function jnt(Request $request, OnlineOrder $order): RedirectResponse
     {
         $data = $request->validate(['revision' => ['required', 'integer'], 'status' => ['nullable', Rule::in(['pickup_requested', 'qr_available', 'picked_up'])],
-            'tracking_number' => ['nullable', 'string', 'max:40']]);
+            'tracking_number' => ['nullable', 'string', 'max:40']] + self::COST_RULES);
+        $requestingPickup = ($data['status'] ?? null) === 'pickup_requested' && $order->jnt_status !== 'pickup_requested';
 
-        return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->recordJnt($order, (int) $data['revision'], $this->actor($request), $data['status'] ?? null, filled($data['tracking_number'] ?? null) ? trim($data['tracking_number']) : null),
+        return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->recordJnt($order, (int) $data['revision'], $this->actor($request), $data['status'] ?? null, filled($data['tracking_number'] ?? null) ? trim($data['tracking_number']) : null,
+            null, $requestingPickup ? $this->courierCost($data) : null),
             ($data['status'] ?? null) === 'picked_up' ? 'Dipickup J&T — pesanan tercatat diserahkan.' : 'Data J&T disimpan.');
+    }
+
+    /** ORD-08: correct the courier fee or whose money paid it after the booking. */
+    public function updateCourierCost(Request $request, OnlineOrder $order): RedirectResponse
+    {
+        $data = $request->validate(['revision' => ['required', 'integer']] + self::COST_RULES);
+
+        $cost = $this->courierCost($data);
+
+        return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->recordCourierCost($order, (int) $data['revision'], $this->actor($request), $cost['amount'], $cost['payer']),
+            'Ongkir kurir disimpan.');
     }
 
     /** ORD-03: optional J&T QR photo, stored privately; never required for pickup. */
@@ -206,22 +223,20 @@ class AdminOnlineOrderV2Controller extends Controller
     }
 
     /**
-     * ORD-03: the shipping fee charged to the customer (and, for finance roles, driver funding). Who may change it
-     * and when is decided in OnlineOrderDetails::updateByAdmin (orders.charge-shipping / orders.finance).
+     * ORD-03: the shipping fee charged to the customer. Who may change it and when is decided in
+     * OnlineOrderDetails::updateByAdmin (orders.charge-shipping / orders.finance). What the courier is paid, and
+     * whose money, is recorded with the courier booking (ORD-08).
      */
     public function shipping(Request $request, OnlineOrder $order): RedirectResponse
     {
         $data = $request->validate(['revision' => ['required', 'integer'], 'shipping_fee' => ['nullable', 'string', 'max:15'],
-            'shipping_payer' => ['nullable', Rule::in(array_keys(OnlineOrder::SHIPPING_PAYERS))],
-            'driver_funding' => ['nullable', Rule::in(array_keys(OnlineOrder::DRIVER_FUNDING))]], [], ['shipping_fee' => 'ongkir', 'shipping_payer' => 'ongkir dibayar']);
+            'shipping_payer' => ['nullable', Rule::in(array_keys(OnlineOrder::SHIPPING_PAYERS))]], [], ['shipping_fee' => 'ongkir', 'shipping_payer' => 'ongkir dibayar']);
 
         return $this->attempt($order, 'pembayaran', function () use ($request, $order, $data) {
-            $changes = ['shipping_fee' => filled($data['shipping_fee'] ?? null) ? $this->rupiah($data['shipping_fee'], true) : null,
-                'shipping_payer' => $data['shipping_payer'] ?? null];
-            if ($request->has('driver_funding')) {
-                $changes['driver_funding'] = $data['driver_funding'] ?? null;
-            }
-            $this->details->updateByAdmin($order, (int) $data['revision'], $request->user(), $changes);
+            $this->details->updateByAdmin($order, (int) $data['revision'], $request->user(), [
+                'shipping_fee' => filled($data['shipping_fee'] ?? null) ? $this->rupiah($data['shipping_fee'], true) : null,
+                'shipping_payer' => $data['shipping_payer'] ?? null,
+            ]);
         }, 'Ongkir disimpan.');
     }
 
@@ -383,6 +398,22 @@ class AdminOnlineOrderV2Controller extends Controller
         }
 
         return redirect()->to($target)->with('order_notice', $notice('success', $success));
+    }
+
+    private const COST_RULES = ['cost_amount' => ['nullable', 'string', 'max:15'], 'cost_payer' => ['nullable', 'string', 'max:70']];
+
+    /**
+     * Raw "ongkir ke kurir" and "uang siapa"; an empty or malformed amount becomes 0 so the domain operation reports it
+     * after its own state checks (unpaid, wrong step).
+     *
+     * @return array{amount: int, payer: string}
+     */
+    private function courierCost(array $data): array
+    {
+        $amount = preg_replace('/^rp\s*/i', '', trim((string) ($data['cost_amount'] ?? '')));
+        $amount = preg_match('/^\d{1,3}(\.\d{3})+$/', $amount) ? str_replace('.', '', $amount) : $amount;
+
+        return ['amount' => preg_match('/^\d{1,9}$/', $amount) ? (int) $amount : 0, 'payer' => (string) ($data['cost_payer'] ?? '')];
     }
 
     private function actor(Request $request): OrderActor

@@ -1,5 +1,6 @@
 @use('App\Models\OnlineOrder')
-{{-- Ongkir charged to the customer (ORD-03/04). Shown open while it is still empty, collapsed once set. --}}
+{{-- Ongkir charged to the customer (ORD-03/04). Shown open while it is still empty, collapsed once set. What the courier
+     is paid, and whose money, is entered when the courier is booked (ORD-08, Pengiriman). --}}
 @php
     $canChargeShipping = auth()->user()->can('orders.charge-shipping', $order);
     $ongkirSet = $order->shipping_fee !== null && $order->shipping_payer !== null;
@@ -19,15 +20,10 @@
                         <select name="shipping_payer" class="{{ $input }}"><option value="">Belum ditentukan</option>@foreach (OnlineOrder::SHIPPING_PAYERS as $value => $label)<option value="{{ $value }}" @selected(old('shipping_payer', $order->shipping_payer) === $value)>{{ $label }}</option>@endforeach</select>
                     </label>
                 </div>
-                @can('orders.finance')
-                    <label class="block text-sm font-medium text-gray-700">Toko bayar driver dengan
-                        <select name="driver_funding" class="{{ $input }}"><option value="">Tidak perlu / belum ditentukan</option>@foreach (OnlineOrder::DRIVER_FUNDING as $value => $label)<option value="{{ $value }}" @selected(old('driver_funding', $order->driver_funding) === $value)>{{ $label }}</option>@endforeach</select>
-                    </label>
-                @endcan
                 <button class="{{ $ongkirSet || $section === 'konfirmasi' ? $secondary : $primary }}" data-busy-label="Menyimpan…">Simpan ongkir</button>
             </form>
         @else
-            <p class="mt-2 text-sm text-gray-600">{{ $received > 0 ? 'Sudah ada pembayaran. Ubah total lewat Opsi lanjutan → penyesuaian harga (disetujui Super Admin).' : 'Ongkir diatur Super Admin.' }}</p>
+            <p class="mt-2 text-sm text-gray-600">{{ $received > 0 ? 'Sudah ada pembayaran. Ubah total lewat Opsi lanjutan → penyesuaian harga.' : 'Ongkir diatur Super Admin.' }}</p>
         @endif
     </details>
 @endif

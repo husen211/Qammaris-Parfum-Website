@@ -297,6 +297,11 @@ class OnlineOrderFulfillment
             if ($existing && $data['source_version'] <= $existing->source_version) {
                 return;
             }
+            if ($existing?->isWebsiteOrigin()) {
+                $this->applyAppReimbursement($existing, $actor, $reimbursement, $data['source_version']);
+
+                return;
+            }
             if ($reimbursement['proof'] === 'waived') {
                 $this->assertWaiverDecision($existing?->waiver, (array) $reimbursement['waiver'], $actor);
             }
@@ -319,6 +324,105 @@ class OnlineOrderFulfillment
             }
             $this->record($existing ? 'cost_updated' : 'cost_recorded', $data['kind'].' Rp'.number_format($data['amount'], 0, ',', '.').' · reimburse '.$reimbursement['status']);
         });
+    }
+
+    /**
+     * ORD-08 "Uang siapa": the employees who may advance the fee (names equal their Qammaris App accounts), the
+     * cashier, or the customer paying the driver directly.
+     *
+     * @return array<string, string> payer key => label
+     */
+    public static function courierCostPayers(): array
+    {
+        $payers = [];
+        foreach ((array) config('orders.staff_advancers') as $name) {
+            $payers['staff:'.$name] = $name;
+        }
+
+        return $payers + ['cashier' => 'Kasir', 'customer' => 'Customer bayar driver'];
+    }
+
+    /**
+     * ORD-08 (Owner 2026-10-17): ongkir actually paid to the courier and whose money paid it, entered on the Website
+     * when the courier is booked and editable afterwards. One website-origin cost per order.
+     */
+    public function recordCourierCost(OnlineOrder $order, int $revision, OrderActor $actor, int $amount, string $payer): OnlineOrder
+    {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $amount, $payer): void {
+            if (! in_array($order->fulfillment, ['local_delivery', 'intercity'], true)) {
+                throw new InvalidOrderTransition('Ongkir kurir hanya untuk pesanan yang dikirim.');
+            }
+            if (($note = $this->applyCourierCost($order, $actor, $amount, $payer)) !== null) {
+                $this->record('courier_cost', $note);
+            }
+        });
+    }
+
+    /**
+     * Creates or edits the order's website-origin cost; an edit bumps source_version so Qammaris App re-imports it.
+     * A staff advance is sent as `submitted`; the App turns it into that employee's approved reimbursement and
+     * reports the status back (applyAppReimbursement). Returns the audit note, or null when nothing changed.
+     */
+    private function applyCourierCost(OnlineOrder $order, OrderActor $actor, int $amount, string $payer): ?string
+    {
+        if ($actor->user === null) {
+            throw new OrderActionNotAllowed('Ongkir kurir dicatat dari halaman pesanan Website.');
+        }
+        $payers = self::courierCostPayers();
+        $fields = [];
+        if ($amount < 1 || $amount > 100000000) {
+            $fields['cost_amount'] = 'Isi ongkir yang dibayar ke kurir';
+        }
+        if (! array_key_exists($payer, $payers)) {
+            $fields['cost_payer'] = 'Pilih uang siapa';
+        }
+        if ($fields) {
+            throw new OrderValidationFailed('Isi ongkir ke kurir dan uang siapa.', $fields);
+        }
+        $advancer = str_starts_with($payer, 'staff:') ? $payers[$payer] : null;
+        $source = $advancer !== null ? 'staff_advance' : ($payer === 'cashier' ? 'cashier_cash' : 'customer_direct');
+
+        $cost = $order->costs()->where('origin', 'website')->lockForUpdate()->first();
+        if ($cost && Rupiah::minorUnits($cost->amount) === $amount * 100 && ($cost->funding[0]['source'] ?? null) === $source && $cost->advanced_by_name === $advancer) {
+            return null;
+        }
+        if ($cost?->reimbursement_status === 'paid') {
+            throw new InvalidOrderTransition('Reimburse ongkir ini sudah dibayar di Qammaris App. Minta Owner mengoreksinya di App.');
+        }
+        $attributes = [
+            'kind' => 'actual_shipping', 'status' => 'active', 'amount' => Rupiah::decimal($amount * 100),
+            'funding' => [['source' => $source, 'amount' => $amount]], 'advanced_by_name' => $advancer,
+            'reimbursement_status' => $advancer !== null ? 'submitted' : 'not_applicable',
+            'reimbursement_amount' => Rupiah::decimal($advancer !== null ? $amount * 100 : 0), 'proof' => 'pending', 'waiver' => null,
+            'reimbursement_updated_at' => now(), 'recorded_by_user_id' => $actor->user->id, 'reported_at' => now(),
+        ];
+        if ($cost) {
+            $cost->update($attributes + ['source_version' => $cost->source_version + 1]);
+        } else {
+            $order->costs()->create($attributes + ['expense_ref' => 'exp_'.bin2hex(random_bytes(16)), 'origin' => 'website', 'source_version' => 1,
+                'reported_by_app_user_id' => '', 'reported_by_name' => Str::limit($actor->displayName, 57)]);
+        }
+
+        return 'ongkir kurir Rp'.number_format($amount, 0, ',', '.').' · '.($advancer !== null ? 'ditalangi '.$advancer : $payers[$payer]);
+    }
+
+    /**
+     * App report on a website-origin cost: only the reimbursement status, proof and waiver of the version it saw.
+     * A report for an amount the Website has since changed is stale and ignored; the App re-imports the edit.
+     */
+    private function applyAppReimbursement(OnlineOrderCost $cost, OrderActor $actor, array $reimbursement, int $sourceVersion): void
+    {
+        if (Rupiah::minorUnits($cost->reimbursement_amount) !== $reimbursement['amount'] * 100) {
+            return;
+        }
+        if ($reimbursement['proof'] === 'waived') {
+            $this->assertWaiverDecision($cost->waiver, (array) $reimbursement['waiver'], $actor);
+        }
+        $cost->update([
+            'reimbursement_status' => $reimbursement['status'], 'proof' => $reimbursement['proof'], 'waiver' => $reimbursement['waiver'] ?? null,
+            'reimbursement_updated_at' => Carbon::parse($reimbursement['updated_at']), 'source_version' => $sourceVersion,
+        ]);
+        $this->record('cost_reimbursement', 'reimburse ongkir '.($cost->advanced_by_name ?? '-').' · '.$reimbursement['status']);
     }
 
     /** Store or customer books the local driver. Only while nothing is handed over. */
@@ -344,9 +448,10 @@ class OnlineOrderFulfillment
         });
     }
 
-    public function requestCourier(OnlineOrder $order, int $revision, OrderActor $actor, string $provider, string $status = 'requested', ?string $reference = null): OnlineOrder
+    /** @param  array{amount: int, payer: string}|null  $courierCost  ORD-08: what the courier was paid and whose money, from the Website */
+    public function requestCourier(OnlineOrder $order, int $revision, OrderActor $actor, string $provider, string $status = 'requested', ?string $reference = null, ?array $courierCost = null): OnlineOrder
     {
-        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $provider, $status, $reference): void {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $provider, $status, $reference, $courierCost): void {
             $this->assertActive($order);
             if ($order->fulfillment !== 'local_delivery' || $order->courier_booking_responsibility !== 'store' || $order->handover_status !== 'pending') {
                 throw new InvalidOrderTransition('Kurir lokal hanya dipesan toko untuk kirim dalam kota sebelum diserahkan.');
@@ -369,14 +474,19 @@ class OnlineOrderFulfillment
             if ($order->courier_status === 'arrived' && $status === 'requested') {
                 throw new InvalidOrderTransition('Kurir sudah tiba.');
             }
+            $costNote = $courierCost !== null ? $this->applyCourierCost($order, $actor, $courierCost['amount'], $courierCost['payer']) : null;
             if ($order->courier_status === $status && $order->courier_provider === $provider && ($reference === null || $reference === $order->courier_reference)) {
+                if ($costNote !== null) {
+                    $this->record('courier_cost', $costNote);
+                }
+
                 return;
             }
             $order->courier_provider = $provider;
             $order->courier_reference = $reference ?? $order->courier_reference;
             $order->courier_status = $status;
             $order->courier_requested_at ??= now();
-            $this->record($status === 'arrived' ? 'courier_arrived' : 'courier_requested', ucfirst($provider).($reference ? ' · '.$reference : ''));
+            $this->record($status === 'arrived' ? 'courier_arrived' : 'courier_requested', ucfirst($provider).($reference ? ' · '.$reference : '').($costNote ? ' · '.$costNote : ''));
         });
     }
 
@@ -384,9 +494,9 @@ class OnlineOrderFulfillment
      * J&T: pickup requested, QR available and picked up are separate steps (contract §8.4). Picked up also
      * records the handover in the same revision and event. A tracking number is optional at any time.
      */
-    public function recordJnt(OnlineOrder $order, int $revision, OrderActor $actor, ?string $status, ?string $trackingNumber = null, ?DateTimeInterface $occurredAt = null): OnlineOrder
+    public function recordJnt(OnlineOrder $order, int $revision, OrderActor $actor, ?string $status, ?string $trackingNumber = null, ?DateTimeInterface $occurredAt = null, ?array $courierCost = null): OnlineOrder
     {
-        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $status, $trackingNumber, $occurredAt): void {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $status, $trackingNumber, $occurredAt, $courierCost): void {
             // The resi often arrives after pickup; a paid order is already completed by then (ORD-04 P0).
             $lateTracking = $status === null && $order->lifecycle === 'completed' && $order->handed_to === 'jnt';
             if (! $lateTracking) {
@@ -415,6 +525,7 @@ class OnlineOrderFulfillment
             $at = $occurredAt ?? now();
             $notes = [];
             $current = $order->jnt_status ?? 'not_requested';
+            $costNote = $courierCost !== null ? $this->applyCourierCost($order, $actor, $courierCost['amount'], $courierCost['payer']) : null;
             if ($status !== null && $status !== $current) {
                 if (self::JNT_RANK[$status] < self::JNT_RANK[$current]) {
                     throw new InvalidOrderTransition('Status J&T tidak bisa mundur.');
@@ -433,7 +544,9 @@ class OnlineOrderFulfillment
                 $notes[] = 'Resi '.$trackingNumber;
             }
             if ($notes) {
-                $this->record($status !== null && $status !== $current ? 'jnt_'.$status : 'jnt_tracking', implode(' · ', $notes));
+                $this->record($status !== null && $status !== $current ? 'jnt_'.$status : 'jnt_tracking', implode(' · ', [...$notes, ...($costNote !== null ? [$costNote] : [])]));
+            } elseif ($costNote !== null) {
+                $this->record('courier_cost', $costNote);
             }
         });
     }

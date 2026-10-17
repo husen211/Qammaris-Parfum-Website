@@ -19,8 +19,9 @@ class OrderApiContractTest extends TestCase
 
     private const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
-    // r4.4 (totals.packaging_fee), signed by both agents 2026-10-11 on 9a6b6ee; r4.2/r4.3 was b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88.
-    private const BASELINE_OPENAPI_SHA256 = '10dcfa5051460fef87d5ab8666df97a06af79f4e43cbd434f093dc79ad51c5b5';
+    // r4.5 draft (website-origin costs, ORD-08 2026-10-17); r4.4 was 10dcfa5051460fef87d5ab8666df97a06af79f4e43cbd434f093dc79ad51c5b5,
+    // r4.2/r4.3 was b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88.
+    private const BASELINE_OPENAPI_SHA256 = 'cfabb384acbbda17d2911336b76b8665cbf243f0fad748d96d548d5e371bc6d8';
 
     private array $spec;
 
@@ -51,10 +52,11 @@ class OrderApiContractTest extends TestCase
 
     public function test_versions_match_and_contract_is_the_r4_2_baseline(): void
     {
-        // r4.4 draft on top of the r4.2 baseline (r4.3 was text only); the version moves only with a schema change.
-        $this->assertSame('1.0.0-rc.4.4', $this->spec['info']['version']);
+        // r4.5 draft on top of the r4.2 baseline (r4.3 was text only); the version moves only with a schema change.
+        $this->assertSame('1.0.0-rc.4.5', $this->spec['info']['version']);
         $this->assertStringContainsString('r4.2 baseline', $this->spec['info']['description']);
         $this->assertStringContainsString('r4.4 DRAFT', $this->spec['info']['description']);
+        $this->assertStringContainsString('r4.5 DRAFT', $this->spec['info']['description']);
         // The App review commit is still local to the App machine; it must not be presented as a GitHub link.
         $this->assertStringNotContainsString('github.com/husen211/qammaris-reimbursement-management-system', $this->markdown);
     }

@@ -238,6 +238,8 @@ final class OrderSerializer
     {
         return [
             'expense_ref' => $cost->expense_ref,
+            // r4.5: website = recorded by Staff Order on the Website (ORD-08); the App owns only its reimbursement.
+            'origin' => $cost->origin,
             'kind' => $cost->kind,
             'status' => $cost->status,
             'amount' => self::money($cost->amount),
@@ -250,7 +252,9 @@ final class OrderSerializer
                 'waiver' => $cost->waiver === null ? null : $cost->waiver + ['decision_id' => null],
                 'updated_at' => self::time($cost->reimbursement_updated_at),
             ],
-            'reported_by' => ['app_user_id' => $cost->reported_by_app_user_id, 'display_name' => $cost->reported_by_name],
+            'advanced_by' => $cost->advanced_by_name === null ? null : ['display_name' => $cost->advanced_by_name],
+            'source_version' => $cost->source_version,
+            'reported_by' => $cost->isWebsiteOrigin() ? null : ['app_user_id' => $cost->reported_by_app_user_id, 'display_name' => $cost->reported_by_name],
             'reported_at' => self::time($cost->reported_at),
         ];
     }
