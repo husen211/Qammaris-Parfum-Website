@@ -72,7 +72,7 @@
                 @csrf {!! $hidden('pembayaran') !!}
                 <div class="grid grid-cols-2 gap-3">
                     <label class="text-sm font-medium text-gray-700">Nominal diterima (Rp)
-                        <input name="amount" inputmode="numeric" required value="{{ old('_section') === 'pembayaran' ? old('amount') : (int) ($remainingCents / 100) }}" class="{{ $input }}">
+                        <input name="amount" data-rupiah-input inputmode="numeric" required value="{{ old('_section') === 'pembayaran' ? old('amount') : (int) ($remainingCents / 100) }}" class="{{ $input }}">
                     </label>
                     <label class="text-sm font-medium text-gray-700">Metode
                         <select name="payment_method" required class="{{ $input }}">

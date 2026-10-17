@@ -14,6 +14,23 @@ abstract class ProductEditorRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Price fields show thousands separators (150.000) while typing; the page submits digits, and this keeps a submit
+     * without JavaScript working too. Only the exact thousands pattern is touched, never decimals like 150000.00.
+     */
+    protected function prepareForValidation(): void
+    {
+        $digits = fn (mixed $value) => is_string($value) && preg_match('/^\d{1,3}(\.\d{3})+$/', trim($value)) ? str_replace('.', '', trim($value)) : $value;
+        $merge = [];
+        if ($this->has('compare_at_price')) {
+            $merge['compare_at_price'] = $digits($this->input('compare_at_price'));
+        }
+        if (is_array($variants = $this->input('variants'))) {
+            $merge['variants'] = array_map(fn ($variant) => is_array($variant) && array_key_exists('price', $variant) ? ['price' => $digits($variant['price'])] + $variant : $variant, $variants);
+        }
+        $this->merge($merge);
+    }
+
     public function editorData(): array
     {
         // Preserve the existing checkbox convention while all other fields are validated.

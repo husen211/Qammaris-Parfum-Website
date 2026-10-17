@@ -41,13 +41,13 @@
         <form method="POST" action="{{ route('admin.orders.money.reconcile', $order) }}" class="mt-3 grid gap-3 sm:grid-cols-3" data-confirm="Simpan rekonsiliasi ini? Angka akan tercatat di riwayat keuangan.">
             @csrf <input type="hidden" name="revision" value="{{ $order->revision }}"> <input type="hidden" name="_section" value="keuangan">
             <label class="text-sm font-medium text-gray-700">Diterima dari customer (Rp)
-                <input name="received" inputmode="numeric" required value="{{ old('received', $money['received'] > 0 ? (int) ($money['received'] / 100) : '') }}" class="{{ $input }}">
+                <input name="received" data-rupiah-input inputmode="numeric" required value="{{ old('received', $money['received'] > 0 ? (int) ($money['received'] / 100) : '') }}" class="{{ $input }}">
             </label>
             <label class="text-sm font-medium text-gray-700">Harus dikembalikan (Rp)
-                <input name="refund_due" inputmode="numeric" required value="{{ old('refund_due') }}" placeholder="0 bila tidak ada" class="{{ $input }}">
+                <input name="refund_due" data-rupiah-input inputmode="numeric" required value="{{ old('refund_due') }}" placeholder="0 bila tidak ada" class="{{ $input }}">
             </label>
             <label class="text-sm font-medium text-gray-700">Sudah dikembalikan (Rp)
-                <input name="already_refunded" inputmode="numeric" required value="{{ old('already_refunded') }}" placeholder="0 bila belum" class="{{ $input }}">
+                <input name="already_refunded" data-rupiah-input inputmode="numeric" required value="{{ old('already_refunded') }}" placeholder="0 bila belum" class="{{ $input }}">
             </label>
             <label class="text-sm font-medium text-gray-700 sm:col-span-3">Sumber/catatan pengecekan
                 <input name="note" required maxlength="300" value="{{ old('note') }}" placeholder="Misalnya: dicek di mutasi BCA 9 Okt" class="{{ $input }}">
@@ -58,7 +58,7 @@
         <form method="POST" action="{{ route('admin.orders.money.refund-decision', $order) }}" class="mt-4 grid gap-3 border-t border-gray-100 pt-4 sm:grid-cols-[12rem_1fr]" data-confirm="Simpan keputusan refund?">
             @csrf <input type="hidden" name="revision" value="{{ $order->revision }}"> <input type="hidden" name="_section" value="keuangan">
             <label class="text-sm font-medium text-gray-700">{{ $dueCents === null ? 'Nominal yang dikembalikan (Rp)' : 'Koreksi nominal refund (Rp)' }}
-                <input name="refund_due" inputmode="numeric" required value="{{ old('refund_due', $dueCents !== null ? (int) ($dueCents / 100) : '') }}" placeholder="0 = tidak ada refund" class="{{ $input }}">
+                <input name="refund_due" data-rupiah-input inputmode="numeric" required value="{{ old('refund_due', $dueCents !== null ? (int) ($dueCents / 100) : '') }}" placeholder="0 = tidak ada refund" class="{{ $input }}">
             </label>
             <label class="text-sm font-medium text-gray-700">Alasan
                 <input name="reason" required maxlength="300" value="{{ old('reason') }}" placeholder="Misalnya: customer batal, dana dikembalikan penuh" class="{{ $input }}">
@@ -70,7 +70,7 @@
                 @csrf <input type="hidden" name="revision" value="{{ $order->revision }}"> <input type="hidden" name="_section" value="keuangan">
                 <p class="text-sm text-gray-700 sm:col-span-3">Sisa refund: <strong class="tabular-nums">{{ $rp($remainingRefund) }}</strong>. Boleh dibayar sebagian.</p>
                 <label class="text-sm font-medium text-gray-700">Nominal dikembalikan (Rp)
-                    <input name="amount" inputmode="numeric" required value="{{ old('amount', (int) ($remainingRefund / 100)) }}" class="{{ $input }}">
+                    <input name="amount" data-rupiah-input inputmode="numeric" required value="{{ old('amount', (int) ($remainingRefund / 100)) }}" class="{{ $input }}">
                 </label>
                 <label class="text-sm font-medium text-gray-700">Metode
                     <select name="refund_method" required class="{{ $input }}">@foreach (OnlineOrder::PAYMENT_METHODS as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select>

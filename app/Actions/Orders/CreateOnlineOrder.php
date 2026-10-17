@@ -12,6 +12,7 @@ use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Support\AdminPush;
 use App\Support\PhoneNumber;
 use App\Support\Rupiah;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -160,7 +161,7 @@ class CreateOnlineOrder
         }
 
         try {
-            return DB::transaction(function () use ($lines, $details, $checkoutKey): array {
+            $result = DB::transaction(function () use ($lines, $details, $checkoutKey): array {
                 $variants = ProductVariant::with('product.brand')->active()
                     ->whereHas('product', fn ($query) => $query->published())
                     ->whereIn('id', array_keys($lines))->get()->keyBy('id');
@@ -201,6 +202,10 @@ class CreateOnlineOrder
 
                 return [$order->fresh(), $customerToken, true];
             });
+            // ORD-09: tell the order team (push) only for a new order, never for a replayed checkout.
+            AdminPush::newWebsiteOrder($result[0]);
+
+            return $result;
         } catch (UniqueConstraintViolationException $error) {
             // A double tap raced the first request; report the order that won.
             return $this->checkoutReplay($checkoutKey) ?? throw $error;

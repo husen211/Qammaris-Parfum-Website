@@ -33,7 +33,7 @@
                 <label class="text-sm font-medium text-gray-700">Jenis
                     <select name="direction" class="{{ $input }}"><option value="discount">Potongan</option><option value="surcharge">Tambahan</option></select>
                 </label>
-                <label class="text-sm font-medium text-gray-700">Nominal (Rp)<input name="amount" inputmode="numeric" required value="{{ old('amount') }}" class="{{ $input }}"></label>
+                <label class="text-sm font-medium text-gray-700">Nominal (Rp)<input name="amount" data-rupiah-input inputmode="numeric" required value="{{ old('amount') }}" class="{{ $input }}"></label>
                 <label class="text-sm font-medium text-gray-700">Alasan<input name="reason" required minlength="5" maxlength="300" value="{{ old('reason') }}" class="{{ $input }}"></label>
                 <div class="sm:col-span-3"><button class="{{ $secondary }}" data-busy-label="Menerapkan…">Terapkan penyesuaian</button>
                     <p class="mt-1 text-xs text-gray-500">Total langsung berubah dan tercatat di Riwayat.</p></div>
@@ -55,7 +55,7 @@
                     <label class="block text-sm font-medium text-gray-700">Alasan<input name="reason" required minlength="5" maxlength="200" value="{{ old('reason') }}" class="{{ $input }}"></label>
                     @if ($received > 0)
                         <label class="block text-sm font-medium text-gray-700">Dikembalikan ke customer (Rp)
-                            <input name="refund_due" required inputmode="numeric" value="{{ old('refund_due') }}" placeholder="0 sampai {{ (int) ($received / 100) }}" class="{{ $input }}">
+                            <input name="refund_due" data-rupiah-input required inputmode="numeric" value="{{ old('refund_due') }}" placeholder="0 sampai {{ (int) ($received / 100) }}" class="{{ $input }}">
                         </label>
                         <p class="text-xs text-gray-600">Sudah diterima {{ $rp($received) }}. Tulis 0 bila tidak dikembalikan.</p>
                     @endif

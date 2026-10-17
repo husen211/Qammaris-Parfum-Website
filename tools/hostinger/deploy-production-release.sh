@@ -47,3 +47,7 @@ if ! curl --fail --silent --show-error --max-time 30 https://qammarisparfum.id/u
 fi
 php artisan queue:restart --no-interaction
 printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$revision" >> "$shared/deployments.log"
+
+# Each release is ~13k files; unpruned releases filled the account inode quota (OPS-INODE-2026-10).
+QAMMARIS_KEEP_RELEASE="$previous" bash "$release/tools/hostinger/prune-production-releases.sh" --apply \
+    || printf '%s\n' 'Warning: old releases were not pruned; run tools/hostinger/prune-production-releases.sh.' >&2

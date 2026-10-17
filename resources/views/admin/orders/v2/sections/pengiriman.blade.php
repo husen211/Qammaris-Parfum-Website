@@ -13,6 +13,10 @@
         default => 'Belum diserahkan',
     };
     $notPacked = $order->preparation_status !== 'packed';
+    // ORD-08: once the store has booked a courier (or one is recorded), the fee is shown and can be corrected.
+    // Includes a store courier handed over without "Kurir sudah dipesan": the fee is still asked for afterwards.
+    $storeBooked = ($order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store' && (in_array($order->courier_status, ['requested', 'arrived'], true) || $order->handed_to === 'courier'))
+        || ($order->fulfillment === 'intercity' && in_array($order->jnt_status, ['pickup_requested', 'qr_available', 'picked_up'], true));
 @endphp
 <details id="pengiriman" class="{{ $card }}" @if ($openSection) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2" @if ($openSection) data-next-step @endif>
@@ -66,19 +70,19 @@
                     </div>
                 </fieldset>
             </form>
-            @if ($order->courier_booking_responsibility === 'store' && $order->courier_status !== 'arrived')
-                <form method="POST" action="{{ route('admin.orders.v2.courier', $order) }}" class="mt-3 flex flex-wrap items-end gap-2">
+            @if ($order->courier_booking_responsibility === 'store' && $order->courier_status === 'unassigned')
+                {{-- ORD-08: one step — booking the courier records the fee and whose money pays it. --}}
+                <form method="POST" action="{{ route('admin.orders.v2.courier', $order) }}" class="mt-3 rounded-lg border border-gray-200 p-3" data-courier-booking>
                     @csrf {!! $hidden('pengiriman') !!}
-                    <label class="min-w-0 flex-1 text-sm font-medium text-gray-700">Kurir
+                    <label class="block text-sm font-medium text-gray-700">Kurir
                         <select name="provider" required class="{{ $input }}">@foreach (OnlineOrderLabels::PROVIDERS as $value => $label)<option value="{{ $value }}" @selected(old('provider', $order->courier_provider) === $value)>{{ $label }}</option>@endforeach</select>
                     </label>
-                    @if ($order->courier_status === 'unassigned')
-                        <button name="status" value="requested" class="{{ $secondary }}" data-busy-label="Menyimpan…">Sudah dipesan</button>
-                    @else
-                        <button name="status" value="arrived" class="{{ $secondary }}" data-busy-label="Menyimpan…">Kurir tiba</button>
-                    @endif
+                    <div class="mt-3">@include('admin.orders.v2._courier-cost-fields')</div>
+                    <button name="status" value="requested" class="{{ $secondary }} mt-3 w-full sm:w-auto" data-busy-label="Menyimpan…">Kurir sudah dipesan</button>
                 </form>
-                @if ($order->courier_status === 'requested')<p class="mt-1 text-xs text-gray-600">Kurir {{ OnlineOrderLabels::PROVIDERS[$order->courier_provider] ?? '' }} sudah dipesan.</p>@endif
+            @elseif ($order->courier_booking_responsibility === 'store')
+                {{-- ORD-08 (Owner 2026-10-17): no "Kurir tiba" step; booked → handed over. --}}
+                <p class="mt-3 text-sm text-gray-700" data-courier-booked>Kurir {{ OnlineOrderLabels::PROVIDERS[$order->courier_provider] ?? '' }} sudah dipesan.</p>
             @endif
             <form method="POST" action="{{ route('admin.orders.v2.handover', $order) }}" class="mt-4" data-confirm="Pesanan sudah diserahkan ke kurir?">
                 @csrf {!! $hidden('pengiriman') !!}
@@ -95,6 +99,7 @@
                 <button name="status" value="picked_up" class="{{ $primary }}" @disabled($notPacked) data-busy-label="Menyimpan…">Sudah di-pickup J&T</button>
                 @if ($notPacked)<p class="mt-1 text-xs text-gray-500">Konfirmasi packing dulu.</p>@endif
             @else
+                <div class="mb-3">@include('admin.orders.v2._courier-cost-fields', ['amountLabel' => 'Ongkir J&T (Rp)'])</div>
                 <button name="status" value="pickup_requested" class="{{ $primary }}" data-busy-label="Menyimpan…">Request pickup J&T</button>
                 <p class="mt-1 text-xs text-gray-500">Jam layanan J&T 09.00–16.00 WITA.</p>
             @endif
@@ -117,5 +122,8 @@
                 <button class="{{ $secondary }}" data-busy-label="Menyimpan…">Simpan resi</button>
             </form>
         </details>
+    @endif
+    @if (in_array($order->fulfillment, ['local_delivery', 'intercity'], true) && ($courierCost || ($storeBooked && $order->lifecycle !== 'cancelled')))
+        @include('admin.orders.v2._courier-cost')
     @endif
 </details>

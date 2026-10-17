@@ -14,6 +14,7 @@ import './ui/navigation-skeleton';
 import './ui/reveal';
 import './ui/toast';
 import './ui/faq';
+import './ui/rupiah-input';
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 if (csrfToken) {

@@ -2,8 +2,8 @@
     "openapi": "3.1.0",
     "info": {
         "title": "Qammaris Order API (Website ↔ Qammaris App)",
-        "version": "1.0.0-rc.4.4",
-        "description": "r4.2 baseline matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2, signed off by the App agent (draft ff3532c).\nr4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver\ndecision_id with Owner authorization vs relayed resends (X-Qammaris-Delivery); error codes aligned\n(structure -> validation_failed, approval requirement -> proof_required, unauthorized waiver -> 403);\nOrderListPage.unavailable and serialization_failed so one unreadable order cannot fail the list.\nr4.1 history: K-A (webhook signature path + vectors) and K-B (new timestamp and signature on every webhook retry).\nr4.3 (text only): payment before fulfillment (payment_required). r4.4 DRAFT (ORD-04, Owner 2026-10-11): Order.totals.packaging_fee,\nthe paperbag charge snapshotted on the order; total = subtotal + adjustments + shipping_charge + packaging_fee.\nThe Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.\nThe App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that\npermission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles\nopportunistically with `updated_since` because it has no cron.\ntests/Unit/OrderApiContractTest.php validates $refs, the Markdown examples, enums and per-operation error codes.\n"
+        "version": "1.0.0-rc.4.5",
+        "description": "r4.2 baseline matching docs/integrations/QAMMARIS_ORDER_API_V1.md r4.2, signed off by the App agent (draft ff3532c).\nr4.2 (Owner decisions 2026-10-09): Issue.opened_by nullable + opened_by_source; waiver\ndecision_id with Owner authorization vs relayed resends (X-Qammaris-Delivery); error codes aligned\n(structure -> validation_failed, approval requirement -> proof_required, unauthorized waiver -> 403);\nOrderListPage.unavailable and serialization_failed so one unreadable order cannot fail the list.\nr4.1 history: K-A (webhook signature path + vectors) and K-B (new timestamp and signature on every webhook retry).\nr4.3 (text only): payment before fulfillment (payment_required). r4.4 DRAFT (ORD-04, Owner 2026-10-11): Order.totals.packaging_fee,\nthe paperbag charge snapshotted on the order; total = subtotal + adjustments + shipping_charge + packaging_fee.\nr4.5 DRAFT (ORD-08, Owner 2026-10-17): Cost.origin, Cost.advanced_by, Cost.source_version; website-origin costs\n(courier fee and whose money, entered on the Website) have reported_by null and accept only reimbursement reports.\nThe Website is the source of truth for orders; Qammaris App for employees, expenses and reimbursements.\nThe App backend verifies the employee is active and is `owner` or holds `orders.handle` before signing; that\npermission is not sent. The Website webhook (retried up to 24 h) is the primary path; the App reconciles\nopportunistically with `updated_since` because it has no cron.\ntests/Unit/OrderApiContractTest.php validates $refs, the Markdown examples, enums and per-operation error codes.\n"
     },
     "servers": [
         {
@@ -1830,7 +1830,7 @@
                     "source_version",
                     "actor"
                 ],
-                "description": "Sum of funding.amount must equal amount; reimbursement.amount equals the staff_advance part (422 otherwise)",
+                "description": "Sum of funding.amount must equal amount; reimbursement.amount equals the staff_advance part (422 otherwise). r4.5: for a website-origin cost only reimbursement (status, proof, waiver, updated_at) and source_version are applied; kind, status, amount and funding are ignored, and a report for a reimbursement amount the Website has since changed is a no-op.",
                 "properties": {
                     "kind": {
                         "$ref": "#/components/schemas/CostKind"
@@ -1878,9 +1878,17 @@
                     "reported_by",
                     "reported_at"
                 ],
+                "description": "r4.5: origin app (default when absent) = reported by Qammaris App. origin website = the courier fee Staff Order recorded on the Website with whose money paid it (ORD-08); the Website owns amount, funding and advanced_by and bumps source_version on every edit; reported_by is null. The App imports it under the same expense_ref, creates the reimbursement of advanced_by (matched by name to an active employee) and reports only the reimbursement back with CostRequest at a higher source_version.",
                 "properties": {
                     "expense_ref": {
                         "$ref": "#/components/schemas/ExpenseRef"
+                    },
+                    "origin": {
+                        "type": "string",
+                        "enum": [
+                            "app",
+                            "website"
+                        ]
                     },
                     "kind": {
                         "$ref": "#/components/schemas/CostKind"
@@ -1898,14 +1906,96 @@
                             "$ref": "#/components/schemas/Funding"
                         }
                     },
+                    "advanced_by": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/AdvancedBy"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "reimbursement": {
                         "$ref": "#/components/schemas/Reimbursement"
                     },
+                    "source_version": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
                     "reported_by": {
-                        "$ref": "#/components/schemas/ActorRef"
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ActorRef"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "reported_at": {
                         "$ref": "#/components/schemas/Timestamp"
+                    }
+                },
+                "allOf": [
+                    {
+                        "if": {
+                            "required": [
+                                "origin"
+                            ],
+                            "properties": {
+                                "origin": {
+                                    "const": "website"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "reported_by": {
+                                    "type": "null"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "required": [
+                                "origin"
+                            ],
+                            "properties": {
+                                "origin": {
+                                    "const": "app"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "reported_by": {
+                                    "$ref": "#/components/schemas/ActorRef"
+                                },
+                                "advanced_by": {
+                                    "type": "null"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "AdvancedBy": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "display_name"
+                ],
+                "description": "r4.5 employee whose own money paid a website-origin cost, chosen on the Website from the App's active employees (GET {app}/api/integrations/website/orders/employees, signed like the webhook); app_user_id links the App account",
+                "properties": {
+                    "app_user_id": {
+                        "$ref": "#/components/schemas/AppUserId"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
                     }
                 }
             },

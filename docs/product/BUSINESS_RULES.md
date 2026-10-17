@@ -231,6 +231,28 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - **Pengecualian bukti reimburse (keputusan Owner 2026-10-09, draf r4.2):** hanya Owner App yang boleh membuat atau menyetujui pengecualian bukti. Backend App boleh mengirim ulang keputusan yang sudah sah tanpa Owner sedang melakukan request itu. Website memisahkan pemberi persetujuan, aktor request, dan jalur sinkronisasi. Keputusan baru tidak diterima hanya karena payload memuat nama atau ID Owner: Owner itu sendiri yang harus mengirim, dan ID-nya harus terdaftar di allowlist Website.
 - Bila App bermasalah, pesanan tetap dikerjakan di Admin PWA. Pemberitahuan ke App menunggu dan dicoba ulang. Setelah 24 jam, event yang gagal tampil di **Integrasi App** untuk dikirim ulang oleh Super Admin.
 
+### Ongkir kurir dan talangan dicatat sekali di Website (ORD-08, Owner 2026-10-17, branch review)
+
+- Semua pekerjaan pesanan dilakukan di Website. Qammaris App hanya tampilan cadangan dan tempat reimburse masuk.
+- Peran:
+  - **Super Admin (Owner, dari Jakarta)** membuat pesanan dan mengirim link ke customer. Owner tidak perlu mengonfirmasi pembayaran, packing, atau uang siapa;
+  - **Staff Order** (Andi/Ikrar, satu akun bersama di laptop toko) mengerjakan pembayaran → packing → pesan kurir (ongkir + uang siapa) → serah terima.
+- Pesanan Online di App hanya untuk dilihat: tanpa "Dilakukan oleh", tombol langkah, atau "Catat ongkir", dengan tombol "Buka di Website". Link pesanan di grup WhatsApp membuka halaman pesanan Website ("Buka pesanan"), dan saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dimatikan saat rilis.
+- Langkah kurir dalam kota: **Kurir sudah dipesan → Sudah diserahkan ke kurir** (tanpa langkah "Kurir tiba").
+- Saat **Kurir sudah dipesan** (atau **Request pickup J&T**), Staff Order wajib mengisi:
+  - **Ongkir ke kurir**: nominal yang benar-benar dibayar ke kurir;
+  - **Uang siapa**: Andi / Ikrar / Kasir / Customer bayar driver.
+- Ongkir kurir bisa diubah lewat "Ubah ongkir kurir". Satu pesanan hanya punya satu catatan ongkir kurir. Setelah reimburse dibayar, koreksi lewat Owner di App.
+- Uang Andi/Ikrar otomatis menjadi reimburse karyawan itu di Qammaris App, **langsung disetujui, bukti opsional** (keputusan Owner). Owner tinggal membayar.
+  - Pilihan karyawan diambil langsung dari karyawan aktif di Qammaris App dan disambungkan lewat ID akun. Karyawan baru atau yang berhenti otomatis ikut berubah. Ganti nama akun di App langsung terlihat di halaman pesanan Website, reimburse, dan ongkir pesanan orang itu.
+  - Nama yang tidak cocok tidak membuat reimburse dan memberi notifikasi ke Owner.
+- Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin tidak mengerjakan packing.
+- Uang Owner, Kasir, dan Customer bayar driver tidak membuat reimburse.
+- Semua isian rupiah di admin memakai pemisah ribuan (15.000).
+- **Notifikasi pesanan (ORD-09):** Super Admin dan Staff Order bisa mengaktifkan push notification per perangkat. Setiap ada pesanan baru dari checkout website, muncul notifikasi berisi kode, jumlah barang, total, dan "menunggu konfirmasi", tanpa nomor HP atau alamat. Ketuk notifikasi untuk membuka pesanannya.
+- Ongkir yang ditagih ke customer (ditambahkan ke transfer / bayar ke driver / gratis) tetap terpisah dari ongkir yang dibayar ke kurir.
+- Pilihan lama "Toko bayar driver dengan" tidak ada lagi di halaman pesanan V2.
+
 ### Status pesanan terpisah (ORD-02c, branch review)
 
 - Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.
