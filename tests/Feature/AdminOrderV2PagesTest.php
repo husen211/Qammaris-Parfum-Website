@@ -194,16 +194,16 @@ class AdminOrderV2PagesTest extends TestCase
         ] as $url => $data) {
             $this->post($url, $data + ['revision' => $order->revision])->assertForbidden();
         }
+        // ADM-01: the staff discount applies at once; deciding (older pending ones) stays Super Admin only.
         $this->post(route('admin.orders.v2.adjustments', $order), ['revision' => $order->revision, 'direction' => 'discount', 'amount' => '20.000', 'reason' => 'Diskon member'])
             ->assertSessionHas('order_notice.type', 'success');
         $adjustment = $order->adjustments()->sole();
-        $this->post(route('admin.orders.v2.adjustments.decide', [$order->refresh(), $adjustment->id, 'approve']), ['revision' => $order->revision])->assertForbidden();
-        $this->get(route('admin.orders.show', $order))->assertSee('Menunggu persetujuan Super Admin')->assertDontSee('Keuangan · Super Admin');
+        $order->refresh();
+        $this->assertSame(['approved', '380000.00'], [$adjustment->status, $order->customerTotal()]);
+        $this->post(route('admin.orders.v2.adjustments.decide', [$order, $adjustment->id, 'approve']), ['revision' => $order->revision])->assertForbidden();
+        $this->get(route('admin.orders.show', $order))->assertSee('Diterapkan')->assertDontSee('Menunggu persetujuan Super Admin')->assertDontSee('Keuangan · Super Admin');
 
         $this->actingAs($this->owner);
-        $this->post(route('admin.orders.v2.adjustments.decide', [$order, $adjustment->id, 'approve']), ['revision' => $order->revision]);
-        $order->refresh();
-        $this->assertSame('380000.00', $order->customerTotal());
         $page = $this->get(route('admin.orders.show', $order))->assertSee('Keuangan · Super Admin')->assertSee('Lebih bayar');
 
         $this->post(route('admin.orders.money.refund-decision', $order), ['revision' => $order->revision, 'refund_due' => '20.000', 'reason' => 'Kembalikan selisih diskon']);

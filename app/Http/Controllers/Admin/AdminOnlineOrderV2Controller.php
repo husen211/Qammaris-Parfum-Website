@@ -313,7 +313,7 @@ class AdminOnlineOrderV2Controller extends Controller
             ['reason.required' => 'Tulis alasan penyesuaian.'], ['amount' => 'nominal']);
 
         return $this->attempt($order, 'harga', fn () => $this->adjustments->request($order, (int) $data['revision'], $request->user(),
-            ($data['direction'] === 'discount' ? '-' : '').$this->rupiah($data['amount']), $data['reason']), 'Penyesuaian harga diajukan. Menunggu persetujuan Super Admin.');
+            ($data['direction'] === 'discount' ? '-' : '').$this->rupiah($data['amount']), $data['reason']), 'Penyesuaian harga diterapkan. Total pesanan sudah diperbarui.');
     }
 
     public function decideAdjustment(Request $request, OnlineOrder $order, int $adjustment, string $decision): RedirectResponse

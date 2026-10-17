@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="id" @include('admin._pwa-attributes')>
+{{-- ADM-01: explicit light theme (OS dark mode turned the canvas behind the shell black) and a single scroller: only <main> scrolls. --}}
+<html lang="id" data-theme="light" class="h-full bg-gray-50 [color-scheme:light]" @include('admin._pwa-attributes')>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -14,7 +15,7 @@
         .active-nav { background-color: #F3F4F6; color: #111827; border-right: 3px solid #111827; }
     </style>
 </head>
-<body data-navigation-shell="admin" class="bg-gray-50 text-gray-800 antialiased">
+<body data-navigation-shell="admin" class="h-full overflow-hidden bg-gray-50 text-gray-800 antialiased">
 
     <div class="flex h-dvh overflow-hidden">
         
@@ -96,7 +97,7 @@
             </div>
         </aside>
 
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+        <main class="relative flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-gray-50">
             <header class="relative md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
                 <div class="min-w-0">
                     <span class="block font-bold tracking-widest">QAMMARIS</span>

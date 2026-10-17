@@ -9,6 +9,7 @@
             <p class="mt-1 text-sm text-gray-500">Pesanan dari WhatsApp: link data customer, pembayaran, pengiriman, dan tugas staf.</p>
         </div>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            @include('admin.orders.partials.refresh')
             @can('orders.payment-accounts')<a href="{{ route('admin.orders.payment-accounts.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-semibold text-gray-700 hover:bg-gray-100">Rekening pembayaran</a>@endcan
             <a href="{{ route('admin.orders.create') }}" class="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 sm:w-auto">+ Buat pesanan</a>
         </div>

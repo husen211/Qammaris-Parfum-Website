@@ -1,4 +1,4 @@
-{{-- ORD-03 "Opsi lanjutan": price adjustments (Super Admin approves) and cancelling. Opens by itself when an approval waits. --}}
+{{-- ORD-03 "Opsi lanjutan": price adjustments (applied directly since ADM-01; older pending ones wait for Super Admin) and cancelling. --}}
 @php($pendingAdjustments = $order->adjustments->where('status', 'pending')->count())
 <details id="lanjutan" class="{{ $card }}" @if ($isOpen('harga') || $isOpen('batal') || ($pendingAdjustments > 0 && auth()->user()->can('orders.approve-adjustment'))) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
@@ -12,7 +12,7 @@
         @foreach ($order->adjustments as $adjustment)
             <div class="mt-2 rounded-lg border border-gray-200 p-3 text-sm">
                 <p class="flex justify-between gap-2"><span class="font-medium">{{ $adjustment->reason }}</span><span class="shrink-0 font-semibold tabular-nums">{{ format_rupiah($adjustment->amount) }}</span></p>
-                <p class="mt-1 text-xs text-gray-500">{{ ['pending' => 'Menunggu persetujuan Super Admin', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'][$adjustment->status] }}{{ $adjustment->decision_note ? ' · '.$adjustment->decision_note : '' }}</p>
+                <p class="mt-1 text-xs text-gray-500">{{ ['pending' => 'Menunggu persetujuan Super Admin', 'approved' => 'Diterapkan', 'rejected' => 'Ditolak'][$adjustment->status] }}{{ $adjustment->decision_note ? ' · '.$adjustment->decision_note : '' }}</p>
                 @if ($adjustment->status === 'pending')
                     @can('orders.approve-adjustment')
                         <div class="mt-2 grid gap-2 sm:grid-cols-2">
@@ -28,15 +28,15 @@
             </div>
         @endforeach
         @if ($open)
-            <form method="POST" action="{{ route('admin.orders.v2.adjustments', $order) }}" class="mt-2 grid gap-3 sm:grid-cols-3">
+            <form method="POST" action="{{ route('admin.orders.v2.adjustments', $order) }}" class="mt-2 grid gap-3 sm:grid-cols-3" data-confirm="Terapkan penyesuaian harga ini? Total pesanan langsung berubah.">
                 @csrf {!! $hidden('harga') !!}
                 <label class="text-sm font-medium text-gray-700">Jenis
                     <select name="direction" class="{{ $input }}"><option value="discount">Potongan</option><option value="surcharge">Tambahan</option></select>
                 </label>
                 <label class="text-sm font-medium text-gray-700">Nominal (Rp)<input name="amount" inputmode="numeric" required value="{{ old('amount') }}" class="{{ $input }}"></label>
                 <label class="text-sm font-medium text-gray-700">Alasan<input name="reason" required minlength="5" maxlength="300" value="{{ old('reason') }}" class="{{ $input }}"></label>
-                <div class="sm:col-span-3"><button class="{{ $secondary }}" data-busy-label="Mengajukan…">Ajukan penyesuaian</button>
-                    <p class="mt-1 text-xs text-gray-500">Total berubah setelah disetujui Super Admin.</p></div>
+                <div class="sm:col-span-3"><button class="{{ $secondary }}" data-busy-label="Menerapkan…">Terapkan penyesuaian</button>
+                    <p class="mt-1 text-xs text-gray-500">Total langsung berubah dan tercatat di Riwayat.</p></div>
             </form>
         @endif
     </section>

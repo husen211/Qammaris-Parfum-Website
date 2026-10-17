@@ -28,7 +28,13 @@
 @section('content')
 <div class="mx-auto max-w-6xl space-y-4" data-order-v2>
     <div>
-        <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">← Pesanan Online</a>
+        <div class="flex items-center justify-between gap-3">
+            <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">← Pesanan Online</a>
+            @include('admin.orders.partials.refresh')
+        </div>
+        @if (in_array($order->lifecycle, ['draft', 'awaiting_customer'], true))
+            <p class="mb-1 text-xs text-gray-500" data-refresh-hint>Customer sudah mengisi link pesanan? Tekan <strong>Muat ulang</strong> untuk melihat data terbaru.</p>
+        @endif
         <div class="flex flex-wrap items-center gap-2">
             <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ $order->code }}</h1>
             <span @class([$chip,

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" @include('admin._pwa-attributes')>
+<html lang="id" data-theme="light" class="bg-gray-50 [color-scheme:light]" @include('admin._pwa-attributes')>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
