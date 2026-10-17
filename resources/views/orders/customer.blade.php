@@ -255,7 +255,11 @@
             </form>
         @else
 
-            @if ($locationUrl && $order->lifecycle !== 'draft' && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
+            {{-- ADM-01: also right after a website checkout (draft), when the customer is already in the WhatsApp chat. --}}
+            @if ($order->fulfillment === 'local_delivery' && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled' && ! $locationUrl && \App\Models\StoreInfo::usesTestWhatsapp())
+                <p class="mt-6 border border-dashed border-gray-300 p-3 text-xs leading-5 text-gray-600" data-location-test-note>Mode uji: tombol Kirim Sharelok tampil di website live. Di sini WhatsApp toko sengaja tidak aktif.</p>
+            @endif
+            @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="location-title">
                     <h2 id="location-title" class="text-base font-semibold text-brand-black">Kirim Sharelok</h2>
                     <p class="mt-1 text-sm leading-6 text-gray-700">Supaya kurir tepat sampai ke lokasi Anda.</p>

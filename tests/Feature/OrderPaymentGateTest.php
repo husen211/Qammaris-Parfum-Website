@@ -82,7 +82,6 @@ class OrderPaymentGateTest extends TestCase
         $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
         $adjustments = app(OnlineOrderAdjustments::class);
         $order = $adjustments->request($order, $order->revision, $this->staff, '-10000', 'Diskon member terlambat');
-        $order = $adjustments->approve($order, $order->revision, $owner, $order->adjustments()->sole()->id);
         $order = app(RecordOnlineOrderMoney::class)->decideRefund($order, $order->revision, $owner, '10000', 'Kembalikan selisih diskon');
         $this->assertSame(['active', 'refund_pending'], [$order->lifecycle, $order->payment_status]);
         $this->assertPaymentRequired($this->api($order, '/claims', ['task' => 'preparation', 'actor' => $this->actor()]));

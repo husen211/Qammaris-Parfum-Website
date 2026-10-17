@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
- * Price adjustments after the order was agreed (ORD-02c slice 5). Anyone with order access may request one;
- * only Super Admin approves. An approved discount that leaves the customer overpaid is shown as such — a refund
- * still needs its own Super Admin decision (ADR-051), nothing is returned automatically.
+ * Price adjustments after the order was agreed (ORD-02c slice 5). Owner 2026-10-17 (ADM-01): anyone with order
+ * access applies a discount or surcharge directly, without a Super Admin approval step; who did it stays in the
+ * order history. Adjustments still pending from before can be approved or rejected by Super Admin as before.
+ * A discount that leaves the customer overpaid is shown as such — a refund still needs its own Super Admin
+ * decision (ADR-051), nothing is returned automatically.
  */
 class OnlineOrderAdjustments
 {
@@ -38,8 +40,17 @@ class OnlineOrderAdjustments
             if ($fields) {
                 throw new OrderValidationFailed('Periksa penyesuaian harga.', $fields);
             }
-            $order->adjustments()->create(['amount' => $amount, 'reason' => Str::limit(trim($reason), 297), 'requested_by' => $actor->id]);
-            $this->orderEvent($order, $actor, 'adjustment_requested', Rupiah::format($amount).' · '.trim($reason));
+            if (Rupiah::minorUnits($order->customerTotal()) + Rupiah::minorUnits($amount) < 0) {
+                throw new OrderValidationFailed('Total pesanan tidak boleh di bawah 0.', ['amount' => 'Terlalu besar']);
+            }
+            $order->adjustments()->create([
+                'amount' => $amount, 'reason' => Str::limit(trim($reason), 297), 'requested_by' => $actor->id,
+                'status' => 'approved', 'decided_by' => $actor->id, 'decided_at' => now(),
+            ]);
+            $order->unsetRelation('adjustments');
+            $overpaid = self::overpaidCents($order);
+            $this->orderEvent($order, $actor, 'adjustment_applied', Rupiah::format($amount).' · '.trim($reason)
+                .($overpaid > 0 ? ' · lebih bayar '.Rupiah::format(Rupiah::decimal($overpaid)) : ''));
 
             return true;
         });

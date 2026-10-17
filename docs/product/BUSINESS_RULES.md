@@ -207,7 +207,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Bila data sudah lengkap dari chat, customer **tidak perlu** membuka form. Link tetap bisa dipakai customer untuk melihat status.
 - Form customer tetap sederhana: produk sudah terisi, tiga cara menerima, dua pilihan paperbag. Setelah Lunas atau packing dimulai, perubahan dari customer menjadi permintaan yang ditinjau toko.
 - Staff Order boleh menandai Lunas dengan sumber konfirmasi (bukti di chat, bukti diunggah, Majoo).
-- Keputusan refund, pembayaran refund, pembatalan entri, rekonsiliasi, dan persetujuan penyesuaian harga hanya untuk Super Admin.
+- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya untuk Super Admin. Penyesuaian harga diterapkan langsung oleh siapa pun dengan akses pesanan (ADM-01, Owner 2026-10-17).
 - Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
 
 ### Operasional pesanan yang disederhanakan (ORD-03, branch review)
@@ -216,7 +216,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Pembayaran dicatat dengan nominal, metode, dan centang "Sudah dicatat di Majoo". Sumber konfirmasi tidak dipilih lagi; sistem mencatatnya secara internal (Majoo, atau "dicatat admin").
 - Packing: centang setiap barang sesuai jumlah pesanan, lalu konfirmasi. Barang yang kurang dilaporkan lewat "Ada masalah".
 - J&T: request pickup, menunggu kurir, lalu sudah di-pickup. QR dan nomor resi opsional dan tidak menghalangi pickup.
-- Ongkir (saklar UAT `ORDERS_SIMPLE_UX`): Staff Order boleh mengisi ongkir yang ditagihkan ke customer selama belum ada pembayaran sama sekali. Setelah ada pembayaran, perubahan total lewat penyesuaian harga yang disetujui Super Admin. Pendanaan driver, refund, dan persetujuan harga tetap Super Admin.
+- Ongkir (saklar UAT `ORDERS_SIMPLE_UX`): Staff Order boleh mengisi ongkir yang ditagihkan ke customer selama belum ada pembayaran sama sekali. Setelah ada pembayaran, perubahan total lewat penyesuaian harga (langsung diterapkan sejak ADM-01). Pendanaan driver dan refund tetap Super Admin.
 - Customer boleh memilih metode pembayaran (Transfer bank atau QRIS) di link pesanan. Pilihan ini hanya preferensi: tidak menandai lunas dan tidak membuat QRIS Majoo.
 - Link pesanan dibagikan lewat Salin Link, Salin Pesan, atau menu bagikan bawaan HP. WhatsApp tidak wajib.
 
@@ -258,7 +258,8 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
   - Lewat batas waktu, keep ditandai **perlu tindakan** dan tidak pernah dibatalkan otomatis.
   - Keep berakhir sendiri saat pesanan Lunas atau diserahkan, dan dilepas bila pesanan dibatalkan.
 - **Penyesuaian harga:**
-  - Siapa pun dengan akses pesanan boleh mengajukan, dengan alasan; hanya Super Admin yang menyetujui. Total berubah setelah disetujui.
+  - Owner 2026-10-17 (ADM-01): siapa pun dengan akses pesanan (termasuk Staff Order) menerapkan potongan/tambahan langsung, dengan alasan, tanpa persetujuan Super Admin. Total langsung berubah; siapa yang menerapkan tercatat di Riwayat. Total tidak boleh di bawah 0.
+  - Pengajuan lama yang masih menunggu tetap diputuskan Super Admin.
   - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Pengembaliannya tetap butuh keputusan refund Super Admin.
 - **Permintaan perubahan customer:**
   - Customer mengubah data langsung hanya selama belum Lunas dan packing belum dimulai. Setelah itu perubahan menjadi permintaan yang ditinjau admin.

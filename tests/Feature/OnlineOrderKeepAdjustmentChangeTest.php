@@ -84,39 +84,45 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
         $this->assertSame('released', $cancelled->keep_status);
     }
 
-    public function test_price_adjustments_need_super_admin_and_overpayment_is_shown_not_refunded(): void
+    public function test_price_adjustments_apply_directly_and_overpayment_is_shown_not_refunded(): void
     {
+        // ADM-01 (Owner 2026-10-17): Staff Order applies a discount or surcharge without a Super Admin approval step.
         $adjustments = app(OnlineOrderAdjustments::class);
         $money = app(RecordOnlineOrderMoney::class);
         $order = $this->order('pickup');
         $order = $money->recordPayment($order, $order->revision, $this->staff, '200000', 'transfer', 'proof_in_chat');
         $this->assertSame('paid', $order->payment_status);
 
-        $order = $adjustments->request($order, $order->revision, $this->staff, '-20000', 'Diskon member lupa diterapkan');
+        $order = $adjustments->request($order, $order->revision, $this->staff, '-20000', 'Potongan poin member');
         $adjustment = $order->adjustments()->sole();
-        $this->assertSame(['pending', '200000.00'], [$adjustment->status, $order->customerTotal()], 'Pending adjustments do not change the total');
-        try {
-            $adjustments->approve($order, $order->revision, $this->staff, $adjustment->id);
-            $this->fail('Staff Order approved a price change');
-        } catch (HttpException $denied) {
-            $this->assertSame(403, $denied->getStatusCode());
-        }
-
-        $order = $adjustments->approve($order, $order->revision, $this->owner, $adjustment->id);
+        $this->assertSame(['approved', $this->staff->id, $this->staff->id], [$adjustment->status, $adjustment->requested_by, $adjustment->decided_by]);
+        $this->assertNotNull($adjustment->decided_at);
         $this->assertSame(['180000.00', 2000000], [$order->customerTotal(), OnlineOrderAdjustments::overpaidCents($order)]);
         $this->assertSame([null, 'paid'], [$order->refund_status, $order->payment_status], 'Overpayment is visible; no refund is assumed');
-        $this->assertStringContainsString('lebih bayar', $order->events()->reorder('id', 'desc')->value('note'));
+        $event = $order->events()->reorder('id', 'desc')->first();
+        $this->assertSame('adjustment_applied', $event->kind);
+        $this->assertStringContainsString('lebih bayar', $event->note);
 
+        // Refunds stay a Super Admin decision.
+        $this->assertRejected(fn () => $money->decideRefund($order, $order->revision, $this->staff, '20000', 'Kembalikan selisih'), HttpException::class);
         $order = $money->decideRefund($order, $order->revision, $this->owner, '20000', 'Kembalikan selisih diskon');
         $this->assertSame(['pending', 'refund_pending'], [$order->refund_status, $order->payment_status]);
 
         $this->assertRejected(fn () => $adjustments->request($order, $order->revision, $this->staff, '0', 'Nol tidak boleh'), OrderValidationFailed::class);
-        $order = $adjustments->request($order, $order->revision, $this->staff, '-500000', 'Terlalu besar sekali');
-        $big = $order->adjustments()->where('status', 'pending')->sole();
-        $this->assertRejected(fn () => $adjustments->approve($order, $order->revision, $this->owner, $big->id), OrderValidationFailed::class);
-        $this->assertRejected(fn () => $adjustments->reject($order, $order->revision, $this->owner, $big->id, 'no'), OrderValidationFailed::class);
-        $order = $adjustments->reject($order, $order->revision, $this->owner, $big->id, 'Salah input nominal');
-        $this->assertSame('rejected', $big->fresh()->status);
+        $this->assertRejected(fn () => $adjustments->request($order, $order->revision, $this->staff, '-500000', 'Terlalu besar sekali'), OrderValidationFailed::class);
+        $this->assertSame(1, $order->adjustments()->count(), 'A rejected input leaves nothing behind');
+
+        // Adjustments still pending from before ADM-01 keep their Super Admin decision.
+        $legacy = $order->adjustments()->create(['amount' => '5000', 'reason' => 'Pengajuan lama', 'requested_by' => $this->staff->id]);
+        $this->assertSame('pending', $legacy->fresh()->status);
+        try {
+            $adjustments->approve($order, $order->revision, $this->staff, $legacy->id);
+            $this->fail('Staff Order decided an older pending request');
+        } catch (HttpException $denied) {
+            $this->assertSame(403, $denied->getStatusCode());
+        }
+        $order = $adjustments->reject($order, $order->revision, $this->owner, $legacy->id, 'Sudah tidak berlaku');
+        $this->assertSame('rejected', $legacy->fresh()->status);
     }
 
     public function test_an_approved_discount_settles_a_short_payment_before_fulfillment(): void
@@ -128,7 +134,6 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
 
         $adjustments = app(OnlineOrderAdjustments::class);
         $order = $adjustments->request($order, $order->revision, $this->staff, '-10000', 'Potongan harga disepakati');
-        $order = $adjustments->approve($order, $order->revision, $this->owner, $order->adjustments()->sole()->id);
         $this->assertSame(['paid', 'active'], [$order->payment_status, $order->lifecycle]);
 
         $order = $this->packed($order);

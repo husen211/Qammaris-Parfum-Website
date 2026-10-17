@@ -88,6 +88,7 @@ class OrderOperationalUxTest extends TestCase
         $this->actingAs($this->staff)->post(route('admin.orders.v2.adjustments', $order), ['revision' => $order->revision, 'direction' => 'discount', 'amount' => '10000', 'reason' => 'Diskon member uji'])
             ->assertSessionHas('order_notice.type', 'success');
         $adjustment = $order->adjustments()->sole();
+        $this->assertSame('approved', $adjustment->status, 'ADM-01: staff discounts apply directly');
         $this->post(route('admin.orders.v2.adjustments.decide', [$order, $adjustment->id, 'approve']), ['revision' => $order->fresh()->revision])->assertForbidden();
         $this->post(route('admin.orders.money.refund-decision', $order), ['revision' => $order->fresh()->revision, 'refund_due' => '0', 'reason' => 'uji'])->assertForbidden();
         $this->get(route('admin.orders.show', $order))->assertDontSee('Setujui</button>', false)->assertDontSee('id="keuangan"', false);

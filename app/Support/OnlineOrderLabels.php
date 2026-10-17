@@ -88,6 +88,7 @@ final class OnlineOrderLabels
         'completed' => 'pesanan selesai',
         'adjustment_requested' => 'mengajukan penyesuaian harga',
         'adjustment_approved' => 'menyetujui penyesuaian harga',
+        'adjustment_applied' => 'menerapkan penyesuaian harga',
         'adjustment_rejected' => 'menolak penyesuaian harga',
         'change_requested' => 'mengajukan perubahan data',
         'change_approved' => 'menyetujui perubahan data',
