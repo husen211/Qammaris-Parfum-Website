@@ -25,13 +25,13 @@ An employee advance becomes that employee's reimbursement in Qammaris App, **alr
 Website:
 - One website-origin cost per order (`expense_ref` = `exp_<32 hex>`). It is created when "Kurir sudah dipesan" or "Request pickup J&T" is submitted, and can be corrected afterwards. Each correction bumps `source_version`.
 - Funding: a named employee → `staff_advance` (reimbursement `submitted`, proof `pending`); Kasir → `cashier_cash`; Customer bayar driver → `customer_direct` (both `not_applicable`).
-- The employee names come from `QAMMARIS_ORDER_STAFF_ADVANCERS` (default `Andi,Ikrar`). They must equal the App account names.
+- The employee names come from `QAMMARIS_ORDER_STAFF_ADVANCERS` (default `Andi,Ikrar`). Each must equal the App account's display name or username.
 - Corrections are refused once the reimbursement is `paid`.
 - An App `PUT …/costs/{ref}` on a website cost applies only the reimbursement fields, and only when `source_version` is higher. A report whose reimbursement amount no longer matches the Website amount is a stale no-op. Waiver authorization is unchanged from r4.2.
 
 App:
 - On every order detail read (webhook, reconcile with `flags.open_reimbursement`, detail opened), the App imports each `origin=website` cost under the same `expense_ref`.
-- A staff advance is matched by name to exactly one active `EMPLOYEE` (case-insensitive). The App creates that employee's reimbursement with status **Approved**, with a proof waiver by the first active Owner ("Otomatis disetujui …", Owner 2026-10-17). It then reports `approved`/`waived` back with version = max(App, Website) + 1, sent as that Owner, who must be on the Website allowlist.
+- A staff advance is matched to exactly one active `EMPLOYEE` by display name (case-insensitive), or by username when no display name matches. The App creates that employee's reimbursement with status **Approved**, with a proof waiver by the first active Owner ("Otomatis disetujui …", Owner 2026-10-17). It then reports `approved`/`waived` back with version = max(App, Website) + 1, sent as that Owner, who must be on the Website allowlist.
 - A correction moves or adjusts the reimbursement while it is not Paid. A change to Kasir or Customer deletes it.
 - An unmatched name keeps the expense, sets `importIssue`, notifies the Owner, and sends nothing back.
 - Website costs cannot be voided in the App, and the App shows no second "Catat ongkir".
