@@ -1,0 +1,48 @@
+# Hostinger inode cleanup (OPS-INODE-2026-10)
+
+hPanel on 2026-10-17 showed 403,410 / 400,000 inodes (101%) and 9.63 / 20 GB disk for `qammarisparfum.id` + `staging.qammarisparfum.id`. Inodes count files and directories, not bytes. The limit is per hosting account, so production and staging share it. At 100% new files can fail: uploads, sessions, cache, logs and the next deploy.
+
+## Cause
+
+Every production deploy unpacks a complete release (code + `vendor`, ~13,200 files and directories) into `releases/qammaris-<sha>`. Nothing removed old releases or the per-deploy leftovers `releases/.incoming-<sha>.tar.gz` (~58 MB each) and `releases/.deploy-<sha>`. GitHub records 33 successful production deploys up to `535d5f3`, which is roughly 33 × 13.2k ≈ 435k inodes in releases alone (exact count: step 1). Staging (hPanel Git checkout with `.git`, `vendor`, storage) adds to the same quota.
+
+From the next deploy, `deploy-production-release.sh` prunes after a successful health check: it keeps the live release, the release it switched away from (rollback target) and one more, and removes leftover archives and temp dirs. The existing backlog still has to be removed once by hand (step 2), because the deploy itself may fail while the account is over quota.
+
+## What is never touched
+
+Releases contain code only. `shared/qammaris-website/` holds `.env`, `storage` (product photos, logs, sessions, cache, private files) and deploy state; the database lives in MySQL. Each release links to `shared` with symlinks; deleting a release removes the link, never the target. `current` and the rollback release are always kept.
+
+## Steps (Owner, over SSH from a laptop with this repository)
+
+The commands stream the script over SSH, so nothing new is written on the full server. Replace `<port>` and `<host>` with the hPanel SSH details. Do not use the staging deploy key.
+
+1. Read-only report. It prints paths and counts only:
+   ```
+   ssh -p <port> u429527638@<host> 'bash -s' < tools/hostinger/inode-report.sh
+   ```
+2. Preview, then remove old releases:
+   ```
+   ssh -p <port> u429527638@<host> 'bash -s' < tools/hostinger/prune-production-releases.sh
+   ssh -p <port> u429527638@<host> 'bash -s -- --apply' < tools/hostinger/prune-production-releases.sh
+   ```
+   The first command is a dry run. It lists every directory with its inode count and the live release. Run `--apply` only if the live release shown is the one serving the site.
+3. Check the site: `https://qammarisparfum.id/up`, the homepage, one product page and the admin login. Run step 1 again and compare.
+4. hPanel → File Manager → **Trash**: files deleted in File Manager stay in the trash and still count. Empty it if it holds old deletions.
+
+Other items from step 1, decided case by case:
+- `shared/.../storage/framework/cache` large: with `CACHE_STORE=file` expired entries are never deleted. `php artisan cache:clear` in `current` is safe: config/route caches are separate, and the App employee list reloads within one page view.
+- `storage/framework/sessions` large: run `php artisan session:gc` only if sessions use files. Active admins may need to log in again.
+- An old `public_html` site, `~/.cache/composer` or `~/.npm`: report first; remove only when nothing links to it.
+
+## Staging
+
+Staging (`staging.qammarisparfum.id`) has its own website files, MySQL database (catalog snapshot), `.env` and Basic Auth. It was last released on 2026-10-05, and the Owner retired it as the E2E target on 2026-10-09 ([ORDER_API_STAGING](ORDER_API_STAGING.md)). Production does not read it. It shares the inode quota, and the hPanel cron list (account-wide) still runs its worker watchdog.
+
+Deleting staging (Owner decision, after step 1 shows its size):
+1. Download a database export (phpMyAdmin → Export) and the staging `.env` (File Manager → Download) to the laptop. Keep them off the server and out of Git.
+2. Remove the staging cron entries in hPanel → Cron Jobs (`staging-qammaris-worker-watchdog.sh` and any `staging.qammarisparfum.id` scheduler). Keep every `production-…` entry.
+3. Disable the GitHub workflow `Staging release` (`gh workflow disable "Staging release"`). The `staging` environment secrets can stay until a later cleanup.
+4. Delete the staging website in hPanel, then its database and database user.
+5. Check production again (step 3 above).
+
+Production does not depend on any of it. A new staging can be rebuilt from Git plus the saved export.
