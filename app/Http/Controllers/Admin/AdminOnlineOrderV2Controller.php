@@ -66,6 +66,8 @@ class AdminOnlineOrderV2Controller extends Controller
         $viewer = OrderActor::user(auth()->user());
         $courierCost = $order->costs->first(fn ($cost) => $cost->isWebsiteOrigin());
         $shipped = in_array($order->fulfillment, ['local_delivery', 'intercity'], true);
+        // Fresh from the App on every page view, so renamed or new employees show at once (cached list = fallback).
+        $employees = $shipped ? AppEmployees::list(refresh: true) : ['employees' => [], 'stale' => false];
 
         return response()->view('admin.orders.v2.show', [
             // ORD-04 stepper: derived from backend state only; the domain refuses steps out of order.
@@ -94,7 +96,7 @@ class AdminOnlineOrderV2Controller extends Controller
             'courierCost' => $courierCost,
             'courierCostPayers' => $shipped ? OnlineOrderFulfillment::courierCostPayers($viewer, $courierCost) : [],
             'courierCostByOwner' => $viewer->isOwner(),
-            'employeesStale' => $shipped && ! $viewer->isOwner() && AppEmployees::list()['stale'],
+            'employeesStale' => $shipped && ! $viewer->isOwner() && $employees['stale'],
         ])->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 

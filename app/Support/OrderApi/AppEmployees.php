@@ -10,7 +10,8 @@ use Throwable;
 /**
  * ORD-08 (Owner 2026-10-17): the "Uang siapa" employees are the active Qammaris App employees themselves (ID + name),
  * read from the App with the same signed request as the order webhook. Cached briefly; when the App is unreachable the
- * last known list is used and marked stale, so staff can still book a courier.
+ * last known list is used and marked stale, so staff can still book a courier. The order page reads it fresh
+ * (`refresh: true`) so a rename or a new employee in the App shows at once.
  */
 final class AppEmployees
 {
@@ -21,9 +22,9 @@ final class AppEmployees
     private const FRESH_SECONDS = 300;
 
     /** @return array{employees: array<string, string>, stale: bool} app_user_id => display_name */
-    public static function list(): array
+    public static function list(bool $refresh = false): array
     {
-        $fresh = Cache::get(self::FRESH_KEY);
+        $fresh = $refresh ? null : Cache::get(self::FRESH_KEY);
         if (is_array($fresh)) {
             return ['employees' => $fresh, 'stale' => false];
         }
@@ -36,6 +37,16 @@ final class AppEmployees
         }
 
         return ['employees' => (array) Cache::get(self::LAST_KEY, []), 'stale' => true];
+    }
+
+    /** Current App name for an account ID (rename-proof display), or the given fallback. */
+    public static function nameOf(?string $appUserId, ?string $fallback): ?string
+    {
+        if ($appUserId === null) {
+            return $fallback;
+        }
+
+        return ((array) Cache::get(self::LAST_KEY, []))[$appUserId] ?? $fallback;
     }
 
     public static function url(): ?string

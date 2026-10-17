@@ -79,13 +79,9 @@
                     <div class="mt-3">@include('admin.orders.v2._courier-cost-fields')</div>
                     <button name="status" value="requested" class="{{ $secondary }} mt-3 w-full sm:w-auto" data-busy-label="Menyimpan…">Kurir sudah dipesan</button>
                 </form>
-            @elseif ($order->courier_booking_responsibility === 'store' && $order->courier_status === 'requested')
-                <form method="POST" action="{{ route('admin.orders.v2.courier', $order) }}" class="mt-3 flex flex-wrap items-end gap-2">
-                    @csrf {!! $hidden('pengiriman') !!}
-                    <input type="hidden" name="provider" value="{{ $order->courier_provider }}">
-                    <p class="min-w-0 flex-1 text-sm text-gray-700">Kurir {{ OnlineOrderLabels::PROVIDERS[$order->courier_provider] ?? '' }} sudah dipesan.</p>
-                    <button name="status" value="arrived" class="{{ $secondary }}" data-busy-label="Menyimpan…">Kurir tiba</button>
-                </form>
+            @elseif ($order->courier_booking_responsibility === 'store')
+                {{-- ORD-08 (Owner 2026-10-17): no "Kurir tiba" step; booked → handed over. --}}
+                <p class="mt-3 text-sm text-gray-700" data-courier-booked>Kurir {{ OnlineOrderLabels::PROVIDERS[$order->courier_provider] ?? '' }} sudah dipesan.</p>
             @endif
             <form method="POST" action="{{ route('admin.orders.v2.handover', $order) }}" class="mt-4" data-confirm="Pesanan sudah diserahkan ke kurir?">
                 @csrf {!! $hidden('pengiriman') !!}

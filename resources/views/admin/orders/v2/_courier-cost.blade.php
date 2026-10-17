@@ -8,7 +8,8 @@
         'cancelled' => 'reimburse dibatalkan',
         default => null,
     } : null;
-    $payerLabel = $courierCost ? ($courierCost->advanced_by_name !== null ? 'uang '.$courierCost->advanced_by_name
+    // ORD-08: the employee's current App name (by account ID), not the name at the time of booking.
+    $payerLabel = $courierCost ? ($courierCost->advanced_by_name !== null ? 'uang '.\App\Support\OrderApi\AppEmployees::nameOf($courierCost->advanced_by_app_user_id, $courierCost->advanced_by_name)
         : match ($courierCost->funding[0]['source'] ?? null) { 'owner_fund' => 'uang Owner (GoPay)', 'cashier_cash' => 'uang kasir', default => 'dibayar customer ke driver' }) : null;
     $locked = $courierCost?->reimbursement_status === 'paid';
 @endphp

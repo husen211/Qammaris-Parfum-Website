@@ -220,6 +220,22 @@ class OrderCourierCostTest extends TestCase
         $this->book($order, ['cost_amount' => '15000', 'cost_payer' => 'staff:'.self::ANDI])->assertSessionHas('order_notice.type', 'success');
     }
 
+    public function test_a_rename_in_the_app_shows_at_once_and_there_is_no_courier_arrived_step(): void
+    {
+        $order = $this->packed($this->paidV2Order('local_delivery'));
+        $this->actingAs($this->staff);
+        $this->book($order, ['cost_amount' => '15000', 'cost_payer' => 'staff:'.self::ANDI]);
+        $this->get(route('admin.orders.show', $order))->assertSee('uang Andi')->assertSee('data-courier-booked', false)
+            ->assertDontSee('Kurir tiba')->assertSee('Sudah diserahkan ke kurir');
+
+        // Owner renames the account in Qammaris App: the next page view shows the new name everywhere (same account ID).
+        Http::swap(new Factory);
+        Http::fake([self::EMPLOYEES_URL => Http::response(['data' => [
+            ['app_user_id' => self::ANDI, 'display_name' => 'Andi Pratama'], ['app_user_id' => self::IKRAR, 'display_name' => 'Ikrar'],
+        ]])]);
+        $this->get(route('admin.orders.show', $order))->assertSee('uang Andi Pratama')->assertSee('Andi Pratama</span>', false)->assertDontSee('uang Andi ·');
+    }
+
     public function test_the_staff_group_link_opens_the_website_order_page(): void
     {
         config(['orders_api.app_task_links' => false]);

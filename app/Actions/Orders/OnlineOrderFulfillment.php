@@ -346,7 +346,7 @@ class OnlineOrderFulfillment
         }
         $payers += ['cashier' => 'Kasir', 'customer' => 'Customer bayar driver'];
         if ($current && ($key = self::courierCostPayer($current)) !== null && ! isset($payers[$key])) {
-            $payers[$key] = $current->advanced_by_name ?? ($key === 'owner' ? 'Dana Owner' : $key);
+            $payers[$key] = AppEmployees::nameOf($current->advanced_by_app_user_id, $current->advanced_by_name) ?? ($key === 'owner' ? 'Dana Owner' : $key);
         }
 
         return $payers;
