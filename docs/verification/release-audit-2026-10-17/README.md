@@ -47,3 +47,16 @@ Local, synthetic data only; nothing deployed. Release steps: [RELEASE_ORD_08_09]
   - App records were deleted by order ID;
   - temporary DB backups and the MariaDB instance were removed;
   - the Owner's own local push subscription was kept.
+
+## Final release preparation (same day)
+
+- **New read-only `php artisan qammaris:release-check`.** It prints one table after the deploy: migrations, App integration, staff link target, the App's active employees, approving Owner vs `QAMMARIS_APP_OWNER_IDS`, VAPID keys, admin PWA and queue.
+  - The App employees endpoint now also returns that approver.
+  - Run for real against the local App: all PASS, plus the expected local WARN for `QUEUE_CONNECTION=sync`.
+- **Existing production costs.** `OrderCostMigrationTest` creates an App-reported cost *before* the 3 new migrations. The row becomes `origin=app`, its values are unchanged, and the Order API still validates. Passes on SQLite and MariaDB 11.8.9, together with the rehearsal and the release check (5/5).
+- **Version compatibility** (old App ↔ new Website, both directions), checked in code: safe for data. Order: App first, then the Website in the same session.
+- **Runbook corrected.**
+  - VAPID keys are generated after the deploy, because the command ships with the release.
+  - `config:cache` + `queue:restart` after the push settings.
+  - Rollback = revert the merge commit.
+- **Final runs:** Website 782 OK (8 skipped), JS 71, Pint clean; App backend 1267 OK, `tsc` + ESLint clean.

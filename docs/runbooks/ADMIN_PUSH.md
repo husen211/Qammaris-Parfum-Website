@@ -4,7 +4,7 @@ Push notification to Super Admin and Staff Order when a customer orders on the w
 
 ## Release (Owner, once per server)
 
-1. Generate the keys on the server:
+1. After the release is live, generate the keys on the server from the live release (the command ships with it):
    ```
    php artisan admin-push:vapid
    ```
@@ -13,7 +13,7 @@ Push notification to Super Admin and Staff Order when a customer orders on the w
 3. Check two settings:
    - `ADMIN_PWA_ENABLED=true` must stay on, because the admin service worker receives the push;
    - the queue worker must be running, because the push is a queued job (`SendAdminPush`).
-4. Run `php artisan config:cache` and `php artisan migrate --force` (table `admin_push_subscriptions`, additive).
+4. The table `admin_push_subscriptions` comes with the release migrations ([RELEASE_ORD_08_09](RELEASE_ORD_08_09.md)). After editing `.env`, run `php artisan config:cache`, then `php artisan queue:restart` (the worker reloads the keys), then `php artisan qammaris:release-check`.
 
 Empty keys = the feature is off. Nothing is offered and nothing is sent.
 

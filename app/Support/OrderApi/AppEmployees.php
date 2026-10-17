@@ -79,8 +79,25 @@ final class AppEmployees
         return $webhook !== '' && str_ends_with($webhook, '/events') ? substr($webhook, 0, -strlen('/events')).'/employees' : null;
     }
 
+    /**
+     * Release check: one fresh read of the App, nothing cached. `approver` is the App Owner whose waiver the automatic
+     * reimbursement approval carries; it must be on QAMMARIS_APP_OWNER_IDS.
+     *
+     * @return array{employees: array<string, string>, approver: array{app_user_id: string, display_name: string}|null}|null
+     */
+    public static function probe(): ?array
+    {
+        return self::read();
+    }
+
     /** @return array<string, string>|null null when the App could not be read */
     private static function fetch(): ?array
+    {
+        return self::read()['employees'] ?? null;
+    }
+
+    /** @return array{employees: array<string, string>, approver: array{app_user_id: string, display_name: string}|null}|null */
+    private static function read(): ?array
     {
         $url = self::url();
         $secret = (string) config('orders_api.webhook_secret');
@@ -115,6 +132,10 @@ final class AppEmployees
             }
         }
 
-        return $employees;
+        $approver = $response->json('approver');
+        $approver = is_array($approver) && preg_match('/^[a-f0-9]{24}$/', (string) ($approver['app_user_id'] ?? ''))
+            ? ['app_user_id' => (string) $approver['app_user_id'], 'display_name' => trim((string) ($approver['display_name'] ?? ''))] : null;
+
+        return ['employees' => $employees, 'approver' => $approver];
     }
 }
