@@ -299,7 +299,7 @@ class OnlineOrderFulfillment
                 return;
             }
             if ($existing?->isWebsiteOrigin()) {
-                $this->applyAppReimbursement($existing, $actor, $reimbursement, $data['source_version']);
+                $this->applyAppReimbursement($order, $existing, $actor, $reimbursement, $data['source_version']);
 
                 return;
             }
@@ -431,8 +431,10 @@ class OnlineOrderFulfillment
     /**
      * App report on a website-origin cost: only the reimbursement status, proof and waiver of the version it saw.
      * A report for an amount the Website has since changed is stale and ignored; the App re-imports the edit.
+     * The audit event is written WITHOUT a new order revision: the report changes nothing staff work on, and a
+     * bump would turn the next click on an open order page into a false "Pesanan berubah" conflict (ORD-08 UAT).
      */
-    private function applyAppReimbursement(OnlineOrderCost $cost, OrderActor $actor, array $reimbursement, int $sourceVersion): void
+    private function applyAppReimbursement(OnlineOrder $order, OnlineOrderCost $cost, OrderActor $actor, array $reimbursement, int $sourceVersion): void
     {
         if (Rupiah::minorUnits($cost->reimbursement_amount) !== $reimbursement['amount'] * 100) {
             return;
@@ -444,7 +446,9 @@ class OnlineOrderFulfillment
             'reimbursement_status' => $reimbursement['status'], 'proof' => $reimbursement['proof'], 'waiver' => $reimbursement['waiver'] ?? null,
             'reimbursement_updated_at' => Carbon::parse($reimbursement['updated_at']), 'source_version' => $sourceVersion,
         ]);
-        $this->record('cost_reimbursement', 'reimburse ongkir '.($cost->advanced_by_name ?? '-').' · '.$reimbursement['status']);
+        $this->lastEvent = $order->events()->create([
+            'kind' => 'cost_reimbursement', 'note' => Str::limit('reimburse ongkir '.($cost->advanced_by_name ?? '-').' · '.$reimbursement['status'], 197), 'stage' => $order->stage,
+        ] + $actor->eventAttributes());
     }
 
     /** Store or customer books the local driver. Only while nothing is handed over. */

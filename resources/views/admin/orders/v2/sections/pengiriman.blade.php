@@ -14,7 +14,8 @@
     };
     $notPacked = $order->preparation_status !== 'packed';
     // ORD-08: once the store has booked a courier (or one is recorded), the fee is shown and can be corrected.
-    $storeBooked = ($order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store' && in_array($order->courier_status, ['requested', 'arrived'], true))
+    // Includes a store courier handed over without "Kurir sudah dipesan": the fee is still asked for afterwards.
+    $storeBooked = ($order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store' && (in_array($order->courier_status, ['requested', 'arrived'], true) || $order->handed_to === 'courier'))
         || ($order->fulfillment === 'intercity' && in_array($order->jnt_status, ['pickup_requested', 'qr_available', 'picked_up'], true));
 @endphp
 <details id="pengiriman" class="{{ $card }}" @if ($openSection) open @endif>

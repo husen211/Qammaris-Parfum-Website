@@ -149,11 +149,16 @@ class OrderCourierCostTest extends TestCase
 
         // Same version as the Website's: nothing new.
         $this->assertNull($this->ok($report(1, ['status' => 'approved', 'proof' => 'waived', 'waiver' => $waiver]))->event_id);
+        $revision = $order->fresh()->revision;
         $approved = $this->ok($report(2, ['status' => 'approved', 'proof' => 'waived', 'waiver' => $waiver]));
         $this->assertNotNull($approved->event_id);
+        // UAT 2026-10-17: the report is audited but is no new order revision, so an open order page keeps working.
+        $this->assertSame($revision, $order->fresh()->revision);
+        $this->actingAs($this->staff)->post(route('admin.orders.v2.handover', $order), ['revision' => $revision, 'handed_to' => 'courier'])
+            ->assertSessionHas('order_notice.type', 'success');
         $this->assertSame(['approved', 'waived', 2, 'website'], [$approved->order->costs[0]->reimbursement->status, $approved->order->costs[0]->reimbursement->proof,
             $approved->order->costs[0]->source_version, $approved->order->costs[0]->origin]);
-        $this->assertSame('cost_reimbursement', $order->events()->reorder('id', 'desc')->first()->kind);
+        $this->assertTrue($order->events()->where('kind', 'cost_reimbursement')->exists());
         $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertSee('reimburse disetujui');
 
         // The Website owns the amount and funding: App values for them are ignored.
@@ -234,6 +239,17 @@ class OrderCourierCostTest extends TestCase
             ['app_user_id' => self::ANDI, 'display_name' => 'Andi Pratama'], ['app_user_id' => self::IKRAR, 'display_name' => 'Ikrar'],
         ]])]);
         $this->get(route('admin.orders.show', $order))->assertSee('uang Andi Pratama')->assertSee('Andi Pratama</span>', false)->assertDontSee('uang Andi ·');
+    }
+
+    public function test_handing_over_without_booking_still_asks_for_the_courier_fee(): void
+    {
+        $order = $this->packed($this->paidV2Order('local_delivery'));
+        $this->actingAs($this->staff)->post(route('admin.orders.v2.handover', $order), ['revision' => $order->fresh()->revision, 'handed_to' => 'courier'])
+            ->assertSessionHas('order_notice.type', 'success');
+        $this->get(route('admin.orders.show', $order))->assertSee('data-courier-cost-missing', false)->assertSee('Simpan ongkir kurir');
+        $this->fix($order, '12.000', 'staff:'.self::ANDI)->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame([self::ANDI, 'submitted'], [$order->costs()->sole()->advanced_by_app_user_id, $order->costs()->sole()->reimbursement_status]);
+        $this->get(route('admin.orders.show', $order))->assertSee('uang Andi')->assertDontSee('data-courier-cost-missing', false);
     }
 
     public function test_the_staff_group_link_opens_the_website_order_page(): void

@@ -32,6 +32,7 @@
         <form method="POST" action="{{ route('admin.orders.v2.courier-cost', $order) }}">
             @csrf {!! $hidden('pengiriman') !!}
             <p class="mb-2 text-sm font-semibold text-gray-900">Catat ongkir kurir</p>
+            <p class="mb-2 text-xs text-amber-800" data-courier-cost-missing>Ongkir ke kurir belum dicatat. Isi supaya uang karyawan otomatis diganti.</p>
             @include('admin.orders.v2._courier-cost-fields')
             <button class="{{ $secondary }} mt-3" data-busy-label="Menyimpan…">Simpan ongkir kurir</button>
         </form>
