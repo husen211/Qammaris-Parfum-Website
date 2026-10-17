@@ -233,7 +233,11 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 
 ### Ongkir kurir dan talangan dicatat sekali di Website (ORD-08, Owner 2026-10-17, branch review)
 
-- Semua pekerjaan pesanan dilakukan di Website. Qammaris App hanya tampilan cadangan dan tempat reimburse masuk. Link pesanan di grup WhatsApp membuka halaman pesanan Website ("Buka pesanan"), dan saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dimatikan saat rilis.
+- Semua pekerjaan pesanan dilakukan di Website. Qammaris App hanya tampilan cadangan dan tempat reimburse masuk.
+- Peran:
+  - **Super Admin (Owner, dari Jakarta)** membuat pesanan dan mengirim link ke customer. Owner tidak perlu mengonfirmasi pembayaran, packing, atau uang siapa;
+  - **Staff Order** (Andi/Ikrar, satu akun bersama di laptop toko) mengerjakan pembayaran → packing → pesan kurir (ongkir + uang siapa) → serah terima.
+- Pesanan Online di App hanya untuk dilihat: tanpa "Dilakukan oleh", tombol langkah, atau "Catat ongkir", dengan tombol "Buka di Website". Link pesanan di grup WhatsApp membuka halaman pesanan Website ("Buka pesanan"), dan saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dimatikan saat rilis.
 - Saat **Kurir sudah dipesan** (atau **Request pickup J&T**), Staff Order wajib mengisi:
   - **Ongkir ke kurir**: nominal yang benar-benar dibayar ke kurir;
   - **Uang siapa**: Andi / Ikrar / Kasir / Customer bayar driver.
