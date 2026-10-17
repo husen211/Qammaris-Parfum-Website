@@ -1987,8 +1987,11 @@
                 "required": [
                     "display_name"
                 ],
-                "description": "r4.5 employee whose own money paid a website-origin cost; equals their Qammaris App account name",
+                "description": "r4.5 employee whose own money paid a website-origin cost, chosen on the Website from the App's active employees (GET {app}/api/integrations/website/orders/employees, signed like the webhook); app_user_id links the App account",
                 "properties": {
+                    "app_user_id": {
+                        "$ref": "#/components/schemas/AppUserId"
+                    },
                     "display_name": {
                         "type": "string",
                         "minLength": 1,

@@ -22,10 +22,11 @@ The Owner decided:
 
 - **Website-origin cost (contract r4.5).** The Website stores one `online_order_costs` row per order with `origin=website`, `advanced_by_name` and the recording admin. It owns amount, funding and advancer, and bumps `source_version` on each correction.
 - **The App owns only the reimbursement.** It imports the cost by `expense_ref` and creates the named employee's reimbursement as Approved, with an Owner proof waiver recorded as the standing decision. It then reports the status back with a higher version. The Website accepts only the reimbursement fields for such a cost.
-- **Name matching instead of IDs.** The Website has no App user IDs for the shared account. A unique, case-insensitive match against active employees (display name, then username) keeps the setup simple. No match → no reimbursement, a visible issue, and an Owner notification. Nothing is dropped silently.
+- **Employees come from the App, linked by ID** (Owner follow-up 2026-10-17: "connect-lah"). "Uang siapa" lists the App's active employees, read with a webhook-signed `GET …/orders/employees` and cached for 5 minutes, with the last known list kept as a fallback. The App account ID is stored with the cost. An inactive or unknown account → no reimbursement, a visible issue, and an Owner notification. Nothing is dropped silently.
 - **One step in the UI.** "Kurir sudah dipesan" and "Request pickup J&T" require the fee and the payer. "Ubah ongkir kurir" edits the same record, and is locked once the reimbursement is paid. The old `driver_funding` choice is removed from the V2 page; the column and the ORD-01 page are kept.
 - **Waiver authorization unchanged.** Approval still carries an Owner waiver from an allowlisted App Owner (r4.2). The App sends it as its first active Owner, which must be on `QAMMARIS_APP_OWNER_IDS`.
-- **Advancer list.** `QAMMARIS_ORDER_STAFF_ADVANCERS` (default `Andi,Ikrar`): changing staff is a configuration change, not code.
+- **By role.** Staff Order sees the App employees, Kasir and Customer bayar driver. Super Admin (the Owner books from Jakarta with GoPay) sees "Uang saya (GoPay Owner)" (`owner_fund`), Kasir and Customer instead of employee names, and no packing action.
+- **Rupiah inputs** show thousands separators (15.000) and submit plain digits.
 
 ## Consequences
 

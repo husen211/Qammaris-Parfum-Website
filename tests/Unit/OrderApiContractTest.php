@@ -21,7 +21,7 @@ class OrderApiContractTest extends TestCase
 
     // r4.5 draft (website-origin costs, ORD-08 2026-10-17); r4.4 was 10dcfa5051460fef87d5ab8666df97a06af79f4e43cbd434f093dc79ad51c5b5,
     // r4.2/r4.3 was b0e1f5d578b44b1d8cf2060090dc87802f8f551b42ba491ea1b3880b3053cb88.
-    private const BASELINE_OPENAPI_SHA256 = 'cfabb384acbbda17d2911336b76b8665cbf243f0fad748d96d548d5e371bc6d8';
+    private const BASELINE_OPENAPI_SHA256 = 'af70e965be879e58152385d4da4c8fc876a6b12dd8e33888dc0bda42041f652d';
 
     private array $spec;
 

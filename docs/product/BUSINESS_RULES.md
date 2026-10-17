@@ -243,9 +243,11 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
   - **Uang siapa**: Andi / Ikrar / Kasir / Customer bayar driver.
 - Ongkir kurir bisa diubah lewat "Ubah ongkir kurir". Satu pesanan hanya punya satu catatan ongkir kurir. Setelah reimburse dibayar, koreksi lewat Owner di App.
 - Uang Andi/Ikrar otomatis menjadi reimburse karyawan itu di Qammaris App, **langsung disetujui, bukti opsional** (keputusan Owner). Owner tinggal membayar.
-  - Nama penalang harus sama dengan nama tampilan atau username akun karyawan di App; daftarnya ada di `QAMMARIS_ORDER_STAFF_ADVANCERS` (bawaan Andi, Ikrar).
+  - Pilihan karyawan diambil langsung dari karyawan aktif di Qammaris App dan disambungkan lewat ID akun. Karyawan baru atau yang berhenti otomatis ikut berubah.
   - Nama yang tidak cocok tidak membuat reimburse dan memberi notifikasi ke Owner.
-- Kasir dan Customer bayar driver tidak membuat reimburse.
+- Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin tidak mengerjakan packing.
+- Uang Owner, Kasir, dan Customer bayar driver tidak membuat reimburse.
+- Semua isian rupiah di admin memakai pemisah ribuan (15.000).
 - Ongkir yang ditagih ke customer (ditambahkan ke transfer / bayar ke driver / gratis) tetap terpisah dari ongkir yang dibayar ke kurir.
 - Pilihan lama "Toko bayar driver dengan" tidak ada lagi di halaman pesanan V2.
 

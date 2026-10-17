@@ -15,7 +15,7 @@
             <form method="POST" action="{{ route('admin.orders.v2.shipping', $order) }}" class="mt-2 space-y-3">
                 @csrf {!! $hidden($section) !!}
                 <div class="grid grid-cols-2 gap-3">
-                    <label class="text-sm font-medium text-gray-700">Ongkir (Rp)<input name="shipping_fee" inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" class="{{ $input }}"></label>
+                    <label class="text-sm font-medium text-gray-700">Ongkir (Rp)<input name="shipping_fee" data-rupiah-input inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" class="{{ $input }}"></label>
                     <label class="text-sm font-medium text-gray-700">Dibayar
                         <select name="shipping_payer" class="{{ $input }}"><option value="">Belum ditentukan</option>@foreach (OnlineOrder::SHIPPING_PAYERS as $value => $label)<option value="{{ $value }}" @selected(old('shipping_payer', $order->shipping_payer) === $value)>{{ $label }}</option>@endforeach</select>
                     </label>

@@ -179,7 +179,7 @@ class OrderPaymentGateTest extends TestCase
                 ->assertSessionHas('order_notice.type', 'success');
             if ($fulfillment === 'local_delivery') {
                 $this->post(route('admin.orders.v2.courier', $order), ['revision' => $order->fresh()->revision, 'provider' => 'gosend', 'status' => 'requested',
-                    'cost_amount' => '15.000', 'cost_payer' => 'staff:Andi'])->assertSessionHas('order_notice.type', 'success');
+                    'cost_amount' => '15.000', 'cost_payer' => 'cashier'])->assertSessionHas('order_notice.type', 'success');
             }
             if ($fulfillment === 'intercity') {
                 $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested',

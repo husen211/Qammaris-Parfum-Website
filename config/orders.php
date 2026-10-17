@@ -25,10 +25,6 @@ return [
         'intercity' => ['label' => 'Pengiriman Luar Kota — J&T', 'help' => 'Dikirim lewat J&T. Ongkir dihitung staf sesuai alamat.'],
     ],
 
-    // ORD-08 (Owner 2026-10-17): employees who may advance the courier fee from their own money. Each name must equal
-    // the employee's Qammaris App account name; the App creates their reimbursement, already approved.
-    'staff_advancers' => array_values(array_filter(array_map('trim', explode(',', (string) env('QAMMARIS_ORDER_STAFF_ADVANCERS', 'Andi,Ikrar'))))),
-
     // Phase-2 extension point (no calculator yet): where a shipping estimate came from. The final charge is shipping_fee.
     'shipping_estimate_sources' => ['manual' => 'Diisi staf', 'zone' => 'Zona', 'distance' => 'Jarak', 'api' => 'API kurir'],
 ];

@@ -23,6 +23,7 @@ use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderState;
 use App\Support\OnlineOrderStepper;
 use App\Support\OrderActor;
+use App\Support\OrderApi\AppEmployees;
 use App\Support\OrderTaskLink;
 use App\Support\PhoneNumber;
 use App\Support\Rupiah;
@@ -61,6 +62,10 @@ class AdminOnlineOrderV2Controller extends Controller
         $totalCents = Rupiah::minorUnits($order->customerTotal());
         $openIssues = $order->issues->where('status', 'open')->count();
         $paymentText = $messages->paymentInstructions($order);
+        // ORD-08: "Uang siapa" depends on who is booking (Owner: GoPay/kasir/customer; Staff Order: App employees).
+        $viewer = OrderActor::user(auth()->user());
+        $courierCost = $order->costs->first(fn ($cost) => $cost->isWebsiteOrigin());
+        $shipped = in_array($order->fulfillment, ['local_delivery', 'intercity'], true);
 
         return response()->view('admin.orders.v2.show', [
             // ORD-04 stepper: derived from backend state only; the domain refuses steps out of order.
@@ -86,8 +91,10 @@ class AdminOnlineOrderV2Controller extends Controller
             'inviteUrl' => $order->customer_phone ? $whatsApp->textUrl($order->customer_phone, $inviteMessage) : $whatsApp->shareUrl($inviteMessage),
             'customerChatUrl' => $order->customer_phone ? $whatsApp->textUrl($order->customer_phone, 'Halo Kak, terkait pesanan Qammaris '.$order->code.'.') : null,
             'customerMatches' => $order->customer_id ? collect() : $this->customers->matches($order->customer_phone),
-            'courierCost' => $order->costs->first(fn ($cost) => $cost->isWebsiteOrigin()),
-            'courierCostPayers' => OnlineOrderFulfillment::courierCostPayers(),
+            'courierCost' => $courierCost,
+            'courierCostPayers' => $shipped ? OnlineOrderFulfillment::courierCostPayers($viewer, $courierCost) : [],
+            'courierCostByOwner' => $viewer->isOwner(),
+            'employeesStale' => $shipped && ! $viewer->isOwner() && AppEmployees::list()['stale'],
         ])->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 

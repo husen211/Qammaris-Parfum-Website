@@ -119,7 +119,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Compare At Price (Rp) <span class="text-gray-400 text-xs">(Optional)</span></label>
-                            <input type="number" name="compare_at_price" value="{{ old('compare_at_price', $product->compare_at_price) }}" min="1" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
+                            <input type="text" inputmode="numeric" data-rupiah-input name="compare_at_price" value="{{ old('compare_at_price', $product->compare_at_price) }}" min="1" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
                             <p class="mt-1 text-xs text-gray-400">Kosongkan jika tidak ingin harga coret.</p>
                             @error('compare_at_price')
                             <p id="compare-at-price-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -248,7 +248,7 @@
                         </div>
                         <div>
                             <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
-                            <input id="offer-price" type="number" name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
+                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror

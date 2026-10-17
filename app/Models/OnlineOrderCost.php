@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class OnlineOrderCost extends Model
 {
     protected $fillable = [
-        'expense_ref', 'origin', 'kind', 'status', 'amount', 'funding', 'advanced_by_name', 'reimbursement_status', 'reimbursement_amount', 'proof', 'waiver',
+        'expense_ref', 'origin', 'kind', 'status', 'amount', 'funding', 'advanced_by_name', 'advanced_by_app_user_id', 'reimbursement_status', 'reimbursement_amount', 'proof', 'waiver',
         'reimbursement_updated_at', 'source_version', 'reported_by_app_user_id', 'reported_by_name', 'reported_at', 'recorded_by_user_id',
     ];
 

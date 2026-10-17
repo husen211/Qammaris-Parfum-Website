@@ -269,7 +269,7 @@
                     </label>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="text-sm font-medium text-gray-700">Ongkir (Rp)
-                            <input name="shipping_fee" @cannot('orders.finance') disabled aria-describedby="finance-locked" @endcannot inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" placeholder="11500" class="{{ $input }}">
+                            <input name="shipping_fee" data-rupiah-input @cannot('orders.finance') disabled aria-describedby="finance-locked" @endcannot inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" placeholder="11500" class="{{ $input }}">
                         </label>
                         <label class="text-sm font-medium text-gray-700">Ongkir dibayar
                             <select name="shipping_payer" @cannot('orders.finance') disabled aria-describedby="finance-locked" @endcannot class="{{ $input }} disabled:bg-gray-100">

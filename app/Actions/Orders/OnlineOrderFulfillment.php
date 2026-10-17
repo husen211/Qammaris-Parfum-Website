@@ -18,6 +18,7 @@ use App\Models\OnlineOrderIssue;
 use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderV2State;
 use App\Support\OrderActor;
+use App\Support\OrderApi\AppEmployees;
 use App\Support\Rupiah;
 use Closure;
 use DateTimeInterface;
@@ -327,19 +328,38 @@ class OnlineOrderFulfillment
     }
 
     /**
-     * ORD-08 "Uang siapa": the employees who may advance the fee (names equal their Qammaris App accounts), the
-     * cashier, or the customer paying the driver directly.
+     * ORD-08 "Uang siapa" (Owner 2026-10-17). Staff Order sees the active Qammaris App employees (`staff:<app user id>`),
+     * the cashier and the customer. The Owner, who books from Jakarta with GoPay, sees "Uang saya" instead of the
+     * employees. The payer already recorded on the order always stays selectable.
      *
      * @return array<string, string> payer key => label
      */
-    public static function courierCostPayers(): array
+    public static function courierCostPayers(OrderActor $actor, ?OnlineOrderCost $current = null): array
     {
         $payers = [];
-        foreach ((array) config('orders.staff_advancers') as $name) {
-            $payers['staff:'.$name] = $name;
+        if ($actor->isOwner()) {
+            $payers['owner'] = 'Uang saya (GoPay Owner)';
+        } else {
+            foreach (AppEmployees::list()['employees'] as $id => $name) {
+                $payers['staff:'.$id] = $name;
+            }
+        }
+        $payers += ['cashier' => 'Kasir', 'customer' => 'Customer bayar driver'];
+        if ($current && ($key = self::courierCostPayer($current)) !== null && ! isset($payers[$key])) {
+            $payers[$key] = $current->advanced_by_name ?? ($key === 'owner' ? 'Dana Owner' : $key);
         }
 
-        return $payers + ['cashier' => 'Kasir', 'customer' => 'Customer bayar driver'];
+        return $payers;
+    }
+
+    /** Payer key of a recorded website-origin cost, as used by the "Uang siapa" choice. */
+    public static function courierCostPayer(OnlineOrderCost $cost): ?string
+    {
+        if ($cost->advanced_by_app_user_id) {
+            return 'staff:'.$cost->advanced_by_app_user_id;
+        }
+
+        return ['owner_fund' => 'owner', 'cashier_cash' => 'cashier', 'customer_direct' => 'customer'][$cost->funding[0]['source'] ?? ''] ?? null;
     }
 
     /**
@@ -368,7 +388,8 @@ class OnlineOrderFulfillment
         if ($actor->user === null) {
             throw new OrderActionNotAllowed('Ongkir kurir dicatat dari halaman pesanan Website.');
         }
-        $payers = self::courierCostPayers();
+        $cost = $order->costs()->where('origin', 'website')->lockForUpdate()->first();
+        $payers = self::courierCostPayers($actor, $cost);
         $fields = [];
         if ($amount < 1 || $amount > 100000000) {
             $fields['cost_amount'] = 'Isi ongkir yang dibayar ke kurir';
@@ -379,11 +400,12 @@ class OnlineOrderFulfillment
         if ($fields) {
             throw new OrderValidationFailed('Isi ongkir ke kurir dan uang siapa.', $fields);
         }
-        $advancer = str_starts_with($payer, 'staff:') ? $payers[$payer] : null;
-        $source = $advancer !== null ? 'staff_advance' : ($payer === 'cashier' ? 'cashier_cash' : 'customer_direct');
+        // Staff advance: the App employee chosen from the App's own list, linked by account ID.
+        $advancerId = str_starts_with($payer, 'staff:') ? substr($payer, 6) : null;
+        $advancer = $advancerId !== null ? $payers[$payer] : null;
+        $source = $advancerId !== null ? 'staff_advance' : ['owner' => 'owner_fund', 'cashier' => 'cashier_cash', 'customer' => 'customer_direct'][$payer];
 
-        $cost = $order->costs()->where('origin', 'website')->lockForUpdate()->first();
-        if ($cost && Rupiah::minorUnits($cost->amount) === $amount * 100 && ($cost->funding[0]['source'] ?? null) === $source && $cost->advanced_by_name === $advancer) {
+        if ($cost && Rupiah::minorUnits($cost->amount) === $amount * 100 && ($cost->funding[0]['source'] ?? null) === $source && $cost->advanced_by_app_user_id === $advancerId) {
             return null;
         }
         if ($cost?->reimbursement_status === 'paid') {
@@ -391,7 +413,7 @@ class OnlineOrderFulfillment
         }
         $attributes = [
             'kind' => 'actual_shipping', 'status' => 'active', 'amount' => Rupiah::decimal($amount * 100),
-            'funding' => [['source' => $source, 'amount' => $amount]], 'advanced_by_name' => $advancer,
+            'funding' => [['source' => $source, 'amount' => $amount]], 'advanced_by_name' => $advancer, 'advanced_by_app_user_id' => $advancerId,
             'reimbursement_status' => $advancer !== null ? 'submitted' : 'not_applicable',
             'reimbursement_amount' => Rupiah::decimal($advancer !== null ? $amount * 100 : 0), 'proof' => 'pending', 'waiver' => null,
             'reimbursement_updated_at' => now(), 'recorded_by_user_id' => $actor->user->id, 'reported_at' => now(),
@@ -403,7 +425,7 @@ class OnlineOrderFulfillment
                 'reported_by_app_user_id' => '', 'reported_by_name' => Str::limit($actor->displayName, 57)]);
         }
 
-        return 'ongkir kurir Rp'.number_format($amount, 0, ',', '.').' · '.($advancer !== null ? 'ditalangi '.$advancer : $payers[$payer]);
+        return 'ongkir kurir Rp'.number_format($amount, 0, ',', '.').' · '.($advancer !== null ? 'ditalangi '.$advancer : ['owner' => 'dana Owner', 'cashier' => 'uang kasir', 'customer' => 'customer bayar driver'][$payer]);
     }
 
     /**
