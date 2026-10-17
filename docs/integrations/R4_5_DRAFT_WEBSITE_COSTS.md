@@ -27,7 +27,7 @@ Website:
 - Funding: an App employee → `staff_advance` (reimbursement `submitted`, proof `pending`); Kasir → `cashier_cash`; Customer bayar driver → `customer_direct`; the Owner's own money (GoPay, offered only to Super Admin) → `owner_fund` (all three `not_applicable`).
 - Staff Order chooses from the App's active employees: `GET {app}/api/integrations/website/orders/employees` returns `{data: [{app_user_id, display_name}]}`. It is signed exactly like the webhook (same client ID and secret, method `GET`, empty body). The Website caches the list for 5 minutes and falls back to the last known list, marked as such, when the App is unreachable. The choice is stored with `advanced_by.app_user_id`.
 - Corrections are refused once the reimbursement is `paid`.
-- An App `PUT …/costs/{ref}` on a website cost applies only the reimbursement fields, and only when `source_version` is higher. A report whose reimbursement amount no longer matches the Website amount is a stale no-op. Waiver authorization is unchanged from r4.2.
+- An App `PUT …/costs/{ref}` on a website cost applies only the reimbursement fields, and only when `source_version` is higher. A report whose reimbursement amount no longer matches the Website amount is a stale no-op. Waiver authorization is unchanged from r4.2. The report is audited as a `cost_reimbursement` event but creates **no new order revision**, so a staff page that is still open does not hit a false revision conflict (UAT 2026-10-17).
 
 App:
 - On every order detail read (webhook, reconcile with `flags.open_reimbursement`, detail opened), the App imports each `origin=website` cost under the same `expense_ref`.

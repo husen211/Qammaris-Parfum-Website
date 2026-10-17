@@ -142,10 +142,13 @@
             @if ($order->lifecycle === 'cancelled')
                 <p class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" data-next-step>Pesanan dibatalkan {{ $time($order->closed_at) }}: {{ $order->cancel_reason }}</p>
             @endif
-            {{-- A refused action for a step that is not shown (e.g. packing before payment) still reports its reason here. --}}
+            {{-- The result of an action for a step that is no longer shown still appears here: a refusal (e.g. packing before
+                 payment), or the success of the step that just finished (e.g. "Tandai Lunas" moves on to packing). --}}
             @php($shownStepSection = ['konfirmasi' => $order->lifecycle === 'draft' ? 'konfirmasi' : 'link', 'pembayaran' => 'pembayaran', 'persiapan' => 'packing', 'pengiriman' => 'pengiriman', 'selesai' => 'pengiriman'][$currentStep ?? 'selesai'])
-            @if (session('order_notice.type') === 'error' && in_array(session('order_notice.section'), ['konfirmasi', 'pembayaran', 'packing', 'pengiriman'], true) && session('order_notice.section') !== $shownStepSection)
-                <div role="alert" data-order-notice="error" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{{ session('order_notice.message') }}</div>
+            @if (in_array(session('order_notice.type'), ['error', 'success'], true) && in_array(session('order_notice.section'), ['konfirmasi', 'pembayaran', 'packing', 'pengiriman'], true) && session('order_notice.section') !== $shownStepSection)
+                @php($noticeOk = session('order_notice.type') === 'success')
+                <div role="{{ $noticeOk ? 'status' : 'alert' }}" data-order-notice="{{ session('order_notice.type') }}" @class(['rounded-lg border p-3 text-sm',
+                    'border-green-200 bg-green-50 text-green-800' => $noticeOk, 'border-red-200 bg-red-50 text-red-800' => ! $noticeOk])>{{ session('order_notice.message') }}</div>
             @endif
             {{-- An open issue comes first; the step stays where it is. --}}
             @if ($openIssues > 0)

@@ -50,6 +50,13 @@ class AdminPushTest extends TestCase
         $this->postJson(route('admin.orders.push-subscriptions.store'), ['endpoint' => self::ENDPOINT, 'keys' => self::KEYS])->assertOk();
         $this->assertSame([$this->staff->id, self::KEYS['auth']], [AdminPushSubscription::sole()->user_id, AdminPushSubscription::sole()->auth_token]);
         $this->postJson(route('admin.orders.push-subscriptions.store'), ['endpoint' => 'http://insecure.test/x', 'keys' => self::KEYS])->assertUnprocessable();
+        // Audit 2026-10-17: only the browser vendors' push services (no server requests to arbitrary hosts).
+        $this->postJson(route('admin.orders.push-subscriptions.store'), ['endpoint' => 'https://127.0.0.1/internal', 'keys' => self::KEYS])->assertUnprocessable();
+        $this->postJson(route('admin.orders.push-subscriptions.store'), ['endpoint' => 'https://evil-googleapis.com/x', 'keys' => self::KEYS])->assertUnprocessable();
+        foreach (['https://web.push.apple.com/abc', 'https://updates.push.services.mozilla.com/wpush/v2/abc', 'https://wns2-par02p.notify.windows.com/w/?token=abc'] as $endpoint) {
+            $this->postJson(route('admin.orders.push-subscriptions.store'), ['endpoint' => $endpoint, 'keys' => self::KEYS])->assertOk();
+        }
+        AdminPushSubscription::where('endpoint', '!=', self::ENDPOINT)->delete();
 
         // Shared store laptop: another account signs in on the same browser and takes the subscription over.
         $other = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();

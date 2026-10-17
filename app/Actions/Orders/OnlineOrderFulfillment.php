@@ -340,7 +340,8 @@ class OnlineOrderFulfillment
         if ($actor->isOwner()) {
             $payers['owner'] = 'Uang saya (GoPay Owner)';
         } else {
-            foreach (AppEmployees::list()['employees'] as $id => $name) {
+            // Never asks the App here (this runs inside the order's row lock); the order page refreshes the list.
+            foreach (AppEmployees::known() as $id => $name) {
                 $payers['staff:'.$id] = $name;
             }
         }

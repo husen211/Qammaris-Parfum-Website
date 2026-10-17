@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendAdminPush;
 use App\Models\AdminPushSubscription;
 use App\Support\AdminPush;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,7 +21,13 @@ class AdminPushSubscriptionController extends Controller
     {
         abort_unless(AdminPush::enabled(), 404);
         $data = $request->validate([
-            'endpoint' => ['required', 'string', 'max:2000', 'url', 'starts_with:https://'],
+            // Only the browser vendors' push services: the server never posts to an arbitrary address (no SSRF).
+            'endpoint' => ['required', 'string', 'max:2000', 'url', 'starts_with:https://', function (string $attribute, mixed $value, Closure $fail) {
+                $host = strtolower((string) parse_url((string) $value, PHP_URL_HOST));
+                if (! preg_match('/(^|\.)(googleapis\.com|mozilla\.com|push\.apple\.com|notify\.windows\.com)$/', $host)) {
+                    $fail('Layanan push browser ini tidak dikenal.');
+                }
+            }],
             'keys.p256dh' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9_-]+=*$/'],
             'keys.auth' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9_-]+=*$/'],
         ]);

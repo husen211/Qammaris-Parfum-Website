@@ -222,6 +222,9 @@ class OrderCourierCostTest extends TestCase
         Http::swap(new Factory);
         Http::fake([self::EMPLOYEES_URL => Http::response(['error' => 'down'], 503)]);
         $this->get(route('admin.orders.show', $order))->assertSee('value="staff:'.self::ANDI.'"', false)->assertSee('data-employees-stale', false);
+        // Audit 2026-10-17: after a failed read the App is left alone for a minute, so pages never keep waiting on it.
+        $this->get(route('admin.orders.show', $order))->assertSee('data-employees-stale', false);
+        $this->assertCount(1, Http::recorded(fn ($request) => $request->url() === self::EMPLOYEES_URL));
         $this->book($order, ['cost_amount' => '15000', 'cost_payer' => 'staff:'.self::ANDI])->assertSessionHas('order_notice.type', 'success');
     }
 
@@ -250,6 +253,19 @@ class OrderCourierCostTest extends TestCase
         $this->fix($order, '12.000', 'staff:'.self::ANDI)->assertSessionHas('order_notice.type', 'success');
         $this->assertSame([self::ANDI, 'submitted'], [$order->costs()->sole()->advanced_by_app_user_id, $order->costs()->sole()->reimbursement_status]);
         $this->get(route('admin.orders.show', $order))->assertSee('uang Andi')->assertDontSee('data-courier-cost-missing', false);
+    }
+
+    public function test_a_finished_step_still_confirms_its_success(): void
+    {
+        // Audit 2026-10-17: "Tandai Lunas" / "Konfirmasi packing" collapse their step to one line; the result stays visible.
+        $order = $this->v2Order('local_delivery');
+        $this->actingAs($this->staff);
+        $this->followingRedirects()->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => (string) (int) $order->customerTotal(), 'payment_method' => 'transfer'])
+            ->assertSee('data-order-notice="success"', false)->assertSee('role="status"', false);
+        $order->refresh();
+        $this->followingRedirects()->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision,
+            'packed' => $order->items->mapWithKeys(fn ($item) => [$item->line_id => $item->quantity])->all()])
+            ->assertSee('Packing dikonfirmasi.')->assertSee('data-order-notice="success"', false);
     }
 
     public function test_the_staff_group_link_opens_the_website_order_page(): void

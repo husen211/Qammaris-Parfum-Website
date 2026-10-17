@@ -19,7 +19,12 @@ final class AppEmployees
 
     private const LAST_KEY = 'orders.app_employees.last';
 
+    private const DOWN_KEY = 'orders.app_employees.down';
+
     private const FRESH_SECONDS = 300;
+
+    /** After a failed read the App is not asked again for this long, so order pages never keep waiting on it. */
+    private const DOWN_SECONDS = 60;
 
     /** @return array{employees: array<string, string>, stale: bool} app_user_id => display_name */
     public static function list(bool $refresh = false): array
@@ -28,15 +33,29 @@ final class AppEmployees
         if (is_array($fresh)) {
             return ['employees' => $fresh, 'stale' => false];
         }
-        $employees = self::fetch();
+        $employees = Cache::has(self::DOWN_KEY) ? null : self::fetch();
         if ($employees !== null) {
             Cache::put(self::FRESH_KEY, $employees, self::FRESH_SECONDS);
             Cache::forever(self::LAST_KEY, $employees);
 
             return ['employees' => $employees, 'stale' => false];
         }
+        Cache::put(self::DOWN_KEY, true, self::DOWN_SECONDS);
 
         return ['employees' => (array) Cache::get(self::LAST_KEY, []), 'stale' => true];
+    }
+
+    /**
+     * The list as last read, without asking the App - for validating a form inside a database transaction (the order
+     * page refreshes it on every view). Only before the very first successful read is the App asked here.
+     *
+     * @return array<string, string>
+     */
+    public static function known(): array
+    {
+        $last = Cache::get(self::LAST_KEY);
+
+        return is_array($last) ? $last : self::list()['employees'];
     }
 
     /** Current App name for an account ID (rename-proof display), or the given fallback. */
@@ -71,7 +90,7 @@ final class AppEmployees
         $path = (string) parse_url($url, PHP_URL_PATH).(($query = parse_url($url, PHP_URL_QUERY)) ? '?'.$query : '');
         $timestamp = now()->timestamp;
         try {
-            $response = Http::timeout(5)->acceptJson()->withHeaders([
+            $response = Http::timeout(3)->connectTimeout(2)->acceptJson()->withHeaders([
                 'X-Qammaris-Client' => (string) config('orders_api.webhook_client_id'),
                 'X-Qammaris-Timestamp' => (string) $timestamp,
                 'X-Qammaris-Signature' => OrderApiSignature::sign($secret, $timestamp, 'GET', $path, ''),
