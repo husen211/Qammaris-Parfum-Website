@@ -42,11 +42,11 @@ Other items from step 1, decided case by case:
 - `storage/framework/sessions` large: run `php artisan session:gc` only if sessions use files. Active admins may need to log in again.
 - An old `public_html` site, `~/.cache/composer` or `~/.npm`: report first; remove only when nothing links to it.
 
-## Staging
+## Staging (retired 2026-10-17, see Result)
 
-Staging (`staging.qammarisparfum.id`) has its own website files, MySQL database (catalog snapshot), `.env` and Basic Auth. It was last released on 2026-10-05, and the Owner retired it as the E2E target on 2026-10-09 ([ORDER_API_STAGING](ORDER_API_STAGING.md)). Production does not read it. It shares the inode quota, and the hPanel cron list (account-wide) still runs its worker watchdog.
+Kept as the record of how it was removed. Staging (`staging.qammarisparfum.id`) had its own website files, MySQL database (catalog snapshot), `.env` and Basic Auth; production never read it, but it shared the inode quota and the account-wide cron list.
 
-Deleting staging (Owner decision, after step 1 shows its size):
+Deleting staging:
 1. Download a database export (phpMyAdmin → Export) and the staging `.env` (File Manager → Download) to the laptop. Keep them off the server and out of Git.
 2. Remove the staging cron entries in hPanel → Cron Jobs (`staging-qammaris-worker-watchdog.sh` and any `staging.qammarisparfum.id` scheduler). Keep every `production-…` entry.
 3. Disable the GitHub workflow `Staging release` (`gh workflow disable "Staging release"`). The `staging` environment secrets can stay until a later cleanup.

@@ -1,10 +1,10 @@
 # Release ORD-08 + ORD-09 (+ App Daftar Tunggu request) — Owner runbook
 
-Status: prepared and re-verified 2026-10-17. **Nothing deployed.** Every step needs the Owner's explicit go. The agent can do the Git/GitHub steps (push, PR, merge, revert) when the Owner says so. Server steps marked **(server)** need the Owner's SSH or hPanel.
+Status: prepared and re-verified 2026-10-17; Owner approved the release on 2026-10-17 (push, PR, merge, deploy after the safety gates). The release also carries the inode fix (OPS-INODE-2026-10: post-deploy prune, [runbook](HOSTINGER_INODE_CLEANUP.md)). The agent can do the Git/GitHub steps (push, PR, merge, revert) when the Owner says so. Server steps marked **(server)** need the Owner's SSH or hPanel.
 
 | Repo | Branch | Contains |
 |---|---|---|
-| Website | `modernization/ord-08-website-courier-cost` | ORD-08 courier cost + "Uang siapa" from App employees, Owner GoPay choice, no "Kurir tiba", rupiah separators, Super Admin without packing, no false "Pesanan berubah"; ORD-09 admin push; Order API r4.5 draft; `symfony/http-foundation` security patch; `qammaris:release-check` |
+| Website | `modernization/ord-08-website-courier-cost` | ORD-08 courier cost + "Uang siapa" from App employees, Owner GoPay choice, no "Kurir tiba", rupiah separators, Super Admin without packing, no false "Pesanan berubah"; ORD-09 admin push; Order API r4.5 draft; `symfony/http-foundation` security patch; `qammaris:release-check`; release pruning after each deploy |
 | App | `feat/ord-08-website-courier-cost` | import of website costs → auto-approved reimbursement, App order page view-only, employees endpoint (+ approver), rename propagation, Daftar Tunggu product requests (ADR 0016) |
 
 Version compatibility, checked in code and tests:
@@ -15,7 +15,7 @@ Version compatibility, checked in code and tests:
 ## 1. Before (Owner)
 
 1. **Backups (server).**
-   - Website: fresh production DB dump with checksum, as in [RELEASE_ORD_PWA_RC §3.1](RELEASE_ORD_PWA_RC.md), stored off-server.
+   - Website: fresh production DB dump with checksum, as in [RELEASE_ORD_PWA_RC §3.1](RELEASE_ORD_PWA_RC.md), stored off-server. Orders exist since 2026-10-11, so the 2026-10-11 backup is not enough. Stream it to the laptop (`ssh … 'mariadb-dump … | gzip' > file`) so nothing large is written on the hosting.
    - App: MongoDB backup the usual way.
 2. **App accounts.**
    - Andi and Ikrar are active `EMPLOYEE` accounts with their real names.
@@ -72,6 +72,8 @@ php artisan qammaris:release-check
 - queue.
 
 Every line must be PASS. A WARN or FAIL names the exact setting to fix.
+
+Then check the post-deploy prune (first run on the server): the deploy log has no `Warning: old releases were not pruned`; `ls -A $root/releases` shows the new live release, the previous live release (`535d5f3`) and one more, and no `.incoming-*` / `.deploy-*`; `shared/` is untouched; `inode-report.sh` stays well below 80%.
 
 ## 5. Smoke (about 10 minutes)
 
