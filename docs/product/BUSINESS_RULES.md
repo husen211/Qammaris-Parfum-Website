@@ -249,6 +249,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin tidak mengerjakan packing.
 - Uang Owner, Kasir, dan Customer bayar driver tidak membuat reimburse.
 - Semua isian rupiah di admin memakai pemisah ribuan (15.000).
+- **Notifikasi pesanan (ORD-09):** Super Admin dan Staff Order bisa mengaktifkan push notification per perangkat. Setiap ada pesanan baru dari checkout website, muncul notifikasi berisi kode, jumlah barang, total, dan "menunggu konfirmasi", tanpa nomor HP atau alamat. Ketuk notifikasi untuk membuka pesanannya.
 - Ongkir yang ditagih ke customer (ditambahkan ke transfer / bayar ke driver / gratis) tetap terpisah dari ongkir yang dibayar ke kurir.
 - Pilihan lama "Toko bayar driver dengan" tidak ada lagi di halaman pesanan V2.
 

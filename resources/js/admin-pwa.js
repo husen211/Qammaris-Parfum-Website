@@ -3,6 +3,8 @@
  * Never use Clear-Site-Data here: it is origin-wide and would wipe the public site's cart session
  * and catalog state. Logout removes only caches named qammaris-admin-*.
  */
+import { initAdminPush } from './admin-push.js';
+
 export const ADMIN_CACHE_PREFIX = 'qammaris-admin-';
 
 export async function clearAdminCaches(cacheStorage = globalThis.caches) {
@@ -114,6 +116,11 @@ export function boot(doc = document, win = window) {
         enabled: root.dataset.adminPwa === 'on',
         url: root.dataset.adminSw,
         scope: root.dataset.adminScope,
+    }).then((result) => {
+        // ORD-09: the push switch needs the registered admin worker (also on a first visit).
+        if (result === 'registered') {
+            initAdminPush(doc, win);
+        }
     }).catch(() => {});
 }
 

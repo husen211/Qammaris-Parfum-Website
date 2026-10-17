@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductImageController;
 use App\Http\Controllers\Admin\AdminProductImportController;
 use App\Http\Controllers\Admin\AdminProductMaintenanceController;
+use App\Http\Controllers\Admin\AdminPushSubscriptionController;
 use App\Http\Controllers\Admin\AdminQammarisAppProductController;
 use App\Http\Controllers\Admin\AdminShopeeContentController;
 use App\Http\Controllers\Admin\AdminStorePaymentAccountController;
@@ -165,6 +166,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
 
     // Online orders (Super Admin, Staff Order, legacy admin); money changes need orders.finance
     Route::middleware('can:orders.manage')->group(function () {
+        // ORD-09: this browser receives a push when someone orders on the website.
+        Route::post('orders/push-subscriptions', [AdminPushSubscriptionController::class, 'store'])->middleware('throttle:20,1')->name('orders.push-subscriptions.store');
+        Route::delete('orders/push-subscriptions', [AdminPushSubscriptionController::class, 'destroy'])->middleware('throttle:20,1')->name('orders.push-subscriptions.destroy');
+        Route::post('orders/push-subscriptions/test', [AdminPushSubscriptionController::class, 'test'])->middleware('throttle:5,1')->name('orders.push-subscriptions.test');
         Route::prefix('orders/payment-accounts')->name('orders.payment-accounts.')->controller(AdminStorePaymentAccountController::class)
             ->middleware('can:orders.payment-accounts')->group(function () {
                 Route::get('/', 'index')->name('index');

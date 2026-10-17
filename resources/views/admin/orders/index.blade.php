@@ -15,6 +15,9 @@
         </div>
     </div>
 
+    {{-- ORD-09: on phones the sidebar is hidden, so the push switch sits on the order list. --}}
+    <div class="md:hidden">@include('admin.partials.push-toggle')</div>
+
     @foreach (['reconcile' => 'pesanan perlu rekonsiliasi pembayaran', 'refund' => 'refund belum selesai', 'issues' => 'pesanan dengan kendala terbuka'] as $key => $label)
         @if ($attention[$key] > 0 && $filter !== $key)
             <a href="{{ route('admin.orders.index', ['status' => $key]) }}" class="flex min-h-11 items-center rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-900 hover:bg-red-100">{{ $attention[$key] }} {{ $label }} →</a>

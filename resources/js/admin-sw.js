@@ -57,6 +57,35 @@ if (!ADMIN_SW.enabled) {
         event.waitUntil(clearAdminCaches(CACHE).then(() => self.clients.claim()));
     });
 
+    // ORD-09: new website order push. The payload holds no phone number or address (shared devices).
+    self.addEventListener('push', (event) => {
+        let data = {};
+        try {
+            data = event.data ? event.data.json() : {};
+        } catch (error) {
+            data = {};
+        }
+        const url = typeof data.url === 'string' && data.url.startsWith('/admin') ? data.url : '/admin/orders';
+        event.waitUntil(self.registration.showNotification(data.title || 'Pesanan baru', {
+            body: data.body || 'Buka Pesanan Online untuk melihat.',
+            icon: '/images/pwa/admin-icon-192.png',
+            badge: '/images/pwa/admin-icon-192.png',
+            tag: data.tag || 'order',
+            renotify: true,
+            data: { url },
+        }));
+    });
+
+    self.addEventListener('notificationclick', (event) => {
+        event.notification.close();
+        const target = new URL(event.notification.data?.url || '/admin/orders', self.location.origin).href;
+        event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+            const open = windows.find((client) => client.url === target);
+
+            return open ? open.focus() : self.clients.openWindow(target);
+        }));
+    });
+
     self.addEventListener('fetch', (event) => {
         const { request } = event;
 
