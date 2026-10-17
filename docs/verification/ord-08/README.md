@@ -33,3 +33,16 @@ Cleanup:
 - Production names: the App accounts for Andi/Ikrar must have that display name or username, and the production App Owner must be in `QAMMARIS_APP_OWNER_IDS`.
 - The App order screen in a real browser (covered by the component test only).
 - Real phones and Safari.
+
+## Round 2 — Owner follow-up (2026-10-17)
+
+Same setup. Synthetic accounts `ord08-owner` (Super Admin) and `ord08-staff` (Staff Order), with two orders. Everything was removed afterwards by restoring the local DB backup taken just before the run and deleting the App records of the two order IDs.
+
+1. **Super Admin.** Typed ongkir `10000` shows as **10.000**. Saved as "ditambahkan ke transfer", then Tandai Lunas (amount shown 809.000). The packing section shows "Menunggu packing oleh staf toko", with no packing button.
+2. **Staff Order.** Packed both orders. "Uang siapa" listed the local App's real employees: QA Staff / Test Team / Test Team 2 / Kasir / Customer bayar driver. Booked with **Test Team**, Rp12.000 → the App created an **Approved** reimbursement for that account, linked by ID → Website shows "reimburse disetujui".
+3. **Super Admin booking.** Options: Uang saya (GoPay Owner) / Kasir / Customer bayar driver, with no employee names. The cost was saved as `owner_fund` with no reimbursement. Found and fixed: the summary first read "dibayar customer ke driver"; it now reads "uang Owner (GoPay)" (regression test added).
+4. **Qammaris App as Admin Toko (5173).** No "Dilakukan oleh" and no action buttons. Shows "Ongkir dari customer: Rp 10.000 · sudah termasuk pembayaran customer", "Rp 12.000 uang Test Team" and "Reimburse: Disetujui, menunggu dibayar", plus "Buka di Website".
+
+Screenshots: `round2-*.png` (390px and 1440px).
+
+Tests: Website 770 + 7 courier-cost tests, JS 69; App backend 1262, App frontend 1386 (+1 timing-only failure in `button.test.tsx`, which passes 23/23 when rerun alone).
