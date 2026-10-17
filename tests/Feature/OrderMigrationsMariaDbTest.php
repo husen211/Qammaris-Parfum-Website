@@ -28,6 +28,9 @@ class OrderMigrationsMariaDbTest extends TestCase
         '2026_10_09_500001_add_delivery_to_online_order_events', '2026_10_10_000001_add_payment_preference_to_online_orders',
         '2026_10_10_100001_add_website_checkout_to_online_orders', '2026_10_10_200001_create_store_payment_accounts',
         '2026_10_11_100001_create_guest_order_histories', '2026_10_11_100002_add_packaging_fee_to_online_orders',
+        // ORD-08/09: additions to online_order_costs and the admin push table roll back with the order tables.
+        '2026_10_17_100001_add_website_origin_to_online_order_costs', '2026_10_17_100002_add_advanced_by_app_user_id_to_online_order_costs',
+        '2026_10_17_200001_create_admin_push_subscriptions_table',
     ];
 
     protected function setUp(): void
@@ -60,7 +63,7 @@ class OrderMigrationsMariaDbTest extends TestCase
         foreach (self::ORD02 as $migration) {
             $this->assertContains($migration, $files->all());
         }
-        $this->assertSame(array_slice(self::ORD02, -4), $files->slice(-4)->values()->all(), 'ORD-04 migrations are the newest ones');
+        $this->assertSame(array_slice(self::ORD02, -4), $files->slice(-4)->values()->all(), 'The order migrations are the newest ones');
 
         Artisan::call('migrate:fresh', ['--force' => true]);
         $this->rollbackOrd02();
@@ -97,9 +100,11 @@ class OrderMigrationsMariaDbTest extends TestCase
             ['customer_name' => 'E2E Pembeli Sintetis', 'customer_phone' => '080000000101', 'fulfillment' => 'pickup', 'packaging' => 'paperbag', 'payment_preference' => 'qris'], (string) Str::uuid());
         $this->assertNull($order->created_by);
 
+        // Every later migration is an empty addition; the last step reaches the ORD-04 checkout migration and must stop.
+        $files = collect(glob(database_path('migrations/*.php')))->map(fn ($file) => basename($file, '.php'))->sort()->values();
+        $steps = $files->count() - $files->search('2026_10_10_100001_add_website_checkout_to_online_orders');
         try {
-            // Steps 1-3 drop later empty additions; step 4 reaches the ORD-04 checkout migration and must stop.
-            Artisan::call('migrate:rollback', ['--step' => 4, '--force' => true]);
+            Artisan::call('migrate:rollback', ['--step' => $steps, '--force' => true]);
             $this->fail('Rollback must stop while guest orders exist.');
         } catch (\RuntimeException $stopped) {
             $this->assertStringContainsString('rollback ORD-04 dihentikan', $stopped->getMessage());
