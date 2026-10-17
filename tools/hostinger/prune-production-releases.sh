@@ -18,8 +18,14 @@ test -d "$releases_dir"
 current="$(readlink -f "$root/current")"
 [[ "$current" == "$releases_dir/qammaris-"* ]] || { echo "current does not point at a release; nothing removed" >&2; exit 1; }
 
+# Hostinger's CageFS has no /dev/fd, so process substitution fails there; release paths contain no whitespace.
+set -f
+IFS=$'\n'
 # Newest first. Only exact release names are considered.
-mapfile -t releases < <(find "$releases_dir" -mindepth 1 -maxdepth 1 -type d -regextype posix-extended -regex '.*/qammaris-[a-f0-9]{40}' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
+releases=($(find "$releases_dir" -mindepth 1 -maxdepth 1 -type d -regextype posix-extended -regex '.*/qammaris-[a-f0-9]{40}' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-))
+# Upload archives, deploy temp dirs and old manual packages are only needed during a deploy.
+leftovers=($(find "$releases_dir" -mindepth 1 -maxdepth 1 \( -name '.incoming-*.tar.gz' -o -name '.deploy-*' -o -name '.github-*.zip' -o -name '.package-*' \) -print))
+unset IFS
 
 remove=()
 kept_extra=0
@@ -39,10 +45,7 @@ for dir in "${releases[@]}"; do
     fi
     remove+=("$dir")
 done
-# Upload archives and deploy temp dirs are only needed during a deploy.
-while IFS= read -r leftover; do
-    remove+=("$leftover")
-done < <(find "$releases_dir" -mindepth 1 -maxdepth 1 \( -name '.incoming-*.tar.gz' -o -name '.deploy-*' \) -print)
+remove+=("${leftovers[@]}")
 
 total=0
 for target in "${remove[@]}"; do

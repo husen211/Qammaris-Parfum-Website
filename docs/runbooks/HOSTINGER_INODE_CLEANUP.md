@@ -8,6 +8,12 @@ Every production deploy unpacks a complete release (code + `vendor`, ~13,200 fil
 
 From the next deploy, `deploy-production-release.sh` prunes after a successful health check: it keeps the live release, the release it switched away from (rollback target) and one more, and removes leftover archives and temp dirs. The existing backlog still has to be removed once by hand (step 2), because the deploy itself may fail while the account is over quota.
 
+The scripts avoid process substitution (`<(...)`): Hostinger's CageFS has no `/dev/fd`, so it fails there.
+
+## Result (2026-10-17)
+
+Measured on the server: 403,361 inodes in the account, 328,975 of them in `releases/` (36 release dirs, 33 `.incoming` archives, 10 `.deploy` dirs, 2 old `.github-*.zip` / `.package-*`). The prune kept `535d5f3` (live), `2d81f8f` (previous in `deployments.log`) and `3c83143`, and removed 32 releases and 47 leftovers (289,331 inodes). Afterwards: 114,033 inodes (28.5%); `/up`, homepage, a product page and `/admin/login` returned 200 and the production worker kept running. `releases/qammaris-85ef088` (pre-cutover, 14 inodes, real `storage` and `.env`) is outside the release name pattern and was left alone.
+
 ## What is never touched
 
 Releases contain code only. `shared/qammaris-website/` holds `.env`, `storage` (product photos, logs, sessions, cache, private files) and deploy state; the database lives in MySQL. Each release links to `shared` with symlinks; deleting a release removes the link, never the target. `current` and the rollback release are always kept.
