@@ -1,0 +1,54 @@
+# Papan kerja Qammaris (GitHub Project husen211/1).
+# Issue baru otomatis masuk papan; label rancangan / dikerjakan / cek-lokal
+# memindahkan kartu; issue ditutup (mis. lewat PR "Closes #n") = Selesai.
+# PROJECT_TOKEN hanya ada di GitHub Secrets, tidak pernah di laptop/agent.
+name: Papan kerja
+
+on:
+  issues:
+    types: [opened, reopened, labeled, unlabeled, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: papan-kerja-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Pindahkan kartu
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          ISSUE_STATE: ${{ github.event.issue.state }}
+          LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+          PROJECT_ID: PVT_kwHOB_dlj84BnlA2
+          FIELD_ID: PVTSSF_lAHOB_dlj84BnlA2zhmI9bM
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Secret PROJECT_TOKEN belum diisi; papan tidak diperbarui."
+            exit 0
+          fi
+
+          # Urutan prioritas: tertutup > cek-lokal > dikerjakan > rancangan > ide.
+          case ",$LABELS," in
+            *,cek-lokal,*)  OPTION=88f6f6dc ;;
+            *,dikerjakan,*) OPTION=d92014bc ;;
+            *,rancangan,*)  OPTION=10f383f1 ;;
+            *)              OPTION=2661745b ;;
+          esac
+          [ "$ISSUE_STATE" = "closed" ] && OPTION=2396dace
+
+          ITEM_ID=$(gh api graphql \
+            -f query='mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}' \
+            -f p="$PROJECT_ID" -f c="$ISSUE_ID" --jq '.data.addProjectV2ItemById.item.id')
+
+          gh api graphql \
+            -f query='mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}' \
+            -f p="$PROJECT_ID" -f i="$ITEM_ID" -f f="$FIELD_ID" -f o="$OPTION" >/dev/null
+
+          echo "Kartu $ITEM_ID -> opsi $OPTION"
