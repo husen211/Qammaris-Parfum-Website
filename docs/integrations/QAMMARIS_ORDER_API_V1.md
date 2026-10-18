@@ -179,10 +179,10 @@ App tidak menyimpan `recipient` di database; data penerima diambil langsung saat
     { "type": "reimbursement", "status": "open", "amount": 5000, "ref": "exp_9b2f4c1e8a7d4b6f9c0e1a2b3c4d5e6f", "blocks_completion": false }
   ],
   "costs": [
-    { "expense_ref": "exp_9b2f4c1e8a7d4b6f9c0e1a2b3c4d5e6f", "kind": "actual_shipping", "status": "active", "amount": 20000,
-      "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ],
+    { "expense_ref": "exp_9b2f4c1e8a7d4b6f9c0e1a2b3c4d5e6f", "origin": "app", "kind": "actual_shipping", "status": "active", "amount": 20000,
+      "funding": [ { "source": "customer_cash_held", "amount": 15000 }, { "source": "staff_advance", "amount": 5000 } ], "advanced_by": null,
       "reimbursement": { "status": "awaiting_proof", "amount": 5000, "proof": "pending", "waiver": null, "updated_at": "2026-10-08T03:10:00Z" },
-      "reported_by": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi" }, "reported_at": "2026-10-08T03:10:00Z" }
+      "source_version": 1, "reported_by": { "app_user_id": "665f0c2a9b1e4a0012ab34cd", "display_name": "Andi" }, "reported_at": "2026-10-08T03:10:00Z" }
   ],
   "issues": [],
   "keep": null,
@@ -362,6 +362,7 @@ Bila `booking_responsibility=customer`, staf langsung mencatat handover `custome
   | `customer_cash_held` | Uang customer yang dipegang staf, dipakai dulu |
   | `customer_direct` | Customer membayar driver langsung; toko tidak mengeluarkan uang, tidak ada reimburse |
 - `status`: `active` | `void`. Koreksi salah catat diberi status void, tidak dihapus.
+- **r4.5 DRAFT — biaya dari Website (ORD-08, Owner 2026-10-17):** `Cost.origin` = `app` (default bila tidak ada) atau `website`. Biaya `website` = ongkir yang dibayar ke kurir dan "uang siapa", diisi Staff Order saat kurir dipesan. Website memiliki `amount`, `funding` dan `advanced_by` (`{display_name}` karyawan, sama dengan nama akun App) dan menaikkan `source_version` setiap kali diubah; `reported_by` = null. App mengimpor biaya itu dengan `expense_ref` yang sama, membuat reimburse karyawan tersebut, lalu hanya melaporkan `reimbursement` kembali lewat `PUT …/costs/{expense_ref}` dengan `source_version` lebih tinggi. Untuk biaya `website`, Website mengabaikan `kind`, `status`, `amount` dan `funding` dari App. Laporan untuk nominal reimburse yang sudah diubah Website adalah no-op. Rincian: [R4_5_DRAFT_WEBSITE_COSTS.md](R4_5_DRAFT_WEBSITE_COSTS.md).
 - `reimbursement` (R7), App sebagai sumber:
   - `status` ∈ `not_applicable`, `awaiting_proof`, `submitted`, `approved`, `paid`, `rejected`, `cancelled`;
   - `amount` = total bagian `staff_advance` (0 dan `not_applicable` bila tidak ada talangan);

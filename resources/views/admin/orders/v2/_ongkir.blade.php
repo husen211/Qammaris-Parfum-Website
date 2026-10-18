@@ -1,5 +1,6 @@
 @use('App\Models\OnlineOrder')
-{{-- Ongkir charged to the customer (ORD-03/04). Shown open while it is still empty, collapsed once set. --}}
+{{-- Ongkir charged to the customer (ORD-03/04). Shown open while it is still empty, collapsed once set. What the courier
+     is paid, and whose money, is entered when the courier is booked (ORD-08, Pengiriman). --}}
 @php
     $canChargeShipping = auth()->user()->can('orders.charge-shipping', $order);
     $ongkirSet = $order->shipping_fee !== null && $order->shipping_payer !== null;
@@ -14,20 +15,15 @@
             <form method="POST" action="{{ route('admin.orders.v2.shipping', $order) }}" class="mt-2 space-y-3">
                 @csrf {!! $hidden($section) !!}
                 <div class="grid grid-cols-2 gap-3">
-                    <label class="text-sm font-medium text-gray-700">Ongkir (Rp)<input name="shipping_fee" inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" class="{{ $input }}"></label>
+                    <label class="text-sm font-medium text-gray-700">Ongkir (Rp)<input name="shipping_fee" data-rupiah-input inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" class="{{ $input }}"></label>
                     <label class="text-sm font-medium text-gray-700">Dibayar
                         <select name="shipping_payer" class="{{ $input }}"><option value="">Belum ditentukan</option>@foreach (OnlineOrder::SHIPPING_PAYERS as $value => $label)<option value="{{ $value }}" @selected(old('shipping_payer', $order->shipping_payer) === $value)>{{ $label }}</option>@endforeach</select>
                     </label>
                 </div>
-                @can('orders.finance')
-                    <label class="block text-sm font-medium text-gray-700">Toko bayar driver dengan
-                        <select name="driver_funding" class="{{ $input }}"><option value="">Tidak perlu / belum ditentukan</option>@foreach (OnlineOrder::DRIVER_FUNDING as $value => $label)<option value="{{ $value }}" @selected(old('driver_funding', $order->driver_funding) === $value)>{{ $label }}</option>@endforeach</select>
-                    </label>
-                @endcan
                 <button class="{{ $ongkirSet || $section === 'konfirmasi' ? $secondary : $primary }}" data-busy-label="Menyimpan…">Simpan ongkir</button>
             </form>
         @else
-            <p class="mt-2 text-sm text-gray-600">{{ $received > 0 ? 'Sudah ada pembayaran. Ubah total lewat Opsi lanjutan → penyesuaian harga (disetujui Super Admin).' : 'Ongkir diatur Super Admin.' }}</p>
+            <p class="mt-2 text-sm text-gray-600">{{ $received > 0 ? 'Sudah ada pembayaran. Ubah total lewat Opsi lanjutan → penyesuaian harga.' : 'Ongkir diatur Super Admin.' }}</p>
         @endif
     </details>
 @endif

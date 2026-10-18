@@ -64,8 +64,8 @@ class OrderOperationalUxTest extends TestCase
         $order->refresh();
         $this->assertSame(['20000.00', 'added_to_transfer'], [$order->shipping_fee, $order->shipping_payer]);
         $this->assertStringContainsString('ongkir - → Rp 20.000', $order->events()->reorder('id', 'desc')->first()->note, 'Audit keeps the money change');
-        // Driver funding stays Super Admin.
-        $shipping($order, ['shipping_fee' => '20000', 'shipping_payer' => 'added_to_transfer', 'driver_funding' => 'cashier_cash'])->assertSessionHas('order_notice.type', 'error');
+        // ORD-08: driver funding is no longer set here (whose money is chosen with the courier booking).
+        $shipping($order, ['shipping_fee' => '20000', 'shipping_payer' => 'added_to_transfer', 'driver_funding' => 'cashier_cash'])->assertSessionHas('order_notice.type', 'success');
         $this->assertNull($order->fresh()->driver_funding);
 
         // After a payment the staff path closes; the change becomes a price adjustment for Super Admin.
@@ -78,7 +78,7 @@ class OrderOperationalUxTest extends TestCase
         // Super Admin keeps full control (audited).
         $this->actingAs($this->owner);
         $shipping($order, ['shipping_fee' => '30000', 'shipping_payer' => 'added_to_transfer', 'driver_funding' => 'cashier_cash'])->assertSessionHas('order_notice.type', 'success');
-        $this->assertSame(['30000.00', 'cashier_cash'], [$order->fresh()->shipping_fee, $order->fresh()->driver_funding]);
+        $this->assertSame(['30000.00', null], [$order->fresh()->shipping_fee, $order->fresh()->driver_funding]);
     }
 
     public function test_staff_still_cannot_approve_prices_or_refunds(): void
@@ -144,7 +144,7 @@ class OrderOperationalUxTest extends TestCase
         $this->actingAs($this->staff);
         $this->get(route('admin.orders.show', $order))->assertSee('data-step="persiapan" data-state="current"', false)->assertDontSee('Request pickup J&amp;T', false);
         $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($i) => [$i->line_id => $i->quantity])->all()]);
-        $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested']);
+        $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested', 'cost_amount' => '27000', 'cost_payer' => 'cashier']);
         $this->get(route('admin.orders.show', $order))->assertSee('Menunggu kurir J&amp;T', false)->assertSee('Sudah di-pickup J&T', false)->assertSee('Opsi lanjutan: QR & resi', false);
 
         // Optional QR: private storage, admin-only download, wrong type refused.

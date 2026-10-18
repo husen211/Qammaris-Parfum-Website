@@ -110,8 +110,9 @@ final class OnlineOrderMessages
             $lines[] = 'Catatan customer: '.$this->text($order->customer_note);
         }
         $lines[] = '';
-        // ORD-04: straight to the App order page when App task links are on (see OrderTaskLink).
-        $lines[] = ($inApp ? 'Buka di Qammaris App: ' : 'Buka tugas (login akun masing-masing): ').$adminUrl;
+        // ORD-04: straight to the App order page when App task links are on (see OrderTaskLink). ORD-08: off in
+        // production, so the store laptop opens the Website order page where all order work happens.
+        $lines[] = ($inApp ? 'Buka di Qammaris App: ' : 'Buka pesanan: ').$adminUrl;
 
         return implode("\n", $lines);
     }

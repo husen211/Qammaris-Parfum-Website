@@ -82,6 +82,7 @@
             </nav>
 
             <div class="p-4 border-t border-gray-100">
+                @include('admin.partials.push-toggle', ['class' => 'mb-3'])
                 <div class="px-4 pb-3 text-sm">
                     <p class="truncate font-semibold text-gray-900">{{ auth()->user()->name }}</p>
                     <p class="text-xs text-gray-500">{{ auth()->user()->roleLabel() }}</p>

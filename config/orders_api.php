@@ -35,6 +35,9 @@ return [
 
     // Contract r4.2: App user IDs of the App Owners who may create or change a proof waiver. Set on the server only;
     // never taken from a request. Empty means no new waiver decision is accepted.
+    // ORD-08: active Qammaris App employees for "Uang siapa" (signed like the webhook). Empty = next to the webhook URL.
+    'app_employees_url' => env('QAMMARIS_APP_EMPLOYEES_URL', ''),
+
     'app_owner_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('QAMMARIS_APP_OWNER_IDS', ''))))),
 
     // Contract r4.2: Website (Admin PWA) staff may open V2 issues while the API is on, once the App reads

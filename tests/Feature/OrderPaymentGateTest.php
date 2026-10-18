@@ -158,7 +158,7 @@ class OrderPaymentGateTest extends TestCase
         foreach ([
             ['admin.orders.v2.preparation', []],
             ['admin.orders.v2.pack', ['packed' => $packed]],
-            ['admin.orders.v2.courier', ['provider' => 'maxim', 'status' => 'requested']],
+            ['admin.orders.v2.courier', ['provider' => 'maxim', 'status' => 'requested', 'cost_amount' => '15000', 'cost_payer' => 'cashier']],
             ['admin.orders.v2.handover', ['handed_to' => 'courier']],
         ] as [$route, $data]) {
             $this->post(route($route, $order), ['revision' => $order->fresh()->revision] + $data)
@@ -178,10 +178,12 @@ class OrderPaymentGateTest extends TestCase
             $this->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision, 'packed' => $order->items->mapWithKeys(fn ($i) => [$i->line_id => $i->quantity])->all()])
                 ->assertSessionHas('order_notice.type', 'success');
             if ($fulfillment === 'local_delivery') {
-                $this->post(route('admin.orders.v2.courier', $order), ['revision' => $order->fresh()->revision, 'provider' => 'gosend', 'status' => 'requested'])->assertSessionHas('order_notice.type', 'success');
+                $this->post(route('admin.orders.v2.courier', $order), ['revision' => $order->fresh()->revision, 'provider' => 'gosend', 'status' => 'requested',
+                    'cost_amount' => '15.000', 'cost_payer' => 'cashier'])->assertSessionHas('order_notice.type', 'success');
             }
             if ($fulfillment === 'intercity') {
-                $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested'])->assertSessionHas('order_notice.type', 'success');
+                $this->post(route('admin.orders.v2.jnt', $order), ['revision' => $order->fresh()->revision, 'status' => 'pickup_requested',
+                    'cost_amount' => '27000', 'cost_payer' => 'cashier'])->assertSessionHas('order_notice.type', 'success');
             }
             $route = $fulfillment === 'intercity' ? 'admin.orders.v2.jnt' : 'admin.orders.v2.handover';
             $this->post(route($route, $order), ['revision' => $order->fresh()->revision] + ($fulfillment === 'intercity' ? ['status' => 'picked_up'] : ['handed_to' => $handedTo]))
