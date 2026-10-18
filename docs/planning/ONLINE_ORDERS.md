@@ -10,11 +10,11 @@ Order lewat WhatsApp (dari Instagram/katalog) membuat Owner mengumpulkan produk,
 
 | ID | Scope | Status |
 |---|---|---|
-| ORD-01 | Link "lengkapi pesanan" untuk customer, catatan admin, status/timeline, pesan grup staf, link tugas staf, talangan ongkir | IN_REVIEW — branch `modernization/ord-01-online-orders`, belum deploy |
-| ORD-02 | Redesign: role Super Admin/Staff Order + manajemen pengguna, Admin PWA, status terpisah (bayar/persiapan/kurir/J&T/handover), pelanggan langganan, keep, API v1 untuk Qammaris App | IN_PROGRESS — Tahap 0 selesai; ORD-02a (role + pengguna) dan ORD-02b (Admin PWA) IN_REVIEW; kontrak API r4.1 (kandidat final setelah conditional sign-off App); ORD-02c/02d boleh dimulai. [Rencana](ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md), [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md) |
+| ORD-01 | Link "lengkapi pesanan" untuk customer, catatan admin, status/timeline, pesan grup staf, link tugas staf, talangan ongkir | DONE — rilis lewat PR55 (2026-10-12) |
+| ORD-02 | Redesign: role Super Admin/Staff Order + manajemen pengguna, Admin PWA, status terpisah (bayar/persiapan/kurir/J&T/handover), pelanggan langganan, keep, API v1 untuk Qammaris App | DONE — ORD-02a–e rilis lewat PR55 (2026-10-12); kontrak API sekarang r4.5. [Rencana](ORD-02_PLAN.md), [audit](../audits/2026-10-08-ord-02-online-orders.md), [kontrak API](../integrations/QAMMARIS_ORDER_API_V1.md) |
 | ORD-03 | Keep/titip barang | Diserap ke ORD-02 |
 | ORD-04 | Akun staf terautentikasi | Diserap ke ORD-02 (role Staff Order + link tugas App) |
-| ORD-04 (dulu ORD-06) | Checkout keranjang website membuat Pesanan Online yang sama (ADR-028 diganti terarah, saklar `ORDERS_WEBSITE_CHECKOUT`) | IN_REVIEW — [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md), [bukti](../verification/ord-04/README.md) |
+| ORD-04 (dulu ORD-06) | Checkout keranjang website membuat Pesanan Online yang sama (ADR-028 diganti terarah, saklar `ORDERS_WEBSITE_CHECKOUT`) | DONE — rilis lewat PR55, checkout website aktif — [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md), [bukti](../verification/ord-04/README.md) |
 | ORD-05 | Kebijakan retensi/anonimisasi data customer | BACKLOG — saat ini tanpa hapus otomatis (keputusan Owner) |
 
 Tidak ada tahap yang dimulai otomatis. Payment gateway, integrasi Majoo, dan pengiriman WhatsApp otomatis bukan bagian program ini.

@@ -119,7 +119,7 @@ AUD-06: `Support/Rupiah` shares the whole-price input rule across editor/CSV/`Sy
 
 `product-cart.js` runs confirmed-success Web Animations flight with reduced-motion fallback; `cart-page.js` serializes quantity/removal mutation feedback. Header points directly to /cart, not drawer. Shared layout destination skeletons observe native same-tab links/valid submits; pageshow resets pending state and timeout recovery never replays POST. No HTML-fetch/swap router; Blade navigation recreates document/navbar DOM. Touch rules/device limits remain explicit, not inferred from mouse viewports.
 
-## Online orders — ORD-01 review branch, not deployed
+## Online orders — ORD-01 (released PR55, 2026-10-12)
 
 ```text
 Admin session + auth/admin + CSRF -> AdminOnlineOrderController + OnlineOrder*Request
@@ -130,9 +130,9 @@ GET/POST /tugas-pesanan/{token}  -> OnlineOrderStaffController (shipping steps +
 Views: OnlineOrderTimeline (per-audience allowlist) + x-order-timeline, OnlineOrderMessages -> copy/wa.me
 ```
 
-Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; the cart checkout path is unchanged and still stores nothing. No package, queue, scheduler, payment, or Majoo integration. [ADR-048](decisions/ADR-048-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
+Tables `online_orders`, `online_order_items` (snapshot, historical catalog IDs without cascade), `online_order_events` (append-only timeline/audit). Token lookup uses the SHA-256 hash; the `encrypted` cast copy lets admins re-copy links; regeneration invalidates. Bearer pages are throttled and send no-store/no-referrer/noindex, with a neutral 404 for unknown/expired/replaced links. `InquiryWhatsApp` gains `textUrl`/`shareUrl`/public `plainText`; at ORD-01 the cart checkout path was unchanged and stored nothing; ORD-04 later made it save a V2 order. No package, queue, scheduler, payment, or Majoo integration. [ADR-048](decisions/ADR-048-online-order-links-and-tracking.md), [runbook](../runbooks/ONLINE_ORDERS.md), [verification](../verification/ord-01/README.md).
 
-## Admin access — ORD-02a review branch, not deployed
+## Admin access — ORD-02a (released PR55, 2026-10-12)
 
 ```text
 Login (email|username, no remember-me) -> session auth_version + last activity
@@ -145,7 +145,7 @@ qammaris:grant-super-admin: explicit, previewed, audited bootstrap (actor null)
 
 A route-table test fails if any new `admin.*` route lacks its area ability. ORD-01 order operations use `orders.manage`, `orders.finance`, and the order-aware `orders.cancel`. [ADR-049](decisions/ADR-049-admin-roles-and-user-management.md), [runbook](../runbooks/ADMIN_ACCESS.md), [verification](../verification/ord-02a/README.md).
 
-### Order state dimensions (ORD-02c slice 1, branch review)
+### Order state dimensions (ORD-02c slice 1, released PR55)
 
 - `online_orders` gains these columns (migration `2026_10_08_300001`):
   - `public_id` (ULID) and `source`;
@@ -179,7 +179,7 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
   - Shared V2 lock/revision/settle: `Concerns\MutatesV2Order`.
 - `App\Support\OnlineOrderState` is the single rule set for `queue`, flags and `canComplete`, matching contract r4.1 §7/§9 and Owner R8.
 
-### V2 order screens (ORD-02d, branch review)
+### V2 order screens (ORD-02d, released PR55)
 
 - `AdminOnlineOrderController@show` hands V2 orders to `AdminOnlineOrderV2Controller`.
 - Routes: `admin.orders.v2.*` (`can:orders.manage`); `admin.orders.money.*` (`can:orders.refund`, also for ORD-01 reconciliation); `admin.orders.customer-search` (JSON).
@@ -189,7 +189,7 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
 - `CreateOnlineOrder` options (source, repeat customer, saved address) apply in the order's transaction.
 - `OnlineOrderMessages::staffGroupV2` uses the stable task link `admin.orders.task`. It opens the Admin PWA order page, or the App page when `QAMMARIS_ORDER_APP_TASK_LINKS=true`.
 
-### Order API v1 for Qammaris App (ORD-02e, branch review)
+### Order API v1 for Qammaris App (ORD-02e, released PR55)
 
 ```text
 App -> /integrations/qammaris-app/orders/v1/* (routes/integrations.php)
@@ -208,7 +208,7 @@ OnlineOrder created/updated (V2) -> integration_outbox -> DeliverOrderWebhook / 
 - `qammaris:order-api:fixtures` builds synthetic staging scenarios and refuses production.
 - [ADR-041](decisions/ADR-041-order-api-v1-implementation.md), [runbook](../runbooks/ORDER_API_STAGING.md), [verification](../verification/ord-02e/README.md).
 
-### Admin PWA (ORD-02b, branch review)
+### Admin PWA (ORD-02b, released PR55)
 
 ```text
 routes/admin-pwa.php (no web group, no cookies): /admin/manifest.webmanifest, /admin/sw.js, /admin/offline
@@ -223,7 +223,7 @@ admin group + login: cache.headers no_store;private
 - Order creation dedupes by `online_orders.submission_token` per creator.
 - [ADR-050](decisions/ADR-050-admin-pwa.md), [verification](../verification/ord-02b/README.md).
 
-### Public website PWA (PWA-01, branch review)
+### Public website PWA (PWA-01, released PR55)
 
 ```text
 routes/public-pwa.php (no web group, no cookies): /manifest.webmanifest (404 when off), /sw.js, /offline
