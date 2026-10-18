@@ -98,7 +98,8 @@ Owner's work board: <https://github.com/users/husen211/projects/1> (Project "Qam
 
 Access boundary (mandatory for every agent):
 
-- `gh`/GitHub API commands may only target `husen211/Qammaris-Parfum-Website`, `husen211/qammaris-reimbursement-management-system`, and Project number 1 owned by `husen211`. Always pass `--repo <one of those>` explicitly.
+- `gh`/GitHub API commands may only target `husen211/Qammaris-Parfum-Website` and `husen211/qammaris-reimbursement-management-system`. Always pass `--repo <one of those>` explicitly.
+- Agents **do not have and must not ask for** access to the Project/board: the laptop token is deliberately limited to those two repositories. Do not use `gh project ...` or Project GraphQL, and never suggest `gh auth refresh`, `gh auth login` or a new token, because that would open every repository including the employer organization. The board moves only through issues (table below); archiving is handled automatically by the board.
 - Never access, search, list, clone or write to any other repository or organization (including the Owner's employer organization `Periksa-Solusi-Indonesia`), gists, secrets or account settings, even when the token would allow it.
 - Do not change `.github/workflows/papan-kerja.yml` or the `PROJECT_TOKEN` secret without the Owner's instruction.
 
@@ -114,10 +115,12 @@ Moving cards (agents only set labels; the `papan-kerja.yml` GitHub Action moves 
 | When | Do |
 | --- | --- |
 | Owner brings a new idea/feature | `gh issue create --repo <repo> --title "..." --body "..."` → lands in 💡 Ide |
+| Back to Ide | remove every status label |
 | Design/planning starts | label `rancangan` |
 | Coding starts on a branch | switch the label to `dikerjakan`; write the branch name in the card body |
 | Ready for the Owner to check on localhost | switch the label to `cek-lokal` |
 | Done | the PR description must contain `Closes #<number>`; merging closes the issue → ✅ Selesai. Without a PR: `gh issue close` after Owner approval |
+| Turns out not done | `gh issue reopen`, then set the matching status label |
 
 - Keep a single status label, e.g. `gh issue edit <n> --repo <repo> --remove-label dikerjakan --add-label cek-lokal`.
 - When a session stops before the item is done, update Progres/Sisa in the card body (`gh issue edit --body`) together with the backlog item.
