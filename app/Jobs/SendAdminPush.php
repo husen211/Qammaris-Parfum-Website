@@ -22,7 +22,11 @@ class SendAdminPush implements ShouldQueue
      * @param  array{title: string, body: string, url: string, tag: string}  $payload
      * @param  int|null  $onlyUserId  "Kirim tes": only this account's devices
      */
-    public function __construct(public readonly array $payload, public readonly ?int $onlyUserId = null) {}
+    public function __construct(public readonly array $payload, public readonly ?int $onlyUserId = null)
+    {
+        // The production worker only listens to the integration queue; the default queue is never processed there.
+        $this->onQueue(config('qammaris_app.queue'));
+    }
 
     public function handle(AdminPushSender $sender): void
     {
