@@ -1,0 +1,24 @@
+# P7-10 production release — 2026-10-07 WITA
+
+The catalog now puts marked best sellers first by default, preserving explicit latest/price/popular sorts. The homepage rotates up to six existing visible marked products per Palu day and uses smaller complete-image cards without prices. Four previously missing illustrations are tracked release assets; the quiz grid/image bounds are repaired. Owner explicitly requested production deployment after the prior report disclosed the unverified Safari limitation. No unrelated PR6/7/9/10 work was merged.
+
+## Release and checks
+
+- [PR8](https://github.com/husen211/Qammaris-Parfum-Website/pull/8) merged at 2026-10-06 17:06:52 UTC. Reviewed head `dc23e9350e0d5a6b7e65b6babff20379623fe3a4`; released main `ae86fc13274998dd6e50de439d5dfd014762cd37`.
+- [Main CI 37501017533](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37501017533): 282 Laravel tests / 1923 assertions and 12 Node tests pass; Vite build passes. Existing DaisyUI @property/large lanyard chunk warnings remain.
+- [Production release 37501092201](https://github.com/husen211/Qammaris-Parfum-Website/actions/runs/37501092201): build and deploy succeed; deploy completes 17:08:51 UTC (01:08:51 WITA). Verified main revision, checksum, pending-migration refusal guard, config/route/view caches, atomic current-release switch, /up gate and queue restart are the existing successful workflow path. No manual migration or panel deployment.
+- Read-only HTTP: homepage, /products, /up, /login, sample /products/proud-of-you-intense-edp-100ml and all four illustration URLs return 200. /.env is 403 and /vendor/autoload.php is 404. The nonexistent /admin/login returns 404; repository's actual login is /login and returns 200.
+- Live browser catalog remains **371** public results before and after. Default first page has 24 best-seller cards and 24 visible prices, compared with zero best-seller cards on the prior latest-first page. Explicit latest remains selected and URL-retained; native search afnan returns 51 results with `sort=latest&search=afnan`.
+- Live homepage has six cards, zero price elements, retained names/size/availability and six loaded photos. Native homepage photo link opens Proud of you intense Edp 100ml with visible **Rp 275.000**, 100 ml and Tersedia. All four illustration images were observed loaded after scrolling.
+- Chrome measured CSS viewports **1440×900** and **391×844**: no horizontal document overflow. The connected browser uses 75% page scaling; physical viewport overrides were compensated to verify actual CSS widths. 391 rather than exactly 390 is the integer rounding limit. Screenshots: [desktop](after-home-desktop.jpg), [mobile](after-home-mobile.jpg). Browser capture intermittently timed out or returned oversized white frames; final evidence uses documented screenshot clips at the observed section position. Prior local before/after evidence remains in ../home-price and ../home-media.
+- No console errors captured in the final browser tab. Real iPhone Safari single-tap/scroll, released-host midnight rotation, and new source-stock event latency remain **Not confirmed**. PHP clock tests verify daily rotation; this release does not alter stock integration. A live rail arrow was clicked but its smooth-scroll completion was not measured; previous local mouse/keyboard rail proof is retained rather than claiming a new live measurement.
+
+## Files, data impact, recovery and next action
+
+Application changes are the existing PR8 HomeController, ProductController, ProductCatalogState, shared/home/catalog Blade views, home/discovery JS, four public static illustration copies and relevant tests. BUSINESS_RULES, ARCHITECTURE, ADR020 and BACKLOG document those choices; this follow-up updates release evidence and status only.
+
+No database migration, product/variant/slug/price/availability/flag/media-upload mutation, account, secret, integration configuration or dependency change. Four static illustration copies ship with the release; original runtime illustrations and product uploads are retained. Runtime storage/env remain shared. Public count equality is a visibility check, not a claim of a full database digest.
+
+Prior successful release is `7b86b00d8d669b6b91e414cb9668090c8509baa9`; existing atomic release procedure retains prior code and restores it if /up fails. For later recovery, use a reviewed code revert/forward fix with a coherent rebuilt artifact. Do not reset feed checkpoints, delete media, restore the database or run down-migrations. No rollback was needed.
+
+Owner-requested P7-10 release is complete within these verified limits. Recommended next action is review the already prepared checkout PR10 separately; it has not been deployed or started as part of this release. Post-release documentation is committed/pushed to the feature branch only, avoiding an unnecessary second production deployment.

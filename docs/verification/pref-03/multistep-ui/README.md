@@ -1,6 +1,6 @@
 # PREF-03 — UI Multistep Form dari 21st.dev
 
-10 Oktober 2026. Owner meminta adaptasi komponen dan animasinya ke tes existing. Implementasi lokal/PR; **belum mengganti UI produksi**. PREF-03 tetap satu item aktif dan IN_REVIEW; quality gates serta PREF-04/V2 tidak berubah.
+10 Oktober 2026. Owner meminta adaptasi komponen dan animasinya ke tes existing. PR53 **sudah merged dan live**; [bukti rilis](RELEASE.md). PREF-03 tetap satu item aktif dan IN_REVIEW; quality gates serta PREF-04/V2 tidak berubah.
 
 ## Komponen yang benar-benar dipakai
 
@@ -16,7 +16,7 @@ Sesuai kontrak touch Qammaris, hover hanya warna/outline pada pointer fine. Hove
 
 ## Scope dan recovery
 
-Patch hanya Blade wizard, CSS preference, JS navigation/motion dan regresi JS. Tidak mengubah backend, questions/engine/parser version, bobot, fingerprint, katalog, media, migration atau retensi. UI-only ini **tidak memerlukan rebuild profil atau migrasi**. Produksi tetap rilisPR51/ec39993 sampai izin deploy revisi UI terpisah. Revert patch UI/code release sebelumnya mengembalikan tampilan lama; tabel/hasil/feedback tetap dipertahankan. Flag false tetap rollback keseluruhan tes ke legacy bila diperlukan.
+Patch hanya Blade wizard, CSS preference, JS navigation/motion dan regresi JS. Tidak mengubah backend, questions/engine/parser version, bobot, fingerprint, katalog, media, migration atau retensi. UI-only ini **tidak memerlukan rebuild profil atau migrasi**. Produksi kini rilisPR53/c8e6530; rilisPR51/ec39993 tetap recovery kode UI. Revert patch UI/code release sebelumnya mengembalikan tampilan lama; tabel/hasil/feedback tetap dipertahankan. Flag false tetap rollback keseluruhan tes ke legacy bila diperlukan.
 
 ## Verifikasi dan batas
 
@@ -24,4 +24,4 @@ Patch hanya Blade wizard, CSS preference, JS navigation/motion dan regresi JS. T
 
 Browser preview fixture lokal381 produk/satu actor sintetis: sebelum/sesudah390×844 dan1440×900; overflow320×844. Budget validation/free-disabled/range, tahapan sebelumnya, mouse serta Enter, refresh/back, skip dan unskip kemanisan, pencarian favorit/clear, ringkasan/edit, submit hasil dan feedback diperiksa. Receipt mencatat hasil aktual terakhir; screenshot hanya dari UI lokal, foto fixture tidak mengklaim verifikasi media produksi. Browser resize/mouse/keyboard bukan genuine touch/iPhone Safari. Reduced motion/cancel fallback diverifikasi pada tes modul; emulasi OS reduced-motion langsung tidak diklaim.
 
-[Receipt browser](browser-receipt.json), [sebelum mobile](before-390.png), [sesudah mobile](after-390.png), [sebelum desktop](before-1440.png), [sesudah desktop](after-1440.png), [320px](after-320.png), dan [pilihan aroma mobile](after-aroma-390.png). Screenshot final budget diambil setelah animasi selesai; screenshot320 sebelum koreksi padding terakhir tetap membuktikan layout tanpa overflow, sementara transisi final diperiksa lagi pada390/1440. Fixture/database/actor/results/sessions lokal dihapus dan server/tab sementara dihentikan; preview screenshot tetap tersedia. Langkah berikut tetap review UI dan rekomendasi beta dalam PREF-03, kemudian rilis UI dengan izin tersendiri. Tidak menjalankan fase selanjutnya otomatis.
+[Receipt browser](browser-receipt.json), [sebelum mobile](before-390.png), [sesudah mobile](after-390.png), [sebelum desktop](before-1440.png), [sesudah desktop](after-1440.png), [320px](after-320.png), dan [pilihan aroma mobile](after-aroma-390.png). Screenshot final budget diambil setelah animasi selesai; screenshot320 sebelum koreksi padding terakhir tetap membuktikan layout tanpa overflow, sementara transisi final diperiksa lagi pada390/1440. Fixture/database/actor/results/sessions lokal dihapus dan server/tab sementara dihentikan; preview screenshot tetap tersedia. Langkah berikut tetap review UI dan rekomendasi beta dalam PREF-03, UI sudah dirilis dengan izin terpisah; lihat bukti rilis. Tidak menjalankan fase selanjutnya otomatis.

@@ -15,3 +15,5 @@ Dokumentasikan release SHA, CI, snapshot/preview/apply/replay, backup receipt, a
 ## UI-only Multistep adaptation
 
 Owner-requested [21st UI patch](../verification/pref-03/multistep-ui/README.md) changes presentation/navigation only. After separate authorization, use the normal CI/deploy pipeline; no migrations, profile apply/rebuild or flag cutover are required because question/parser/engine semantics stay unchanged. Code rollback to the preceding UI keeps all recommendation/result/feedback tables. Human quality and genuine-touch limits remain separately reported.
+
+Current UI-only release PR53/c8e6530 is live; [release proof and quota recovery](../verification/pref-03/multistep-ui/RELEASE.md). The previous ec39993 release remains code-only recovery. No profile or migration step was run for this UI patch. Future release approval and device/quality limits remain separate.
