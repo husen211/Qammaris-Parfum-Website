@@ -87,7 +87,7 @@ class ReleaseCheck extends Command
         $this->add(config('admin.pwa_enabled') ? 'PASS' : 'FAIL', 'service worker admin', config('admin.pwa_enabled') ? 'ADMIN_PWA_ENABLED aktif' : 'ADMIN_PWA_ENABLED harus true agar push diterima');
         $sync = config('queue.default') === 'sync';
         $failedJobs = rescue(fn () => DB::table('failed_jobs')->where('payload', 'like', '%SendAdminPush%')->count(), 0, false);
-        $this->add($sync ? 'WARN' : 'PASS', 'antrean push', ($sync ? 'QUEUE_CONNECTION=sync (push dikirim langsung saat checkout)' : 'antrean '.config('queue.default')).', gagal: '.$failedJobs);
+        $this->add($sync ? 'WARN' : 'PASS', 'antrean push', ($sync ? 'QUEUE_CONNECTION=sync (push dikirim langsung saat checkout)' : 'antrean '.config('queue.default').' / '.config('qammaris_app.queue').' (worker harus mendengarkan antrean ini)').', gagal: '.$failedJobs);
     }
 
     private function add(string $status, string $check, string $detail): void

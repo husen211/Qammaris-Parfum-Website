@@ -80,6 +80,8 @@ class AdminPushTest extends TestCase
         $key = (string) Str::uuid();
         [$order] = app(CreateOnlineOrder::class)->fromWebsiteCheckout([$variant->id => ['quantity' => 2, 'price' => '150000.00']], $this->details(), $key);
         Queue::assertPushed(SendAdminPush::class, 1);
+        // The production worker only processes the integration queue (tools/hostinger/production-qammaris-worker-watchdog.sh).
+        Queue::assertPushedOn('qammaris-app', SendAdminPush::class);
         Queue::assertPushed(SendAdminPush::class, function (SendAdminPush $job) use ($order) {
             return $job->payload['title'] === 'Pesanan baru dari website'
                 && str_contains($job->payload['body'], $order->code.' · 2 barang · ')
