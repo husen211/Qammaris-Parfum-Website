@@ -92,3 +92,13 @@ Then check the post-deploy prune (first run on the server): the deploy log has n
   - Imported website costs stay as App expenses and approved reimbursements. Pay or reject them as usual.
   - To let staff work in the App again: rebuild with `VITE_ONLINE_ORDERS_WORK_IN_APP=1`.
 - **Integration emergency:** [RELEASE_ORD_PWA_RC §6.2](RELEASE_ORD_PWA_RC.md) (API/webhook flags off; staff keep working on the Website).
+
+## 7. Release record (2026-10-18)
+
+- Backups: Website DB streamed off-server (`backups/2026-10-17_production_website-ord-08-09`, sha256 `38af8668…`), restored on MariaDB 11.8.9 with all 52 table counts equal to production; migrations rehearsed on that copy (pre-existing data unchanged). App: the Owner chose to release on the existing 2026-10-13 MongoDB backup (the App release has no migration or index change).
+- App PR #2 merged (`7bcded1`), Hostinger auto-deploy live 03:15 UTC.
+- `QAMMARIS_ORDER_APP_TASK_LINKS=false` (backup `.env.bak-20261018-ord-08`). It was set only after the App went live, so for about an hour the App's "Buka di Website" redirected back to the App. Set it **before** the App deploy next time.
+- 3 migrations from the build-only package of `180d859`; then PR #62 merged (`a5adcd2`); deploy, health check and post-deploy prune OK.
+- VAPID keys generated on the server straight into `.env` (subject `https://qammarisparfum.id`); `config:cache`, `queue:restart`.
+- Found after the release: `SendAdminPush` used the `default` queue, which the production worker does not process. Fixed in PR #63 (`d7d1a22`); a no-op push job was processed by the worker. Four "Kirim tes" jobs queued before the fix stay unprocessed in `default` (test only).
+- `qammaris:release-check`: 8/8 PASS. Inodes after both deploys: 72,235 (≈18%).

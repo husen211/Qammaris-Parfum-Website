@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\OnlineOrder;
 use App\Models\User;
+use App\Support\OnlineOrderMessages;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
@@ -274,6 +275,18 @@ class OrderCourierCostTest extends TestCase
         $order = $this->paidV2Order('local_delivery');
         $this->actingAs($this->staff)->get(route('admin.orders.show', $order))
             ->assertSee('Buka pesanan: '.route('admin.orders.task', $order->public_id), false)->assertDontSee('login akun masing-masing');
+    }
+
+    public function test_paying_the_driver_before_the_fee_is_known_still_opens_the_order(): void
+    {
+        // Production 2026-10-18 (QAM-0007): "dibayar langsung ke driver" without a fee yet made the order page a 500.
+        $order = $this->v2Order('local_delivery');
+        $order->forceFill(['shipping_payer' => 'cash_to_driver', 'shipping_fee' => null])->save();
+        $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertOk();
+        $this->assertStringContainsString('Ongkir: dibayar langsung ke driver', app(OnlineOrderMessages::class)->paymentInstructions($order));
+        $order->forceFill(['shipping_payer' => 'added_to_transfer'])->save();
+        $this->get(route('admin.orders.show', $order))->assertOk();
+        $this->assertStringContainsString('Ongkir: menunggu konfirmasi', app(OnlineOrderMessages::class)->paymentInstructions($order->fresh()));
     }
 
     private function packed(OnlineOrder $order): OnlineOrder

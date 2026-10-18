@@ -143,8 +143,10 @@ final class OnlineOrderMessages
         }
         $lines[] = match (true) {
             $order->fulfillment === 'pickup' => 'Ongkir: - (ambil di toko)',
-            $order->shipping_payer === 'added_to_transfer' => 'Ongkir: '.Rupiah::format($order->shipping_fee),
-            $order->shipping_payer === 'cash_to_driver' => 'Ongkir: '.Rupiah::format($order->shipping_fee).' (dibayar langsung ke driver)',
+            // A payer may be chosen before the fee is known (e.g. the driver quotes it on pickup).
+            $order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null => 'Ongkir: '.Rupiah::format($order->shipping_fee),
+            $order->shipping_payer === 'cash_to_driver' && $order->shipping_fee !== null => 'Ongkir: '.Rupiah::format($order->shipping_fee).' (dibayar langsung ke driver)',
+            $order->shipping_payer === 'cash_to_driver' => 'Ongkir: dibayar langsung ke driver',
             $order->shipping_payer === 'store_free' => 'Ongkir: gratis',
             default => 'Ongkir: menunggu konfirmasi',
         };
