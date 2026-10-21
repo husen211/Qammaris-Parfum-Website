@@ -13,6 +13,12 @@ class AdminOrderListFiltersTest extends TestCase
 {
     use BuildsV2Orders, RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     public function test_tabs_replace_the_dropdown_and_apply_without_a_button(): void
     {
         $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER]);
