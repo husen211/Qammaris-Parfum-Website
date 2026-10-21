@@ -2,8 +2,8 @@
 {{-- ORD-03 "Ada masalah": open issues are always visible; recording a new one is behind a disclosure. --}}
 <details id="kendala" class="{{ $card }}" @if ($isOpen('kendala', $openIssues > 0)) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
-        <span><span class="block text-base font-semibold text-gray-900">Ada masalah</span><span @class(['block text-sm', 'text-red-700' => $openIssues > 0, 'text-gray-600' => $openIssues === 0])>{{ $openIssues > 0 ? $openIssues.' kendala terbuka' : 'Stok kurang, kurir, customer, atau lainnya' }}</span></span>
-        <span aria-hidden="true" class="text-gray-400">▾</span>
+        <span><span class="block text-base font-semibold text-gray-900">Ada masalah?</span><span @class(['block text-sm', 'text-red-700' => $openIssues > 0, 'text-gray-600' => $openIssues === 0])>{{ $openIssues > 0 ? $openIssues.' kendala terbuka' : 'Stok kurang, kurir, customer, atau lainnya' }}</span></span>
+        @include('admin.orders.v2._chevron')
     </summary>
     @include('admin.orders.v2._notice', ['section' => 'kendala'])
     @if ($order->issues->isNotEmpty())

@@ -12,7 +12,7 @@
                 $order->shipping_fee !== null ? format_rupiah($order->shipping_fee) : ($order->shipping_payer === 'cash_to_driver' ? null : 'belum diisi'),
                 $order->shipping_payer ? OnlineOrder::SHIPPING_PAYERS[$order->shipping_payer] : null,
             ])) }}</span></span>
-            <span aria-hidden="true" class="text-gray-400">{{ $ongkirSet ? 'Ubah' : '' }} ▾</span>
+            <span class="flex items-center gap-1 text-sm text-gray-500">{{ $ongkirSet ? 'Ubah' : '' }}@include('admin.orders.v2._chevron')</span>
         </summary>
         @if ($canChargeShipping)
             <form method="POST" action="{{ route('admin.orders.v2.shipping', $order) }}" class="mt-2 space-y-3">

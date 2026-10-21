@@ -333,11 +333,14 @@ class AdminOnlineOrderV2Controller extends Controller
 
     public function requestAdjustment(Request $request, OnlineOrder $order): RedirectResponse
     {
-        $data = $request->validate(['revision' => ['required', 'integer'], 'direction' => ['required', Rule::in(['discount', 'surcharge'])], 'amount' => ['required', 'string', 'max:15'], 'reason' => ['required', 'string', 'max:300']],
+        // ADM-04: "Poin member" is a discount whose reason is always the member points, so none is typed.
+        $data = $request->validate(['revision' => ['required', 'integer'], 'direction' => ['required', Rule::in(['discount', 'member_points', 'surcharge'])], 'amount' => ['required', 'string', 'max:15'],
+            'reason' => ['exclude_if:direction,member_points', 'required', 'string', 'max:300']],
             ['reason.required' => 'Tulis alasan penyesuaian.'], ['amount' => 'nominal']);
+        $reason = $data['direction'] === 'member_points' ? 'Poin member' : $data['reason'];
 
         return $this->attempt($order, 'harga', fn () => $this->adjustments->request($order, (int) $data['revision'], $request->user(),
-            ($data['direction'] === 'discount' ? '-' : '').$this->rupiah($data['amount']), $data['reason']), 'Penyesuaian harga diterapkan. Total pesanan sudah diperbarui.');
+            ($data['direction'] === 'surcharge' ? '' : '-').$this->rupiah($data['amount']), $reason), 'Penyesuaian harga diterapkan. Total pesanan sudah diperbarui.');
     }
 
     public function decideAdjustment(Request $request, OnlineOrder $order, int $adjustment, string $decision): RedirectResponse

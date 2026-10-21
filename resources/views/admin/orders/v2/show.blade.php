@@ -8,6 +8,8 @@
 {{-- ORD-02d/ORD-03: V2 order page. Every form posts the revision it was rendered with; actions go through V2 operations only. --}}
 @php
     $card = 'scroll-mt-20 rounded-xl border border-gray-200 bg-white p-4 sm:p-5';
+    // ADM-04: the step to work on now stands out (brand gold), so staff see where they are without reading the stepper.
+    $currentCard = 'scroll-mt-20 rounded-xl border-2 border-[#C5A059] bg-[#FFFCF5] p-4 shadow-sm ring-4 ring-[#C5A059]/10 sm:p-5';
     $input = 'mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10';
     $primary = 'inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:bg-gray-400 sm:w-auto';
     $secondary = 'inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-800 hover:bg-gray-50 disabled:text-gray-400';
@@ -157,8 +159,14 @@
 
             <ol class="space-y-2" aria-label="Langkah pesanan">
                 @foreach ($steps as $i => $step)
-                    <li data-step-row="{{ $step['key'] }}">
-                        @if ($step['state'] === 'current' || ($step['key'] === 'selesai' && $finished))
+                    <li data-step-row="{{ $step['key'] }}" @if ($step['state'] === 'current' && ! $finished) data-step-current @endif>
+                        @if ($step['state'] === 'current' && ! $finished)
+                            <p class="mb-1.5 flex items-center gap-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-[#8A6A2E]">
+                                <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                                Langkah sekarang
+                            </p>
+                            @include($stepView[$step['key']], ['openSection' => true, 'card' => $currentCard])
+                        @elseif ($step['key'] === 'selesai' && $finished)
                             @include($stepView[$step['key']], ['openSection' => true])
                         @elseif ($step['state'] === 'done')
                             <div class="flex min-h-12 items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm">
@@ -207,7 +215,12 @@
                 </section>
             @endif
 
-            {{-- Exceptions and less frequent tools, collapsed. --}}
+            {{-- Exceptions and less frequent tools, collapsed, after a divider so they read as outside the routine flow. --}}
+            <div class="flex items-center gap-3 pt-3" role="separator" aria-label="Di luar alur rutin" data-flow-divider>
+                <span class="h-px flex-1 bg-gray-200"></span>
+                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Di luar alur rutin</span>
+                <span class="h-px flex-1 bg-gray-200"></span>
+            </div>
             @if ($open && $pending && ($order->payment_status !== 'paid' || $order->keep_status === 'active'))
                 @include('admin.orders.v2.sections.keep')
             @endif
@@ -224,7 +237,7 @@
                     <details id="keuangan" class="{{ $card }}" @if ($isOpen('keuangan', in_array($order->refund_status, ['pending', 'partial', 'needs_reconciliation'], true))) open @endif>
                         <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
                             <span><span class="block text-base font-semibold text-gray-900">Keuangan</span><span class="block text-sm text-gray-600">Refund dan rekonsiliasi (Super Admin)</span></span>
-                            <span aria-hidden="true" class="text-gray-400">▾</span>
+                            @include('admin.orders.v2._chevron')
                         </summary>
                         @include('admin.orders.v2._money-panel')
                     </details>
@@ -258,7 +271,7 @@
             <details id="detail" class="{{ $card }}" @if ($isOpen('detail')) open @endif>
                 <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
                     <span class="min-w-0"><span class="block text-base font-semibold text-gray-900">Data penerima</span><span class="block truncate text-sm text-gray-600">{{ $order->customer_name ? $order->customer_name.' · '.$order->customer_phone : 'Belum diisi' }}</span></span>
-                    <span aria-hidden="true" class="text-gray-400">▾</span>
+                    @include('admin.orders.v2._chevron')
                 </summary>
                 <form method="POST" action="{{ route('admin.orders.v2.details', $order) }}" class="mt-3 space-y-4">
                     @csrf @method('PATCH') {!! $hidden('detail') !!}
@@ -278,7 +291,7 @@
             <details id="pelanggan" class="{{ $card }}" @if ($isOpen('pelanggan')) open @endif>
                 <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
                     <span><span class="block text-base font-semibold text-gray-900">Pelanggan langganan</span><span class="block text-sm text-gray-600">{{ $order->customer ? $order->customer->name : 'Belum dihubungkan' }}</span></span>
-                    <span aria-hidden="true" class="text-gray-400">▾</span>
+                    @include('admin.orders.v2._chevron')
                 </summary>
                 @include('admin.orders.v2._notice', ['section' => 'pelanggan'])
                 @if ($order->customer)
@@ -318,7 +331,7 @@
 
             <details id="riwayat" class="{{ $card }}">
                 <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
-                    <span class="text-base font-semibold text-gray-900">Riwayat</span><span aria-hidden="true" class="text-gray-400">▾</span>
+                    <span class="text-base font-semibold text-gray-900">Riwayat</span>@include('admin.orders.v2._chevron')
                 </summary>
                 <ol class="mt-3 space-y-2 text-sm">
                     @foreach ($order->events->reverse() as $event)
