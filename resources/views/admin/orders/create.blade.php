@@ -5,7 +5,7 @@
 @php($field = 'mt-1 min-h-12 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10')
 <div class="mx-auto max-w-3xl space-y-4">
     <div>
-        <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">← Pesanan Online</a>
+        @include('admin.orders.partials.back')
         <h1 class="mt-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Buat pesanan</h1>
     </div>
 

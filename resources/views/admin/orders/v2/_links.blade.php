@@ -2,7 +2,7 @@
 <details id="link" class="{{ $card }}" @if ($openSection ?? true) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2" @if ($openSection ?? false) data-next-step @endif>
         <span><span class="block text-lg font-semibold text-gray-900" id="link-title">Link Pesanan</span><span class="block text-sm text-gray-600">{{ $order->lifecycle === 'awaiting_customer' ? 'Menunggu customer mengisi data' : 'Untuk melihat status pesanan' }}</span></span>
-        <span aria-hidden="true" class="text-gray-400">▾</span>
+        @include('admin.orders.v2._chevron')
     </summary>
     @include('admin.orders.v2._notice', ['section' => 'link'])
     @if ($order->lifecycle === 'awaiting_customer' && ! $order->customerLinkUsable())

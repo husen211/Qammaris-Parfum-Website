@@ -2,8 +2,8 @@
 @php($pendingAdjustments = $order->adjustments->where('status', 'pending')->count())
 <details id="lanjutan" class="{{ $card }}" @if ($isOpen('harga') || $isOpen('batal') || ($pendingAdjustments > 0 && auth()->user()->can('orders.approve-adjustment'))) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
-        <span><span class="block text-base font-semibold text-gray-900">Opsi lanjutan</span><span class="block text-sm text-gray-600">{{ $pendingAdjustments > 0 ? $pendingAdjustments.' penyesuaian harga menunggu persetujuan' : 'Penyesuaian harga, batalkan pesanan' }}</span></span>
-        <span aria-hidden="true" class="text-gray-400">▾</span>
+        <span><span class="block text-base font-semibold text-gray-900">Opsi lanjutan</span><span class="block text-sm text-gray-600">{{ $pendingAdjustments > 0 ? $pendingAdjustments.' penyesuaian harga menunggu persetujuan' : 'Penyesuaian harga, poin member, batalkan pesanan' }}</span></span>
+        @include('admin.orders.v2._chevron')
     </summary>
 
     <section id="harga" class="mt-3 scroll-mt-20" aria-labelledby="harga-title">
@@ -28,16 +28,29 @@
             </div>
         @endforeach
         @if ($open)
-            <form method="POST" action="{{ route('admin.orders.v2.adjustments', $order) }}" class="mt-2 grid gap-3 sm:grid-cols-3" data-confirm="Terapkan penyesuaian harga ini? Total pesanan langsung berubah.">
+            {{-- ADM-04: "Poin member" is a fixed rupiah discount from the customer's points and needs no reason. --}}
+            <form method="POST" action="{{ route('admin.orders.v2.adjustments', $order) }}" class="mt-2 grid gap-3 sm:grid-cols-3" data-confirm="Terapkan penyesuaian harga ini? Total pesanan langsung berubah." data-adjustment-form>
                 @csrf {!! $hidden('harga') !!}
                 <label class="text-sm font-medium text-gray-700">Jenis
-                    <select name="direction" class="{{ $input }}"><option value="discount">Potongan</option><option value="surcharge">Tambahan</option></select>
+                    <select name="direction" class="{{ $input }}" data-adjustment-direction>
+                        @foreach (['discount' => 'Potongan', 'member_points' => 'Poin member', 'surcharge' => 'Tambahan'] as $value => $label)<option value="{{ $value }}" @selected(old('direction') === $value)>{{ $label }}</option>@endforeach
+                    </select>
                 </label>
                 <label class="text-sm font-medium text-gray-700">Nominal (Rp)<input name="amount" data-rupiah-input inputmode="numeric" required value="{{ old('amount') }}" class="{{ $input }}"></label>
-                <label class="text-sm font-medium text-gray-700">Alasan<input name="reason" required minlength="5" maxlength="300" value="{{ old('reason') }}" class="{{ $input }}"></label>
-                <div class="sm:col-span-3"><button class="{{ $secondary }}" data-busy-label="Menerapkan…">Terapkan penyesuaian</button>
+                <label class="text-sm font-medium text-gray-700" data-adjustment-reason @if (old('direction') === 'member_points') hidden @endif>Alasan<input name="reason" @if (old('direction') !== 'member_points') required @endif minlength="5" maxlength="300" value="{{ old('reason') }}" class="{{ $input }}"></label>
+                <div class="sm:col-span-3"><button class="{{ $primary }}" data-busy-label="Menerapkan…">Terapkan penyesuaian</button>
                     <p class="mt-1 text-xs text-gray-500">Total langsung berubah dan tercatat di Riwayat.</p></div>
             </form>
+            <script>
+            // ADM-04: points need no reason; the field hides and stops being required.
+            document.querySelectorAll('[data-adjustment-form]').forEach((form) => {
+                const direction = form.querySelector('[data-adjustment-direction]');
+                const reason = form.querySelector('[data-adjustment-reason]');
+                const sync = () => { const points = direction.value === 'member_points'; reason.hidden = points; reason.querySelector('input').required = !points; };
+                direction.addEventListener('change', sync);
+                sync();
+            });
+            </script>
         @endif
     </section>
 

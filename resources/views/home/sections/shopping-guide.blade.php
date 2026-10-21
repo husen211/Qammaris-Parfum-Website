@@ -62,8 +62,8 @@
                 </div>
                 @if($storeInfo->whatsapp_link)
                 <a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer"
-                    class="inline-flex items-center justify-center border border-white/30 px-6 py-3 text-xs font-semibold uppercase tracking-widest text-white/90 hover:bg-brand-gold hover:text-brand-black hover:border-brand-gold transition-colors">
-                    Chat WhatsApp
+                    class="inline-flex items-center justify-center border border-white/30 px-6 py-3 text-xs font-semibold uppercase tracking-widest text-white/90 hover:bg-brand-gold hover:text-brand-black hover:border-brand-gold transition-colors gap-2" data-whatsapp-button>
+                    <x-icon name="whatsapp" class="text-[1.2rem]" /> Chat WhatsApp
                 </a>
                 @else
                 <a href="{{ route('products.index') }}"

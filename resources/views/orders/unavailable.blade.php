@@ -15,7 +15,7 @@
                 : 'Link tugas ini sudah diganti atau pesanan sudah lama selesai. Minta link terbaru di grup.' }}
         </p>
         @if ($whatsappUrl)
-            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-white active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black sm:w-auto sm:px-8">Chat admin di WhatsApp</a>
+            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-sm font-semibold uppercase tracking-widest text-white active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3 sm:w-auto sm:px-8" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Chat admin di WhatsApp</a>
         @endif
     </div>
 </section>

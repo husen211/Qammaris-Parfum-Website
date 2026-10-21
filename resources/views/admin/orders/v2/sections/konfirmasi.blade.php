@@ -1,9 +1,9 @@
 @use('App\Models\OnlineOrder')
 {{-- ORD-04: website checkout waiting for Staff Order. The customer opening WhatsApp is not a confirmation. --}}
-<details id="konfirmasi" class="{{ $card }} border-amber-300" @if ($openSection) open @endif>
+<details id="konfirmasi" class="{{ $card }}" @if ($openSection) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2" @if ($openSection) data-next-step @endif>
         <span><span class="block text-lg font-semibold text-gray-900">Konfirmasi pesanan website</span><span class="block text-sm text-gray-600">Belum masuk antrean packing</span></span>
-        <span aria-hidden="true" class="text-gray-400">▾</span>
+        @include('admin.orders.v2._chevron')
     </summary>
     @include('admin.orders.v2._notice', ['section' => 'konfirmasi'])
     <dl class="mt-3 space-y-2 text-sm">

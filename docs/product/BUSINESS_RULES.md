@@ -214,7 +214,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 ### Operasional pesanan yang disederhanakan (ORD-03, branch review)
 
 - Halaman pesanan menampilkan satu langkah saat ini (link, kendala, pembayaran, packing, atau pengiriman) dengan satu tombol utama. Langkah lain dilipat.
-- Pembayaran dicatat dengan nominal, metode, dan centang "Sudah dicatat di Majoo". Sumber konfirmasi tidak dipilih lagi; sistem mencatatnya secara internal (Majoo, atau "dicatat admin").
+- Pembayaran dicatat dengan nominal dan metode. **ADM-03 (Owner 2026-10-21):** tombol Tandai Lunas membuka konfirmasi singkat; staf wajib mencentang "Bukti pembayaran sudah dicek" dan "Sudah dicatat di kasir (Majoo)" sebelum menyimpan, dan server menolak pembayaran tanpa centang Majoo. Sumber konfirmasi di ledger tercatat Majoo.
 - Packing: centang setiap barang sesuai jumlah pesanan, lalu konfirmasi. Barang yang kurang dilaporkan lewat "Ada masalah".
 - J&T: request pickup, menunggu kurir, lalu sudah di-pickup. QR dan nomor resi opsional dan tidak menghalangi pickup.
 - Ongkir (saklar UAT `ORDERS_SIMPLE_UX`): Staff Order boleh mengisi ongkir yang ditagihkan ke customer selama belum ada pembayaran sama sekali. Setelah ada pembayaran, perubahan total lewat penyesuaian harga (langsung diterapkan sejak ADM-01). Pendanaan driver dan refund tetap Super Admin.
@@ -291,6 +291,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
   - Lewat batas waktu, keep ditandai **perlu tindakan** dan tidak pernah dibatalkan otomatis.
   - Keep berakhir sendiri saat pesanan Lunas atau diserahkan, dan dilepas bila pesanan dibatalkan.
 - **Penyesuaian harga:**
+  - ADM-04 (Owner 2026-10-21): jenis **Poin member** = potongan rupiah tetap dari poin yang dipakai customer; tidak perlu alasan (tercatat "Poin member").
   - Owner 2026-10-17 (ADM-01): siapa pun dengan akses pesanan (termasuk Staff Order) menerapkan potongan/tambahan langsung, dengan alasan, tanpa persetujuan Super Admin. Total langsung berubah; siapa yang menerapkan tercatat di Riwayat. Total tidak boleh di bawah 0.
   - Pengajuan lama yang masih menunggu tetap diputuskan Super Admin.
   - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Pengembaliannya tetap butuh keputusan refund Super Admin.

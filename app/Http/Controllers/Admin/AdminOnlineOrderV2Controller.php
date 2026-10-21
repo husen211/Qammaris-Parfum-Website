@@ -139,9 +139,11 @@ class AdminOnlineOrderV2Controller extends Controller
             'payment_method' => ['required', Rule::in(array_keys(OnlineOrder::PAYMENT_METHODS))],
             // ORD-03: no visible source choice; Majoo when ticked, otherwise "recorded by admin" in the ledger.
             'confirmation_source' => ['nullable', Rule::in(RecordOnlineOrderMoney::CONFIRMATION_SOURCES)],
-            'reference' => ['nullable', 'string', 'max:80'], 'recorded_in_majoo' => ['nullable', 'boolean'],
-        ], [], ['amount' => 'nominal', 'payment_method' => 'metode']);
-        $data['confirmation_source'] ??= $request->boolean('recorded_in_majoo') ? 'majoo' : RecordOnlineOrderMoney::ADMIN_RECORDED;
+            'reference' => ['nullable', 'string', 'max:80'],
+            // ADM-03 (Owner 2026-10-21): a payment is entered in the cashier (Majoo) before it is marked here.
+            'recorded_in_majoo' => ['accepted'],
+        ], ['recorded_in_majoo.accepted' => 'Catat dulu pembayaran ini di kasir (Majoo), lalu tandai lunas.'], ['amount' => 'nominal', 'payment_method' => 'metode']);
+        $data['confirmation_source'] ??= 'majoo';
 
         return $this->attempt($order, 'pembayaran', function () use ($request, $order, $data) {
             $updated = $this->money->recordPayment($order, (int) $data['revision'], $request->user(), $this->rupiah($data['amount']), $data['payment_method'], $data['confirmation_source'], $data['reference'] ?? null);
@@ -333,11 +335,14 @@ class AdminOnlineOrderV2Controller extends Controller
 
     public function requestAdjustment(Request $request, OnlineOrder $order): RedirectResponse
     {
-        $data = $request->validate(['revision' => ['required', 'integer'], 'direction' => ['required', Rule::in(['discount', 'surcharge'])], 'amount' => ['required', 'string', 'max:15'], 'reason' => ['required', 'string', 'max:300']],
+        // ADM-04: "Poin member" is a discount whose reason is always the member points, so none is typed.
+        $data = $request->validate(['revision' => ['required', 'integer'], 'direction' => ['required', Rule::in(['discount', 'member_points', 'surcharge'])], 'amount' => ['required', 'string', 'max:15'],
+            'reason' => ['exclude_if:direction,member_points', 'required', 'string', 'max:300']],
             ['reason.required' => 'Tulis alasan penyesuaian.'], ['amount' => 'nominal']);
+        $reason = $data['direction'] === 'member_points' ? 'Poin member' : $data['reason'];
 
         return $this->attempt($order, 'harga', fn () => $this->adjustments->request($order, (int) $data['revision'], $request->user(),
-            ($data['direction'] === 'discount' ? '-' : '').$this->rupiah($data['amount']), $data['reason']), 'Penyesuaian harga diterapkan. Total pesanan sudah diperbarui.');
+            ($data['direction'] === 'surcharge' ? '' : '-').$this->rupiah($data['amount']), $reason), 'Penyesuaian harga diterapkan. Total pesanan sudah diperbarui.');
     }
 
     public function decideAdjustment(Request $request, OnlineOrder $order, int $adjustment, string $decision): RedirectResponse
