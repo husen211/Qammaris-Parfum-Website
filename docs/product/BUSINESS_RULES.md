@@ -135,6 +135,7 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
 
   Alamat hanya wajib untuk pengiriman. Kelurahan, kecamatan, dan kode pos opsional.
 - **Pilihan lain:** paperbag wajib dipilih. Preferensi pembayaran Transfer bank atau QRIS hanyalah preferensi, tidak menandai lunas. Pengiriman dalam kota juga wajib memilih metode pembayaran ongkir (ORD-10). Ongkir tampil "Menunggu konfirmasi staf", atau "Dibayar langsung ke driver" bila itu pilihannya.
+- **Pesan WhatsApp checkout** menyebut nomor pesanan dan diakhiri **Link pesanan untuk admin** (ORD-11): link tugas yang sama dengan grup staf, tanpa data kontak; hanya terbuka setelah login admin.
 - **Status awal "Menunggu konfirmasi website"** (lifecycle `draft`):
   - belum menjadi tugas packing di Qammaris App;
   - belum bisa dicatat pembayarannya;

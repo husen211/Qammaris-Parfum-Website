@@ -81,7 +81,8 @@ final class InquiryWhatsApp
 
     /**
      * ORD-04: short message after a saved website checkout. The order already holds the recipient and address,
-     * so the chat only names the order for the admin to look up; no address or phone is repeated.
+     * so the chat only names the order; no address or phone is repeated. ORD-11: it ends with the same task link
+     * as the staff group (random public ID, admin login required), so staff open the order with one tap.
      */
     public function websiteOrderUrl(?string $number, OnlineOrder $order): ?string
     {
@@ -104,6 +105,8 @@ final class InquiryWhatsApp
             ...($order->fulfillment === 'local_delivery' && $order->shipping_payer === 'cash_to_driver' ? ['Ongkir: bayar langsung ke driver'] : []),
             '',
             'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
+            '',
+            'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
         ]);
     }
 

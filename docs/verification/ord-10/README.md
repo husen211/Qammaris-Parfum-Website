@@ -52,3 +52,13 @@ The question sits next to "Pembayaran" because it is the same money decision, an
 ## Rollback
 
 Code-only: revert the PR. No schema or data change; values already saved in `shipping_payer` stay valid for the old code.
+
+## ORD-11 — order link in the checkout WhatsApp message
+
+Owner request (card #77, 2026-10-21, before releasing ORD-10): the chat a customer sends after a website checkout only named the order number, so staff searched for it by hand.
+
+- `InquiryWhatsApp::websiteOrderMessage()` now ends with `Link pesanan untuk admin: …`, built by `OrderTaskLink::for()`, the same link as the staff WhatsApp group: `/admin/orders/task/{public ID}` (random ULID, no contact data). With `QAMMARIS_ORDER_APP_TASK_LINKS=true` it would be the App order URL, exactly like the group link.
+- The customer sees the link in their own message; it only leads to the admin login.
+- Test `test_checkout_message_carries_a_staff_link_that_opens_the_order_after_login`: the message ends with the link and has no phone number; the WhatsApp button sends the same text; the link redirects to the order page; a guest is sent to the admin login; a Staff Order account opens the order.
+- Browser (375, synthetic DB): checkout J&T order QAM-0001 → copied message ends with the link → as a guest the link opens `/admin/login`; after signing in as a synthetic Staff Order the browser lands on `/admin/orders/1`; clicking the link again opens the order directly. Synthetic DB and account removed afterwards.
+
