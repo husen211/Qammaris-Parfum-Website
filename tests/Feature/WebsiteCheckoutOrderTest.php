@@ -12,6 +12,7 @@ use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderState;
 use App\Support\OrderApi\OrderApiSchema;
 use App\Support\OrderApi\OrderSerializer;
@@ -66,6 +67,28 @@ class WebsiteCheckoutOrderTest extends TestCase
         $this->assertStringContainsString('Nomor pesanan: *'.$order->code.'*', $query['text']);
         $this->assertStringContainsString('Pengiriman: Ambil di toko', $query['text']);
         $this->assertStringNotContainsString('080000000101', $query['text'], 'the chat names the order; contact data stays in the order');
+    }
+
+    public function test_checkout_message_carries_a_staff_link_that_opens_the_order_after_login(): void
+    {
+        $this->review([$this->variant('Rose Sintetis', 120000)->id => 1]);
+        $this->post(route('cart.checkout'), $this->form('intercity'));
+        $order = OnlineOrder::sole();
+
+        // ORD-11: the same task link as the staff group: random public ID, no contact data, admin login required.
+        $message = app(InquiryWhatsApp::class)->websiteOrderMessage($order);
+        $link = route('admin.orders.task', $order->public_id);
+        $this->assertStringEndsWith('Link pesanan untuk admin: '.$link, $message);
+        $this->assertStringNotContainsString('080000000101', $message);
+        $page = $this->get(route('orders.customer.show', $order->customer_token_encrypted))->getContent();
+        $this->assertStringContainsString($link, urldecode(html_entity_decode($page)), 'the WhatsApp button sends the same text');
+
+        $this->get($link)->assertRedirect(route('admin.orders.show', $order));
+        auth()->logout();
+        $this->get(route('admin.orders.show', $order))->assertRedirect(route('admin.login'));
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER]);
+        $this->actingAs($staff)->get($link)->assertRedirect(route('admin.orders.show', $order));
+        $this->get(route('admin.orders.show', $order))->assertOk()->assertSee($order->code);
     }
 
     public function test_whatsapp_not_sent_keeps_the_order_and_the_page_offers_whatsapp_again(): void
@@ -304,7 +327,7 @@ class WebsiteCheckoutOrderTest extends TestCase
         return array_replace([
             'customer_name' => 'E2E Pembeli Sintetis', 'customer_phone' => '080000000101', 'delivery' => $delivery,
             'customer_address' => 'Jl. Sintetis No. 1, patokan uji', 'packaging' => 'paperbag', 'payment_preference' => 'qris',
-            'customer_note' => 'Catatan sintetis', 'checkout_quote' => session('checkout_quote'), 'checkout_key' => session('checkout_key'),
+            'shipping_payment' => 'added_to_transfer', 'customer_note' => 'Catatan sintetis', 'checkout_quote' => session('checkout_quote'), 'checkout_key' => session('checkout_key'),
         ], $overrides);
     }
 

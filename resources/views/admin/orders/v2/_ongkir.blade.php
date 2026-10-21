@@ -3,12 +3,15 @@
      is paid, and whose money, is entered when the courier is booked (ORD-08, Pengiriman). --}}
 @php
     $canChargeShipping = auth()->user()->can('orders.charge-shipping', $order);
-    $ongkirSet = $order->shipping_fee !== null && $order->shipping_payer !== null;
+    $ongkirSet = \App\Support\OnlineOrderStepper::totalIsFinal($order);
 @endphp
 @if ($order->fulfillment !== 'pickup')
     <details class="mt-3 rounded-lg border border-gray-200 p-3" @if (! $ongkirSet || (old('_section') === $section && old('shipping_payer') !== null)) open @endif data-ongkir>
         <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm">
-            <span><span class="font-semibold text-gray-900">Ongkir</span> <span class="text-gray-600">{{ $order->shipping_fee !== null ? format_rupiah($order->shipping_fee) : 'belum diisi' }}{{ $order->shipping_payer ? ' · '.OnlineOrder::SHIPPING_PAYERS[$order->shipping_payer] : '' }}</span></span>
+            <span><span class="font-semibold text-gray-900">Ongkir</span> <span class="text-gray-600">{{ implode(' · ', array_filter([
+                $order->shipping_fee !== null ? format_rupiah($order->shipping_fee) : ($order->shipping_payer === 'cash_to_driver' ? null : 'belum diisi'),
+                $order->shipping_payer ? OnlineOrder::SHIPPING_PAYERS[$order->shipping_payer] : null,
+            ])) }}</span></span>
             <span aria-hidden="true" class="text-gray-400">{{ $ongkirSet ? 'Ubah' : '' }} ▾</span>
         </summary>
         @if ($canChargeShipping)
@@ -16,10 +19,18 @@
                 @csrf {!! $hidden($section) !!}
                 <div class="grid grid-cols-2 gap-3">
                     <label class="text-sm font-medium text-gray-700">Ongkir (Rp)<input name="shipping_fee" data-rupiah-input inputmode="numeric" value="{{ old('shipping_fee', $order->shipping_fee !== null ? (int) $order->shipping_fee : null) }}" class="{{ $input }}"></label>
-                    <label class="text-sm font-medium text-gray-700">Dibayar
+                    <label class="text-sm font-medium text-gray-700">Metode pembayaran ongkir
                         <select name="shipping_payer" class="{{ $input }}"><option value="">Belum ditentukan</option>@foreach (OnlineOrder::SHIPPING_PAYERS as $value => $label)<option value="{{ $value }}" @selected(old('shipping_payer', $order->shipping_payer) === $value)>{{ $label }}</option>@endforeach</select>
                     </label>
                 </div>
+                {{-- ORD-10: the customer picks this on the order link or at checkout; staff only change it on request. --}}
+                @if ($order->shipping_fee === null)
+                    <p class="text-xs leading-5 text-gray-600" data-ongkir-hint>{{ match ($order->shipping_payer) {
+                        'cash_to_driver' => 'Customer bayar ongkir langsung ke driver, jadi total sudah final. Nominal di sini opsional; ongkir kurir dicatat saat pesan kurir.',
+                        null => 'Customer belum memilih metode. Tanyakan di chat.',
+                        default => 'Sudah dipilih customer. Cukup isi nominal ongkir; ubah metode hanya bila customer minta lain.',
+                    } }}</p>
+                @endif
                 <button class="{{ $ongkirSet || $section === 'konfirmasi' ? $secondary : $primary }}" data-busy-label="Menyimpan…">Simpan ongkir</button>
             </form>
         @else

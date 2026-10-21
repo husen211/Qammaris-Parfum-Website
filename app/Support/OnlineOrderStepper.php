@@ -51,10 +51,14 @@ final class OnlineOrderStepper
         ], $keys, array_keys($keys));
     }
 
-    /** Payment can be requested once the total is final: pickup, or the shipping fee and who pays it are set. */
+    /**
+     * Payment can be requested once the total is final: pickup, ongkir paid to the driver (never part of the
+     * total, so its amount may come later, ORD-10), or the shipping fee and who pays it are set.
+     */
     public static function totalIsFinal(OnlineOrder $order): bool
     {
-        return $order->fulfillment === 'pickup' || ($order->shipping_fee !== null && $order->shipping_payer !== null);
+        return $order->fulfillment === 'pickup' || $order->shipping_payer === 'cash_to_driver'
+            || ($order->shipping_fee !== null && $order->shipping_payer !== null);
     }
 
     private static function reachedBeforeCancel(OnlineOrder $order): int

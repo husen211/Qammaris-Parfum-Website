@@ -44,6 +44,12 @@ class OnlineOrder extends Model
         'store_free' => 'Gratis ongkir (ditanggung toko)',
     ];
 
+    // ORD-10: "Metode pembayaran ongkir" the customer picks for a local courier; stored as shipping_payer.
+    public const CUSTOMER_SHIPPING_PAYMENTS = [
+        'added_to_transfer' => 'Sekalian transfer',
+        'cash_to_driver' => 'Bayar langsung ke driver',
+    ];
+
     public const DRIVER_FUNDING = [
         'cashier_cash' => 'Ambil cash kasir',
         'owner_gopay' => 'Admin kirim ke GoPay staf',
@@ -255,6 +261,28 @@ class OnlineOrder extends Model
     public function customerCanEdit(): bool
     {
         return $this->lifecycle !== 'draft' && in_array($this->stage, [self::STAGE_AWAITING_CUSTOMER, self::STAGE_DETAILS_RECEIVED], true);
+    }
+
+    /**
+     * ORD-10: the customer link sets "Metode pembayaran ongkir" while no money has come in (a partial payment keeps
+     * payment_status unpaid, but the total is then fixed), the store has not made the ongkir free, and the form is
+     * applied directly rather than sent as a change request.
+     */
+    public function customerSetsShippingPayment(): bool
+    {
+        return $this->isV2() && $this->lifecycle !== 'draft' && $this->shipping_payer !== 'store_free'
+            && ($this->lifecycle === 'awaiting_customer' || ($this->customerCanEdit() && $this->preparation_status === 'not_started'))
+            && OnlineOrderMoney::totals($this)['received'] === 0;
+    }
+
+    /** ORD-10: shipping payer from the customer's form: their choice for a local courier, always the transfer for J&T. */
+    public static function customerShippingPayer(?string $fulfillment, ?string $choice): ?string
+    {
+        return match ($fulfillment) {
+            'local_delivery' => array_key_exists((string) $choice, self::CUSTOMER_SHIPPING_PAYMENTS) ? $choice : null,
+            'intercity' => 'added_to_transfer',
+            default => null,
+        };
     }
 
     public function customerLinkUsable(): bool
