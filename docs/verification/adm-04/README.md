@@ -7,7 +7,7 @@ Owner request (card #85), on the first day of real use: make it obvious which st
 - **Current step.** The card of the step to work on is tinted in the brand gold with a stronger border and a "Langkah sekarang" label above it. Done steps stay one line with a check; later steps stay dashed. Order, steps and actions are unchanged.
 - **Chevrons.** The small "▾" became a visible chevron that turns when a card opens (all order page cards).
 - **"Ada masalah?"** with a question mark.
-- **Divider "Di luar alur rutin"** between the routine steps and the exception cards (Keep, Ada masalah?, Link Pesanan, Opsi lanjutan).
+- **Divider "Lainnya"** between the routine steps and the exception cards (Keep, Ada masalah?, Link Pesanan, Opsi lanjutan).
 - **Opsi lanjutan.** Description "Penyesuaian harga, poin member, batalkan pesanan". New type **Poin member**: a fixed rupiah discount, no reason field (recorded as "Poin member"); Potongan and Tambahan still need a reason. "Terapkan penyesuaian" is now a solid button instead of looking like a field.
 
 ## Checks

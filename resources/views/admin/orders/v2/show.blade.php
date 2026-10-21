@@ -216,9 +216,9 @@
             @endif
 
             {{-- Exceptions and less frequent tools, collapsed, after a divider so they read as outside the routine flow. --}}
-            <div class="flex items-center gap-3 pt-3" role="separator" aria-label="Di luar alur rutin" data-flow-divider>
+            <div class="flex items-center gap-3 pt-3" role="separator" aria-label="Lainnya" data-flow-divider>
                 <span class="h-px flex-1 bg-gray-200"></span>
-                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Di luar alur rutin</span>
+                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Lainnya</span>
                 <span class="h-px flex-1 bg-gray-200"></span>
             </div>
             @if ($open && $pending && ($order->payment_status !== 'paid' || $order->keep_status === 'active'))
