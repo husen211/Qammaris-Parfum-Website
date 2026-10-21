@@ -10,6 +10,13 @@ Owner request (card #79): the order list had 14 filters in a dropdown and needed
 - Desktop: tabs and search on one row. Empty state follows the tab or the search.
 - No data, schema or API change. `AdminOnlineOrderController::TABS` lists the tabs; `FILTERS` keeps the other keys for the banners.
 
+## Owner feedback round (2026-10-21)
+
+- **Back link remembers the list.** The list stores its exact URL (tab, search, page) in the session; "← Pesanan Online" on the order, create and payment-account pages returns there. Checked: Selesai tab → open order → back → Selesai.
+- **Smooth tabs.** One white pill slides to the tapped tab (300 ms, off with reduced motion); only the list is fetched and swapped, the URL follows (`pushState`), browser back/forward reload the matching list, and any failure falls back to a normal page load. Checked: same document after the tap, pill mid-slide at 120 ms, list swapped.
+- **No square frame on press in the admin.** The site-wide gold press frame is kept for the public site; inside the admin, pressed controls keep their own colours and shape and dim, and keyboard focus has a soft ring.
+- **WhatsApp icon on every WhatsApp button (card #82).** Tabler brand-whatsapp in `x-icon`: admin order pages (Chat customer, Kirim ke WhatsApp customer, legacy group/invite), customer link (Kirim ke WhatsApp, bukti, Chat Qammaris), staff link, expired link, checkout submit, About, homepage guide, footer, Journal share.
+
 ## Checks
 
 - New `AdminOrderListFiltersTest` (2 tests): tabs replace the dropdown, one current tab, waiting-for-pickup order stays in Aktif, Selesai/Dibatalkan tabs, search across statuses, banner filter note.

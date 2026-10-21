@@ -74,6 +74,9 @@ class AdminOnlineOrderController extends Controller
                 ->orWhere('customer_phone', 'like', $like));
         }
 
+        // ADM-02: the order pages' back link returns to this exact list (tab, search, page).
+        $request->session()->put('admin.orders.list_url', $request->fullUrlWithoutQuery(['partial']));
+
         return view('admin.orders.index', [
             'orders' => $query->paginate(20)->withQueryString(),
             'filter' => $filter,

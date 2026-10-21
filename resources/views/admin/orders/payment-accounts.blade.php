@@ -9,7 +9,7 @@
 @section('content')
 <div class="mx-auto max-w-3xl space-y-4">
     <div>
-        <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">← Pesanan Online</a>
+        @include('admin.orders.partials.back')
         <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Rekening pembayaran</h1>
         <p class="mt-1 text-sm text-gray-600">Rekening resmi toko untuk instruksi pembayaran dan halaman status customer. Hanya rekening terverifikasi yang ditampilkan.</p>
     </div>

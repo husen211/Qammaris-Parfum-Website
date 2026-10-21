@@ -48,7 +48,7 @@
                 <h2 id="next-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim pesan WhatsApp</h2>
                 <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok, ongkir, dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
                 @if ($checkoutWhatsappUrl)
-                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Kirim ke WhatsApp</a>
+                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Kirim ke WhatsApp</a>
                     <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan Kirim ke WhatsApp lagi. Pesanan Anda tetap tersimpan.</p>
                 @else
                     {{-- ORD-07: no store number here (test environment): never fall back to the real store chat. --}}
@@ -87,7 +87,7 @@
                 <p class="mt-2 text-sm text-gray-700">Untuk QRIS, minta kode QRIS ke admin lewat WhatsApp.</p>
                 <p class="mt-2 text-sm text-gray-700">Setelah membayar, kirim bukti pembayaran. Pesanan disiapkan setelah pembayaran dikonfirmasi admin.</p>
                 @if ($proofWhatsappUrl)
-                    <a href="{{ $proofWhatsappUrl }}" target="_blank" rel="noopener noreferrer" data-proof-whatsapp class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Kirim bukti lewat WhatsApp</a>
+                    <a href="{{ $proofWhatsappUrl }}" target="_blank" rel="noopener noreferrer" data-proof-whatsapp class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Kirim bukti lewat WhatsApp</a>
                 @else
                     <p class="mt-2 text-xs text-gray-500">Lingkungan uji: WhatsApp toko tidak tersedia. Kirim bukti ke admin dengan pesan: “{{ $proofMessage }}”</p>
                 @endif
@@ -328,7 +328,7 @@
         </nav>
 
         @if ($whatsappUrl)
-            <p class="mt-6 text-sm text-gray-600">Ada pertanyaan? <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center text-brand-black underline underline-offset-4">Chat Qammaris di WhatsApp</a></p>
+            <p class="mt-6 text-sm text-gray-600">Ada pertanyaan? <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 text-brand-black underline underline-offset-4" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Chat Qammaris di WhatsApp</a></p>
         @endif
     </div>
 </section>

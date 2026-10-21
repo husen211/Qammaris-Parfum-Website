@@ -72,7 +72,7 @@
                 <section class="journal-share" aria-labelledby="share-heading" data-journal-share data-share-url="{{ $shareUrl }}" data-share-title="{{ $post->title }}">
                     <h2 id="share-heading">Bagikan artikel</h2>
                     <div class="journal-share-actions">
-                        <a href="https://wa.me/?text={{ rawurlencode($post->title.' '.$shareUrl) }}" target="_blank" rel="noopener noreferrer">WhatsApp <x-icon name="arrow-up-right" /></a>
+                        <a href="https://wa.me/?text={{ rawurlencode($post->title.' '.$shareUrl) }}" target="_blank" rel="noopener noreferrer"><x-icon name="whatsapp" /> WhatsApp</a>
                         <button type="button" data-journal-copy>Salin tautan</button>
                         <a href="https://www.facebook.com/sharer/sharer.php?u={{ rawurlencode($shareUrl) }}" target="_blank" rel="noopener noreferrer">Facebook <x-icon name="arrow-up-right" /></a>
                         <a href="https://x.com/intent/post?url={{ rawurlencode($shareUrl) }}&text={{ rawurlencode($post->title) }}" target="_blank" rel="noopener noreferrer">X <x-icon name="arrow-up-right" /></a>

@@ -36,7 +36,13 @@ class AdminOrderListFiltersTest extends TestCase
         // An order waiting for the courier pickup is still active work.
         $page->assertSee($waiting->code)->assertDontSee($done->code)->assertDontSee($cancelled->code);
 
-        $this->get(route('admin.orders.index', ['status' => 'completed']))->assertSee($done->code)->assertDontSee($waiting->code);
+        $this->get(route('admin.orders.index', ['status' => 'completed']))->assertSee($done->code)->assertDontSee($waiting->code)
+            ->assertSee('data-tab-indicator', false)->assertSee('--tab-index: 1', false);
+        // The order page's back link returns to the tab the order was opened from.
+        $this->get(route('admin.orders.show', $done))->assertOk()
+            ->assertSee('href="'.e(route('admin.orders.index', ['status' => 'completed'])).'" class="-ml-2', false);
+        $this->get(route('admin.orders.index'));
+        $this->get(route('admin.orders.show', $done))->assertSee('href="'.route('admin.orders.index').'" class="-ml-2', false);
         $this->get(route('admin.orders.index', ['status' => 'cancelled']))->assertSee($cancelled->code)->assertDontSee($done->code);
     }
 
