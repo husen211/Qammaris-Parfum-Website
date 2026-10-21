@@ -1,7 +1,10 @@
 @props(['name', 'filled' => false])
-{{-- Lucide SVGs copied from 21st.dev/community/icons/lucide; licences in docs/licenses/lucide.txt. --}}
+{{-- Lucide SVGs copied from 21st.dev/community/icons/lucide; licences in docs/licenses/lucide.txt. "whatsapp" is Tabler brand-whatsapp (docs/licenses/tabler-icons.txt). --}}
 <svg {{ $attributes->class(['q-icon']) }} width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     @switch($name)
+        @case('whatsapp')
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"></path><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"></path></g>
+            @break
         @case('globe')
             <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></g>
             @break

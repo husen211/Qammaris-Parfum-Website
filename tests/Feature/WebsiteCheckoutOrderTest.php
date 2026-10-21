@@ -61,7 +61,8 @@ class WebsiteCheckoutOrderTest extends TestCase
 
         // Success page = the customer link: order number, WhatsApp opened once by script, data locked.
         $page = $this->followRedirects($response)->assertOk()->assertSee('Pesanan tersimpan')->assertSee($order->code)
-            ->assertSee('data-auto-open="1"', false)->assertDontSee('Ubah data')->assertSee('Sampaikan lewat WhatsApp', false);
+            ->assertSee('data-auto-open="1"', false)->assertDontSee('Ubah data')->assertSee('Sampaikan lewat WhatsApp', false)
+            ->assertSee('data-whatsapp-button><svg', false);
         preg_match('/href="(https:\/\/wa\.me\/[^"]+)" rel="noopener noreferrer" data-checkout-whatsapp/', $page->getContent(), $match);
         parse_str((string) parse_url(html_entity_decode($match[1]), PHP_URL_QUERY), $query);
         $this->assertStringContainsString('Nomor pesanan: *'.$order->code.'*', $query['text']);

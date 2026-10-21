@@ -13,7 +13,7 @@
 @section('content')
 <div class="space-y-6">
     <div>
-        <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">← Pesanan Online</a>
+        @include('admin.orders.partials.back')
         <div class="mt-1 flex flex-wrap items-center gap-3">
             <h1 class="text-3xl font-bold tracking-tight text-gray-900">{{ $order->code }}</h1>
             @include('admin.orders._stage-badge', ['order' => $order])
@@ -114,7 +114,7 @@
                 <textarea id="group-message" readonly rows="15" class="mt-3 w-full rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-sm leading-6 text-gray-800">{{ $groupMessage }}</textarea>
                 <div class="mt-3 flex flex-wrap gap-3">
                     <button type="button" class="{{ $copyButton }}" data-copy="#group-message">Salin untuk grup</button>
-                    <a href="{{ $groupShareUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }}">Buka WhatsApp</a>
+                    <a href="{{ $groupShareUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Buka WhatsApp</a>
                 </div>
                 <div class="mt-4 border-t border-gray-100 pt-4">
                     <label for="staff-link" class="block text-sm font-medium text-gray-700">Link tugas staf</label>
@@ -149,7 +149,7 @@
                 <textarea id="invite-message" readonly rows="7" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm leading-6">{{ $inviteMessage }}</textarea>
                 <div class="mt-3 flex flex-wrap gap-3">
                     <button type="button" class="{{ $copyButton }}" data-copy="#invite-message">Salin pesan</button>
-                    <a href="{{ $inviteUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }}">{{ $order->customer_phone ? 'Kirim ke '.$order->customer_phone : 'Buka WhatsApp' }}</a>
+                    <a href="{{ $inviteUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> {{ $order->customer_phone ? 'Kirim ke '.$order->customer_phone : 'Buka WhatsApp' }}</a>
                     <form method="POST" action="{{ route('admin.orders.regenerate-link', $order) }}">
                         @csrf <input type="hidden" name="audience" value="customer">
                         <button class="inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-gray-600 hover:bg-gray-100">Buat link baru</button>
@@ -233,7 +233,7 @@
                 <input type="hidden" name="revision" value="{{ $order->revision }}">
                 <h2 id="details-title" class="text-lg font-semibold text-gray-900">Detail pesanan</h2>
                 @if ($order->customer_phone && $customerChatUrl)
-                    <a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center text-sm text-gray-700 underline underline-offset-4">Chat customer di WhatsApp</a>
+                    <a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} mt-2 gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Chat customer di WhatsApp</a>
                 @endif
                 <fieldset>
                     <legend class="text-sm font-semibold uppercase tracking-wider text-gray-500">Customer</legend>

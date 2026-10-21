@@ -62,7 +62,7 @@
                 <textarea id="payment-message" readonly hidden>{{ $paymentText }}</textarea>
                 <div class="mt-2 grid gap-2 sm:grid-cols-2">
                     <button type="button" data-copy="#payment-message" class="{{ $secondary }} w-full">Salin Total & Instruksi Pembayaran</button>
-                    @if ($paymentChatUrl)<a href="{{ $paymentChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} w-full">Kirim ke WhatsApp customer</a>@endif
+                    @if ($paymentChatUrl)<a href="{{ $paymentChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} w-full gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Kirim ke WhatsApp customer</a>@endif
                 </div>
                 @if (! $hasPaymentAccount)
                     <p class="mt-2 text-xs text-amber-900">Belum ada rekening resmi terverifikasi; instruksi meminta customer menunggu nomor rekening dari admin.@can('orders.payment-accounts') <a href="{{ route('admin.orders.payment-accounts.index') }}" class="underline underline-offset-2">Atur rekening</a>@endcan</p>

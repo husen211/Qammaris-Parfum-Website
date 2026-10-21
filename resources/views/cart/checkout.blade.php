@@ -174,7 +174,7 @@
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
                 @endif
-                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600">{{ $submitLabel }}</button>
+                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 gap-3">@if ($whatsappAvailable)<x-icon name="whatsapp" class="text-[1.2rem]" />@endif<span data-submit-label>{{ $submitLabel }}</span></button>
                 @if ($savesOrder)
                     <p class="mt-3 text-xs leading-5 text-gray-600">Pesanan diproses setelah admin mengonfirmasi lewat WhatsApp. Data penerima disimpan hanya untuk mengurus pesanan ini dan hanya dapat dilihat tim Qammaris.</p>
                 @else
@@ -191,7 +191,8 @@
 const orderForm = document.querySelector('[data-order-checkout]');
 const orderSubmit = orderForm?.querySelector('button[type="submit"]');
 const orderFeedback = document.querySelector('[data-order-feedback]');
-const initialOrderLabel = orderSubmit?.textContent;
+const orderLabel = orderSubmit?.querySelector('[data-submit-label]') ?? orderSubmit;
+const initialOrderLabel = orderLabel?.textContent;
 let orderRetryTimer;
 // ORD-04: the address block belongs to delivery only; pickup sends no address.
 const deliveryOnly = orderForm?.querySelector('[data-delivery-only]');
@@ -238,11 +239,11 @@ orderForm?.addEventListener('submit', (event) => {
     }
     // A repeated tap resends the same checkout key; the server answers with the same order.
     orderSubmit.disabled = true;
-    orderSubmit.textContent = @json($savesOrder ? 'Menyimpan pesanan…' : 'Membuka WhatsApp…');
+    orderLabel.textContent = @json($savesOrder ? 'Menyimpan pesanan…' : 'Membuka WhatsApp…');
     orderFeedback.textContent = 'Menyiapkan rincian pesanan…';
     orderRetryTimer = window.setTimeout(() => {
         orderSubmit.disabled = false;
-        orderSubmit.textContent = initialOrderLabel;
+        orderLabel.textContent = initialOrderLabel;
         orderFeedback.textContent = @json($savesOrder ? 'Belum ada balasan. Periksa koneksi, lalu coba lagi; pesanan tidak akan tercatat dua kali.' : 'WhatsApp belum terbuka? Periksa koneksi, lalu coba lagi.');
     }, 15000);
 });
@@ -250,7 +251,7 @@ window.addEventListener('pageshow', () => {
     window.clearTimeout(orderRetryTimer);
     if (orderSubmit) {
         orderSubmit.disabled = {{ $canSubmit ? 'false' : 'true' }};
-        orderSubmit.textContent = initialOrderLabel;
+        orderLabel.textContent = initialOrderLabel;
         orderFeedback.textContent = '';
     }
 });

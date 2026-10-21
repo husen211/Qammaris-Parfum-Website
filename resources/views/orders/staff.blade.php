@@ -105,7 +105,7 @@
                 <a href="tel:{{ $order->customer_phone }}" class="{{ $buttonClass }} border border-brand-black active:bg-gray-100">Telepon</a>
             @endif
             @if ($customerChatUrl)
-                <a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $buttonClass }} border border-brand-black active:bg-gray-100">Chat WhatsApp</a>
+                <a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $buttonClass }} gap-2 border border-brand-black active:bg-gray-100" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Chat WhatsApp</a>
             @endif
             @if ($order->location_url)
                 <a href="{{ $order->location_url }}" target="_blank" rel="noopener noreferrer" class="{{ $buttonClass }} col-span-2 bg-[#0D3F33] text-white active:bg-[#0a2f26]">Buka lokasi di Maps</a>
