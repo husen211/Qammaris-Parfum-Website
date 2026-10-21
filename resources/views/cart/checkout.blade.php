@@ -119,6 +119,20 @@
                             <p id="payment-help" class="mt-2 text-xs leading-5 text-gray-500">Bayar setelah admin mengonfirmasi total dan ongkir di WhatsApp.</p>
                             @error('payment_preference') <p id="payment_preference-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
+                        {{-- ORD-10: only a local courier can be paid on arrival; J&T ongkir is always part of the payment. --}}
+                        <fieldset data-local-only @if ($delivery !== 'local_delivery') hidden @endif aria-describedby="shipping-payment-help{{ $errors->has('shipping_payment') ? ' shipping_payment-error' : '' }}">
+                            <legend class="text-sm font-medium text-brand-black">Metode pembayaran ongkir <span aria-hidden="true">*</span></legend>
+                            <div class="mt-3 grid grid-cols-2 gap-3">
+                                @foreach (\App\Models\OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS as $value => $title)
+                                    <label class="{{ $choiceClass }} items-center">
+                                        <input type="radio" name="shipping_payment" value="{{ $value }}" @checked(old('shipping_payment') === $value) @if ($delivery === 'local_delivery') required @endif class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-payment>
+                                        <span class="text-base text-brand-black">{{ $title }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p id="shipping-payment-help" class="mt-2 text-xs leading-5 text-gray-500">Bayar langsung ke driver: ongkir dibayar saat pesanan tiba dan tidak masuk total pembayaran.</p>
+                            @error('shipping_payment') <p id="shipping_payment-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                        </fieldset>
                     @endif
 
                     <div>
@@ -152,7 +166,7 @@
                         <span>Paperbag</span><span class="tabular-nums" data-paperbag-amount>{{ old('packaging') === 'paperbag' ? format_rupiah($paperbagFee) : 'Pilih di atas' }}</span>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700">
-                        <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
+                        <span>Ongkir</span><span data-ongkir-summary>{{ $delivery === 'local_delivery' && old('shipping_payment') === 'cash_to_driver' ? 'Dibayar langsung ke driver' : 'Menunggu konfirmasi staf' }}</span>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-3">
                         <span class="text-sm text-gray-600">Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span></span><strong class="text-lg tabular-nums" data-running-total>{{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($subtotal) + (old('packaging') === 'paperbag' ? $paperbagFee * 100 : 0))) }}</strong>
@@ -187,7 +201,20 @@ const syncDelivery = () => {
     const delivers = choice === 'local_delivery' || choice === 'intercity';
     deliveryOnly.hidden = !delivers;
     orderForm.querySelector('#customer_address').required = delivers;
+    // ORD-10: "Metode pembayaran ongkir" is asked for the local courier only.
+    const local = choice === 'local_delivery';
+    orderForm.querySelector('[data-local-only]').hidden = !local;
+    orderForm.querySelectorAll('[data-shipping-payment]').forEach((input) => { input.required = local; });
+    syncOngkir();
 };
+const syncOngkir = () => {
+    const summary = document.querySelector('[data-ongkir-summary]');
+    if (!summary) return;
+    const local = orderForm.querySelector('[data-delivery]:checked')?.value === 'local_delivery';
+    const toDriver = orderForm.querySelector('[data-shipping-payment]:checked')?.value === 'cash_to_driver';
+    summary.textContent = local && toDriver ? 'Dibayar langsung ke driver' : 'Menunggu konfirmasi staf';
+};
+orderForm?.querySelectorAll('[data-shipping-payment]').forEach((input) => input.addEventListener('change', syncOngkir));
 orderForm?.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncDelivery));
 syncDelivery();
 // ORD-04: show the paperbag charge and running total for the chosen option (display only; the server computes).

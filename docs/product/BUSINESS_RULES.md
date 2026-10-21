@@ -134,7 +134,7 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
   - Pengiriman Luar Kota — J&T.
 
   Alamat hanya wajib untuk pengiriman. Kelurahan, kecamatan, dan kode pos opsional.
-- **Pilihan lain:** paperbag wajib dipilih. Preferensi pembayaran Transfer bank atau QRIS hanyalah preferensi, tidak menandai lunas. Ongkir tampil "Menunggu konfirmasi staf".
+- **Pilihan lain:** paperbag wajib dipilih. Preferensi pembayaran Transfer bank atau QRIS hanyalah preferensi, tidak menandai lunas. Pengiriman dalam kota juga wajib memilih metode pembayaran ongkir (ORD-10). Ongkir tampil "Menunggu konfirmasi staf", atau "Dibayar langsung ke driver" bila itu pilihannya.
 - **Status awal "Menunggu konfirmasi website"** (lifecycle `draft`):
   - belum menjadi tugas packing di Qammaris App;
   - belum bisa dicatat pembayarannya;
@@ -252,6 +252,14 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - **Notifikasi pesanan (ORD-09):** Super Admin dan Staff Order bisa mengaktifkan push notification per perangkat. Setiap ada pesanan baru dari checkout website, muncul notifikasi berisi kode, jumlah barang, total, dan "menunggu konfirmasi", tanpa nomor HP atau alamat. Ketuk notifikasi untuk membuka pesanannya.
 - Ongkir yang ditagih ke customer (ditambahkan ke transfer / bayar ke driver / gratis) tetap terpisah dari ongkir yang dibayar ke kurir.
 - Pilihan lama "Toko bayar driver dengan" tidak ada lagi di halaman pesanan V2.
+
+### Customer memilih metode pembayaran ongkir (ORD-10, Owner 2026-10-21)
+
+- Di link isi data dan checkout website, customer **Pengiriman Dalam Kota** wajib memilih **Metode pembayaran ongkir**: **Sekalian transfer** atau **Bayar langsung ke driver**. Pilihan ini mengisi "Metode pembayaran ongkir" di langkah Ongkir halaman staf, sehingga staf cukup mengisi nominal ongkir.
+- **Bayar langsung ke driver**: ongkir tidak masuk total pembayaran, dan saat pesan kurir "Uang siapa" otomatis terpilih **Customer bayar driver** (tanpa reimburse).
+- **Kirim ke luar kota (J&T)** tidak ditanya: ongkirnya selalu sekalian dibayar. **Ambil di toko** tidak ditanya.
+- Staf tetap bisa mengganti pilihan bila customer minta lain lewat chat. **Gratis ongkir** tetap keputusan toko: setelah toko memilih gratis, customer tidak ditanya lagi.
+- Setelah ada uang masuk (termasuk pembayaran sebagian) atau packing dimulai, link customer tidak lagi menanyakan atau mengubah metode ini; perubahan total mengikuti aturan ongkir dan penyesuaian harga yang berlaku.
 
 ### Status pesanan terpisah (ORD-02c, branch review)
 

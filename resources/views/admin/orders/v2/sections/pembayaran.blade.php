@@ -47,7 +47,7 @@
         <p class="mt-3 text-sm text-gray-600">Pembayaran dicatat setelah pesanan website dikonfirmasi.</p>
     @elseif ($order->lifecycle !== 'cancelled' && $remainingCents > 0)
         @if (! $totalFinal)
-            <p class="mt-3 text-sm text-gray-700">Isi ongkir dan siapa yang membayarnya dulu supaya total pembayaran final.</p>
+            <p class="mt-3 text-sm text-gray-700">{{ $order->shipping_payer ? 'Isi nominal ongkir dulu supaya total pembayaran final.' : 'Isi ongkir dan metode pembayarannya dulu supaya total pembayaran final.' }}</p>
         @else
             {{-- ORD-04: total + official accounts for the customer; staff still mark paid only after the proof. --}}
             <div class="mt-3 rounded-lg bg-gray-50 p-3" data-payment-instructions>

@@ -76,7 +76,7 @@ class AdminOrderV2PagesTest extends TestCase
         $this->assertStringContainsString('no-store', $page->headers->get('Cache-Control'));
         // ORD-04 stepper: payment is the current step; ongkir comes first, so no "Tandai Lunas" yet; later steps are inert.
         $page->assertSee('data-order-v2', false)
-            ->assertSeeInOrder(['data-stepper', 'data-step="pembayaran" data-state="current"', 'id="pembayaran"', 'Isi ongkir dan siapa yang membayarnya dulu', 'data-step-row="persiapan"', 'id="link"'], false)
+            ->assertSeeInOrder(['data-stepper', 'data-step="pembayaran" data-state="current"', 'id="pembayaran"', 'Isi ongkir dan metode pembayarannya dulu', 'data-step-row="persiapan"', 'id="link"'], false)
             ->assertSee('Salin Link')->assertSee('Pesan untuk grup staf')
             ->assertDontSee('Tandai Lunas')->assertDontSee('Konfirmasi packing')->assertDontSee('Sudah diserahkan ke kurir')
             ->assertDontSee('Dikonfirmasi dari')->assertDontSee('Mulai siapkan')

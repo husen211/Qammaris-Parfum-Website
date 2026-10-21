@@ -102,7 +102,7 @@ class OrderStepperAndPaymentInstructionsTest extends TestCase
         $account->forceFill(['verified_at' => now(), 'verified_by' => $this->owner->id])->save();
         $order = $this->v2Order('local_delivery');
         $this->actingAs($this->staff)->get(route('admin.orders.show', $order))
-            ->assertSee('Isi ongkir dan siapa yang membayarnya dulu')->assertDontSee('Salin Total & Instruksi Pembayaran', false);
+            ->assertSee('Isi ongkir dan metode pembayarannya dulu')->assertDontSee('Salin Total & Instruksi Pembayaran', false);
 
         $this->post(route('admin.orders.v2.shipping', $order), ['revision' => $order->revision, 'shipping_fee' => '15000', 'shipping_payer' => 'added_to_transfer'])->assertSessionHas('order_notice.type', 'success');
         $order->refresh();

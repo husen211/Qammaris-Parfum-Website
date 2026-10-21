@@ -101,6 +101,7 @@ final class InquiryWhatsApp
             'Pengiriman: '.$delivery,
             'Subtotal produk: '.Rupiah::format($order->subtotal()),
             ...(Rupiah::minorUnits($order->packagingFee()) > 0 ? ['Paperbag: '.Rupiah::format($order->packagingFee())] : []),
+            ...($order->fulfillment === 'local_delivery' && $order->shipping_payer === 'cash_to_driver' ? ['Ongkir: bayar langsung ke driver'] : []),
             '',
             'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
         ]);

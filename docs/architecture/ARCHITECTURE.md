@@ -185,6 +185,7 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
 - Routes: `admin.orders.v2.*` (`can:orders.manage`); `admin.orders.money.*` (`can:orders.refund`, also for ORD-01 reconciliation); `admin.orders.customer-search` (JSON).
 - Each action calls exactly one V2 operation with the posted revision. Typed exceptions become a section-scoped `order_notice` (success / error / conflict) and field errors.
 - `OnlineOrderDetails` is the V2 counterpart of ORD-01 data edits, the customer form, and the customer link.
+- ORD-10: the customer link and checkout write "Metode pembayaran ongkir" into `shipping_payer` through `OnlineOrder::customerSetsShippingPayment()` / `customerShippingPayer()` (local courier: customer choice; J&T: `added_to_transfer`). `OnlineOrderStepper::totalIsFinal()` treats `cash_to_driver` as final without an amount.
 - The ORD-01 workflow and bearer staff links refuse V2 orders.
 - `CreateOnlineOrder` options (source, repeat customer, saved address) apply in the order's transaction.
 - `OnlineOrderMessages::staffGroupV2` uses the stable task link `admin.orders.task`. It opens the Admin PWA order page, or the App page when `QAMMARIS_ORDER_APP_TASK_LINKS=true`.

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Cart;
 
+use App\Models\OnlineOrder;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CheckoutRequest extends FormRequest
@@ -40,6 +41,8 @@ class CheckoutRequest extends FormRequest
             'subdistrict' => ['exclude_if:delivery,pickup', 'nullable', 'string', 'max:80'],
             'packaging' => ['required', 'string', 'in:paperbag,no_paperbag'],
             'payment_preference' => ['required', 'string', 'in:'.implode(',', array_keys(config('orders.payment_preferences')))],
+            // ORD-10: only a local courier is paid either way; J&T ongkir is always part of the transfer.
+            'shipping_payment' => ['exclude_unless:delivery,local_delivery', 'required', 'string', 'in:'.implode(',', array_keys(OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS))],
             'checkout_key' => ['required', 'uuid'],
         ]);
     }
@@ -60,6 +63,7 @@ class CheckoutRequest extends FormRequest
             'packaging' => $data['packaging'],
             'customer_note' => $data['customer_note'] ?? null,
             'payment_preference' => $data['payment_preference'],
+            'shipping_payer' => OnlineOrder::customerShippingPayer($data['delivery'], $data['shipping_payment'] ?? null),
         ];
     }
 
@@ -90,6 +94,7 @@ class CheckoutRequest extends FormRequest
             'subdistrict' => 'kelurahan',
             'packaging' => 'pilihan paperbag',
             'payment_preference' => 'metode pembayaran',
+            'shipping_payment' => 'metode pembayaran ongkir',
             'checkout_key' => 'sesi checkout',
         ];
     }
@@ -107,6 +112,7 @@ class CheckoutRequest extends FormRequest
             'delivery.required' => 'Pilih cara pengiriman.',
             'packaging.required' => 'Pilih pakai paperbag atau tidak.',
             'payment_preference.required' => 'Pilih metode pembayaran.',
+            'shipping_payment.required' => 'Pilih metode pembayaran ongkir.',
             'in' => 'Pilih :attribute dari pilihan yang tersedia.',
             'checkout_key.uuid' => 'Buka kembali checkout untuk meninjau ringkasan terbaru.',
         ];

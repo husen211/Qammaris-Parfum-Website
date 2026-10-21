@@ -130,6 +130,11 @@
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
                     <span>Ongkir</span><span class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</span>
                 </div>
+            @elseif ($order->fulfillment !== 'pickup' && $order->shipping_payer === 'cash_to_driver')
+                {{-- ORD-10: paid to the driver on arrival, so it is not part of the total below. --}}
+                <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700" data-ongkir-driver>
+                    <span>Ongkir</span><span>{{ $order->shipping_fee !== null ? format_rupiah($order->shipping_fee).', dibayar langsung ke driver' : 'Dibayar langsung ke driver' }}</span>
+                </div>
             @elseif ($order->fulfillment !== 'pickup' && $order->shipping_fee === null && $order->payment_status !== 'paid')
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
                     <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
@@ -234,6 +239,24 @@
                     </fieldset>
                 @endif
 
+                {{-- ORD-10: only a local courier can be paid on arrival; J&T ongkir is always part of the payment. --}}
+                @if ($order->customerSetsShippingPayment())
+                    @php($shippingPayment = old('shipping_payment', $order->fulfillment === 'local_delivery' ? $order->shipping_payer : null))
+                    <fieldset data-show-for="local_delivery" @if ($fulfillment !== 'local_delivery') hidden @endif aria-describedby="shipping-payment-help{{ $errors->has('shipping_payment') ? ' shipping_payment-error' : '' }}">
+                        <legend class="text-base font-medium text-brand-black">Metode pembayaran ongkir</legend>
+                        <div class="mt-3 grid grid-cols-2 gap-3">
+                            @foreach (\App\Models\OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS as $value => $title)
+                                <label class="{{ $choiceClass }} items-center">
+                                    <input type="radio" name="shipping_payment" value="{{ $value }}" @checked($shippingPayment === $value) class="h-5 w-5 shrink-0 accent-brand-black">
+                                    <span class="text-base text-brand-black">{{ $title }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <p id="shipping-payment-help" class="mt-2 text-sm text-gray-600">Bayar langsung ke driver: ongkir dibayar saat pesanan tiba dan tidak masuk total pembayaran.</p>
+                        @error('shipping_payment') <p id="shipping_payment-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                    </fieldset>
+                @endif
+
                 <div>
                     <label for="customer_note" class="block text-base font-medium text-brand-black">Catatan <span class="font-normal text-gray-600">(opsional)</span></label>
                     <textarea id="customer_note" name="customer_note" rows="2" maxlength="300" placeholder="Misalnya: kirim sore hari" aria-invalid="{{ $errors->has('customer_note') ? 'true' : 'false' }}" @if ($errors->has('customer_note')) aria-describedby="customer_note-error" @endif class="{{ $fieldClass }} resize-y leading-6">{{ old('customer_note', $order->customer_note) }}</textarea>
@@ -282,6 +305,7 @@
                         @if ($order->address)<div><dt class="text-sm text-gray-600">Alamat</dt><dd class="break-words">{{ implode(', ', array_filter([$order->address, $order->subdistrict, $order->district])) }}{{ $order->postcode ? ' '.$order->postcode : '' }}</dd></div>@endif
                         <div><dt class="text-sm text-gray-600">Paperbag</dt><dd>{{ \App\Models\OnlineOrder::PACKAGING[$order->packaging] ?? '-' }}</dd></div>
                         @if ($order->payment_preference)<div><dt class="text-sm text-gray-600">Pembayaran</dt><dd>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</dd></div>@endif
+                        @if ($order->fulfillment === 'local_delivery' && $order->shipping_payer)<div><dt class="text-sm text-gray-600">Metode pembayaran ongkir</dt><dd>{{ \App\Models\OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS[$order->shipping_payer] ?? 'Gratis ongkir' }}</dd></div>@endif
                         @if ($order->customer_note)<div><dt class="text-sm text-gray-600">Catatan</dt><dd class="break-words">{{ $order->customer_note }}</dd></div>@endif
                     </dl>
                     @if ($pendingChange)

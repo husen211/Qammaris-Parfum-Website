@@ -192,6 +192,7 @@ class CreateOnlineOrder
                 $order->district = $details['district'] ?? null;
                 $order->subdistrict = $details['subdistrict'] ?? null;
                 $order->payment_preference = $details['payment_preference'] ?? null;
+                $order->shipping_payer = $details['shipping_payer'] ?? null;
                 $order->save();
                 $order->code = 'QAM-'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT);
                 $order->save();

@@ -98,7 +98,7 @@ class OrderOperationalUxTest extends TestCase
     {
         $order = $this->v2Order(null);
         $token = $order->customer_token_encrypted;
-        $form = ['customer_name' => 'E2E Rina', 'customer_phone' => '081200000099', 'fulfillment' => 'local_delivery', 'address' => 'Depan masjid', 'packaging' => 'paperbag'];
+        $form = ['customer_name' => 'E2E Rina', 'customer_phone' => '081200000099', 'fulfillment' => 'local_delivery', 'address' => 'Depan masjid', 'packaging' => 'paperbag', 'shipping_payment' => 'added_to_transfer'];
 
         $page = $this->get(route('orders.customer.show', $token))->assertOk()->assertSee('data-order-page', false)->assertDontSee('data-cart-count', false);
         $page->assertDontSee('name="payment_preference"', false)->assertDontSee('kecamatan');

@@ -304,7 +304,7 @@ class WebsiteCheckoutOrderTest extends TestCase
         return array_replace([
             'customer_name' => 'E2E Pembeli Sintetis', 'customer_phone' => '080000000101', 'delivery' => $delivery,
             'customer_address' => 'Jl. Sintetis No. 1, patokan uji', 'packaging' => 'paperbag', 'payment_preference' => 'qris',
-            'customer_note' => 'Catatan sintetis', 'checkout_quote' => session('checkout_quote'), 'checkout_key' => session('checkout_key'),
+            'shipping_payment' => 'added_to_transfer', 'customer_note' => 'Catatan sintetis', 'checkout_quote' => session('checkout_quote'), 'checkout_key' => session('checkout_key'),
         ], $overrides);
     }
 
