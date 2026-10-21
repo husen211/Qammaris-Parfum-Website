@@ -3,7 +3,7 @@
 <details id="keep" class="{{ $card }}" @if ($isOpen('keep', in_array($keep, ['active', 'expired'], true))) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
         <span><span class="block text-base font-semibold text-gray-900">Keep</span><span @class(['block text-sm', 'text-red-700' => $keep === 'expired', 'text-gray-600' => $keep !== 'expired'])>{{ $keepLabel }}</span></span>
-        <span aria-hidden="true" class="text-gray-400">▾</span>
+        @include('admin.orders.v2._chevron')
     </summary>
     @include('admin.orders.v2._notice', ['section' => 'keep'])
     @if (in_array($keep, ['active', 'expired'], true))

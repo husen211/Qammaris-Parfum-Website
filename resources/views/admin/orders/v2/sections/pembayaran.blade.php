@@ -11,7 +11,7 @@
 <details id="pembayaran" class="{{ $card }}" @if ($openSection) open @endif>
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2" @if ($openSection) data-next-step @endif>
         <span><span class="block text-lg font-semibold text-gray-900">Pembayaran</span><span class="block text-sm text-gray-600">{{ $paymentSummary }}</span></span>
-        <span aria-hidden="true" class="text-gray-400">▾</span>
+        @include('admin.orders.v2._chevron')
     </summary>
     @include('admin.orders.v2._notice', ['section' => 'pembayaran'])
     @if ($order->payments->isNotEmpty())

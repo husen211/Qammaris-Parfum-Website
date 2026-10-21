@@ -399,3 +399,6 @@ a[data-catalog-return][data-catalog-pressed] {
 }
 
 [data-preference-form] :is(legend, [data-preference-summary] h2) { scroll-margin-top: 7rem; }
+
+/* ADM-04: order page disclosures turn their chevron when open. */
+details[open] > summary [data-chevron] { rotate: 180deg; }
