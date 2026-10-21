@@ -122,7 +122,7 @@ class AdminOrderV2PagesTest extends TestCase
         $this->assertSame(['paid', true], [$order->payment_status, $order->recorded_in_majoo]);
 
         // A second tap with the old revision is a conflict, not a second payment.
-        $this->post(route('admin.orders.v2.payments', $order), ['revision' => 1, 'amount' => '400000', 'payment_method' => 'qris', 'confirmation_source' => 'majoo'])
+        $this->post(route('admin.orders.v2.payments', $order), ['revision' => 1, 'amount' => '400000', 'payment_method' => 'qris', 'recorded_in_majoo' => '1', 'confirmation_source' => 'majoo'])
             ->assertSessionHas('order_notice.type', 'conflict');
         $this->assertSame(1, OnlineOrderPayment::count());
         $this->get(route('admin.orders.show', $order))->assertSee('Lunas Rp 400.000 · QRIS · Majoo')->assertSee('data-step="persiapan" data-state="current"', false)
@@ -183,7 +183,7 @@ class AdminOrderV2PagesTest extends TestCase
     public function test_super_admin_panel_refund_reverse_and_adjustment_approval_with_staff_denied(): void
     {
         $order = $this->activeOrder('pickup');
-        $this->actingAs($this->staff)->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '400000', 'payment_method' => 'transfer', 'confirmation_source' => 'proof_in_chat']);
+        $this->actingAs($this->staff)->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '400000', 'payment_method' => 'transfer', 'recorded_in_majoo' => '1', 'confirmation_source' => 'proof_in_chat']);
         $order->refresh();
 
         foreach ([

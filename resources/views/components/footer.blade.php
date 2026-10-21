@@ -44,7 +44,7 @@
                         <h2 id="footer-shopping" class="footer-heading">Bantuan &amp; belanja</h2>
                         <ul class="footer-links flex flex-wrap gap-x-6 md:block">
                             @if(!empty($storeInfo->whatsapp_number))
-                                <li><a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Bantuan WhatsApp (tab baru)">Bantuan WhatsApp</a></li>
+                                <li><a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Bantuan WhatsApp (tab baru)"><x-icon name="whatsapp" class="mr-1.5" /> Bantuan WhatsApp</a></li>
                             @endif
                             @if(!empty($storeInfo->tokopedia_url))
                                 <li><a href="{{ $storeInfo->tokopedia_url }}" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Tokopedia (tab baru)">Tokopedia</a></li>

@@ -31,7 +31,7 @@
             </div>
             <div class="about-split-contacts" aria-label="Kontak Qammaris" data-split-item="contacts">
                 <a href="{{ route('home') }}"><x-icon name="globe" /><span>qammarisparfum.id</span></a>
-                <a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer"><x-icon name="phone" /><span>+{{ $storeInfo->whatsapp_number }}</span></a>
+                <a href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer"><x-icon name="whatsapp" /><span>+{{ $storeInfo->whatsapp_number }}</span></a>
                 <a href="{{ route('store.location') }}"><x-icon name="map-pin" /><span>{{ $aboutAddress }}</span></a>
             </div>
         </div>
@@ -68,7 +68,7 @@
                 <li><span class="about-step-number" aria-hidden="true">2</span><div><h3>Coba dan bandingkan</h3><p>Semua produk di toko tersedia testernya. Gunakan paper test untuk mencoba dan membandingkan aroma sebelum memutuskan.</p></div></li>
                 <li><span class="about-step-number" aria-hidden="true">3</span><div><h3>Pilih yang terasa cocok</h3><p>Tanyakan dan luangkan waktu untuk mengenal aromanya. Kami melayani dengan sepenuh hati agar Anda nyaman selama memilih.</p></div></li>
             </ol>
-            <div class="about-feature-help"><div><h3>Masih ingin tanya-tanya dulu?</h3><p>Kami juga bisa membantu melalui WhatsApp.</p></div><a class="about-button about-button-outline" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Diskusi dengan kami <x-icon name="arrow-up-right" /></a></div>
+            <div class="about-feature-help"><div><h3>Masih ingin tanya-tanya dulu?</h3><p>Kami juga bisa membantu melalui WhatsApp.</p></div><a class="about-button about-button-outline" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Diskusi dengan kami <x-icon name="whatsapp" /></a></div>
         </div>
     </section>
 
@@ -140,7 +140,7 @@
 
     <section id="kunjungan" class="about-section about-container about-visit" aria-labelledby="visit-title">
         <figure><img src="{{ asset('images/store/facade-768.webp') }}" srcset="{{ asset('images/store/facade-480.webp') }} 480w, {{ asset('images/store/facade-768.webp') }} 768w, {{ asset('images/store/facade-1200.webp') }} {{ $aboutMedia['facade']['width'] }}w" sizes="(min-width: 900px) 40vw, 100vw" width="{{ $aboutMedia['facade']['width'] }}" height="{{ $aboutMedia['facade']['height'] }}" alt="Tampak depan toko Qammaris Perfumes di Jalan Sis Aljufri Palu" loading="lazy" decoding="async"></figure>
-        <div><p class="about-eyebrow">Kunjungi kami</p><h2 id="visit-title">Coba parfum langsung<br>di toko kami.</h2><p class="about-lead">Datang untuk mencoba koleksi, mengenal aroma baru, atau sekadar memulai percakapan tentang parfum.</p><dl class="about-store-details"><div><dt>Alamat</dt><dd>{{ $aboutAddress }}</dd></div><div><dt>Jam buka</dt><dd>Sabtu–Kamis · 09.00–21.00 WITA<br>Jumat tutup</dd></div></dl><div class="about-actions"><a class="about-button about-button-primary" href="{{ $aboutContent['reviews_url'] }}" target="_blank" rel="noopener noreferrer">Petunjuk arah <x-icon name="arrow-up-right" /></a><a class="about-text-link" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Hubungi lewat WhatsApp <x-icon name="arrow-up-right" /></a></div><a class="about-text-link about-catalog-link" href="{{ route('products.index') }}">Jelajahi katalog parfum <x-icon name="arrow-right" /></a></div>
+        <div><p class="about-eyebrow">Kunjungi kami</p><h2 id="visit-title">Coba parfum langsung<br>di toko kami.</h2><p class="about-lead">Datang untuk mencoba koleksi, mengenal aroma baru, atau sekadar memulai percakapan tentang parfum.</p><dl class="about-store-details"><div><dt>Alamat</dt><dd>{{ $aboutAddress }}</dd></div><div><dt>Jam buka</dt><dd>Sabtu–Kamis · 09.00–21.00 WITA<br>Jumat tutup</dd></div></dl><div class="about-actions"><a class="about-button about-button-primary" href="{{ $aboutContent['reviews_url'] }}" target="_blank" rel="noopener noreferrer">Petunjuk arah <x-icon name="arrow-up-right" /></a><a class="about-text-link" href="{{ $storeInfo->whatsapp_link }}" target="_blank" rel="noopener noreferrer">Hubungi lewat WhatsApp <x-icon name="whatsapp" /></a></div><a class="about-text-link about-catalog-link" href="{{ route('products.index') }}">Jelajahi katalog parfum <x-icon name="arrow-right" /></a></div>
     </section>
 
     <section id="faq" class="about-section about-container about-faq" aria-labelledby="faq-title"><p class="about-eyebrow">Sebelum berkunjung</p><h2 id="faq-title">Yang mungkin ingin Anda tahu.</h2>

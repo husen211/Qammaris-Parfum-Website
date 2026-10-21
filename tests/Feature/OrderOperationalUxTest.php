@@ -32,13 +32,21 @@ class OrderOperationalUxTest extends TestCase
         $this->owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
     }
 
-    public function test_payment_has_no_visible_source_but_the_ledger_records_an_internal_one_and_api_v1_stays_valid(): void
+    public function test_payment_needs_the_majoo_check_and_the_ledger_records_it_with_api_v1_unchanged(): void
     {
         $order = $this->v2Order();
+        $order->forceFill(['shipping_fee' => 10000, 'shipping_payer' => 'added_to_transfer'])->save();
+        // ADM-03: nothing is recorded until the payment is in the cashier (Majoo).
         $this->actingAs($this->staff)->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '100000', 'payment_method' => 'transfer'])
+            ->assertSessionHasErrors(['recorded_in_majoo' => 'Catat dulu pembayaran ini di kasir (Majoo), lalu tandai lunas.']);
+        $this->assertSame(0, OnlineOrderPayment::count());
+        $this->get(route('admin.orders.show', $order))->assertSee('data-paid-open', false)->assertSee('data-paid-dialog', false)
+            ->assertSeeInOrder(['Bukti pembayaran sudah dicek', 'Sudah dicatat di kasir (Majoo)', 'Ya, tandai lunas'])
+            ->assertSee('data-paid-submit disabled', false)->assertDontSee('Sudah dicatat di Majoo</label>', false);
+        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '100000', 'payment_method' => 'transfer', 'recorded_in_majoo' => '1'])
             ->assertSessionHas('order_notice.type', 'success');
         $entry = OnlineOrderPayment::sole();
-        $this->assertSame(['admin_recorded', null], [$entry->confirmation_source, $order->fresh()->payment_confirmation_source]);
+        $this->assertSame(['majoo', 'majoo'], [$entry->confirmation_source, $order->fresh()->payment_confirmation_source]);
         $this->assertSame([], OrderApiSchema::errors(json_decode(json_encode(OrderSerializer::order($order->fresh()))), 'Order'), 'API v1 enum unchanged');
 
         $rest = (int) (Rupiah::minorUnits($order->fresh()->customerTotal()) / 100) - 100000;
@@ -69,7 +77,7 @@ class OrderOperationalUxTest extends TestCase
         $this->assertNull($order->fresh()->driver_funding);
 
         // After a payment the staff path closes; the change becomes a price adjustment for Super Admin.
-        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->fresh()->revision, 'amount' => '50000', 'payment_method' => 'transfer']);
+        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->fresh()->revision, 'amount' => '50000', 'payment_method' => 'transfer', 'recorded_in_majoo' => '1']);
         $shipping($order, ['shipping_fee' => '30000', 'shipping_payer' => 'added_to_transfer'])
             ->assertSessionHas('order_notice', fn ($notice) => $notice['type'] === 'error' && str_contains($notice['message'], 'penyesuaian harga'));
         $this->assertSame('20000.00', $order->fresh()->shipping_fee);

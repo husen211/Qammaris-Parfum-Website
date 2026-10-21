@@ -328,6 +328,18 @@ a[data-navigation-pending] {
     background-color: rgb(197 160 89 / .15);
     box-shadow: inset 0 0 0 1px var(--color-brand-gold);
 }
+/* ADM-02: in the admin the gold square frame clashed with rounded controls. Press feedback keeps each control's
+   own colours and shape and only dims it; keyboard focus gets a soft ring. */
+[data-navigation-shell="admin"] :where(a[href], button, summary):active,
+[data-navigation-shell="admin"] a[data-navigation-pending] {
+    background-color: revert-layer;
+    box-shadow: revert-layer;
+    opacity: .7;
+}
+[data-navigation-shell="admin"] :where(a[href], button, summary, input, select, textarea):focus-visible {
+    outline: 2px solid rgb(17 24 39 / .35);
+    outline-offset: 2px;
+}
 
 /* Editorial links use text feedback rather than painting the whole card. */
 a[data-catalog-product]:is(:active, [data-navigation-pending]),

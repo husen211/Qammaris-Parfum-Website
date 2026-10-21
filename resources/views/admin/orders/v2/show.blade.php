@@ -31,7 +31,7 @@
 <div class="mx-auto max-w-6xl space-y-4" data-order-v2>
     <div>
         <div class="flex items-center justify-between gap-3">
-            <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">← Pesanan Online</a>
+            @include('admin.orders.partials.back')
             @include('admin.orders.partials.refresh')
         </div>
         @if (in_array($order->lifecycle, ['draft', 'awaiting_customer'], true))
@@ -276,7 +276,7 @@
                 <form method="POST" action="{{ route('admin.orders.v2.details', $order) }}" class="mt-3 space-y-4">
                     @csrf @method('PATCH') {!! $hidden('detail') !!}
                     @include('admin.orders.v2._notice', ['section' => 'detail'])
-                    @if ($customerChatUrl)<a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center text-sm text-gray-700 underline underline-offset-4">Chat customer di WhatsApp</a>@endif
+                    @if ($customerChatUrl)<a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} mt-2 gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Chat customer di WhatsApp</a>@endif
                     @include('admin.orders._customer-fields', ['order' => $order])
                     <label class="block text-sm font-medium text-gray-700">Link Google Maps <span class="font-normal text-gray-500">(opsional)</span>
                         <input name="location_url" type="url" inputmode="url" value="{{ old('location_url', $order->location_url) }}" maxlength="500" placeholder="https://maps.app.goo.gl/…" class="{{ $input }}">
