@@ -27,7 +27,7 @@ class OnlineOrderCustomers
     {
         $normalized = PhoneNumber::normalize($phone);
 
-        return $normalized === null ? collect() : Customer::where('phone', $normalized)->orderBy('name')->get();
+        return $normalized === null ? collect() : Customer::where('phone', $normalized)->whereNull('anonymized_at')->orderBy('name')->get();
     }
 
     /** Links the order to an existing customer, or creates one from the order's own name and number. */

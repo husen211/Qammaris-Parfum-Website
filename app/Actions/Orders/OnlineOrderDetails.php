@@ -26,7 +26,7 @@ class OnlineOrderDetails
 
     private const ADMIN_FIELDS = [...self::CUSTOMER_FIELDS, 'location_url', 'recorded_in_majoo', 'staff_note', ...self::FINANCIAL_FIELDS];
 
-    public function __construct(private readonly OnlineOrderChangeRequests $changeRequests) {}
+    public function __construct(private readonly OnlineOrderChangeRequests $changeRequests, private readonly RememberCustomer $customers) {}
 
     /**
      * Customer form. Applied directly while unpaid and packing has not started; otherwise it becomes a change
@@ -56,6 +56,7 @@ class OnlineOrderDetails
             if (isset($details['payment_preference']) && $order->payment_status === 'unpaid') {
                 $order->payment_preference = $details['payment_preference'];
             }
+            $this->customers->link($order, null);
             if ($order->lifecycle === 'awaiting_customer') {
                 $order->stage = OnlineOrder::STAGE_DETAILS_RECEIVED;
                 $this->orderEvent($order, null, 'advance', 'Data penerima dikirim customer');
@@ -98,6 +99,7 @@ class OnlineOrderDetails
             if ($order->isDirty('fulfillment') && $order->handover_status === 'handed_over') {
                 throw new InvalidOrderTransition('Cara pengiriman tidak dapat diubah setelah diserahkan.');
             }
+            $this->customers->link($order, $actor);
             if (! $order->isDirty()) {
                 return false;
             }

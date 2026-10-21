@@ -21,7 +21,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\PaysOrders;
 use Tests\TestCase;
 
-/** ORD-02c slice 4: repeat customers and confirmed saved addresses, never linked or reused automatically. */
+/** ORD-02c slice 4 + ORD-05: repeat customers (saved automatically by WhatsApp number) and saved addresses. */
 class OnlineOrderCustomersTest extends TestCase
 {
     use PaysOrders, RefreshDatabase;
@@ -56,20 +56,21 @@ class OnlineOrderCustomersTest extends TestCase
         }
     }
 
-    public function test_customers_are_linked_only_on_request_and_may_share_a_number(): void
+    public function test_the_same_number_is_the_same_customer_automatically_and_staff_can_still_split_it(): void
     {
+        // ORD-05 (Owner 2026-10-21): an order with a name and a valid number is remembered at once, number normalized.
         $order = $this->order('local_delivery', '0812 3456 7890');
-        $this->assertNull($order->customer_id, 'Creating an order never links a customer by itself');
-        $this->assertCount(0, $this->customers->matches('081234567890'));
-
-        $order = $this->customers->link($order, $order->revision, $this->staff, null);
         $customer = Customer::sole();
         $this->assertSame(['Siti Sintetis', '6281234567890', $customer->id], [$customer->name, $customer->phone, $order->customer_id]);
-        $this->assertSame('customer_linked', $order->events()->reorder('id', 'desc')->value('kind'));
+        $this->assertSame('customer_linked', $order->events()->where('kind', 'customer_linked')->value('kind'));
 
-        // A family member with the same number is a separate customer; matches() lists both for an explicit choice.
-        $second = $this->order('pickup', '+62 812-3456-7890', 'Budi Sintetis');
-        $second = $this->customers->link($second, $second->revision, $this->staff, null);
+        // Same number, other spelling of the name: same customer, no duplicate.
+        $second = $this->order('pickup', '+62 812-3456-7890', 'siti s');
+        $this->assertSame([$customer->id, 1], [$second->customer_id, Customer::count()]);
+
+        // A family member: staff move the order to a separate customer by hand; matches() lists both.
+        $second = $this->customers->link($second->fresh(), $second->fresh()->revision, $this->staff, null);
+        $this->assertNotSame($customer->id, $second->customer_id);
         $this->assertCount(2, $this->customers->matches('0812 3456 7890'));
         $third = $this->order('pickup', '081234567890');
         $third = $this->customers->link($third, $third->revision, $this->staff, $customer->id);

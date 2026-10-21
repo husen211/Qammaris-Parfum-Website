@@ -15,7 +15,7 @@ Order lewat WhatsApp (dari Instagram/katalog) membuat Owner mengumpulkan produk,
 | ORD-03 | Keep/titip barang | Diserap ke ORD-02 |
 | ORD-04 | Akun staf terautentikasi | Diserap ke ORD-02 (role Staff Order + link tugas App) |
 | ORD-04 (dulu ORD-06) | Checkout keranjang website membuat Pesanan Online yang sama (ADR-028 diganti terarah, saklar `ORDERS_WEBSITE_CHECKOUT`) | DONE — rilis lewat PR55, checkout website aktif — [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md), [bukti](../verification/ord-04/README.md) |
-| ORD-05 | Kebijakan retensi/anonimisasi data customer | BACKLOG — saat ini tanpa hapus otomatis (keputusan Owner) |
+| ORD-05 | Pelanggan tersimpan otomatis, menu Pelanggan, hapus data oleh Super Admin | IN_REVIEW — tanpa hapus otomatis (keputusan Owner 2026-10-21); [bukti](../verification/ord-05/README.md) |
 
 Tidak ada tahap yang dimulai otomatis. Payment gateway, integrasi Majoo, dan pengiriman WhatsApp otomatis bukan bagian program ini.
 

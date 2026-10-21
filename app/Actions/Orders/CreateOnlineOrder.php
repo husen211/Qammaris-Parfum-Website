@@ -13,7 +13,6 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Support\AdminPush;
-use App\Support\PhoneNumber;
 use App\Support\Rupiah;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -26,8 +25,8 @@ class CreateOnlineOrder
      * @param  array<int, int>  $lines  variant ID => quantity
      * @param  array<string, mixed>|null  $customer  optional details typed by the admin from the chat
      * @param  string|null  $submissionToken  form UUID; a repeated submission returns the first order instead of a new one
-     * @param  array{source?: string, customer_id?: ?int, new_customer?: bool, customer_address_id?: ?int}  $options
-     *                                                                                                                where the order came from, and an explicitly chosen repeat customer / saved address (ORD-02d)
+     * @param  array{source?: string, customer_id?: ?int, customer_address_id?: ?int}  $options
+     *                                                                                           where the order came from, and an explicitly chosen repeat customer / saved address (ORD-02d)
      * @return array{0: OnlineOrder, 1: string, 2: string} order, raw customer token, raw staff token
      *
      * @throws DuplicateOnlineOrderSubmission
@@ -107,13 +106,6 @@ class CreateOnlineOrder
             }
             $order->events()->create(['kind' => 'created', 'stage' => OnlineOrder::STAGE_AWAITING_CUSTOMER, 'actor_type' => 'admin', 'actor_user_id' => $actor->id]);
 
-            if (($options['new_customer'] ?? false) && $repeatCustomer === null) {
-                $phone = PhoneNumber::normalize($customer['customer_phone'] ?? null);
-                if (blank($customer['customer_name'] ?? null) || $phone === null) {
-                    throw new OrderValidationFailed('Isi nama dan nomor WhatsApp untuk menyimpan pelanggan baru.', ['customer_phone' => 'Wajib']);
-                }
-                $repeatCustomer = Customer::create(['name' => $customer['customer_name'], 'phone' => $phone, 'created_by' => $actor->id]);
-            }
             if ($repeatCustomer !== null) {
                 $order->customer_id = $repeatCustomer->id;
                 $order->customer_address_id = $address?->id;
@@ -129,6 +121,10 @@ class CreateOnlineOrder
                     $order->stage = OnlineOrder::STAGE_DETAILS_RECEIVED;
                     $order->save();
                     $order->events()->create(['kind' => 'advance', 'stage' => OnlineOrder::STAGE_DETAILS_RECEIVED, 'actor_type' => 'admin', 'actor_user_id' => $actor->id]);
+                }
+                // ORD-05: without a chosen customer, the name and number are remembered automatically.
+                if ($repeatCustomer === null && app(RememberCustomer::class)->link($order, $actor)) {
+                    $order->save();
                 }
             }
 

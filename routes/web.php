@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminBlogTaxonomyController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminFragrancePreferenceController;
 use App\Http\Controllers\Admin\AdminOnlineOrderController;
@@ -181,6 +182,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
         Route::post('orders/uat-whatsapp', [AdminStorePaymentAccountController::class, 'uatWhatsapp'])->middleware('can:orders.payment-accounts')->name('orders.uat-whatsapp');
         Route::get('orders/product-search', [AdminOnlineOrderController::class, 'productSearch'])->name('orders.product-search');
         Route::get('orders/customer-search', [AdminOnlineOrderV2Controller::class, 'customerSearch'])->name('orders.customer-search');
+        // ORD-05: saved customers (automatic), their orders and addresses; removal is Super Admin only.
+        Route::prefix('customers')->name('customers.')->controller(AdminCustomerController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('{customer}', 'show')->whereNumber('customer')->name('show');
+            Route::patch('{customer}', 'update')->whereNumber('customer')->name('update');
+            Route::post('{customer}/addresses/{address}/archive', 'archiveAddress')->whereNumber(['customer', 'address'])->name('addresses.archive');
+            Route::post('{customer}/anonymize', 'anonymize')->whereNumber('customer')->middleware('can:customers.delete')->name('anonymize');
+        });
 
         // V2 orders (ORD-02d): every action is a V2 domain operation; each form posts its revision.
         Route::prefix('orders/{order}/v2')->name('orders.v2.')->controller(AdminOnlineOrderV2Controller::class)->group(function () {

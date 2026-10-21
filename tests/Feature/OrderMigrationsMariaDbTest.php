@@ -31,6 +31,8 @@ class OrderMigrationsMariaDbTest extends TestCase
         // ORD-08/09: additions to online_order_costs and the admin push table roll back with the order tables.
         '2026_10_17_100001_add_website_origin_to_online_order_costs', '2026_10_17_100002_add_advanced_by_app_user_id_to_online_order_costs',
         '2026_10_17_200001_create_admin_push_subscriptions_table',
+        // ORD-05: nullable creators and anonymization columns on the customer tables.
+        '2026_10_21_100001_prepare_customers_for_auto_save_and_anonymizing',
     ];
 
     protected function setUp(): void

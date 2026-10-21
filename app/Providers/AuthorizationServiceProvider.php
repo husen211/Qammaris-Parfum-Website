@@ -46,6 +46,8 @@ class AuthorizationServiceProvider extends ServiceProvider
         });
         // Refund decisions, refund payouts, ledger reversals and reconciliation: Super Admin only (Owner 2026-10-09).
         Gate::define('orders.refund', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
+        // ORD-05: removing a customer's personal data is a Super Admin decision.
+        Gate::define('customers.delete', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // ORD-04: official bank accounts in payment instructions are Owner configuration.
         Gate::define('orders.payment-accounts', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // Price adjustments and cost-relevant customer changes need Super Admin approval (plan §5.1, D5).
