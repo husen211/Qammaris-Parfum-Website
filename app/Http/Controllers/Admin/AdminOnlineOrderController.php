@@ -24,6 +24,9 @@ use Illuminate\Validation\Rule;
 
 class AdminOnlineOrderController extends Controller
 {
+    /** ADM-02: the three tabs on the list. The other filters stay reachable from the attention banners and old links. */
+    public const TABS = ['active' => 'Aktif', 'completed' => 'Selesai', 'cancelled' => 'Dibatalkan'];
+
     public const FILTERS = [
         'active' => 'Aktif',
         'website' => 'Menunggu konfirmasi website',
@@ -49,7 +52,8 @@ class AdminOnlineOrderController extends Controller
         $search = SearchMatcher::term($request->query('search'));
         $query = OnlineOrder::query()->with('items')->withCount(['issues as open_issues_count' => fn ($issues) => $issues->where('status', 'open')])->latest('id');
 
-        match ($filter) {
+        // ADM-02: a search looks in every status, so a finished or cancelled order is found from any tab.
+        match ($search !== '' ? 'all' : $filter) {
             'active' => $query->whereNotIn('stage', [OnlineOrder::STAGE_COMPLETED, OnlineOrder::STAGE_CANCELLED]),
             'website' => $query->where('lifecycle', 'draft'),
             'awaiting_customer' => $query->where('lifecycle', 'awaiting_customer'),

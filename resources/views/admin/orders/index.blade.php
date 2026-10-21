@@ -34,17 +34,28 @@
         </a>
     @endif
 
-    <form method="GET" action="{{ route('admin.orders.index') }}" class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row">
-        <label for="order-status" class="sr-only">Status</label>
-        <select id="order-status" name="status" class="min-h-11 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10">
-            @foreach (\App\Http\Controllers\Admin\AdminOnlineOrderController::FILTERS as $value => $label)
-                <option value="{{ $value }}" @selected($filter === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-        <label for="order-search" class="sr-only">Cari pesanan</label>
-        <input id="order-search" name="search" type="search" value="{{ $search }}" placeholder="Kode, nama, atau nomor HP…" class="min-h-11 flex-1 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10">
-        <button class="min-h-11 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black">Tampilkan</button>
-    </form>
+    {{-- ADM-02: three tabs that apply on tap; the special filters come from the banners above. --}}
+    @php($tabs = \App\Http\Controllers\Admin\AdminOnlineOrderController::TABS)
+    <div class="space-y-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <nav aria-label="Status pesanan" class="grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1 lg:w-96 lg:shrink-0" data-order-tabs>
+                @foreach ($tabs as $value => $label)
+                    @php($current = $search === '' && $filter === $value)
+                    <a href="{{ route('admin.orders.index', $value === 'active' ? [] : ['status' => $value]) }}" @if ($current) aria-current="page" @endif
+                        class="flex min-h-11 items-center justify-center rounded-md px-2 text-sm font-semibold {{ $current ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }} focus-visible:outline focus-visible:outline-2 focus-visible:outline-black">{{ $label }}</a>
+                @endforeach
+            </nav>
+            <form method="GET" action="{{ route('admin.orders.index') }}" role="search" class="lg:flex-1">
+                <label for="order-search" class="sr-only">Cari pesanan (kode, nama, atau nomor HP)</label>
+                <input id="order-search" name="search" type="search" value="{{ $search }}" placeholder="Cari kode, nama, atau nomor HP" enterkeyhint="search" autocomplete="off" class="min-h-11 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10 sm:text-sm">
+            </form>
+        </div>
+        @if ($search !== '')
+            <p class="flex flex-wrap items-center gap-x-3 text-sm text-gray-600" data-order-filter-note>Hasil cari “{{ $search }}” di semua status. <a href="{{ route('admin.orders.index', array_key_exists($filter, $tabs) && $filter !== 'active' ? ['status' => $filter] : []) }}" class="inline-flex min-h-11 items-center font-semibold text-gray-900 underline underline-offset-4">Hapus pencarian</a></p>
+        @elseif (! array_key_exists($filter, $tabs))
+            <p class="flex flex-wrap items-center gap-x-3 text-sm text-gray-600" data-order-filter-note>Filter: <strong class="text-gray-900">{{ \App\Http\Controllers\Admin\AdminOnlineOrderController::FILTERS[$filter] }}</strong> <a href="{{ route('admin.orders.index') }}" class="inline-flex min-h-11 items-center font-semibold text-gray-900 underline underline-offset-4">Hapus filter</a></p>
+        @endif
+    </div>
 
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="hidden grid-cols-[7rem_minmax(0,1.2fr)_minmax(0,1.5fr)_10rem_9rem] gap-4 border-b border-gray-200 bg-gray-50 px-5 py-3 text-xs font-bold uppercase tracking-wider text-gray-500 lg:grid">
@@ -75,8 +86,12 @@
                 </a>
             @empty
                 <div class="px-5 py-14 text-center">
-                    <p class="font-semibold text-gray-900">Belum ada pesanan</p>
-                    <p class="mt-1 text-sm text-gray-500">{{ $search !== '' || $filter !== 'active' ? 'Coba filter atau kata pencarian lain.' : 'Buat pesanan saat customer sudah fix order di WhatsApp.' }}</p>
+                    <p class="font-semibold text-gray-900">{{ $search !== '' ? 'Pesanan tidak ditemukan' : 'Belum ada pesanan' }}</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ match (true) {
+                        $search !== '' => 'Coba kode, nama, atau nomor HP lain.',
+                        $filter !== 'active' => 'Tidak ada pesanan di sini.',
+                        default => 'Buat pesanan saat customer sudah fix order di WhatsApp.',
+                    } }}</p>
                 </div>
             @endforelse
         </div>
