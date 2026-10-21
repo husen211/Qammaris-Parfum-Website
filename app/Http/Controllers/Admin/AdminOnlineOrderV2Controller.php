@@ -139,9 +139,11 @@ class AdminOnlineOrderV2Controller extends Controller
             'payment_method' => ['required', Rule::in(array_keys(OnlineOrder::PAYMENT_METHODS))],
             // ORD-03: no visible source choice; Majoo when ticked, otherwise "recorded by admin" in the ledger.
             'confirmation_source' => ['nullable', Rule::in(RecordOnlineOrderMoney::CONFIRMATION_SOURCES)],
-            'reference' => ['nullable', 'string', 'max:80'], 'recorded_in_majoo' => ['nullable', 'boolean'],
-        ], [], ['amount' => 'nominal', 'payment_method' => 'metode']);
-        $data['confirmation_source'] ??= $request->boolean('recorded_in_majoo') ? 'majoo' : RecordOnlineOrderMoney::ADMIN_RECORDED;
+            'reference' => ['nullable', 'string', 'max:80'],
+            // ADM-03 (Owner 2026-10-21): a payment is entered in the cashier (Majoo) before it is marked here.
+            'recorded_in_majoo' => ['accepted'],
+        ], ['recorded_in_majoo.accepted' => 'Catat dulu pembayaran ini di kasir (Majoo), lalu tandai lunas.'], ['amount' => 'nominal', 'payment_method' => 'metode']);
+        $data['confirmation_source'] ??= 'majoo';
 
         return $this->attempt($order, 'pembayaran', function () use ($request, $order, $data) {
             $updated = $this->money->recordPayment($order, (int) $data['revision'], $request->user(), $this->rupiah($data['amount']), $data['payment_method'], $data['confirmation_source'], $data['reference'] ?? null);

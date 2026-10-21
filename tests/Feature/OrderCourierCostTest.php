@@ -261,7 +261,7 @@ class OrderCourierCostTest extends TestCase
         // Audit 2026-10-17: "Tandai Lunas" / "Konfirmasi packing" collapse their step to one line; the result stays visible.
         $order = $this->v2Order('local_delivery');
         $this->actingAs($this->staff);
-        $this->followingRedirects()->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => (string) (int) $order->customerTotal(), 'payment_method' => 'transfer'])
+        $this->followingRedirects()->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => (string) (int) $order->customerTotal(), 'payment_method' => 'transfer', 'recorded_in_majoo' => '1'])
             ->assertSee('data-order-notice="success"', false)->assertSee('role="status"', false);
         $order->refresh();
         $this->followingRedirects()->post(route('admin.orders.v2.pack', $order), ['revision' => $order->revision,

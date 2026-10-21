@@ -68,22 +68,65 @@
                     <p class="mt-2 text-xs text-amber-900">Belum ada rekening resmi terverifikasi; instruksi meminta customer menunggu nomor rekening dari admin.@can('orders.payment-accounts') <a href="{{ route('admin.orders.payment-accounts.index') }}" class="underline underline-offset-2">Atur rekening</a>@endcan</p>
                 @endif
             </div>
-            <form method="POST" action="{{ route('admin.orders.v2.payments', $order) }}" class="mt-3 space-y-3" data-confirm="Bukti pembayaran sudah diterima dan dicek?">
+            {{-- ADM-03 (Owner 2026-10-21): marking paid opens a short check; the payment must already be in the cashier (Majoo). --}}
+            <form method="POST" action="{{ route('admin.orders.v2.payments', $order) }}" class="mt-3 space-y-3" data-paid-form>
                 @csrf {!! $hidden('pembayaran') !!}
                 <div class="grid grid-cols-2 gap-3">
                     <label class="text-sm font-medium text-gray-700">Nominal diterima (Rp)
-                        <input name="amount" data-rupiah-input inputmode="numeric" required value="{{ old('_section') === 'pembayaran' ? old('amount') : (int) ($remainingCents / 100) }}" class="{{ $input }}">
+                        <input name="amount" data-paid-amount data-rupiah-input inputmode="numeric" required value="{{ old('_section') === 'pembayaran' ? old('amount') : (int) ($remainingCents / 100) }}" class="{{ $input }}">
                     </label>
                     <label class="text-sm font-medium text-gray-700">Metode
-                        <select name="payment_method" required class="{{ $input }}">
+                        <select name="payment_method" data-paid-method required class="{{ $input }}">
                             @foreach (OnlineOrder::PAYMENT_METHODS as $value => $label)<option value="{{ $value }}" @selected(old('payment_method', $order->payment_preference ?? $order->payment_method ?? 'transfer') === $value)>{{ $label }}</option>@endforeach
                         </select>
                     </label>
                 </div>
-                <label class="flex min-h-11 items-center gap-3 text-sm text-gray-700"><input type="checkbox" name="recorded_in_majoo" value="1" @checked($order->recorded_in_majoo) class="h-5 w-5"> Sudah dicatat di Majoo</label>
-                <button class="{{ $primary }}" data-busy-label="Menyimpan…">{{ $received === 0 ? 'Tandai Lunas' : 'Catat pembayaran' }}</button>
-                <p class="text-xs text-gray-500">Tandai setelah bukti pembayaran diterima. Packing dan pengiriman baru bisa setelah lunas.</p>
+                @error('recorded_in_majoo') <p class="text-sm text-red-700" role="alert">{{ $message }}</p> @enderror
+                <button type="button" class="{{ $primary }}" data-paid-open>{{ $received === 0 ? 'Tandai Lunas' : 'Catat pembayaran' }}</button>
+                <p class="text-xs text-gray-500">Packing dan pengiriman baru bisa setelah lunas.</p>
+                <dialog aria-labelledby="paid-title" data-paid-dialog
+                    class="mt-auto mb-0 w-full max-w-full rounded-t-2xl bg-white p-0 text-gray-900 shadow-xl backdrop:bg-black/40 transition duration-200 ease-out starting:open:translate-y-6 starting:open:opacity-0 motion-reduce:transition-none sm:m-auto sm:max-w-md sm:rounded-2xl">
+                    <div class="space-y-4 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+                        <div>
+                            <h3 id="paid-title" class="text-lg font-semibold">{{ $received === 0 ? 'Tandai lunas?' : 'Catat pembayaran?' }}</h3>
+                            <p class="mt-1 text-sm text-gray-600" data-paid-summary></p>
+                        </div>
+                        <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-gray-200 px-3 text-sm font-medium has-[:checked]:border-black">
+                            <input type="checkbox" required data-paid-check class="h-5 w-5"> Bukti pembayaran sudah dicek
+                        </label>
+                        <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-gray-200 px-3 text-sm font-medium has-[:checked]:border-black">
+                            <input type="checkbox" name="recorded_in_majoo" value="1" required data-paid-check class="h-5 w-5"> Sudah dicatat di kasir (Majoo)
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" class="{{ $secondary }} min-h-12" data-paid-cancel>Batal</button>
+                            <button class="{{ $primary }} sm:w-full" data-paid-submit disabled data-busy-label="Menyimpan…">{{ $received === 0 ? 'Ya, tandai lunas' : 'Ya, catat' }}</button>
+                        </div>
+                    </div>
+                </dialog>
             </form>
+            @once
+                <script>
+                (() => {
+                    // ADM-03: confirm only once both checks are ticked; closing resets them.
+                    document.querySelectorAll('[data-paid-form]').forEach((form) => {
+                        const dialog = form.querySelector('[data-paid-dialog]');
+                        const checks = [...form.querySelectorAll('[data-paid-check]')];
+                        const submit = form.querySelector('[data-paid-submit]');
+                        const sync = () => { submit.disabled = !checks.every((check) => check.checked); };
+                        checks.forEach((check) => check.addEventListener('change', sync));
+                        form.querySelector('[data-paid-open]').addEventListener('click', () => {
+                            if (!form.querySelector('[data-paid-amount]').reportValidity()) return;
+                            const method = form.querySelector('[data-paid-method]');
+                            form.querySelector('[data-paid-summary]').textContent = `Rp ${form.querySelector('[data-paid-amount]').value} · ${method.selectedOptions[0]?.textContent ?? ''}`;
+                            dialog.showModal();
+                            checks[0].focus();
+                        });
+                        form.querySelector('[data-paid-cancel]').addEventListener('click', () => dialog.close());
+                        dialog.addEventListener('close', () => { if (!form.dataset.submitting) { checks.forEach((check) => { check.checked = false; }); sync(); } });
+                    });
+                })();
+                </script>
+            @endonce
         @endif
     @endif
 

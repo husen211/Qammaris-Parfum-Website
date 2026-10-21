@@ -207,7 +207,7 @@ class WebsiteCheckoutOrderTest extends TestCase
             ->assertSee('data-step="konfirmasi" data-state="current"', false)->assertDontSee('Tandai Lunas')->assertSee('Palu Barat');
 
         // Unpaid draft: no payment can be recorded before confirmation; ongkir can be set.
-        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '200000', 'payment_method' => 'qris'])
+        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '200000', 'payment_method' => 'qris', 'recorded_in_majoo' => '1'])
             ->assertSessionHas('order_notice.type', 'error');
         $this->post(route('admin.orders.v2.shipping', $order), ['revision' => $order->fresh()->revision, 'shipping_fee' => '15000', 'shipping_payer' => 'added_to_transfer'])
             ->assertSessionHas('order_notice.type', 'success');
@@ -223,7 +223,7 @@ class WebsiteCheckoutOrderTest extends TestCase
         // Then the existing payment flow: total includes the confirmed ongkir.
         // Product 200.000 + ongkir 15.000 + paperbag 4.000 (ORD-04, chosen at checkout).
         $this->assertSame(['4000.00', '219000.00'], [$order->packagingFee(), $order->customerTotal()]);
-        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '219000', 'payment_method' => 'qris'])->assertSessionHas('order_notice.type', 'success');
+        $this->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '219000', 'payment_method' => 'qris', 'recorded_in_majoo' => '1'])->assertSessionHas('order_notice.type', 'success');
         $this->assertSame('paid', $order->fresh()->payment_status);
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('Dikonfirmasi toko')->assertDontSee('Pesanan tersimpan');
     }
