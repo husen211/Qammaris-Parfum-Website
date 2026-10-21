@@ -111,7 +111,7 @@ class OrderShippingPaymentChoiceTest extends TestCase
         // After money came in, the total is fixed: the link no longer asks or changes how the ongkir is paid.
         $paid = $this->v2Order();
         $paid->forceFill(['shipping_payer' => 'added_to_transfer', 'shipping_fee' => 10000])->save();
-        $this->actingAs($this->staff)->post(route('admin.orders.v2.payments', $paid), ['revision' => $paid->fresh()->revision, 'amount' => '50000', 'payment_method' => 'transfer']);
+        $this->actingAs($this->staff)->post(route('admin.orders.v2.payments', $paid), ['revision' => $paid->fresh()->revision, 'amount' => '50000', 'payment_method' => 'transfer', 'recorded_in_majoo' => '1']);
         $this->assertFalse($paid->fresh()->customerSetsShippingPayment());
         $this->post(route('orders.customer.submit', $paid->customer_token_encrypted), $this->linkForm('local_delivery', ['shipping_payment' => 'cash_to_driver']));
         $this->assertSame('added_to_transfer', $paid->fresh()->shipping_payer);
