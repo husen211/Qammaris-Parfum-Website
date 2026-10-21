@@ -185,14 +185,15 @@ class AdminPwaTest extends TestCase
             ->assertSee('action="'.route('admin.logout').'"', false);
 
         $nav = $this->bottomNav($response->getContent());
-        $this->assertSame(['Pesanan', 'Buat', 'Akun'], array_column($nav, 'label'));
-        $this->assertSame([route('admin.orders.index'), route('admin.orders.create'), route('admin.account')], array_column($nav, 'href'));
-        $this->assertSame([true, false, false], array_column($nav, 'current'));
+        $this->assertSame(['Pesanan', 'Pelanggan', 'Buat', 'Akun'], array_column($nav, 'label'));
+        $this->assertSame([route('admin.orders.index'), route('admin.customers.index'), route('admin.orders.create'), route('admin.account')], array_column($nav, 'href'));
+        $this->assertSame([true, false, false, false], array_column($nav, 'current'));
         // Staff Order has nothing else to open, so the extra menu is hidden.
         $response->assertDontSee('<summary', false);
 
-        $this->assertSame([false, true, false], array_column($this->bottomNav($this->get('/admin/orders/create')->assertOk()->getContent()), 'current'));
-        $this->assertSame([false, false, true], array_column($this->bottomNav($this->get('/admin/account')->assertOk()->getContent()), 'current'));
+        $this->assertSame([false, true, false, false], array_column($this->bottomNav($this->get('/admin/customers')->assertOk()->getContent()), 'current'));
+        $this->assertSame([false, false, true, false], array_column($this->bottomNav($this->get('/admin/orders/create')->assertOk()->getContent()), 'current'));
+        $this->assertSame([false, false, false, true], array_column($this->bottomNav($this->get('/admin/account')->assertOk()->getContent()), 'current'));
 
         $owner = $this->actingAs($this->user(User::ROLE_SUPER_ADMIN))->get('/admin/orders')->assertOk();
         $owner->assertSee('<summary', false)->assertSee('data-admin-bottom-nav', false);

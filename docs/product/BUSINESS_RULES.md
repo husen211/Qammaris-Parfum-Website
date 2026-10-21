@@ -149,8 +149,8 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
 - **Katalog dicek ulang di server.** Saat simpan, harga dan status Tersedia dicek ulang. Bila berubah, pesanan tidak dibuat dan customer meninjau ringkasan terbaru.
 - **Kirim ganda aman.** Tekan dua kali, refresh, atau kirim ulang dengan sesi checkout yang sama menghasilkan satu pesanan yang sama.
 - **Batas kirim:** 6 checkout per menit dan 30 per jam per perangkat/IP.
-- **Pelanggan langganan.** Nomor HP checkout tidak otomatis membuat pelanggan langganan; menghubungkan pelanggan tetap aksi Staff Order.
-- **Privasi.** Data penerima checkout (nama, HP, alamat, kelurahan/kecamatan, catatan) disimpan seperti Pesanan Online lain: hanya untuk mengurus pesanan, terlihat oleh tim Qammaris dan detail tugas App setelah aktif. Belum ada penghapusan otomatis (ORD-05).
+- **Pelanggan.** Pesanan checkout website tersimpan sebagai pelanggan saat Staff Order **mengonfirmasi** pesanannya (bukan saat masih draft), dengan aturan nomor WhatsApp yang sama = pelanggan yang sama (ORD-05).
+- **Privasi.** Data penerima checkout (nama, HP, alamat, kelurahan/kecamatan, catatan) disimpan seperti Pesanan Online lain: hanya untuk mengurus pesanan, terlihat oleh tim Qammaris dan detail tugas App setelah aktif. Tidak ada penghapusan otomatis; Super Admin bisa menghapus data pelanggan atas permintaan (ORD-05).
 - **Tahap 2 (belum dihitung):**
   - Kolom estimasi ongkir dan sumbernya (manual/zona/jarak/API) serta berat produk/item tersedia tetapi kosong.
   - Berat yang belum diketahui tetap kosong, tidak diisi 1 kg.
@@ -200,11 +200,11 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Super Admin aktif terakhir tidak dapat dinonaktifkan atau diturunkan.
 - Staff Order: membuat/mengubah pesanan, menandai Lunas, membatalkan pesanan yang belum Lunas dan belum diserahkan dengan alasan, dan mengubah alamat tanpa biaya sampai diserahkan. Perubahan ongkir/pendanaan, koreksi langkah, penggantian talangan, dan pembatalan setelah Lunas hanya Super Admin.
 - Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
-- **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis untuk sekarang**; kebijakan retensi/anonimisasi ditinjau di ORD-05. Riwayat perubahan akun dan pesanan disimpan tanpa purge.
+- **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis** (keputusan Owner 2026-10-21); Super Admin menghapus data pelanggan secara manual atas permintaan (ORD-05). Riwayat perubahan akun dan pesanan disimpan tanpa purge.
 
 ### Layar pesanan V2 (ORD-02d, branch review)
 
-- Staff Order membuat pesanan dari chat WhatsApp/Instagram: pilih produk, pilih pelanggan lama (dan alamat tersimpan) atau pelanggan baru, lalu pilih **data sudah lengkap** atau **kirim link ke customer**.
+- Staff Order membuat pesanan dari chat WhatsApp/Instagram: pilih produk, pilih pelanggan lama (dan alamat tersimpan) atau isi pelanggan baru (otomatis tersimpan), lalu pilih **data sudah lengkap** atau **kirim link ke customer**.
 - Bila data sudah lengkap dari chat, customer **tidak perlu** membuka form. Link tetap bisa dipakai customer untuk melihat status.
 - Form customer tetap sederhana: produk sudah terisi, tiga cara menerima, dua pilihan paperbag. Setelah Lunas atau packing dimulai, perubahan dari customer menjadi permintaan yang ditinjau toko.
 - Staff Order boleh menandai Lunas dengan sumber konfirmasi (bukti di chat, bukti diunggah, Majoo).
@@ -280,9 +280,11 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Kendala terbuka menahan status selesai. Kendala hanya bisa ditutup oleh pembukanya atau Owner/Super Admin.
 - Pesanan yang **sudah ada pembayaran** (walau sebagian) hanya bisa dibatalkan Super Admin. Saat membatalkan, ia wajib menetapkan nominal yang dikembalikan (boleh 0).
 - **Pelanggan langganan:**
-  - Admin menghubungkan pesanan ke pelanggan secara sadar. Pesanan tidak pernah otomatis digabung berdasarkan nomor, dan satu nomor boleh dimiliki beberapa pelanggan (misalnya keluarga).
-  - Alamat disimpan setelah dikonfirmasi admin dan dipakai ulang dengan memilihnya. Alamat itu disalin ke pesanan; mengubah pesanan tidak mengubah alamat tersimpan.
+  - ORD-05 (Owner 2026-10-21): pesanan dengan nama dan nomor WhatsApp yang valid otomatis tersimpan sebagai pelanggan. **Nomor yang sama = pelanggan yang sama**, walau namanya ditulis beda. Staf tetap bisa memindahkan pesanan ke pelanggan lain (misalnya anggota keluarga dengan nomor yang sama) dari halaman pesanan.
+  - Alamat pengiriman otomatis tersimpan saat pesanan **diserahkan ke kurir/J&T** (alamatnya terbukti benar); alamat yang persis sama tidak disimpan dua kali. Alamat dipakai ulang dengan memilihnya, lalu disalin ke pesanan; mengubah pesanan tidak mengubah alamat tersimpan.
   - Alamat diarsipkan, tidak dihapus, dan tidak bisa diganti setelah pesanan diserahkan.
+- **Menu Pelanggan (ORD-05):** Super Admin dan Staff Order melihat daftar pelanggan (nama, nomor WhatsApp, jumlah dan tanggal pesanan terakhir), mencari dengan nama/nomor, membuka riwayat pesanan dan alamat tersimpan, mengubah nama/catatan, dan mengarsipkan alamat.
+- **Hapus data pelanggan (ORD-05):** hanya Super Admin, hanya atas permintaan, tidak pernah otomatis. Nama, nomor, alamat, dan catatan dikosongkan di pelanggan dan semua pesanannya (termasuk salinan yang terkirim ke Qammaris App lewat revisi baru); kode pesanan, barang, dan catatan uang tetap ada. Ditolak selama masih ada pesanan yang berjalan. Nomor yang sama boleh memesan lagi dan menjadi pelanggan baru.
 - **Keep (D9):**
   - Default 24 jam (1–168 jam), boleh belum dibayar.
   - Staf mengonfirmasi manual bahwa stok sudah dipisahkan.

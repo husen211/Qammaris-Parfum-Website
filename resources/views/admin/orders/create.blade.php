@@ -53,7 +53,7 @@
             <div data-customer-search-box @if (old('customer_id')) hidden @endif>
                 <label for="customer-search" class="sr-only">Cari pelanggan lama</label>
                 <input id="customer-search" type="search" autocomplete="off" enterkeyhint="search" placeholder="Pelanggan lama: nama atau nomor" aria-describedby="customer-search-status" class="{{ $field }}">
-                <p id="customer-search-status" role="status" aria-live="polite" class="mt-1 min-h-5 text-xs text-gray-500">Pelanggan baru? Lewati saja.</p>
+                <p id="customer-search-status" role="status" aria-live="polite" class="mt-1 min-h-5 text-xs text-gray-500">Pelanggan baru? Lewati saja, nanti otomatis tersimpan.</p>
                 <ul class="max-h-64 divide-y divide-gray-100 overflow-y-auto rounded-lg border border-gray-200 empty:hidden" data-customer-results></ul>
             </div>
             <fieldset class="mt-2" data-address-choices hidden>
@@ -73,9 +73,8 @@
             </div>
             <div class="mt-4 space-y-4" data-fill-fields @unless (old('fill_customer') === '1') hidden @endunless>
                 @include('admin.orders._customer-fields')
-                <label class="flex min-h-11 items-center gap-3 text-sm text-gray-800" data-new-customer @if (old('customer_id')) hidden @endif>
-                    <input type="checkbox" name="new_customer" value="1" @checked(old('new_customer')) class="h-5 w-5"> Simpan sebagai pelanggan langganan
-                </label>
+                {{-- ORD-05: no "save as customer" box; a name with a valid number is remembered automatically. --}}
+                <p class="text-xs text-gray-500" data-new-customer @if (old('customer_id')) hidden @endif>Pelanggan baru otomatis tersimpan dari nama dan nomor WhatsApp ini.</p>
             </div>
         </section>
 
@@ -206,7 +205,7 @@
         chosen.hidden = false; searchBox.hidden = true; customerResults.replaceChildren();
         setField('customer_name', customer.name); setField('customer_phone', customer.phone);
         // A repeat customer's data is known: fill it here instead of sending a link.
-        fillNow(); newCustomer.hidden = true; newCustomer.querySelector('input').checked = false;
+        fillNow(); newCustomer.hidden = true;
         addressList.replaceChildren(...customer.addresses.map((address) => {
             const label = el('label', 'flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 text-sm has-[:checked]:border-black');
             const radio = el('input', 'mt-0.5 h-5 w-5'); Object.assign(radio, { type: 'radio', name: 'customer_address_id', value: address.id });

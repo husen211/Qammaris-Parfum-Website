@@ -698,11 +698,13 @@ class OnlineOrderFulfillment
             throw new OrderActionNotAllowed('Pesanan website dikonfirmasi oleh admin Website.');
         }
 
-        return $this->run($order, $revision, $actor, function (OnlineOrder $order): void {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor): void {
             if ($order->lifecycle !== 'draft') {
                 throw new InvalidOrderTransition('Hanya pesanan website yang menunggu konfirmasi yang bisa dikonfirmasi.');
             }
             $order->lifecycle = 'active';
+            // ORD-05: a confirmed website order (not a possible prank draft) becomes a remembered customer.
+            app(RememberCustomer::class)->link($order, $actor->user);
             $this->record('website_confirmed', 'Pesanan website dikonfirmasi');
         });
     }
@@ -825,6 +827,8 @@ class OnlineOrderFulfillment
         $order->handover_status = 'handed_over';
         $order->handed_to = $handedTo;
         $order->handed_over_at = $at;
+        // ORD-05: the delivery address has proven correct, so it is kept for the next order.
+        app(RememberCustomer::class)->rememberAddress($order);
     }
 
     private function assertActive(OnlineOrder $order): void

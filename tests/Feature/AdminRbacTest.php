@@ -64,6 +64,9 @@ class AdminRbacTest extends TestCase
             if (in_array($name, ['admin.orders.revert', 'admin.orders.reimburse'], true)) {
                 $this->assertContains('can:orders.finance', $abilities, $name);
             }
+            if ($name === 'admin.customers.anonymize') {
+                $this->assertContains('can:customers.delete', $abilities, $name);
+            }
             $checked++;
         }
         $this->assertGreaterThan(60, $checked);
@@ -213,7 +216,7 @@ class AdminRbacTest extends TestCase
     {
         return match (true) {
             $name === 'admin.dashboard', $name === 'admin.account', str_starts_with($name, 'admin.account.') => null,
-            str_starts_with($name, 'admin.orders.') => 'orders.manage',
+            str_starts_with($name, 'admin.orders.'), str_starts_with($name, 'admin.customers.') => 'orders.manage',
             str_starts_with($name, 'admin.users.') => 'users.manage',
             str_starts_with($name, 'admin.integrations.') => 'integrations.manage',
             str_starts_with($name, 'admin.blog-posts.'), str_starts_with($name, 'admin.blog-automation.'),

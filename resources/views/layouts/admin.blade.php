@@ -69,6 +69,10 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     Pesanan Online
                 </a>
+                <a href="{{ route('admin.customers.index') }}" class="{{ request()->routeIs('admin.customers*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.28.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Pelanggan
+                </a>
                 @endcan
                 @can('integrations.manage')
                 <a href="{{ route('admin.integrations.orders') }}" class="{{ request()->routeIs('admin.integrations*') ? 'active-nav' : '' }} flex min-h-11 items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">Integrasi App</a>
@@ -125,6 +129,7 @@
                         @endcan
                         @can('orders.manage')
                         <a href="{{ route('admin.orders.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.orders*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pesanan Online</a>
+                        <a href="{{ route('admin.customers.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.customers*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pelanggan</a>
                         @endcan
                         @can('users.manage')<a href="{{ route('admin.users.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.users*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Pengguna &amp; Role</a>@endcan
                         <a href="{{ route('admin.account') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.account*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Akun</a>
@@ -163,6 +168,8 @@
         $bottomNav = [
             ['route' => 'admin.orders.index', 'active' => request()->routeIs('admin.orders.index', 'admin.orders.show'), 'label' => 'Pesanan',
                 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h4'],
+            ['route' => 'admin.customers.index', 'active' => request()->routeIs('admin.customers*'), 'label' => 'Pelanggan',
+                'icon' => 'M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.28.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'],
             ['route' => 'admin.orders.create', 'active' => request()->routeIs('admin.orders.create'), 'label' => 'Buat',
                 'icon' => 'M12 5v14M5 12h14'],
             ['route' => 'admin.account', 'active' => request()->routeIs('admin.account*'), 'label' => 'Akun',
@@ -170,7 +177,7 @@
         ];
     @endphp
     <nav aria-label="Navigasi pesanan" data-admin-bottom-nav class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
-        <ul class="grid grid-cols-3">
+        <ul class="grid grid-cols-4">
             @foreach ($bottomNav as $item)
                 <li>
                     <a href="{{ route($item['route']) }}" @if ($item['active']) aria-current="page" @endif

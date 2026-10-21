@@ -109,7 +109,7 @@ class AdminOnlineOrderV2Controller extends Controller
         }
         $phone = PhoneNumber::normalize($term);
         $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term).'%';
-        $customers = Customer::with('addresses')
+        $customers = Customer::with('addresses')->whereNull('anonymized_at')
             ->where(fn ($query) => $phone ? $query->where('phone', $phone)->orWhere('name', 'like', $like) : $query->where('name', 'like', $like))
             ->orderBy('name')->limit(8)->get();
 

@@ -29,12 +29,11 @@ class OnlineOrderStoreRequest extends FormRequest
             // ORD-02d: where the chat came from, and an explicitly chosen repeat customer / saved address.
             'source' => ['nullable', Rule::in(array_keys(CreateOnlineOrder::SOURCES))],
             'customer_id' => ['nullable', 'integer', 'min:1'],
-            'new_customer' => ['boolean'],
             'customer_address_id' => ['nullable', 'integer', 'min:1'],
         ] + $customer;
     }
 
-    /** @return array{source: string, customer_id: ?int, new_customer: bool, customer_address_id: ?int} */
+    /** @return array{source: string, customer_id: ?int, customer_address_id: ?int} */
     public function options(): array
     {
         $customerId = $this->validated('customer_id');
@@ -42,7 +41,6 @@ class OnlineOrderStoreRequest extends FormRequest
         return [
             'source' => $this->validated('source') ?? 'whatsapp',
             'customer_id' => $customerId === null ? null : (int) $customerId,
-            'new_customer' => $customerId === null && $this->boolean('new_customer') && $this->boolean('fill_customer'),
             'customer_address_id' => $customerId === null || $this->validated('customer_address_id') === null ? null : (int) $this->validated('customer_address_id'),
         ];
     }
