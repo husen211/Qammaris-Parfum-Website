@@ -1,6 +1,6 @@
 # ORD-10 — Customer chooses "Metode pembayaran ongkir" (2026-10-21)
 
-Owner request (card #75): on the order link and the website checkout, the customer also picks how the ongkir is paid, so staff no longer choose it; plus a small tidy-up of the online-order flow. Branch `modernization/ord-10-ongkir-payment-method`. Local only; nothing deployed.
+Owner request (card #75): on the order link and the website checkout, the customer also picks how the ongkir is paid, so staff no longer choose it; plus a small tidy-up of the online-order flow. Released with ORD-11 via PR76 (`d528af9`) on 2026-10-21 after Owner localhost check and approval; CI and the Production release run passed, and the live checkout shows the new question (public GET check, throwaway session cart cleared, no order submitted).
 
 ## What changed
 
