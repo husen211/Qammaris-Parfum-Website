@@ -1,4 +1,4 @@
-Tabler Icons (https://tabler.io/icons) - "motorbike" icon path used in resources/views/orders/customer.blade.php.
+Tabler Icons (https://tabler.io/icons) - "motorbike" icon path used in resources/views/orders/customer.blade.php and "brand-whatsapp" in resources/views/components/icon.blade.php.
 
 MIT License
 
