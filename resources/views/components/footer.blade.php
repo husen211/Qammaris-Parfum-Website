@@ -3,7 +3,7 @@
         <div class="grid gap-10 pb-10 md:pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)] lg:gap-16">
             <div>
                 <a href="{{ route('home') }}" class="footer-link inline-flex min-h-11 items-center gap-3" aria-label="Qammaris — Beranda">
-                    <img src="{{ asset('images/logo-black2.png') }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-10 w-10 object-contain brightness-0 invert">
+                    <img src="{{ asset('images/logo-black-192.webp') }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-10 w-10 object-contain brightness-0 invert">
                     <span class="text-2xl font-medium tracking-tight text-white">Qammaris.</span>
                 </a>
                 <p class="mt-5 max-w-sm text-sm leading-6 text-white/75">Kurasi parfum original Timur Tengah. Temukan aroma pilihan Anda dari koleksi Qammaris.</p>

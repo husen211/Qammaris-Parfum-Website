@@ -44,7 +44,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle }}</title>
 
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav.jpg') }}">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav-192.jpg') }}">
     @include('pwa._head')
     @include('partials.analytics')
     <link rel="canonical" href="{{ $canonicalUrl }}">
@@ -91,7 +91,7 @@
     @hasSection('minimal_chrome')
         <header class="border-b border-gray-200 bg-white px-4 py-4">
             <div class="mx-auto flex max-w-xl items-center justify-between gap-3">
-                <a href="{{ route('products.index') }}" aria-label="Qammaris Perfumes, ke katalog"><img src="{{ asset('images/logo-black2.png') }}" alt="Qammaris Perfumes" class="h-8 w-auto"></a>
+                <a href="{{ route('products.index') }}" aria-label="Qammaris Perfumes, ke katalog"><img src="{{ asset('images/logo-black-192.webp') }}" alt="Qammaris Perfumes" class="h-8 w-auto"></a>
                 <nav aria-label="Navigasi pesanan" class="flex items-center gap-1 text-sm">
                     <a href="{{ route('products.index') }}" class="inline-flex min-h-11 items-center px-2 text-gray-700 underline-offset-4 hover:underline" data-back-catalog>Katalog</a>
                     <a href="{{ route('orders.customer.mine') }}" class="inline-flex min-h-11 items-center px-2 font-medium text-brand-black underline-offset-4 hover:underline" data-my-orders>Pesanan Saya</a>

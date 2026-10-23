@@ -22,8 +22,8 @@
                     </div>
                 </div>
                 <div class="flex h-60 items-center justify-center sm:h-72 lg:h-[340px]">
-                    <img src="{{ asset('images/illustrations/testparfumanimation.png') }}"
-                        alt="Ilustrasi tes parfum" width="632" height="1390" loading="lazy" decoding="async"
+                    <img src="{{ asset('images/illustrations/testparfumanimation.webp') }}"
+                        alt="Ilustrasi tes parfum" width="316" height="695" loading="lazy" decoding="async"
                         class="h-full w-full object-contain" />
                 </div>
             </div>

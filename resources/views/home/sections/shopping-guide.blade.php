@@ -22,8 +22,8 @@
                     Jelajahi katalog lengkap kami dan temukan signature scent yang paling sesuai.
                 </p>
                 <div class="mt-auto pt-6 flex justify-end">
-                    <img src="{{ asset('images/illustrations/step1.png') }}" alt="Ilustrasi langkah discover"
-                        width="432" height="578" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
+                    <img src="{{ asset('images/illustrations/step1.webp') }}" alt="Ilustrasi langkah discover"
+                        width="288" height="385" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
                 </div>
             </div>
 
@@ -34,8 +34,8 @@
                     Pilih varian yang diinginkan, atur jumlah, lalu masukkan ke keranjang belanja.
                 </p>
                 <div class="mt-auto pt-6 flex justify-end">
-                    <img src="{{ asset('images/illustrations/step2.png') }}" alt="Ilustrasi langkah select"
-                        width="677" height="369" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
+                    <img src="{{ asset('images/illustrations/step2.webp') }}" alt="Ilustrasi langkah select"
+                        width="451" height="246" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
                 </div>
             </div>
 
@@ -46,8 +46,8 @@
                     Pesanan Anda terkirim otomatis ke WhatsApp admin untuk konfirmasi cepat.
                 </p>
                 <div class="mt-auto pt-6 flex justify-end">
-                    <img src="{{ asset('images/illustrations/step3.png') }}" alt="Ilustrasi langkah checkout"
-                        width="408" height="612" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
+                    <img src="{{ asset('images/illustrations/step3.webp') }}" alt="Ilustrasi langkah checkout"
+                        width="272" height="408" loading="lazy" decoding="async" class="h-36 w-auto max-w-full object-contain" />
                 </div>
             </div>
         </div>

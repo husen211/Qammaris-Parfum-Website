@@ -26,9 +26,29 @@ class HomeIllustrationAssetsTest extends TestCase
             $file = public_path(ltrim($path, '/'));
             $this->assertFileExists($file);
             $dimensions = getimagesize($file);
-            $this->assertSame(IMAGETYPE_PNG, $dimensions[2]);
+            $this->assertSame(IMAGETYPE_WEBP, $dimensions[2]);
             $this->assertSame((string) $dimensions[0], $image->getAttribute('width'));
             $this->assertSame((string) $dimensions[1], $image->getAttribute('height'));
+        }
+    }
+
+    /** PERF-01: no hero video downloads before the script picks the one the current layout shows. */
+    public function test_hero_videos_wait_for_the_script_and_show_a_poster_first(): void
+    {
+        $this->withoutVite();
+        $document = new DOMDocument;
+        @$document->loadHTML($this->get('/')->assertOk()->getContent());
+        $videos = (new DOMXPath($document))->query('//video[@data-hero-video]');
+
+        $this->assertCount(4, $videos);
+        foreach ($videos as $video) {
+            $this->assertFalse($video->hasAttribute('autoplay'));
+            $this->assertFalse($video->hasAttribute('src'));
+            $this->assertSame(0, $video->getElementsByTagName('source')->length);
+            $this->assertSame('none', $video->getAttribute('preload'));
+            foreach (['poster', 'data-src'] as $attribute) {
+                $this->assertFileExists(public_path(ltrim(parse_url($video->getAttribute($attribute), PHP_URL_PATH), '/')));
+            }
         }
     }
 }

@@ -23,3 +23,14 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# PERF-01: long browser/CDN cache for static files only. Vite file names carry a content hash and uploads get
+# unique names, so a changed file arrives under a new URL. Pages keep Laravel's own no-cache headers.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(?:mp4|webm|webp|avif|jpe?g|png|gif|svg|ico|woff2?|ttf|otf)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+    <FilesMatch "-[A-Za-z0-9_-]{8}\.(?:js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
     <title>@yield('title', 'Tugas pesanan - Qammaris')</title>
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav.jpg') }}">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logofav-192.jpg') }}">
     @vite(['resources/css/app.css'])
 </head>
 <body class="bg-white text-brand-black antialiased">
