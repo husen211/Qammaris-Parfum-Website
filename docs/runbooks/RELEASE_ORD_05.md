@@ -41,7 +41,7 @@ root=/home/u429527638/domains/qammarisparfum.id; shared=$root/shared/qammaris-we
 cd "$dir" && sha256sum -c production-release.tar.gz.sha256 && tar -xzf production-release.tar.gz
 test "$(cat release-revision.txt)" = 418894aade800a22fca13881e699f1cf22568a8b && echo revision-ok
 ln -s "$shared/.env" .env
-mkdir -p storage/logs storage/framework/cache storage/framework/views storage/framework/sessions
+mkdir -p storage/logs storage/framework/cache storage/framework/views storage/framework/sessions bootstrap/cache
 php artisan migrate:status --no-interaction | grep -i pending
 ```
 
@@ -67,3 +67,10 @@ The agent merges PR #81. CI on `main` deploys: nothing is pending, caches, healt
 ## Not done in this preparation
 
 - The migration was rehearsed on MariaDB 10.4 (isolated), not on a copy of production on 11.8. The change is two nullable columns and two nullability relaxations; the step 3 status check and the step 1 backup are the safety net.
+
+## Release record (2026-10-23)
+
+- Owner chose to skip the database backup (additive migration only).
+- Package `production-418894a…` uploaded and checksum verified on the server. Artisan first failed with a masked `Class "request" does not exist`; the real error was a missing `bootstrap/cache` in the package (now in step 3). Exactly one migration was pending; `migrate --force` ran it in 31 ms; 0 pending; `/up` 200; private directory removed.
+- The deploy of `32700b9` (refused on 2026-10-21) needed two re-runs: its refusal had left `releases/qammaris-32700b9…` and `releases/.deploy-32700b9…`, which block a re-run of the same revision. Both were removed (not live); the 4th attempt deployed, health check passed, `current` = `qammaris-32700b9…`, `/admin/customers` redirects guests to login. Finding recorded as OPS-DEPLOY-01.
+- Backfill preview on production: 8 orders without customer → 0 to existing, 5 new customers, 7 links, 1 skipped. `--apply` not run; waits for the Owner.
