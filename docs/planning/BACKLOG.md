@@ -40,9 +40,9 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-PRICE-01 — Struck-through price on catalog cards — IN_PROGRESS
+## CAT-PRICE-01 — Struck-through price on catalog cards — DONE
 
-Owner 2026-10-23 (card #96): the struck-through `compare_at_price` showed only on the product detail page. The shared catalog card (`products/_catalog-card`, used by the catalog, related products and Journal product embeds; the homepage best-seller rail hides prices) now shows it after the selling price, under the detail page's rule (only when higher than the active offer price), with a screen-reader label "Harga sebelumnya". The 2026-10-07 card-trust rule stays: size and selling price come only from the active offer; `compare_at_price` is never a fallback price (`PublicCatalogCardTrustTest` updated accordingly). Verified 390/1440 locally.
+Owner 2026-10-23 (card #96): the struck-through `compare_at_price` showed only on the product detail page. The shared catalog card (`products/_catalog-card`, used by the catalog, related products and Journal product embeds; the homepage best-seller rail hides prices) now shows it after the selling price, under the detail page's rule (only when higher than the active offer price), with a screen-reader label "Harga sebelumnya". The 2026-10-07 card-trust rule stays: size and selling price come only from the active offer; `compare_at_price` is never a fallback price (`PublicCatalogCardTrustTest` updated accordingly). Verified 390/1440 locally. Released PR97 (production `16666fb`, 2026-10-23); production catalog pages show the struck-through price on cards with a higher compare price.
 
 ## PERF-01 — Faster homepage on phones — DONE
 
