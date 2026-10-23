@@ -13,8 +13,10 @@ if subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() != r
 tracked = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
 prefixes = ("app/", "bootstrap/", "config/", "database/migrations/", "resources/", "routes/", "public/", "tools/hostinger/")
 roots = {"artisan", "composer.json", "composer.lock"}
+# bootstrap/cache ships only its .gitignore: the folder must exist for artisan run from the package (OPS-DEPLOY-01),
+# but no cache file from the build machine may travel with the release.
 files = {Path(name) for name in tracked if name and (name in roots or name.startswith(prefixes))
-         and not name.startswith(("bootstrap/cache/", "public/storage/", "public/build/"))}
+         and (name == "bootstrap/cache/.gitignore" or not name.startswith(("bootstrap/cache/", "public/storage/", "public/build/")))}
 for required in [Path("vendor/autoload.php"), Path("public/build/manifest.json")]:
     if not required.is_file():
         raise SystemExit("Missing runtime dependencies or built assets")

@@ -8,15 +8,30 @@ revision="$2"
 root=/home/u429527638/domains/qammarisparfum.id
 shared="$root/shared/qammaris-website"
 release="$root/releases/qammaris-$revision"
+# OPS-DEPLOY-01: a deploy that stops (or rolls back) removes what it created, so the same revision can be re-run after
+# the Owner fixes the cause: its own candidate release (never the one `current` points to) and the workflow's
+# releases/.deploy-<sha> folder this script is extracted into.
+created_release=0
+cleanup() {
+    if [ "$created_release" = 1 ] && [ "$(readlink -f "$root/current")" != "$release" ]; then
+        cd "$root" && rm -rf -- "$release"
+    fi
+    rm -rf -- "$root/releases/.deploy-$revision"
+}
+trap cleanup EXIT
 test -f "$shared/.production-active"
 test -f "$shared/.env"
 test -L "$root/current"
 exec 9>"$shared/deploy.lock"
 flock -n 9
-test ! -e "$release"
+if [ -e "$release" ]; then
+    printf '%s\n' "Deployment refused: $release already exists. If it is not current, remove it and re-run." >&2
+    exit 1
+fi
 # Packages are produced by the private GitHub workflow, not arbitrary operator uploads.
 php -r '$a=new PharData($argv[1]);foreach(new RecursiveIteratorIterator($a) as $f){$p=$f->getPathName();if(str_contains($p,"/../")||str_contains($p,"/.env")||$f->isLink()){exit(1);}}' "$archive"
 mkdir -m 0711 "$release"
+created_release=1
 tar -xzf "$archive" -C "$release" --no-same-owner --same-permissions
 test "$(cat "$release/release-revision.txt")" = "$revision"
 ln -s "$shared/.env" "$release/.env"

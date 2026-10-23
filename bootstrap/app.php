@@ -58,7 +58,9 @@ return Application::configure(basePath: dirname(__DIR__))
             return BlogAutomationErrors::render($error, $request);
         });
         $exceptions->report(function (Throwable $error) {
-            if (request()->is('api/automation/v1*')) {
+            // OPS-DEPLOY-01: artisan has no request; asking for one here used to hide the real error behind
+            // "Class \"request\" does not exist".
+            if (app()->bound('request') && request()->is('api/automation/v1*')) {
                 Log::error('blog.automation_failed', ['exception' => $error::class, 'code' => (string) $error->getCode()]);
 
                 return false;
