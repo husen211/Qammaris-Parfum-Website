@@ -51,4 +51,18 @@ class HomeIllustrationAssetsTest extends TestCase
             }
         }
     }
+
+    /** PERF-01: no render-blocking third-party font stylesheet; the preloaded font ships with the release. */
+    public function test_inter_is_self_hosted_and_preloaded(): void
+    {
+        $this->withoutVite();
+        $html = $this->get('/')->assertOk()->assertDontSee('fonts.googleapis.com', false)->getContent();
+
+        $this->assertMatchesRegularExpression('#<link rel="preload" href="[^"]*/fonts/inter/inter-latin\.woff2" as="font" type="font/woff2" crossorigin>#', $html);
+        $this->assertStringContainsString('hero-mobile-poster.webp" as="image"', $html);
+        foreach (['inter-latin', 'inter-latin-ext'] as $font) {
+            $this->assertStringStartsWith('wOF2', file_get_contents(public_path("fonts/inter/{$font}.woff2"), length: 4));
+            $this->assertStringContainsString("/fonts/inter/{$font}.woff2", file_get_contents(resource_path('css/app.css')));
+        }
+    }
 }

@@ -62,9 +62,8 @@
     <meta name="twitter:description" content="{{ $openGraphDescription }}">
     <meta name="twitter:image" content="{{ $openGraphImage }}">
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="preload" href="{{ asset('fonts/inter/inter-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+    @stack('preload')
     
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.js'])

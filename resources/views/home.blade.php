@@ -2,6 +2,10 @@
 
 @section('title', 'Qammaris Perfumes - Premium Middle Eastern Fragrances')
 
+@push('preload')
+    <link rel="preload" href="{{ asset('images/hero/hero-mobile-poster.webp') }}" as="image" type="image/webp" media="(max-width: 767px)" fetchpriority="high">
+@endpush
+
 @section('content')
     @include('home.sections.hero')
     @include('home.sections.brand-marquee')
