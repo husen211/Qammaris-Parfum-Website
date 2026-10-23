@@ -47,7 +47,7 @@ Keputusan: [ADR-004](../architecture/decisions/ADR-004-drafts-and-single-offer-p
 ## Harga dan klasifikasi website
 
 - `product_variants.price` pada satu offer aktif adalah harga jual website; `products.base_price` bukan sumber independen. Draft tanpa ukuran/offer boleh menyimpan harga sumber sebagai data persiapan, bukan offer fiktif.
-- Harga published wajib valid/positif; “hubungi kami” tidak menggantikannya. Nilai negatif/di luar presisi ditolak. `compare_at_price` opsional dan harus lebih besar dari harga jual.
+- Harga published wajib valid/positif; “hubungi kami” tidak menggantikannya. Nilai negatif/di luar presisi ditolak. `compare_at_price` opsional dan harus lebih besar dari harga jual; bila lebih besar dari harga offer aktif, ditampilkan dicoret di detail produk dan di kartu katalog (CAT-PRICE-01), tidak pernah sebagai harga jual.
 - Harga produk manual tetap dapat diedit; bulk maintenance memakai preview/conflict guard. Perubahan schema tidak memberi izin membetulkan harga massal.
 - Kategori adalah jenis/konsentrasi (misalnya EDP, Extrait, EDT, mist/oil), bukan brand/departemen. Peruntukan memakai Unisex/Pria/Wanita; SKU, notes, comparison price, meta description dan flag terlaris opsional.
 - Ukuran/peruntukan/konsentrasi tidak ditebak. Persetujuan estimasi/default Unisex untuk gelombang launching tertentu hanya berlaku pada daftar historis itu, bukan default impor berikutnya.

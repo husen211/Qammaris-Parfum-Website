@@ -50,7 +50,9 @@ class PublicCatalogCardTrustTest extends TestCase
             ->assertSee('Rp 425.000')
             ->assertSee('Tersedia · dicek')
             ->assertDontSee('Rp 987.654')
-            ->assertDontSee('Rp 999.999');
+            // CAT-PRICE-01: compare_at_price is never the selling price, only the struck-through reference.
+            ->assertSee('<span>Rp 425.000</span>', false)
+            ->assertSee('<s class="catalog-card__compare"><span class="sr-only">Harga sebelumnya </span>Rp 999.999</s>', false);
 
         $this->assertSame(
             1,
