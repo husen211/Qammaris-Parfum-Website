@@ -33,7 +33,7 @@
 
 <div
     id="card-nav-root"
-    data-logo="{{ asset('images/logo-black2.png') }}"
+    data-logo="{{ asset('images/logo-black-192.webp') }}"
     data-logo-alt="Qammaris Perfumes"
     data-items='@json($navItems)'
     data-base-color="#FDFCF9"

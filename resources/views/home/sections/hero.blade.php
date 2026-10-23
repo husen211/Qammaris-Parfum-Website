@@ -2,24 +2,20 @@
 
     <div class="absolute inset-0 z-0 grid grid-cols-1 md:grid-cols-3">
         <div class="relative overflow-hidden hidden md:block">
-            <video class="w-full h-full object-cover brightness-80 hover:brightness-100 transition duration-700" autoplay muted loop playsinline>
-                <source src="{{ asset('images/video-hero1.mp4') }}" type="video/mp4">
-            </video>
+            <video class="w-full h-full object-cover brightness-80 hover:brightness-100 transition duration-700" muted loop playsinline preload="none" aria-hidden="true"
+                poster="{{ asset('images/hero/hero-1-poster.webp') }}" data-hero-video data-src="{{ asset('images/hero/hero-1.mp4') }}"></video>
             <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60"></div>
         </div>
         <div class="relative overflow-hidden">
-            <video class="w-full h-full object-cover brightness-80 hover:brightness-100 transition duration-700 md:hidden" autoplay muted loop playsinline>
-                <source src="{{ asset('images/video-hero-mobile.mp4') }}" type="video/mp4">
-            </video>
-            <video class="w-full h-full object-cover brightness-80 hover:brightness-100 transition duration-700 hidden md:block" autoplay muted loop playsinline>
-                <source src="{{ asset('images/video-hero2.mp4') }}" type="video/mp4">
-            </video>
+            <video class="w-full h-full object-cover brightness-80 hover:brightness-100 transition duration-700 md:hidden" muted loop playsinline preload="none" aria-hidden="true"
+                poster="{{ asset('images/hero/hero-mobile-poster.webp') }}" data-hero-video data-src="{{ asset('images/hero/hero-mobile.mp4') }}"></video>
+            <video class="w-full h-full object-cover brightness-80 hover:brightness-100 transition duration-700 hidden md:block" muted loop playsinline preload="none" aria-hidden="true"
+                poster="{{ asset('images/hero/hero-2-poster.webp') }}" data-hero-video data-src="{{ asset('images/hero/hero-2.mp4') }}"></video>
             <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60"></div>
         </div>
         <div class="relative overflow-hidden hidden md:block">
-            <video class="w-full h-full object-cover brightness-75 hover:brightness-100 transition duration-700" autoplay muted loop playsinline>
-                <source src="{{ asset('images/video-hero3.mp4') }}" type="video/mp4">
-            </video>
+            <video class="w-full h-full object-cover brightness-75 hover:brightness-100 transition duration-700" muted loop playsinline preload="none" aria-hidden="true"
+                poster="{{ asset('images/hero/hero-3-poster.webp') }}" data-hero-video data-src="{{ asset('images/hero/hero-3.mp4') }}"></video>
             <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60"></div>
         </div>
 
@@ -47,7 +43,7 @@
 <section class="bg-white py-20 md:py-28">
     <div class="container mx-auto px-6 text-center space-y-6 md:space-y-8">
         <div class="flex justify-center">
-            <img src="{{ asset('images/logo-black2.png') }}" alt="Qammaris Perfumes" class="w-16 md:w-20 h-auto">
+            <img src="{{ asset('images/logo-black-192.webp') }}" alt="Qammaris Perfumes" width="80" height="80" loading="lazy" decoding="async" class="w-16 md:w-20 h-auto">
         </div>
         <div class="space-y-3">
             <h2 class="font-mayluxa text-2xl md:text-3xl tracking-[0.3em] uppercase text-brand-black">About Qammaris</h2>

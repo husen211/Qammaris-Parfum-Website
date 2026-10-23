@@ -19,7 +19,7 @@
         <div class="about-split-content">
             <div>
                 <div class="about-split-brand" data-split-item="brand">
-                    <img src="{{ asset('images/logo-black2.png') }}" alt="" width="40" height="40" decoding="async">
+                    <img src="{{ asset('images/logo-black-192.webp') }}" alt="" width="40" height="40" decoding="async">
                     <div><p>Qammaris Perfumes</p><span>Experience store parfum di Palu</span></div>
                 </div>
                 <div class="about-split-main" data-split-main>
