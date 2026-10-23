@@ -33,7 +33,12 @@
                 @if ($offer)
                     <p class="catalog-card__size">{{ $offer->volume }} ml</p>
                     @if ($showPrice ?? true)
-                        <p class="catalog-card__price">{{ format_rupiah($offer->price) }}</p>
+                        <p class="catalog-card__price">
+                            <span>{{ format_rupiah($offer->price) }}</span>
+                            @if ($product->compare_at_price && $product->compare_at_price > $offer->price)
+                                <s class="catalog-card__compare"><span class="sr-only">Harga sebelumnya </span>{{ format_rupiah($product->compare_at_price) }}</s>
+                            @endif
+                        </p>
                     @endif
                 @else
                     <p class="catalog-card__size">Data sedang dilengkapi</p>
