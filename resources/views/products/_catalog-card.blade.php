@@ -15,7 +15,8 @@
                 decoding="async" class="catalog-media__image"
                 @if ($hasImage) data-catalog-image @endif
                 data-fallback-src="{{ asset('images/product-placeholder.svg') }}">
-            <span class="catalog-media__fallback" data-image-fallback @if ($hasImage) hidden @endif>Foto sedang dilengkapi</span>
+            {{-- SEO-01: the placeholder text exists in the HTML only when the card has no photo; a failed load adds it. --}}
+            <span class="catalog-media__fallback" data-image-fallback @if ($hasImage) hidden @endif>{{ $hasImage ? '' : 'Foto sedang dilengkapi' }}</span>
         </div>
         <div class="catalog-card__details">
             <div class="catalog-card__brand-row">

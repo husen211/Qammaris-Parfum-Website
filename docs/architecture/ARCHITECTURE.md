@@ -300,6 +300,8 @@ Static delivery (PERF-01, 2026-10-23): Hostinger CDN is active for qammarisparfu
 
 Database connections (OPS-DB-BURST-01, 2026-10-25): Hostinger shared MySQL refuses new connections above ~20/s with `[2002] Operation not permitted`. The `mysql` driver uses `App\Support\RetryingMySqlConnector`, which retries only that refusal with short jittered backoff; one request still opens at most one connection.
 
+Search signals (SEO-01, 2026-10-25): `RedirectWwwToCanonicalHost` (global, first) moves `www.<APP_URL host>` permanently to the APP_URL host (301 for GET/HEAD, 308 otherwise). Catalog pages are `index,follow` and self-canonical including `?page=N`; any filter, sort or search makes them `noindex,follow` with a canonical of their normalized query. Product pages emit Product (Offer with `itemCondition` and `availability` only for available/sold-out) plus BreadcrumbList. `App\Support\StoreProfile` builds the one Store node (NAP from `config('store.profile')`) on `/store/location`; `/store/about` references the same `@id`. The sitemap omits the noindex quiz and gives lastmod only from real change dates.
+
 ## Store About — ABOUT-01
 
 `GET /store/about` → `StoreController::about` → existing cached`StoreInfo` read, curated`config/store_about.php`/`store_about_media.php` → Blade About, semantic rating/review partials, page-onlyVite`about.css`/`about.js`. No schema/write/API/CMS abstraction. Story/review changes are reviewed code content; six complete attributed Google Maps reviews are curated from Owner-provided screenshots and escaped through the existing review partial; source/date limits are documented. Twenty-seven WebP480/768/1200-budget derivatives preserve original composition and do not upscale; native master width is the srcset descriptor.

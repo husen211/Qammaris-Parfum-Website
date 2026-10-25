@@ -7,6 +7,7 @@ use App\Http\Middleware\BlogAutomationAccess;
 use App\Http\Middleware\BlogAutomationEnabled;
 use App\Http\Middleware\FragranceBrowser;
 use App\Http\Middleware\NoIndexOutsideProduction;
+use App\Http\Middleware\RedirectWwwToCanonicalHost;
 use App\Support\AdminHome;
 use App\Support\BlogAutomationErrors;
 use App\Support\OrderApi\OrderApiResponse;
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'blog.automation.enabled' => BlogAutomationEnabled::class,
             'blog.automation.access' => BlogAutomationAccess::class,
         ]);
+        $middleware->prepend(RedirectWwwToCanonicalHost::class);
         $middleware->append(NoIndexOutsideProduction::class);
         // Keep the installed admin app inside its scope: admin pages send guests to /admin/login (ORD-02b).
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*') ? route('admin.login') : route('login'));

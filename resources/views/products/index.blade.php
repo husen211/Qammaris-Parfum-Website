@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Katalog Parfum Original - Qammaris Perfumes')
+{{-- SEO-01: plain pages (also ?page=N) are indexable and self-canonical; filtered, sorted or searched views are noindex,follow. --}}
+@section('robots', $catalogState->query(includePage: false) === [] ? 'index,follow' : 'noindex,follow')
+@section('canonical_url', route('products.index', $catalogState->query()))
 
 @php
     $selectedBrands = $catalogState->brandIds;

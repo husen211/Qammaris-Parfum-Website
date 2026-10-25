@@ -17,4 +17,24 @@ return [
     // PWA-01 kill switch for the installable public website. Off by default: nothing is registered until enabled,
     // and while off, installed copies replace their worker with one that removes itself and the public caches.
     'pwa_enabled' => (bool) env('PUBLIC_PWA_ENABLED', false),
+
+    // SEO-01: the one name/address/phone the website and its structured data use (Owner confirmed 2026-10-25).
+    'profile' => [
+        'name' => 'Qammaris Perfumes',
+        'street' => 'Jl. Sis Aljufri, Siranindi, Kec. Palu Barat',
+        'locality' => 'Kota Palu',
+        'region' => 'Sulawesi Tengah',
+        'postal_code' => '94111',
+        'country' => 'ID',
+        'telephone' => '+6285144924931',
+        'maps_url' => 'https://maps.app.goo.gl/npKqotHHTo2AAyag9',
+        'opening_days' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+        'opens' => '09:00',
+        'closes' => '21:00',
+        'same_as' => [
+            'https://www.instagram.com/qammaris',
+            'https://www.tiktok.com/@qammaris.parfum',
+            'https://www.linkedin.com/company/qammaris-perfumes',
+        ],
+    ],
 ];
