@@ -22,7 +22,12 @@
                 @endif
             </div>
 
-            <div class="grid gap-x-6 gap-y-8 md:gap-x-8 {{ $footerCategories->isNotEmpty() ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2' }}">
+            @php
+                // SEO-03: permanent collection and brand pages; the old category filter links were noindex views.
+                $footerGenders = $footerCollections->where('group', 'gender');
+                $footerBrands = $footerCollections->where('group', 'brand');
+            @endphp
+            <div class="grid grid-cols-2 gap-x-6 gap-y-8 md:gap-x-8 {{ $footerBrands->isNotEmpty() ? 'md:grid-cols-4' : 'md:grid-cols-3' }}">
                 <nav aria-labelledby="footer-explore">
                     <h2 id="footer-explore" class="footer-heading">Jelajahi</h2>
                     <ul class="footer-links">
@@ -32,18 +37,28 @@
                         <li><a href="{{ route('store.location') }}" class="footer-link">Lokasi Toko</a></li>
                     </ul>
                 </nav>
-                @if($footerCategories->isNotEmpty())
+                @if($footerGenders->isNotEmpty())
                     <nav aria-labelledby="footer-collection">
                         <h2 id="footer-collection" class="footer-heading">Koleksi</h2>
                         <ul class="footer-links">
-                            @foreach($footerCategories as $category)
-                                <li><a href="{{ route('products.index', ['category' => $category->id]) }}" class="footer-link">{{ $category->name }}</a></li>
+                            @foreach($footerGenders as $link)
+                                <li><a href="{{ $link['url'] }}" class="footer-link">{{ $link['name'] }}</a></li>
+                            @endforeach
+                        </ul>
+                    </nav>
+                @endif
+                @if($footerBrands->isNotEmpty())
+                    <nav aria-labelledby="footer-brands">
+                        <h2 id="footer-brands" class="footer-heading">Brand</h2>
+                        <ul class="footer-links">
+                            @foreach($footerBrands as $link)
+                                <li><a href="{{ $link['url'] }}" class="footer-link">{{ $link['name'] }}</a></li>
                             @endforeach
                         </ul>
                     </nav>
                 @endif
                 @if(!empty($storeInfo->whatsapp_number) || !empty($storeInfo->tokopedia_url) || !empty($storeInfo->shopee_url))
-                    <nav aria-labelledby="footer-shopping" @class(['col-span-2 md:col-span-1' => $footerCategories->isNotEmpty()])>
+                    <nav aria-labelledby="footer-shopping">
                         <h2 id="footer-shopping" class="footer-heading">Bantuan &amp; belanja</h2>
                         <ul class="footer-links flex flex-wrap gap-x-6 md:block">
                             @if(!empty($storeInfo->whatsapp_number))

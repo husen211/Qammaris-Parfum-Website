@@ -1,15 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Katalog Parfum Timur Tengah & Lokal - Qammaris Perfumes Palu')
-@section('meta_description', 'Katalog parfum Timur Tengah dan lokal Qammaris di Palu: harga, ukuran, ketersediaan, dan catatan aroma. Coba tester di toko atau pesan online, kirim ke seluruh Indonesia.')
-{{-- SEO-01: plain pages (also ?page=N) are indexable and self-canonical; filtered, sorted or searched views are noindex,follow. --}}
-@section('robots', $catalogState->query(includePage: false) === [] ? 'index,follow' : 'noindex,follow')
-@section('canonical_url', route('products.index', $catalogState->query()))
-
 @php
+    // SEO-03: the same catalog serves /products and the permanent collection pages (/koleksi/…, /brand/…).
+    $collection ??= null;
+    $catalogLink = fn (array $query = []) => $collection ? $collection->url($query) : route('products.index', $query);
     $selectedBrands = $catalogState->brandIds;
     $activeFilterCount = $catalogState->activeFilterCount();
-    $detailContext = $catalogState->query();
+    $detailContext = $catalogState->query() + ($collection ? ['koleksi' => $collection->key] : []);
     $sortLabels = [
         \App\Support\ProductCatalogState::DEFAULT_SORT => 'Terlaris dahulu',
         'latest' => 'Terbaru',
@@ -17,16 +14,66 @@
         'price_high' => 'Harga tertinggi',
         'popular' => 'Populer',
     ];
+    $isPlainView = $catalogState->query(includePage: false) === [];
+    $highlights = $collection && $catalogState->query() === [] ? \App\Support\CatalogCollection::highlights($products->items()) : '';
 @endphp
+
+@section('title', $collection?->title ?? 'Katalog Parfum Timur Tengah & Lokal - Qammaris Perfumes Palu')
+@section('meta_description', $collection?->description ?? 'Katalog parfum Timur Tengah dan lokal Qammaris di Palu: harga, ukuran, ketersediaan, dan catatan aroma. Coba tester di toko atau pesan online, kirim ke seluruh Indonesia.')
+{{-- SEO-01: plain pages (also ?page=N) are indexable and self-canonical; filtered, sorted or searched views are noindex,follow. --}}
+@section('robots', $isPlainView && $products->total() > 0 ? 'index,follow' : 'noindex,follow')
+@section('canonical_url', $catalogLink($catalogState->query()))
+
+@if ($collection)
+    @push('jsonld')
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Beranda', 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Katalog', 'item' => route('products.index')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $collection->name, 'item' => $collection->url()],
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) !!}
+    </script>
+    @endpush
+@endif
 
 @section('content')
     <header class="catalog-header">
         <div class="catalog-container">
-            <p class="catalog-header__eyebrow">Parfum pilihan Qammaris</p>
-            <h1 class="catalog-header__title font-mayluxa">Koleksi Parfum</h1>
-            @if ($catalogState->query() === [])
-                <p class="catalog-header__intro">Parfum Timur Tengah dan lokal yang bisa Anda coba langsung di <a href="{{ route('store.location') }}">toko kami di Palu</a>. Pesan online, kami kirim ke seluruh Indonesia.</p>
+            @if ($collection)
+                <nav aria-label="Breadcrumb" class="catalog-breadcrumb">
+                    <a href="{{ route('home') }}">Beranda</a>
+                    <span aria-hidden="true">/</span>
+                    <a href="{{ route('products.index') }}">Katalog</a>
+                    <span aria-hidden="true">/</span>
+                    <span aria-current="page">{{ $collection->name }}</span>
+                </nav>
             @endif
+            <p class="catalog-header__eyebrow">{{ $collection?->eyebrow ?? 'Parfum pilihan Qammaris' }}</p>
+            <h1 class="catalog-header__title font-mayluxa">{{ $collection?->name ?? 'Koleksi Parfum' }}</h1>
+            @if ($catalogState->query() === [])
+                @if ($collection)
+                    <div class="catalog-header__intro">
+                        @foreach ($collection->introHtml() as $paragraph)
+                            <p>{!! $paragraph !!}</p>
+                        @endforeach
+                        @if ($highlights !== '')
+                            <p>Terlaris di sini: {{ $highlights }}.</p>
+                        @endif
+                    </div>
+                @else
+                    <p class="catalog-header__intro">Parfum Timur Tengah dan lokal yang bisa Anda coba langsung di <a href="{{ route('store.location') }}">toko kami di Palu</a>. Pesan online, kami kirim ke seluruh Indonesia.</p>
+                @endif
+            @endif
+            <nav aria-label="Koleksi parfum" class="catalog-collections">
+                <a href="{{ route('products.index') }}" @if (! $collection) aria-current="page" @endif>Semua parfum</a>
+                @foreach (config('catalog_collections.genders') as $key => $gender)
+                    <a href="{{ route('products.collection', $key) }}" @if ($collection?->key === $key) aria-current="page" @endif>{{ $gender['name'] }}</a>
+                @endforeach
+            </nav>
         </div>
     </header>
 
@@ -43,7 +90,7 @@
                 </span>
             </button>
 
-            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="relative min-h-11">
+            <form method="GET" action="{{ $catalogLink() }}" data-catalog-form autocomplete="off" class="relative min-h-11">
                 @include('products._catalog-state-inputs', ['catalogState' => $catalogState, 'exclude' => ['sort']])
                 <label for="mobile-catalog-sort" class="sr-only">Urutkan katalog</label>
                 <select id="mobile-catalog-sort" name="sort" data-catalog-sort
@@ -65,11 +112,11 @@
     </div>
 
     <section data-catalog-discovery
-        data-catalog-url="{{ route('products.index', $catalogState->query()) }}"
+        data-catalog-url="{{ $catalogLink($catalogState->query()) }}"
         data-search="{{ $catalogState->search }}"
-        data-brand-ids="{{ implode(',', $catalogState->brandIds) }}"
+        data-brand-ids="{{ implode(',', $catalogState->query()['brand'] ?? []) }}"
         data-category="{{ $catalogState->categoryId }}"
-        data-gender="{{ $catalogState->gender }}"
+        data-gender="{{ $catalogState->query()['gender'] ?? '' }}"
         data-price-min="{{ $catalogState->priceMin }}"
         data-price-max="{{ $catalogState->priceMax }}"
         data-availability="{{ $catalogState->availability }}"
@@ -77,7 +124,7 @@
         class="catalog-surface pb-20 pt-6 min-h-screen" aria-label="Hasil katalog">
         <div class="catalog-container">
             <div class="lg:flex lg:items-center lg:gap-8 lg:mb-7">
-                <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="catalog-search relative mb-5 lg:mb-0 lg:flex-1 lg:max-w-xl">
+                <form method="GET" action="{{ $catalogLink() }}" data-catalog-form autocomplete="off" class="catalog-search relative mb-5 lg:mb-0 lg:flex-1 lg:max-w-xl">
                     @include('products._catalog-state-inputs', ['catalogState' => $catalogState, 'exclude' => ['search']])
                     <label for="catalog-search" class="sr-only">Cari produk atau brand</label>
                     <input id="catalog-search" type="search" name="search" value="{{ $catalogState->search }}"
@@ -94,7 +141,7 @@
                         <span class="font-bold text-brand-black">{{ $products->total() }}</span> produk ditemukan
                     </p>
 
-                    <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="flex items-center gap-3">
+                    <form method="GET" action="{{ $catalogLink() }}" data-catalog-form autocomplete="off" class="flex items-center gap-3">
                         @include('products._catalog-state-inputs', ['catalogState' => $catalogState, 'exclude' => ['sort']])
                         <label for="desktop-catalog-sort" class="text-xs uppercase tracking-widest text-gray-400">Urutkan:</label>
                         <select id="desktop-catalog-sort" name="sort" data-catalog-sort
@@ -115,7 +162,7 @@
                         <span class="mx-1 text-gray-300" aria-hidden="true">·</span>
                         {{ $products->total() }} hasil
                     </p>
-                    <a href="{{ route('products.index') }}"
+                    <a href="{{ $catalogLink() }}"
                         class="min-h-11 inline-flex items-center text-xs font-semibold uppercase tracking-wider underline underline-offset-4 hover:text-brand-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                         Hapus semua
                     </a>
@@ -128,7 +175,7 @@
 
             <div class="catalog-layout">
                 <aside class="catalog-sidebar hidden lg:block shrink-0 sticky top-32 h-fit" aria-label="Filter katalog">
-                    <form method="GET" action="{{ route('products.index') }}" id="desktopFilterForm" data-catalog-form autocomplete="off" class="space-y-5">
+                    <form method="GET" action="{{ $catalogLink() }}" id="desktopFilterForm" data-catalog-form autocomplete="off" class="space-y-5">
                         @if ($catalogState->sort !== \App\Support\ProductCatalogState::DEFAULT_SORT)
                             <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
                         @endif
@@ -137,7 +184,7 @@
                         @include('products._catalog-filters', ['filterSurface' => 'desktop'])
 
                         @if ($activeFilterCount > 0)
-                            <a href="{{ route('products.index') }}" class="min-h-11 w-full inline-flex items-center justify-center border border-gray-300 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Hapus semua filter</a>
+                            <a href="{{ $catalogLink() }}" class="min-h-11 w-full inline-flex items-center justify-center border border-gray-300 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Hapus semua filter</a>
                         @endif
                     </form>
                 </aside>
@@ -186,7 +233,7 @@
                             </div>
                             <h2 class="font-mayluxa text-2xl mb-2">Produk tidak ditemukan</h2>
                             <p class="text-gray-500 text-sm font-light mb-6 max-w-md">Coba ubah kata pencarian atau hapus beberapa filter untuk melihat hasil lain.</p>
-                            <a href="{{ route('products.index') }}" class="min-h-11 inline-flex items-center border border-brand-black px-5 text-xs font-semibold uppercase tracking-widest hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black transition-colors">Hapus semua filter</a>
+                            <a href="{{ $catalogLink() }}" class="min-h-11 inline-flex items-center border border-brand-black px-5 text-xs font-semibold uppercase tracking-widest hover:bg-brand-black hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black transition-colors">Hapus semua filter</a>
                         </div>
                     @endif
                 </div>
@@ -208,7 +255,7 @@
                 </button>
             </div>
 
-            <form method="GET" action="{{ route('products.index') }}" data-catalog-form autocomplete="off" class="catalog-filter__form">
+            <form method="GET" action="{{ $catalogLink() }}" data-catalog-form autocomplete="off" class="catalog-filter__form">
                 <div class="catalog-filter__fields space-y-5">
                 @if ($catalogState->sort !== \App\Support\ProductCatalogState::DEFAULT_SORT)
                     <input type="hidden" name="sort" value="{{ $catalogState->sort }}">
@@ -219,7 +266,7 @@
 
                 </div>
                 <div class="catalog-filter__footer">
-                    <a href="{{ route('products.index') }}" class="min-h-11 inline-flex items-center justify-center border border-gray-300 px-3 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">Hapus semua</a>
+                    <a href="{{ $catalogLink() }}" class="min-h-11 inline-flex items-center justify-center border border-gray-300 px-3 text-xs font-semibold uppercase tracking-wider hover:border-brand-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-black">Hapus semua</a>
                     <button type="submit" class="min-h-11 bg-brand-black text-white px-3 text-xs font-semibold uppercase tracking-wider hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Tampilkan hasil</button>
                 </div>
             </form>

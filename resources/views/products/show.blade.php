@@ -2,7 +2,6 @@
 
 @php
     $brandName = $product->brand?->name ?? 'Brand belum diisi';
-    $catalogUrl = route('products.index', $catalogState->query());
     $detailContext = $catalogState->query();
     $offer = $product->activeOffer;
     $displayPrice = $offer?->price;
@@ -176,7 +175,8 @@
 
                 <section class="order-2 min-w-0 lg:sticky lg:top-28" aria-labelledby="product-title">
                     @if ($product->brand_id)
-                        <a href="{{ route('products.index', ['brand' => [$product->brand_id]]) }}"
+                        {{-- SEO-03: a configured brand links to its permanent brand page instead of the noindex filter. --}}
+                        <a href="{{ $brandPage?->url() ?? route('products.index', ['brand' => [$product->brand_id]]) }}"
                             class="inline-flex min-h-11 items-center text-[11px] font-bold uppercase tracking-[0.2em] text-brand-emerald hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                             {{ $brandName }}
                         </a>

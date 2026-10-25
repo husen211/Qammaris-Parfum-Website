@@ -306,6 +306,13 @@ html { scroll-behavior: smooth; }
         .brand-carousel__item { flex-basis: 16.666%; }
     }
 
+    .brand-carousel__link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+    }
+
     .brand-carousel__logo {
         max-width: 100%;
         height: auto;

@@ -2,6 +2,8 @@
     $autosubmit = $filterSurface === 'desktop';
 @endphp
 
+{{-- SEO-03: a filter fixed by the page address (brand page, gender collection) is not offered again. --}}
+@unless (in_array('brand', $catalogState->locked, true))
 <div class="catalog-filter-field">
     <span id="{{ $filterSurface }}-brand-label" class="catalog-filter-label">Brand</span>
     <details class="catalog-filter-dropdown" data-catalog-dropdown name="{{ $filterSurface }}-filters">
@@ -29,6 +31,7 @@
         </div>
     </details>
 </div>
+@endunless
 
 <div class="catalog-filter-field">
     <label for="{{ $filterSurface }}-catalog-category" class="catalog-filter-label">Kategori</label>
@@ -40,6 +43,7 @@
     </select>
 </div>
 
+@unless (in_array('gender', $catalogState->locked, true))
 <div class="catalog-filter-field">
     <label for="{{ $filterSurface }}-catalog-gender" class="catalog-filter-label">Peruntukan</label>
     <select id="{{ $filterSurface }}-catalog-gender" name="gender" @if($autosubmit) data-catalog-autosubmit @endif class="catalog-filter-control">
@@ -49,6 +53,7 @@
         @endforeach
     </select>
 </div>
+@endunless
 
 <div class="catalog-filter-field">
     <label for="{{ $filterSurface }}-catalog-availability" class="catalog-filter-label">Ketersediaan</label>

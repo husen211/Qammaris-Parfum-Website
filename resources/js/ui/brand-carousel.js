@@ -25,6 +25,8 @@ function start(root) {
         const clone = item.cloneNode(true);
         clone.setAttribute('aria-hidden', 'true');
         clone.querySelectorAll('img').forEach((image) => { image.alt = ''; });
+        // Clones are decoration: keyboard focus only reaches the real brand links.
+        clone.querySelectorAll('a').forEach((link) => { link.tabIndex = -1; });
         track.append(clone);
     });
     root.classList.add('is-running');
