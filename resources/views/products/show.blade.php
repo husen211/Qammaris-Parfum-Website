@@ -58,6 +58,7 @@
         chr(64).'context' => 'https://schema.org',
         chr(64).'type' => 'Product',
         'name' => $product->name,
+        'url' => route('products.show', $product->slug),
         'description' => Str::limit($descriptionText, 200),
         'image' => $mainImageUrl,
         'brand' => [
@@ -72,8 +73,27 @@
             'priceCurrency' => 'IDR',
             'price' => $displayPrice,
             'url' => route('products.show', $product->slug),
+            'itemCondition' => 'https://schema.org/NewCondition',
         ];
+        // SEO-01: stock follows the visible status; "ask us" states stay without a claim.
+        $schemaAvailability = match ($effectiveAvailability) {
+            \App\Models\Product::AVAILABILITY_AVAILABLE => 'https://schema.org/InStock',
+            \App\Models\Product::AVAILABILITY_SOLD_OUT => 'https://schema.org/OutOfStock',
+            default => null,
+        };
+        if ($schemaAvailability) {
+            $productJsonLd['offers']['availability'] = $schemaAvailability;
+        }
     }
+    $breadcrumbJsonLd = [
+        chr(64).'context' => 'https://schema.org',
+        chr(64).'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [chr(64).'type' => 'ListItem', 'position' => 1, 'name' => 'Beranda', 'item' => route('home')],
+            [chr(64).'type' => 'ListItem', 'position' => 2, 'name' => 'Katalog', 'item' => route('products.index')],
+            [chr(64).'type' => 'ListItem', 'position' => 3, 'name' => $product->name, 'item' => route('products.show', $product->slug)],
+        ],
+    ];
 
     $productJsonLdFlags = JSON_UNESCAPED_SLASHES
         | JSON_UNESCAPED_UNICODE
@@ -315,5 +335,8 @@
 @push('jsonld')
 <script type="application/ld+json">
 {!! json_encode($productJsonLd, $productJsonLdFlags) !!}
+</script>
+<script type="application/ld+json">
+{!! json_encode($breadcrumbJsonLd, $productJsonLdFlags) !!}
 </script>
 @endpush

@@ -71,7 +71,8 @@ class StoreAboutTest extends TestCase
         cache()->forget('store_info');
         $response = $this->get('/store/about')->assertOk();
         $response->assertDontSee('</script><script>alert("address")</script>', false)
-            ->assertSee('&lt;/script&gt;', false)
-            ->assertSee('\\u003C/script\\u003E', false);
+            ->assertSee('&lt;/script&gt;', false);
+        // SEO-01: structured data carries the one confirmed NAP from config, never the stored free text.
+        $response->assertViewHas('aboutSchema', fn ($schema) => $schema['@graph'][1]['address']['streetAddress'] === config('store.profile.street'));
     }
 }

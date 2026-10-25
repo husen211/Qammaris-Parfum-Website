@@ -9,7 +9,9 @@ document.querySelectorAll('[data-catalog-image]').forEach((image) => {
     const fallback = () => {
         frame.querySelector('canvas')?.remove();
         frame.dataset.imageFraming = 'fallback';
-        frame.querySelector('[data-image-fallback]').hidden = false;
+        const note = frame.querySelector('[data-image-fallback]');
+        note.textContent ||= 'Foto sedang dilengkapi';
+        note.hidden = false;
         image.alt = `Foto ${originalAlt} sedang dilengkapi`;
         if (image.getAttribute('src') !== image.dataset.fallbackSrc) image.src = image.dataset.fallbackSrc;
     };

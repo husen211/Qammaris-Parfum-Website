@@ -16,34 +16,19 @@ class SitemapController extends Controller
         if (! is_array($cached) || ($cached['expires_at'] ?? 0) <= now()->timestamp) {
             $next = BlogPost::whereNull('archived_at')->where('is_published', true)->where('published_at', '>', now())->min('published_at');
             $expiresAt = min(now()->timestamp + 3600, $next ? Carbon::parse($next)->timestamp : PHP_INT_MAX);
+            $products = Product::published()->get(['slug', 'updated_at']);
+            $posts = BlogPost::published()->where('seo_indexable', true)
+                ->get(['slug', 'canonical_url', 'content_updated_at', 'published_at']);
+            // SEO-01: lastmod only where a real change date exists; the noindex quiz stays out of the sitemap.
+            $catalogUpdated = $products->max('updated_at')?->toAtomString();
             $urls = [
-                [
-                    'loc' => url('/'),
-                    'lastmod' => now()->toAtomString(),
-                ],
-                [
-                    'loc' => route('products.index'),
-                    'lastmod' => now()->toAtomString(),
-                ],
-                [
-                    'loc' => route('blog.index'),
-                    'lastmod' => now()->toAtomString(),
-                ],
-                [
-                    'loc' => route('store.about'),
-                    'lastmod' => now()->toAtomString(),
-                ],
-                [
-                    'loc' => route('store.location'),
-                    'lastmod' => now()->toAtomString(),
-                ],
-                [
-                    'loc' => route('quiz.index'),
-                    'lastmod' => now()->toAtomString(),
-                ],
+                ['loc' => url('/'), 'lastmod' => $catalogUpdated],
+                ['loc' => route('products.index'), 'lastmod' => $catalogUpdated],
+                ['loc' => route('blog.index'), 'lastmod' => $posts->map(fn ($post) => $post->content_updated_at ?? $post->published_at)->max()?->toAtomString()],
+                ['loc' => route('store.about')],
+                ['loc' => route('store.location')],
             ];
 
-            $products = Product::published()->get(['slug', 'updated_at']);
             foreach ($products as $product) {
                 $urls[] = [
                     'loc' => route('products.show', $product->slug),
@@ -51,8 +36,6 @@ class SitemapController extends Controller
                 ];
             }
 
-            $posts = BlogPost::published()->where('seo_indexable', true)
-                ->get(['slug', 'canonical_url', 'content_updated_at', 'published_at']);
             foreach ($posts as $post) {
                 if (! JournalMetadata::selfCanonical($post)) {
                     continue;

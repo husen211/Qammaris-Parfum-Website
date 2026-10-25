@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\StoreInfo;
+use App\Support\StoreProfile;
 
 class StoreController extends Controller
 {
@@ -11,7 +12,9 @@ class StoreController extends Controller
         $storeInfo = cache()->remember('store_info', 3600, function () {
             return StoreInfo::first() ?? new StoreInfo;
         });
-        $fallbackAddress = "Qammaris Perfumes\nJl Sis Aljufri, Palu Barat\nKota Palu, Sulawesi Tengah";
+        $profile = config('store.profile');
+        $fallbackAddress = $profile['name']."\n".$profile['street']."\n".$profile['locality'].', '.$profile['region'].' '.$profile['postal_code'];
+        $storeSchema = ['@context' => 'https://schema.org'] + StoreProfile::schema();
         $addressTextRaw = trim((string) $storeInfo->address);
         $addressText = ($addressTextRaw === '' || str_contains(strtolower($addressTextRaw), 'contoh'))
             ? $fallbackAddress
@@ -49,7 +52,8 @@ class StoreController extends Controller
             'tiktokUrl',
             'tiktokShopUrl',
             'mapsEmbedSrc',
-            'displayAddress'
+            'displayAddress',
+            'storeSchema'
         ));
     }
 
@@ -63,9 +67,9 @@ class StoreController extends Controller
         $aboutMedia = config('store_about_media');
         $aboutAddress = trim((string) $storeInfo->address);
         if ($aboutAddress === '' || str_contains(strtolower($aboutAddress), 'contoh')) {
-            $aboutAddress = 'Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111';
+            $aboutAddress = StoreProfile::fullAddress();
         }
-        $storeId = route('store.location').'#store';
+        $storeId = StoreProfile::id();
         $aboutSchema = [
             '@context' => 'https://schema.org',
             '@graph' => [
@@ -78,28 +82,7 @@ class StoreController extends Controller
                     'mainEntity' => ['@id' => $storeId],
                     'breadcrumb' => ['@id' => route('store.about').'#breadcrumb'],
                 ],
-                [
-                    '@type' => 'Store',
-                    '@id' => $storeId,
-                    'name' => 'Qammaris Perfumes',
-                    'url' => route('store.location'),
-                    'image' => asset('images/store/facade-1200.webp'),
-                    'telephone' => '+'.$storeInfo->whatsapp_number,
-                    'address' => [
-                        '@type' => 'PostalAddress',
-                        'streetAddress' => $aboutAddress,
-                        'addressLocality' => 'Palu',
-                        'addressRegion' => 'Sulawesi Tengah',
-                        'addressCountry' => 'ID',
-                    ],
-                    'openingHoursSpecification' => [[
-                        '@type' => 'OpeningHoursSpecification',
-                        'dayOfWeek' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-                        'opens' => '09:00',
-                        'closes' => '21:00',
-                    ]],
-                    'sameAs' => ['https://www.instagram.com/qammaris', 'https://www.linkedin.com/company/qammaris-perfumes'],
-                ],
+                StoreProfile::schema(),
                 [
                     '@type' => 'BreadcrumbList',
                     '@id' => route('store.about').'#breadcrumb',
