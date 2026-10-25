@@ -41,6 +41,55 @@
     text-underline-offset: 3px;
 }
 
+.catalog-header__intro p + p {
+    margin-top: 6px;
+}
+
+/* SEO-03: breadcrumb and collection links on catalog pages. */
+.catalog-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #6b665e;
+}
+
+.catalog-breadcrumb a:hover {
+    color: var(--color-brand-black);
+}
+
+.catalog-breadcrumb [aria-current] {
+    color: var(--color-brand-black);
+    font-weight: 600;
+}
+
+.catalog-collections {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.catalog-collections a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    color: #5f5a52;
+    border-bottom: 1px solid transparent;
+}
+
+.catalog-collections a[aria-current] {
+    color: var(--color-brand-black);
+    font-weight: 600;
+    border-bottom-color: var(--color-brand-gold);
+}
+
 .catalog-toolbar {
     top: 80px;
     padding-block: 10px;

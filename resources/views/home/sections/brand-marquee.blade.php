@@ -10,12 +10,14 @@
             <ul class="brand-carousel__track" data-brand-track aria-label="Brand yang dijual di Qammaris">
                 @foreach ($distributorBrands as $brand)
                     <li class="brand-carousel__item">
+                        @if ($brand->page_url)<a href="{{ $brand->page_url }}" class="brand-carousel__link" aria-label="Parfum {{ $brand->name }}">@endif
                         @if ($brand->logo_mark)
                             <img src="{{ $brand->logo_mark['src'] }}" alt="{{ $brand->name }}" width="{{ $brand->logo_mark['width'] }}"
                                 height="{{ $brand->logo_mark['height'] }}" loading="lazy" decoding="async" class="brand-carousel__logo">
                         @else
                             <span class="brand-carousel__name font-mayluxa">{{ $brand->name }}</span>
                         @endif
+                        @if ($brand->page_url)</a>@endif
                     </li>
                 @endforeach
             </ul>

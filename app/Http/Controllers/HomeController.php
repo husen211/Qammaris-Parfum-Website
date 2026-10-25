@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Product;
+use App\Support\CatalogCollection;
 use Illuminate\Support\Str;
 
 class HomeController extends Controller
@@ -57,6 +58,8 @@ class HomeController extends Controller
                     [$width, $height] = getimagesize(public_path($file));
                     $brand->setAttribute('logo_mark', ['src' => asset($file), 'width' => intdiv($width, 2), 'height' => intdiv($height, 2)]);
                 }
+                // SEO-03: brands with a permanent page link to it from the row.
+                $brand->setAttribute('page_url', CatalogCollection::brand($brand)?->url());
 
                 return $brand;
             })

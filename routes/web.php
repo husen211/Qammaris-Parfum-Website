@@ -43,6 +43,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Products
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+// SEO-03: permanent collection and brand pages (config/catalog_collections.php).
+Route::get('/koleksi/{collection}', [ProductController::class, 'collection'])->name('products.collection');
+Route::get('/brand/{brand:slug}', [ProductController::class, 'brand'])->name('products.brand');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show')
     // SEO-04: old catalog URLs Google still requests move permanently to the same product; other slugs stay 404.
     ->missing(function (Request $request) {

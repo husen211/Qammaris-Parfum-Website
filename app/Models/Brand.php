@@ -23,6 +23,12 @@ class Brand extends Model
         'is_active' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // SEO-03: the footer's cached list of brand pages follows brand activation and renames.
+        static::saved(fn () => cache()->forget('catalog_collection_brands'));
+    }
+
     /**
      * Get the options for generating the slug.
      */

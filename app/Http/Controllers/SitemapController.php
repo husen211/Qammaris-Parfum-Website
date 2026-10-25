@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use App\Models\Product;
+use App\Support\CatalogCollection;
 use App\Support\JournalMetadata;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -16,7 +17,7 @@ class SitemapController extends Controller
         if (! is_array($cached) || ($cached['expires_at'] ?? 0) <= now()->timestamp) {
             $next = BlogPost::whereNull('archived_at')->where('is_published', true)->where('published_at', '>', now())->min('published_at');
             $expiresAt = min(now()->timestamp + 3600, $next ? Carbon::parse($next)->timestamp : PHP_INT_MAX);
-            $products = Product::published()->get(['slug', 'updated_at']);
+            $products = Product::published()->with('brand:id,slug')->get(['slug', 'updated_at', 'gender', 'brand_id']);
             $posts = BlogPost::published()->where('seo_indexable', true)
                 ->get(['slug', 'canonical_url', 'content_updated_at', 'published_at']);
             // SEO-01: lastmod only where a real change date exists; the noindex quiz stays out of the sitemap.
@@ -28,6 +29,14 @@ class SitemapController extends Controller
                 ['loc' => route('store.about')],
                 ['loc' => route('store.location')],
             ];
+
+            // SEO-03: permanent collection and brand pages, dated by their newest product change.
+            foreach (CatalogCollection::links() as $link) {
+                $members = $link['group'] === 'gender'
+                    ? $products->where('gender', config("catalog_collections.genders.{$link['slug']}.gender"))
+                    : $products->filter(fn (Product $product) => $product->brand?->slug === $link['slug']);
+                $urls[] = ['loc' => $link['url'], 'lastmod' => $members->max('updated_at')?->toAtomString()];
+            }
 
             foreach ($products as $product) {
                 $urls[] = [

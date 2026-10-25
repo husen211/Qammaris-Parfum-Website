@@ -40,7 +40,26 @@ final class ProductCatalogState
         public readonly ?string $availability,
         public readonly string $sort,
         public readonly int $page,
+        /** SEO-03: filters fixed by a collection address ("gender", "brand"); they stay out of query() and the count. */
+        public readonly array $locked = [],
     ) {}
+
+    /** The same state with gender and/or brand fixed by a collection page. */
+    public function lockedTo(array $values): self
+    {
+        return new self(
+            search: $this->search,
+            brandIds: $values['brand'] ?? $this->brandIds,
+            categoryId: $this->categoryId,
+            gender: $values['gender'] ?? $this->gender,
+            priceMin: $this->priceMin,
+            priceMax: $this->priceMax,
+            availability: $this->availability,
+            sort: $this->sort,
+            page: $this->page,
+            locked: array_keys($values),
+        );
+    }
 
     public static function fromRequest(Request $request, Collection $brands, Collection $categories): self
     {
@@ -98,7 +117,7 @@ final class ProductCatalogState
             $query['search'] = $this->search;
         }
 
-        if ($this->brandIds !== []) {
+        if ($this->brandIds !== [] && ! in_array('brand', $this->locked, true)) {
             $query['brand'] = $this->brandIds;
         }
 
@@ -106,7 +125,7 @@ final class ProductCatalogState
             $query['category'] = $this->categoryId;
         }
 
-        if ($this->gender !== null) {
+        if ($this->gender !== null && ! in_array('gender', $this->locked, true)) {
             $query['gender'] = $this->gender;
         }
 
@@ -136,9 +155,9 @@ final class ProductCatalogState
     public function activeFilterCount(): int
     {
         return (int) ($this->search !== null)
-            + (int) ($this->brandIds !== [])
+            + (int) ($this->brandIds !== [] && ! in_array('brand', $this->locked, true))
             + (int) ($this->categoryId !== null)
-            + (int) ($this->gender !== null)
+            + (int) ($this->gender !== null && ! in_array('gender', $this->locked, true))
             + (int) ($this->priceMin !== null || $this->priceMax !== null)
             + (int) ($this->availability !== null);
     }

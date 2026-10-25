@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\StoreInfo;
 use App\Support\BestSellerArrangement;
+use App\Support\CatalogCollection;
 use App\Support\InquiryWhatsApp;
 use App\Support\ProductCatalogState;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,9 +17,29 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        return $this->catalog($request, null);
+    }
+
+    /** SEO-03: /koleksi/{collection}, the catalog fixed to one Peruntukan value. */
+    public function collection(Request $request, string $collection)
+    {
+        return $this->catalog($request, CatalogCollection::gender($collection) ?? abort(404));
+    }
+
+    /** SEO-03: /brand/{brand}, the catalog fixed to one configured brand. */
+    public function brand(Request $request, Brand $brand)
+    {
+        return $this->catalog($request, CatalogCollection::brand($brand) ?? abort(404));
+    }
+
+    private function catalog(Request $request, ?CatalogCollection $collection)
+    {
         $brands = Brand::active()->orderBy('name')->get();
         $categories = Category::active()->orderBy('name')->get();
         $catalogState = ProductCatalogState::fromRequest($request, $brands, $categories);
+        if ($collection) {
+            $catalogState = $catalogState->lockedTo($collection->locked);
+        }
 
         $query = Product::with(['brand', 'category', 'primaryImage', 'activeOffer'])
             ->withMin([
@@ -66,7 +87,7 @@ class ProductController extends Controller
             ->paginate(24)
             ->appends($catalogState->query(includePage: false));
 
-        return view('products.index', compact('products', 'brands', 'categories', 'catalogState'));
+        return view('products.index', compact('products', 'brands', 'categories', 'catalogState', 'collection'));
     }
 
     public function show(Request $request, Product $product, InquiryWhatsApp $inquiryWhatsApp)
@@ -107,7 +128,12 @@ class ProductController extends Controller
             )
             : null;
 
-        return view('products.show', compact('product', 'relatedProducts', 'catalogState', 'productInquiryUrl'));
+        // SEO-03: "Kembali" returns to the collection page the product was opened from.
+        $collection = CatalogCollection::fromContext($request->query('koleksi'));
+        $catalogUrl = $collection ? $collection->url($catalogState->query()) : route('products.index', $catalogState->query());
+        $brandPage = $product->brand ? CatalogCollection::brand($product->brand) : null;
+
+        return view('products.show', compact('product', 'relatedProducts', 'catalogState', 'productInquiryUrl', 'catalogUrl', 'brandPage'));
     }
 
     private function applyAvailabilityFilter(Builder $query, string $availability): void

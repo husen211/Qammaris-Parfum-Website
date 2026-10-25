@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\Category;
 use App\Models\StoreInfo;
+use App\Support\CatalogCollection;
 use App\Support\RetryingMySqlConnector;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -31,6 +31,17 @@ class AppServiceProvider extends ServiceProvider
         }
         RateLimiter::for('blog-automation', fn ($request) => Limit::perMinute(60)->by('blog-actor:'.$request->user()->id));
         RateLimiter::for('blog-automation-media', fn ($request) => Limit::perMinute(10)->by('blog-media-actor:'.$request->user()->id));
+        // SEO-03: footer links to the permanent collection and brand pages (brand availability cached for an hour).
+        view()->composer('components.footer', function ($view) {
+            try {
+                $available = Schema::hasTable('brands');
+            } catch (\Throwable $e) {
+                $available = false;
+            }
+
+            $view->with('footerCollections', $available ? CatalogCollection::links() : collect());
+        });
+
         if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
             return;
         }
@@ -52,33 +63,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         view()->share('storeInfo', $storeInfo);
-
-        view()->composer('components.footer', function ($view) {
-            try {
-                if (! Schema::hasTable('categories')) {
-                    $view->with('footerCategories', collect());
-
-                    return;
-                }
-            } catch (\Throwable $e) {
-                $view->with('footerCategories', collect());
-
-                return;
-            }
-
-            $footerCategories = cache()->remember('footer_categories', 3600, function () {
-                return Category::active()->take(4)->get();
-            });
-
-            $view->with('footerCategories', $footerCategories);
-        });
     }
 
     private function shareFallbackStoreData(): void
     {
         view()->share('storeInfo', new StoreInfo);
-        view()->composer('components.footer', function ($view) {
-            $view->with('footerCategories', collect());
-        });
     }
 }
