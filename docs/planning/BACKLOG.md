@@ -48,9 +48,9 @@ Other findings of the 2026-10-25 check (not fixed here):
 
 | ID | Status | Finding |
 |---|---|---|
-| OPS-PUSH-STALE-01 | BACKLOG | Four `SendAdminPush` jobs from 2026-10-18 06:17 sit on the `default` queue that the production worker never reads; created before fix `591bbda` moved admin push to the worker queue. Stale notifications; removing the four rows needs Owner approval. |
-| SEC-DEP-03 | BACKLOG | `npm audit`: high advisories in dev-only `vite` 7.3.6 (launch-editor, dev server on Windows) and `follow-redirects` 1.16.0 (axios Node adapter, not in the browser bundle). `npm audit --omit=dev` and `composer audit` are clean. |
-| TEST-FLAKE-02 | BACKLOG | `BlogWriteSafetyTest` (replacement/archive/restore) failed once in a full local run and passed in isolation and in the next full run; order or clock dependent. |
+| OPS-PUSH-STALE-01 | DONE | Four `SendAdminPush` jobs from 2026-10-18 06:17 sat on the `default` queue that the production worker never reads; created before fix `591bbda` moved admin push to the worker queue. Owner approved removal 2026-10-25; exactly those four rows (queue `default`, job `SendAdminPush`, created before the fix) were deleted on production; the jobs table is empty and `failed_jobs` stays 0 (card #102). |
+| SEC-DEP-03 | DONE | `npm audit`: high advisories in dev-only `vite` 7.3.6 (launch-editor, dev server on Windows) and `follow-redirects` 1.16.0 (axios Node adapter, not in the browser bundle). `npm audit --omit=dev` and `composer audit` were clean. Lockfile-only patch to vite 7.3.7 / follow-redirects 1.16.1 (card #102); `npm audit` clean, build and JS tests pass. |
+| TEST-FLAKE-02 | DONE (no code change) | `BlogWriteSafetyTest` (replacement/archive/restore) failed once in a full local run. Not reproducible alone or in 6 random-order Blog runs; reproduced by running two test processes at once in the same checkout: `Storage::fake('public')` shares `storage/framework/testing/disks/public`, so one run wipes the other's files. The failed run overlapped a background run. Run one suite at a time locally (CI already does). |
 
 ## CAT-PRICE-01 — Struck-through price on catalog cards — DONE
 
@@ -182,7 +182,7 @@ Owner requested and approved ORD-01 on 2026-10-07. ORD-01–04, ORD-07 and PWA-0
 | DOC-ADR-01 | DONE | Order ADRs renumbered 037→048, 038→049, 039→050, 040→051 (old filenames kept as aliases); now on `main` via PR55. |
 | TEST-MYSQL-02 | DONE | `BlogAutomationTest` and `StoreAboutTest` MariaDB-only failures fixed test-only; on `main` via PR55. Open limit: `ProductSeeder` duplicate SKU `AFNAN-9PM-50ML`. |
 | TEST-MYSQL-01 | DONE | Two `ShopeeContentImportTest` cases assumed SQLite; fixed test-only on 2026-10-09; full suite on MariaDB 11.8.9: 522 passed. |
-| TEST-FLAKE-01 | BACKLOG | Found 2026-10-18 on docs-only PR74 CI: `OrderApiReadTest::authentication failures use the contract codes in order` signs a request at exactly `now() - 300` s; when the clock ticks one second before the middleware check the difference is 301 and the request is refused (401 instead of 200). Timing-only test flake; freeze time in the test. No production impact. |
+| TEST-FLAKE-01 | DONE | Found 2026-10-18 on docs-only PR74 CI: `OrderApiReadTest::authentication failures use the contract codes in order` signs a request at exactly `now() - 300` s; when the clock ticks one second before the middleware check the difference is 301 and the request is refused (401 instead of 200). Timing-only test flake; freeze time in the test. No production impact. Fixed 2026-10-25 (card #102): the test freezes time first. |
 
 ORD-01 local verification: 14 new tests/142 assertions; full suite and browser flow at 320/375/390/1440 on an isolated synthetic SQLite DB; staging MySQL, genuine touch/Safari and real WhatsApp sending not confirmed.
 

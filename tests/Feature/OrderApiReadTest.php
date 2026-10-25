@@ -59,6 +59,8 @@ class OrderApiReadTest extends TestCase
 
     public function test_authentication_failures_use_the_contract_codes_in_order(): void
     {
+        // TEST-FLAKE-01: the ±300 s edges below must not drift when the clock ticks between signing and checking.
+        $this->freezeTime();
         $order = $this->v2Order();
         $path = '/orders/'.$order->public_id;
 
