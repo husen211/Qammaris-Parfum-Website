@@ -114,7 +114,8 @@ class SeoTechnicalTest extends TestCase
     {
         preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $blocks);
 
-        return collect($blocks[1])->map(fn ($json) => json_decode($json, true))->keyBy('@type')->all();
+        return collect($blocks[1])->map(fn ($json) => json_decode($json, true))
+            ->flatMap(fn ($block) => $block['@graph'] ?? [$block])->keyBy('@type')->all();
     }
 
     private function product(string $name, string $availability): Product

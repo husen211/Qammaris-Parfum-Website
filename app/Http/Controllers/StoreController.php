@@ -14,7 +14,13 @@ class StoreController extends Controller
         });
         $profile = config('store.profile');
         $fallbackAddress = $profile['name']."\n".$profile['street']."\n".$profile['locality'].', '.$profile['region'].' '.$profile['postal_code'];
-        $storeSchema = ['@context' => 'https://schema.org'] + StoreProfile::schema();
+        $storeSchema = ['@context' => 'https://schema.org', '@graph' => [StoreProfile::schema(), [
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Beranda', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Lokasi Toko', 'item' => route('store.location')],
+            ],
+        ]]];
         $addressTextRaw = trim((string) $storeInfo->address);
         $addressText = ($addressTextRaw === '' || str_contains(strtolower($addressTextRaw), 'contoh'))
             ? $fallbackAddress
@@ -209,7 +215,7 @@ class StoreController extends Controller
         }
 
         if (preg_match('/^(\d{2})(\d{3})(\d{4})(\d{4})$/', $normalized, $matches)) {
-            return "{$matches[1]} {$matches[2]}-{$matches[3]}-{$matches[4]}";
+            return "+{$matches[1]} {$matches[2]}-{$matches[3]}-{$matches[4]}";
         }
 
         return $normalized;

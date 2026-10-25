@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Qammaris Perfumes - Premium Middle Eastern Fragrances')
+@section('title', 'Toko Parfum Timur Tengah & Lokal di Palu - Qammaris Perfumes')
+@section('meta_description', 'Toko parfum Timur Tengah dan lokal terlengkap di Kota Palu. Coba tester langsung di Jl. Sis Aljufri, konsultasi aroma, atau pesan online dengan pengiriman ke seluruh Indonesia.')
 
 @push('preload')
     <link rel="preload" href="{{ asset('images/hero/hero-mobile-poster.webp') }}" as="image" type="image/webp" media="(max-width: 767px)" fetchpriority="high">

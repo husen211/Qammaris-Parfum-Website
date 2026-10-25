@@ -26,14 +26,15 @@
 
     <div class="relative z-10 h-full flex items-center justify-center">
         <div class="text-center px-6 space-y-4">
-            <p class="text-xs md:text-sm tracking-[0.4em] uppercase text-white/70">Qammaris Parfumes</p>
-            <h1 class="font-mayluxa text-3xl md:text-4xl lg:text-5xl text-white leading-tight drop-shadow-xl">
-                Redefining Middle East Scents
+            <p class="text-xs md:text-sm tracking-[0.4em] uppercase text-white/70">Redefining Middle East Scents</p>
+            {{-- SEO-02 (Owner 2026-10-25): the heading names what the store is and where; the tagline stays above it. --}}
+            <h1 class="mx-auto max-w-4xl font-mayluxa text-3xl md:text-4xl lg:text-5xl text-white leading-tight drop-shadow-xl">
+                Toko Parfum Timur Tengah dan Lokal Terlengkap di Kota Palu
             </h1>
             <div class="flex justify-center">
                 <a href="{{ route('products.index') }}"
                     class="px-7 py-3 border border-white/70 text-white text-xs md:text-sm font-semibold uppercase tracking-[0.18em] hover:bg-white hover:text-brand-black transition-colors duration-300">
-                    Discover Our Fragrance
+                    Lihat Koleksi Parfum
                 </a>
             </div>
         </div>
@@ -55,9 +56,12 @@
         <p class="text-gray-500 max-w-3xl mx-auto leading-relaxed text-sm md:text-base">
             Qammaris Perfumes lahir dari kecintaan pada aroma Timur Tengah dan keinginan menghadirkan pengalaman coba langsung di Palu. Kami mengkurasi setiap parfum dengan teliti agar Anda dapat menemukan karakter aroma yang paling sesuai, tanpa harus menebak.
         </p>
-        <div class="flex justify-center pt-2">
+        <div class="flex flex-wrap justify-center gap-x-8 gap-y-4 pt-2">
             <a href="{{ route('store.about') }}" class="text-brand-gold font-semibold border-b border-brand-gold/70 pb-1 hover:text-brand-black transition-colors duration-200">
-                See More
+                Kenali Qammaris
+            </a>
+            <a href="{{ route('store.location') }}" class="text-brand-gold font-semibold border-b border-brand-gold/70 pb-1 hover:text-brand-black transition-colors duration-200">
+                Kunjungi toko di Palu
             </a>
         </div>
     </div>

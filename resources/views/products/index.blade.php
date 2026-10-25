@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Katalog Parfum Original - Qammaris Perfumes')
+@section('title', 'Katalog Parfum Timur Tengah & Lokal - Qammaris Perfumes Palu')
+@section('meta_description', 'Katalog parfum Timur Tengah dan lokal Qammaris di Palu: harga, ukuran, ketersediaan, dan catatan aroma. Coba tester di toko atau pesan online, kirim ke seluruh Indonesia.')
 {{-- SEO-01: plain pages (also ?page=N) are indexable and self-canonical; filtered, sorted or searched views are noindex,follow. --}}
 @section('robots', $catalogState->query(includePage: false) === [] ? 'index,follow' : 'noindex,follow')
 @section('canonical_url', route('products.index', $catalogState->query()))
@@ -23,6 +24,9 @@
         <div class="catalog-container">
             <p class="catalog-header__eyebrow">Parfum pilihan Qammaris</p>
             <h1 class="catalog-header__title font-mayluxa">Koleksi Parfum</h1>
+            @if ($catalogState->query() === [])
+                <p class="catalog-header__intro">Parfum Timur Tengah dan lokal yang bisa Anda coba langsung di <a href="{{ route('store.location') }}">toko kami di Palu</a>. Pesan online, kami kirim ke seluruh Indonesia.</p>
+            @endif
         </div>
     </header>
 
