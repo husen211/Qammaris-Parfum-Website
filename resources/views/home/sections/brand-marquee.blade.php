@@ -1,4 +1,4 @@
-{{-- UX-02: every brand on sale. A paused carousel (brand-carousel.js) moves one brand at a time; without JS the row scrolls. --}}
+{{-- UX-02 / UI-BRANDS-01: every brand on sale, drifting continuously left (brand-carousel.js); without JS the row scrolls. --}}
 @if ($distributorBrands->isNotEmpty())
 <section aria-labelledby="brands-heading" class="bg-white border-b border-gray-100 py-8 md:py-10">
     <div class="container mx-auto px-6">

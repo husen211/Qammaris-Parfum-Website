@@ -1,14 +1,14 @@
 /*
- * UX-02: Distributor Resmi carousel. Shows a row of brands, waits, then moves exactly one brand and waits again.
- * Loops with clones of the first visible brands. Never runs with reduced motion, while hovered/focused,
- * off screen, or in a hidden tab. Without JS the row simply scrolls.
+ * UI-BRANDS-01 (Owner 2026-10-25): the brand row drifts continuously to the left, about one brand every
+ * SECONDS_PER_BRAND seconds, instead of pausing between steps. The brands are cloned once so the loop is
+ * seamless. It holds while hovered with a mouse or focused, rests off screen, and never moves with reduced
+ * motion. Without JS the row simply scrolls.
  */
-export const PAUSE_MS = 3000;
-const MOVE_MS = 700;
+export const SECONDS_PER_BRAND = 1.8;
 
-/** Index after one step; reaching `count` means "showing the clones", which resets to 0 after the move. */
-export function nextStep(index, count) {
-    return count > 0 ? (index + 1) % (count + 1) : 0;
+/** Milliseconds for one full loop of `count` brands. */
+export function loopDuration(count) {
+    return Math.max(1, count) * SECONDS_PER_BRAND * 1000;
 }
 
 function start(root) {
@@ -17,12 +17,11 @@ function start(root) {
     if (!track || items.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
     }
-
-    const visible = () => Math.max(1, Math.round(root.clientWidth / items[0].getBoundingClientRect().width));
-    if (items.length <= visible()) {
+    const visible = Math.max(1, Math.round(root.clientWidth / items[0].getBoundingClientRect().width));
+    if (items.length <= visible) {
         return;
     }
-    items.slice(0, visible() + 1).forEach((item) => {
+    items.forEach((item) => {
         const clone = item.cloneNode(true);
         clone.setAttribute('aria-hidden', 'true');
         clone.querySelectorAll('img').forEach((image) => { image.alt = ''; });
@@ -30,41 +29,38 @@ function start(root) {
     });
     root.classList.add('is-running');
 
-    let index = 0;
-    let timer = null;
+    let animation = null;
     let held = false;
     let onScreen = true;
-    const place = (animate) => {
-        track.style.transition = animate ? '' : 'none';
-        track.style.transform = `translateX(${-track.children[index].offsetLeft}px)`;
+    const sync = () => {
+        if (held || !onScreen) animation?.pause();
+        else animation?.play();
     };
-    const schedule = () => {
-        clearTimeout(timer);
-        if (!held && onScreen && !document.hidden) {
-            timer = setTimeout(step, PAUSE_MS);
-        }
+    const run = () => {
+        const duration = loopDuration(items.length);
+        const progress = animation?.effect.getComputedTiming().progress ?? 0;
+        animation?.cancel();
+        // The first clone sits exactly one full set of brands to the right of the start.
+        const distance = track.children[items.length].offsetLeft;
+        animation = track.animate(
+            [{ transform: 'translateX(0)' }, { transform: `translateX(${-distance}px)` }],
+            { duration, iterations: Infinity },
+        );
+        animation.currentTime = progress * duration;
+        sync();
     };
-    function step() {
-        index = nextStep(index, items.length);
-        place(true);
-        if (index === items.length) {
-            // The clones look exactly like the first brands: jump back without animation once the move ends.
-            setTimeout(() => { index = 0; place(false); schedule(); }, MOVE_MS);
-            return;
-        }
-        schedule();
-    }
 
-    const hold = (value) => () => { held = value; schedule(); };
-    root.addEventListener('pointerenter', hold(true));
-    root.addEventListener('pointerleave', hold(false));
+    const hold = (value) => () => { held = value; sync(); };
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        root.addEventListener('pointerenter', hold(true));
+        root.addEventListener('pointerleave', hold(false));
+    }
     root.addEventListener('focusin', hold(true));
     root.addEventListener('focusout', hold(false));
-    document.addEventListener('visibilitychange', schedule);
-    window.addEventListener('resize', () => place(false));
-    new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; schedule(); }).observe(root);
-    place(false);
-    schedule();
+    let resizeTimer = null;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(run, 150); });
+    new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; sync(); }).observe(root);
+    run();
 }
 
 if (typeof document !== 'undefined') {

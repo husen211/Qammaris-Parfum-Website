@@ -99,11 +99,21 @@ class HomeBestSellersTest extends TestCase
         $this->assertCount(0, $response->viewData('bestSellers'));
     }
 
+    public function test_brand_logo_falls_back_to_the_slugged_name_when_the_stored_slug_differs(): void
+    {
+        // UI-BRANDS-01: production stores Aoera under an old test slug; its mark is images/brands/aoera.webp.
+        $aoera = Brand::create(['name' => 'Aoera', 'is_active' => true]);
+        $aoera->forceFill(['slug' => 'p8-03-aoera-test'])->save();
+        $this->product('Aoera Satu', ['brand_id' => $aoera->id]);
+
+        $this->get(route('home'))->assertOk()->assertSee('src="'.asset('images/brands/aoera.webp').'"', false)->assertSee('alt="Aoera"', false);
+    }
+
     public function test_rail_ends_with_full_catalog_link_and_distributor_section_lists_every_brand_on_sale(): void
     {
         // UX-02: logo for brands with a supplied mark, name otherwise; brands without published products are left out.
         $afnan = Brand::create(['name' => 'Afnan', 'is_active' => true]);
-        $bali = Brand::create(['name' => 'Bali Surfer', 'is_active' => true]);
+        $bali = Brand::create(['name' => 'Brand Tanpa Logo', 'is_active' => true]);
         $empty = Brand::create(['name' => 'Brand Tanpa Produk', 'is_active' => true]);
         $inactive = Brand::create(['name' => 'Brand Nonaktif', 'is_active' => false]);
         $this->product('Afnan Satu', ['brand_id' => $afnan->id]);
@@ -114,9 +124,9 @@ class HomeBestSellersTest extends TestCase
 
         $response = $this->get(route('home'))->assertOk();
         $brands = $response->viewData('distributorBrands');
-        $this->assertSame(['Afnan', 'Bali Surfer'], $brands->pluck('name')->all(), 'logos first, then by product count');
+        $this->assertSame(['Afnan', 'Brand Tanpa Logo'], $brands->pluck('name')->all(), 'logos first, then by product count');
         $response->assertSee('src="'.asset('images/brands/afnan.webp').'"', false)->assertSee('alt="Afnan"', false)
-            ->assertSee('<span class="brand-carousel__name font-mayluxa">Bali Surfer</span>', false)
+            ->assertSee('<span class="brand-carousel__name font-mayluxa">Brand Tanpa Logo</span>', false)
             ->assertDontSee('Brand Tanpa Produk')->assertDontSee('Brand Nonaktif')
             ->assertDontSee('animate-slide-pause')->assertSee('data-brand-carousel', false);
 
