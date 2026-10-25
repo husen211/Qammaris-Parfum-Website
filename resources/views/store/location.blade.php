@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Our Boutique - Qammaris Perfumes')
-@section('meta_description', 'Kunjungi butik offline Qammaris Perfumes. Rasakan langsung kemewahan aroma Timur Tengah.')
+@section('title', 'Toko Parfum Timur Tengah di Palu - Qammaris Perfumes')
+@section('meta_description', 'Kunjungi toko parfum Qammaris di Jl. Sis Aljufri, Siranindi, Palu Barat. Coba tester parfum Timur Tengah dan lokal, konsultasi aroma, buka Sabtu–Kamis 09.00–21.00 WITA.')
 
 @push('jsonld')
 <script type="application/ld+json">{!! json_encode($storeSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) !!}</script>
@@ -11,15 +11,22 @@
 
 <div class="pt-32 pb-12 bg-white text-center">
     <div class="container mx-auto px-4">
+        <nav aria-label="Breadcrumb" class="mb-6 flex justify-center gap-2 text-[10px] uppercase tracking-widest text-gray-500">
+            <a href="{{ route('home') }}" class="hover:text-brand-black">Beranda</a>
+            <span aria-hidden="true">/</span>
+            <span class="font-semibold text-brand-black" aria-current="page">Lokasi Toko</span>
+        </nav>
         <p class="text-xs md:text-sm font-bold uppercase tracking-[0.3em] text-brand-gold mb-4 animate-fade-in-up">
-            Visit Us
+            Qammaris Perfumes
         </p>
-        <h1 class="font-mayluxa text-5xl md:text-7xl text-brand-black mb-6 animate-fade-in-up" style="animation-delay: 0.1s;">
-            Our Boutique
+        {{-- SEO-02: the store's local landing page; copy states only what the Owner confirmed (tester, consultation, nationwide shipping). --}}
+        <h1 class="mx-auto max-w-3xl font-mayluxa text-4xl md:text-6xl leading-tight text-brand-black mb-6 animate-fade-in-up" style="animation-delay: 0.1s;">
+            Toko Parfum Timur Tengah di Palu
         </h1>
-        <p class="text-gray-500 font-light text-lg max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s;">
-            Rasakan langsung kemewahan aroma Timur Tengah di butik offline kami. Konsultasikan preferensi aroma Anda dengan fragrance specialist kami.
-        </p>
+        <div class="text-gray-500 font-light text-lg max-w-2xl mx-auto leading-relaxed space-y-4 animate-fade-in-up" style="animation-delay: 0.2s;">
+            <p>Qammaris Perfumes adalah toko parfum Timur Tengah dan lokal di Jl. Sis Aljufri, Siranindi, Palu Barat. Semua parfum di toko tersedia testernya, dan staf kami membantu membandingkan aroma sampai Anda menemukan yang paling cocok.</p>
+            <p>Tidak sempat datang? Pilih dari <a href="{{ route('products.index') }}" class="text-brand-black underline underline-offset-4 hover:text-brand-gold">katalog parfum</a> lalu pesan online. Kami kirim ke seluruh Indonesia, termasuk ke kota-kota di Sulawesi Tengah.</p>
+        </div>
     </div>
 </div>
 
@@ -30,7 +37,7 @@
             <div class="space-y-12">
                 
                 <div>
-                    <h3 class="font-mayluxa text-3xl text-brand-black mb-8 border-b border-gray-100 pb-4">Contact & Address</h3>
+                    <h2 class="font-mayluxa text-3xl text-brand-black mb-8 border-b border-gray-100 pb-4">Alamat & Kontak</h2>
                     
                     <div class="space-y-8">
                         @php($hasWhatsapp = !empty($whatsappLink))
@@ -39,12 +46,12 @@
                                 <svg class="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold uppercase tracking-widest text-brand-black mb-1">Toko Utama</p>
+                                <p class="text-xs font-bold uppercase tracking-widest text-brand-black mb-1">Toko Qammaris Palu</p>
                                 <p class="text-gray-600 font-light leading-relaxed">
                                     {!! $displayAddress ?? '' !!}
                                 </p>
                                 <a href="{{ $mapsLink ?: 'https://maps.google.com' }}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 text-xs font-medium uppercase tracking-widest border-b border-gray-300 pb-0.5 hover:border-brand-gold hover:text-brand-gold transition-colors">
-                                    Get Directions
+                                    Petunjuk arah
                                 </a>
                             </div>
                         </div>
@@ -54,30 +61,32 @@
                                 <svg class="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold uppercase tracking-widest text-brand-black mb-1">WhatsApp & Call</p>
+                                <p class="text-xs font-bold uppercase tracking-widest text-brand-black mb-1">WhatsApp & Telepon</p>
                                 <p class="text-gray-600 font-light tracking-wide">{{ $phoneDisplay ?? '' }}</p>
                                 <a href="{{ $whatsappLink ?: '#' }}" target="_blank" rel="noopener noreferrer"
                                     class="inline-block mt-2 text-xs font-medium uppercase tracking-widest border-b border-gray-300 pb-0.5 hover:border-brand-gold hover:text-brand-gold transition-colors {{ $hasWhatsapp ? '' : 'pointer-events-none opacity-60' }}"
                                     @if (! $hasWhatsapp) aria-disabled="true" @endif>
-                                    Chat Now
+                                    Chat WhatsApp
                                 </a>
                             </div>
                         </div>
 
+                        @if (filled($storeInfo->email))
                         <div class="flex gap-6 group">
                             <div class="w-10 h-10 border border-gray-200 flex items-center justify-center rounded-full flex-shrink-0 group-hover:border-brand-black transition-colors">
                                 <svg class="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                             </div>
                             <div>
                                 <p class="text-xs font-bold uppercase tracking-widest text-brand-black mb-1">Email</p>
-                                <p class="text-gray-600 font-light">{{ $storeInfo->email ?? '' }}</p>
+                                <p class="text-gray-600 font-light">{{ $storeInfo->email }}</p>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="font-mayluxa text-3xl text-brand-black mb-8 border-b border-gray-100 pb-4">Jam Operasional</h3>
+                    <h2 class="font-mayluxa text-3xl text-brand-black mb-8 border-b border-gray-100 pb-4">Jam Operasional</h2>
                     <div class="grid grid-cols-2 gap-x-8 gap-y-6">
                         <div>
                             <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Sabtu–Kamis</p>
@@ -91,7 +100,7 @@
                     <div class="mt-8 p-4 bg-[#FAFAFA] border border-gray-100 flex items-start gap-3">
                         <svg class="w-5 h-5 text-brand-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <p class="text-xs text-gray-500 leading-relaxed">
-                            Layanan chat WhatsApp tetap tersedia 24/7. Untuk hari libur nasional, silakan cek Instagram kami untuk update jam operasional terbaru.
+                            Layanan chat WhatsApp tetap tersedia 24/7. Untuk hari libur nasional, cek Instagram @qammaris untuk jam operasional terbaru.
                         </p>
                     </div>
                 </div>
@@ -117,7 +126,7 @@
                 @endif
                 
                 <a href="{{ $mapsLink ?: 'https://maps.google.com' }}" target="_blank" rel="noopener noreferrer" class="absolute bottom-6 right-6 bg-white text-brand-black px-6 py-3 text-xs font-bold uppercase tracking-widest shadow-xl hover:bg-brand-black hover:text-white transition-colors z-10">
-                    Open in Google Maps
+                    Buka di Google Maps
                 </a>
             </div>
 
@@ -125,9 +134,21 @@
     </div>
 </section>
 
+<section class="py-20 bg-white border-t border-gray-100" aria-labelledby="location-faq-title">
+    <div class="container mx-auto px-4 max-w-3xl">
+        <h2 id="location-faq-title" class="font-mayluxa text-3xl text-brand-black mb-8 text-center">Sebelum berkunjung</h2>
+        <x-faq name="location-faq" :items="[
+            ['question' => 'Apakah saya bisa mencoba tester di toko?', 'answer' => 'Bisa. Semua parfum di toko tersedia testernya. Anda bisa mencoba dengan paper test atau di kulit dan membandingkan beberapa aroma sebelum membeli.'],
+            ['question' => 'Apakah tersedia parfum pria, wanita, dan unisex?', 'answer' => 'Ada. Koleksi kami mencakup parfum pria, wanita, dan unisex dari brand Timur Tengah dan lokal. Lihat semuanya di katalog website.'],
+            ['question' => 'Apakah bisa kirim ke luar Palu?', 'answer' => 'Bisa. Pesan lewat website atau WhatsApp, kami kirim ke seluruh Indonesia. Ongkir dikonfirmasi admin sesuai alamat penerima.'],
+            ['question' => 'Kapan toko buka?', 'answer' => 'Sabtu sampai Kamis, pukul 09.00–21.00 WITA. Jumat tutup. Untuk hari libur nasional, cek Instagram @qammaris.'],
+        ]" />
+    </div>
+</section>
+
 <section class="py-20 bg-[#FAFAFA] border-t border-gray-100">
     <div class="container mx-auto px-4 text-center">
-        <h2 class="font-mayluxa text-3xl text-brand-black mb-12">Connect & Shop Online</h2>
+        <h2 class="font-mayluxa text-3xl text-brand-black mb-12">Belanja Online & Media Sosial</h2>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
             
@@ -137,7 +158,7 @@
                 <img src="https://cdn.simpleicons.org/instagram/1A1A1A" alt="Instagram"
                     class="w-8 h-8 mb-4 transition-transform" loading="lazy" decoding="async">
                 <h4 class="font-bold text-sm uppercase tracking-wider mb-1">Instagram</h4>
-                <span class="text-[10px] text-gray-400 group-hover:text-brand-gold transition-colors">@qammarisperfumes</span>
+                <span class="text-[10px] text-gray-400 group-hover:text-brand-gold transition-colors">@qammaris</span>
             </a>
 
             <a href="{{ $tokopediaUrl ?: '#' }}" target="_blank" rel="noopener noreferrer"

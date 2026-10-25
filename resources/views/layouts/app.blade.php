@@ -8,7 +8,7 @@
             'UTF-8'
         );
         $pageTitle = $decodeSection($__env->yieldContent('title', 'Qammaris Perfumes'));
-        $pageDescription = $decodeSection($__env->yieldContent('meta_description', 'Qammaris Perfumes - Distributor parfum original Timur Tengah terpercaya'));
+        $pageDescription = $decodeSection($__env->yieldContent('meta_description', 'Qammaris Perfumes, toko parfum Timur Tengah dan lokal di Kota Palu. Coba tester langsung di toko, konsultasi aroma, dan kirim ke seluruh Indonesia.'));
         $robotsDirective = $decodeSection($__env->yieldContent('robots', 'index,follow'));
         $openGraphType = $decodeSection($__env->yieldContent('og_type', 'website'));
         $openGraphImage = $decodeSection($__env->yieldContent('og_image', asset('images/logo.png')));

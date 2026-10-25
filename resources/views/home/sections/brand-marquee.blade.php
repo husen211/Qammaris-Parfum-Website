@@ -3,7 +3,7 @@
 <section aria-labelledby="distributor-heading" class="bg-white border-b border-gray-100 py-8 md:py-10">
     <div class="container mx-auto px-6">
         <h2 id="distributor-heading" class="text-center text-[10px] md:text-xs text-gray-400 uppercase tracking-[0.2em] mb-6 font-normal" data-reveal>
-            Distributor Resmi
+            Brand pilihan di Qammaris
         </h2>
 
         <div class="brand-carousel max-w-5xl mx-auto" data-brand-carousel data-reveal data-reveal-delay="120">

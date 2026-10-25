@@ -80,7 +80,7 @@
                     </div>
                     <p role="status" data-share-status></p><input type="text" readonly aria-label="Tautan artikel untuk disalin" value="{{ $shareUrl }}" data-share-fallback hidden>
                 </section>
-                <section class="journal-store-cta"><h2>Temukan aroma pilihan Anda</h2><p>Jelajahi koleksi parfum Qammaris atau kunjungi toko untuk mencoba langsung.</p><a class="journal-button" href="{{ route('products.index') }}">Lihat katalog</a><a class="journal-text-link" href="{{ route('store.location') }}">Lokasi toko <x-icon name="arrow-right" /></a></section>
+                <section class="journal-store-cta"><h2>Temukan aroma pilihan Anda</h2><p>Jelajahi koleksi parfum Qammaris atau kunjungi toko kami di Palu untuk mencoba tester langsung.</p><a class="journal-button" href="{{ route('products.index') }}">Lihat katalog parfum</a><a class="journal-text-link" href="{{ route('store.location') }}">Toko parfum kami di Palu <x-icon name="arrow-right" /></a></section>
             @endunless
         </div>
     </div>

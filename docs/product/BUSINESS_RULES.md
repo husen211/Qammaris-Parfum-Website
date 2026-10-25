@@ -15,6 +15,7 @@ Owner2026-10-10 meminta koreksi bahasa dan alur setelah mencoba beta: rentang bu
 - Keputusan Owner 2026-10-08: toko Palu buka **Sabtu–Kamis, 09.00–21.00 WITA**; **Jumat tutup**. Halaman lokasi harus menampilkan jadwal ini, bukan Senin–Sabtu/Minggu tutup.
 - Hari libur nasional mengikuti pengumuman terbaru toko di Instagram; jadwal ini tidak mengubah alur checkout atau menjanjikan balasan chat seketika.
 - Keputusan Owner 2026-10-25 (SEO-01): alamat resmi **Qammaris Perfumes, Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111**; Instagram resmi **@qammaris**. Satu sumber untuk website dan data terstruktur: `config('store.profile')`. Nomor toko tidak tampil di lingkungan uji (ORD-07), termasuk di data terstruktur.
+- Keputusan Owner 2026-10-25 (SEO-02): Qammaris adalah **reseller**, bukan distributor; website tidak memakai klaim "distributor" (judul brand di beranda: "Brand pilihan di Qammaris"). Qammaris **mengirim ke seluruh Indonesia** (ongkir dikonfirmasi admin). H1 beranda: "Toko Parfum Timur Tengah dan Lokal Terlengkap di Kota Palu" dengan tagline "Redefining Middle East Scents" di atasnya. `/store/location` adalah halaman utama toko Palu (judul, intro, FAQ terlihat, breadcrumb).
 
 ## Identitas, ukuran, dan publication
 

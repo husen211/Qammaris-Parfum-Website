@@ -6,7 +6,10 @@
                     <img src="{{ asset('images/logo-black-192.webp') }}" alt="" width="40" height="40" loading="lazy" decoding="async" class="h-10 w-10 object-contain brightness-0 invert">
                     <span class="text-2xl font-medium tracking-tight text-white">Qammaris.</span>
                 </a>
-                <p class="mt-5 max-w-sm text-sm leading-6 text-white/75">Kurasi parfum original Timur Tengah. Temukan aroma pilihan Anda dari koleksi Qammaris.</p>
+                <p class="mt-5 max-w-sm text-sm leading-6 text-white/75">Kurasi parfum original Timur Tengah dan lokal. Coba langsung di toko kami di Palu atau pesan online.</p>
+                <address class="mt-4 max-w-sm text-sm not-italic leading-6 text-white/75">
+                    <a href="{{ route('store.location') }}" class="footer-link">{{ \App\Support\StoreProfile::fullAddress() }}</a>
+                </address>
                 @if(!empty($storeInfo->instagram_url) || !empty($storeInfo->facebook_url))
                     <ul class="mt-5 flex gap-2" aria-label="Media sosial Qammaris">
                         @if(!empty($storeInfo->instagram_url))
