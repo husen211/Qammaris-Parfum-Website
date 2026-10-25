@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Brand;
-use App\Models\Product;
 use Illuminate\Support\Collection;
 
 /**
@@ -19,7 +18,9 @@ final class CatalogCollection
         public readonly string $eyebrow,
         public readonly string $title,
         public readonly string $description,
-        /** @var list<string> paragraphs; "{store}" and "{unisex}" become links */
+        /** One line above the products. */
+        public readonly string $lead,
+        /** @var list<string> paragraphs of the "Tentang …" text below the products */
         public readonly array $intro,
         /** @var array{gender?: string, brand?: list<int>} */
         public readonly array $locked,
@@ -34,7 +35,7 @@ final class CatalogCollection
             return null;
         }
 
-        return new self($key, $config['name'], 'Koleksi Qammaris', $config['title'], $config['description'], $config['intro'],
+        return new self($key, $config['name'], 'Koleksi Qammaris', $config['title'], $config['description'], $config['lead'], $config['intro'],
             ['gender' => $config['gender']], 'products.collection', ['collection' => $key]);
     }
 
@@ -48,7 +49,8 @@ final class CatalogCollection
 
         return new self('brand-'.$brand->slug, 'Parfum '.$name, 'Brand', "Parfum {$name} Original di Palu - Qammaris Perfumes",
             "Parfum {$name} original di Qammaris Palu: harga, ukuran, dan stok terbaru. Coba tester di toko atau pesan online, kirim ke seluruh Indonesia.",
-            [$config['intro'], "Semua parfum {$name} di sini bisa dicoba langsung di {store} sebelum membeli. Pesan online juga bisa, kami kirim ke seluruh Indonesia."],
+            "Parfum {$name} original, bisa dicoba langsung di {store}.",
+            [$config['intro'], "Setiap parfum {$name} di Qammaris bisa dicoba dulu di {store} sebelum membeli, dan staf kami siap membantu membandingkan aroma. Pesan online juga bisa, kami kirim ke seluruh Indonesia."],
             ['brand' => [(int) $brand->id]], 'products.brand', ['brand' => $brand->slug]);
     }
 
@@ -94,26 +96,22 @@ final class CatalogCollection
         return route($this->routeName, $this->routeParameters + $query);
     }
 
-    /** Escaped intro paragraphs with the store and unisex links filled in. */
-    public function introHtml(): array
+    public function leadHtml(): string
     {
-        $links = [
-            '{store}' => '<a href="'.e(route('store.location')).'">toko kami di Palu</a>',
-            '{unisex}' => '<a href="'.e(route('products.collection', 'parfum-unisex')).'">koleksi parfum unisex</a>',
-        ];
-
-        return array_map(fn (string $paragraph) => strtr(e($paragraph), $links), $this->intro);
+        return self::linked($this->lead);
     }
 
-    /** Names of the first few products on the default first page, for a short "most wanted" line. */
-    public static function highlights(iterable $products, int $count = 3): string
+    /** Escaped "Tentang …" paragraphs with the store and unisex links filled in. */
+    public function introHtml(): array
     {
-        $names = collect($products)->take($count)->map(fn (Product $product) => $product->name)->values();
+        return array_map(self::linked(...), $this->intro);
+    }
 
-        return match (true) {
-            $names->count() < 2 => '',
-            $names->count() === 2 => $names->implode(' dan '),
-            default => $names->slice(0, -1)->implode(', ').', dan '.$names->last(),
-        };
+    private static function linked(string $text): string
+    {
+        return strtr(e($text), [
+            '{store}' => '<a href="'.e(route('store.location')).'">toko kami di Palu</a>',
+            '{unisex}' => '<a href="'.e(route('products.collection', 'parfum-unisex')).'">koleksi parfum unisex</a>',
+        ]);
     }
 }

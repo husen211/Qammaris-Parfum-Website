@@ -1,15 +1,18 @@
 <?php
 
-// SEO-03 (Owner 2026-10-25): permanent catalog pages with their own address, title and short introduction, so a
-// search like "parfum pria Palu" or "parfum Afnan" has a page to land on. Each page is the normal catalog with one
-// filter fixed by its address; any extra filter, sort or search on it is noindex (see products/index).
-// Intros state only what the catalog data or the Owner confirmed. "{store}" and "{unisex}" become links.
+// SEO-03 (Owner 2026-10-25): permanent catalog pages with their own address, title and introduction, so a search
+// like "parfum pria Palu" or "parfum Afnan" has a page to land on. Each page is the normal catalog with one filter
+// fixed by its address; any extra filter, sort or search on it is noindex (see products/index).
+// "lead" is the one line above the products; "intro" is the fuller "Tentang …" text below them (Owner: keep the top
+// short, especially on phones). Text states only what the catalog data or the Owner confirmed. "{store}" and
+// "{unisex}" become links.
 return [
     // /koleksi/{key}: catalog fixed to one Peruntukan value.
     'genders' => [
         'parfum-pria' => [
             'gender' => 'Pria',
             'name' => 'Parfum Pria',
+            'lead' => 'Parfum pria Timur Tengah dan lokal, bisa dicoba langsung di {store}.',
             'title' => 'Parfum Pria Original di Palu - Qammaris Perfumes',
             'description' => 'Parfum pria Timur Tengah dan lokal di Qammaris Palu: aroma kayu, rempah, oud, sampai wangi segar harian. Coba tester di toko atau pesan online, kirim ke seluruh Indonesia.',
             'intro' => [
@@ -20,6 +23,7 @@ return [
         'parfum-wanita' => [
             'gender' => 'Wanita',
             'name' => 'Parfum Wanita',
+            'lead' => 'Parfum wanita Timur Tengah dan lokal, bisa dicoba langsung di {store}.',
             'title' => 'Parfum Wanita Original di Palu - Qammaris Perfumes',
             'description' => 'Parfum wanita Timur Tengah dan lokal di Qammaris Palu: floral, buah, vanila, dan musk. Coba tester di toko atau pesan online, kirim ke seluruh Indonesia.',
             'intro' => [
@@ -30,6 +34,7 @@ return [
         'parfum-unisex' => [
             'gender' => 'Unisex',
             'name' => 'Parfum Unisex',
+            'lead' => 'Parfum unisex untuk siapa saja, bisa dicoba langsung di {store}.',
             'title' => 'Parfum Unisex Original di Palu - Qammaris Perfumes',
             'description' => 'Parfum unisex Timur Tengah dan lokal di Qammaris Palu, dari musk dan aroma bersih untuk harian sampai oud dan rempah. Coba tester di toko atau pesan online.',
             'intro' => [
