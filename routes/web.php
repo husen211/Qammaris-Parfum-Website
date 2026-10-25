@@ -33,6 +33,8 @@ use App\Http\Controllers\OnlineOrderStaffController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FragranceBrowser;
+use App\Models\Product;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Homepage
@@ -41,7 +43,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Products
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show')
+    // SEO-04: old catalog URLs Google still requests move permanently to the same product; other slugs stay 404.
+    ->missing(function (Request $request) {
+        $target = config('product_redirects')[$request->route('product')] ?? null;
+        abort_unless($target && Product::published()->where('slug', $target)->exists(), 404);
+
+        return redirect()->route('products.show', $target, 301);
+    });
 
 // Cart
 Route::prefix('cart')->name('cart.')->group(function () {
