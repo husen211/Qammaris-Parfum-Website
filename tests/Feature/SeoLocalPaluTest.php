@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
+use App\Models\Product;
 use App\Models\StoreInfo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -29,6 +31,14 @@ class SeoLocalPaluTest extends TestCase
 
     public function test_no_page_claims_to_be_a_distributor(): void
     {
+        // The homepage brand row only renders for brands with a published product.
+        $brand = Brand::create(['name' => 'Afnan', 'is_active' => true]);
+        Product::create([
+            'brand_id' => $brand->id, 'name' => 'Brand Row', 'description' => 'Deskripsi', 'base_price' => 150000, 'is_active' => true,
+            'publication_status' => Product::PUBLICATION_PUBLISHED, 'published_at' => now(), 'availability_status' => Product::AVAILABILITY_UNKNOWN,
+        ]);
+        $this->get('/')->assertSee('Brand pilihan di Qammaris');
+
         foreach (['/', '/products', route('store.location'), route('store.about')] as $url) {
             $this->assertStringNotContainsStringIgnoringCase('distributor', $this->get($url)->assertOk()->getContent(), $url);
         }
