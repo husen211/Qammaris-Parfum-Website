@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Product;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
@@ -42,14 +43,17 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
-        // UX-02: every brand on sale; logos from public/images/brands/<slug>.webp, otherwise the brand name.
+        // UX-02: every brand on sale; logos from public/images/brands/<slug>.webp (or the slugged name, for brands whose
+        // stored slug differs, UI-BRANDS-01), otherwise the brand name.
         $distributorBrands = Brand::active()
             ->withCount(['products as published_count' => fn ($products) => $products->published()])
             ->get()
             ->where('published_count', '>', 0)
             ->map(function (Brand $brand) {
-                $file = "images/brands/{$brand->slug}.webp";
-                if (is_file(public_path($file))) {
+                $file = collect([$brand->slug, Str::slug($brand->name)])
+                    ->map(fn ($slug) => "images/brands/{$slug}.webp")
+                    ->first(fn ($candidate) => is_file(public_path($candidate)));
+                if ($file) {
                     [$width, $height] = getimagesize(public_path($file));
                     $brand->setAttribute('logo_mark', ['src' => asset($file), 'width' => intdiv($width, 2), 'height' => intdiv($height, 2)]);
                 }
