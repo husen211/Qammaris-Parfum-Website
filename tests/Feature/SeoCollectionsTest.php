@@ -42,7 +42,9 @@ class SeoCollectionsTest extends TestCase
             ->assertDontSee('Afnan Wanita')->assertDontSee('Lain Unisex')
             ->assertSee('href="'.route('store.location').'">toko kami di Palu</a>', false)
             ->assertSee('href="'.route('products.collection', 'parfum-unisex').'">koleksi parfum unisex</a>', false)
-            ->assertSee('Terlaris di sini:')
+            ->assertDontSee('Terlaris di sini')
+            // Owner: one line above the products, the fuller text below them.
+            ->assertSeeInOrder(['catalog-header__intro', 'Parfum pria Timur Tengah dan lokal', 'data-product-card', 'Tentang Parfum Pria', 'karakter kayu, rempah, dan oud'], false)
             ->assertSee('action="'.$url.'"', false)
             ->assertDontSee('name="gender"', false)
             ->assertSee('name="brand[]"', false)
@@ -59,7 +61,7 @@ class SeoCollectionsTest extends TestCase
         $this->get('/koleksi/parfum-pria?sort=price_low')->assertOk()
             ->assertSee('<meta name="robots" content="noindex,follow">', false)
             ->assertSee('<link rel="canonical" href="'.route('products.collection', ['collection' => 'parfum-pria', 'sort' => 'price_low']).'">', false)
-            ->assertDontSee('Terlaris di sini:');
+            ->assertDontSee('Tentang Parfum Pria');
         // The gender stays fixed even if the query tries to change it.
         $this->get('/koleksi/parfum-pria?gender=Wanita')->assertOk()->assertSee('Afnan Pria Satu')->assertDontSee('Afnan Wanita');
         $this->get('/koleksi/parfum-tidak-ada')->assertNotFound();
@@ -69,7 +71,7 @@ class SeoCollectionsTest extends TestCase
     {
         $this->get('/brand/afnan')->assertOk()
             ->assertSee('<title>Parfum Afnan Original di Palu - Qammaris Perfumes</title>', false)
-            ->assertSee('Afnan adalah rumah parfum dari Dubai')
+            ->assertSeeInOrder(['Parfum Afnan original, bisa dicoba langsung di', 'data-product-card', 'Tentang Parfum Afnan', 'Afnan adalah rumah parfum dari Dubai'], false)
             ->assertSee('Afnan Pria Satu')->assertSee('Afnan Wanita')->assertDontSee('Lain Pria')
             ->assertDontSee('name="brand[]"', false)
             ->assertSee('name="gender"', false);

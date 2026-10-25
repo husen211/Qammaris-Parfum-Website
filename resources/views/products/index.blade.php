@@ -15,7 +15,6 @@
         'popular' => 'Populer',
     ];
     $isPlainView = $catalogState->query(includePage: false) === [];
-    $highlights = $collection && $catalogState->query() === [] ? \App\Support\CatalogCollection::highlights($products->items()) : '';
 @endphp
 
 @section('title', $collection?->title ?? 'Katalog Parfum Timur Tengah & Lokal - Qammaris Perfumes Palu')
@@ -56,14 +55,8 @@
             <h1 class="catalog-header__title font-mayluxa">{{ $collection?->name ?? 'Koleksi Parfum' }}</h1>
             @if ($catalogState->query() === [])
                 @if ($collection)
-                    <div class="catalog-header__intro">
-                        @foreach ($collection->introHtml() as $paragraph)
-                            <p>{!! $paragraph !!}</p>
-                        @endforeach
-                        @if ($highlights !== '')
-                            <p>Terlaris di sini: {{ $highlights }}.</p>
-                        @endif
-                    </div>
+                    {{-- Owner: one line above the products; the fuller text sits below them ("Tentang …"). --}}
+                    <p class="catalog-header__intro">{!! $collection->leadHtml() !!}</p>
                 @else
                     <p class="catalog-header__intro">Parfum Timur Tengah dan lokal yang bisa Anda coba langsung di <a href="{{ route('store.location') }}">toko kami di Palu</a>. Pesan online, kami kirim ke seluruh Indonesia.</p>
                 @endif
@@ -240,6 +233,17 @@
             </div>
         </div>
     </section>
+
+    @if ($collection && $catalogState->query() === [])
+        <section class="catalog-about" aria-labelledby="catalog-about-title">
+            <div class="catalog-container">
+                <h2 id="catalog-about-title" class="catalog-about__title font-mayluxa">Tentang {{ $collection->name }}</h2>
+                @foreach ($collection->introHtml() as $paragraph)
+                    <p>{!! $paragraph !!}</p>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     <dialog id="mobileFilter" class="modal modal-bottom sm:modal-middle" aria-labelledby="mobile-filter-title">
         <div class="catalog-filter__panel modal-box bg-white rounded-t-2xl sm:rounded-lg p-0 flex flex-col">

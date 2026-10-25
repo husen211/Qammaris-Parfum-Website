@@ -45,6 +45,39 @@
     margin-top: 6px;
 }
 
+/* SEO-03: the fuller collection text below the products, before the footer. */
+.catalog-about {
+    padding-block: 40px 56px;
+    border-top: 1px solid #ebe8e1;
+    background: var(--color-brand-cream, #f9f9f7);
+}
+
+.catalog-about .catalog-container > * {
+    max-width: 42rem;
+}
+
+.catalog-about__title {
+    margin-bottom: 12px;
+    font-size: 20px;
+    color: var(--color-brand-black);
+}
+
+.catalog-about p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #5f5a52;
+}
+
+.catalog-about p + p {
+    margin-top: 8px;
+}
+
+.catalog-about a {
+    color: var(--color-brand-black);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 /* SEO-03: breadcrumb and collection links on catalog pages. */
 .catalog-breadcrumb {
     display: flex;
