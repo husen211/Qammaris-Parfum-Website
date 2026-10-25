@@ -40,6 +40,18 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## OPS-DB-BURST-01 — Pages fail during traffic bursts — IN_PROGRESS
+
+Found 2026-10-25 in the maintenance check (card #99): a 4-way parallel sitemap crawl returned HTTP 500 on 65 of 430 pages with `SQLSTATE[HY000] [2002] Operation not permitted`; the same error hit ~500 product requests on 2026-10-22 (07:47 and 12:48 UTC, sequential product slugs, i.e. a crawler). Measured on production: Hostinger refuses new MySQL connections above ~20 per second (socket and TCP alike); `max_user_connections` 75, `wait_timeout` 20 s, so persistent connections were rejected as an option. Fix: `App\Support\RetryingMySqlConnector` (bound as `db.connector.mysql`) retries only this refusal after 100/200/400/800 ms pauses with up to 50% jitter (worst case ~2.3 s extra), all other connection errors fail as before. Production MySQL probe with the connector (no app change): 4 parallel clients at ~40 connects/s failed 35% without and 4% with retries; an extreme 120-connect burst in ~0.1 s 83% → 8%. Sustained traffic far above ~20 PHP requests/s still fails; full-page caching would be the next step if that becomes real traffic.
+
+Other findings of the 2026-10-25 check (not fixed here):
+
+| ID | Status | Finding |
+|---|---|---|
+| OPS-PUSH-STALE-01 | BACKLOG | Four `SendAdminPush` jobs from 2026-10-18 06:17 sit on the `default` queue that the production worker never reads; created before fix `591bbda` moved admin push to the worker queue. Stale notifications; removing the four rows needs Owner approval. |
+| SEC-DEP-03 | BACKLOG | `npm audit`: high advisories in dev-only `vite` 7.3.6 (launch-editor, dev server on Windows) and `follow-redirects` 1.16.0 (axios Node adapter, not in the browser bundle). `npm audit --omit=dev` and `composer audit` are clean. |
+| TEST-FLAKE-02 | BACKLOG | `BlogWriteSafetyTest` (replacement/archive/restore) failed once in a full local run and passed in isolation and in the next full run; order or clock dependent. |
+
 ## CAT-PRICE-01 — Struck-through price on catalog cards — DONE
 
 Owner 2026-10-23 (card #96): the struck-through `compare_at_price` showed only on the product detail page. The shared catalog card (`products/_catalog-card`, used by the catalog, related products and Journal product embeds; the homepage best-seller rail hides prices) now shows it after the selling price, under the detail page's rule (only when higher than the active offer price), with a screen-reader label "Harga sebelumnya". The 2026-10-07 card-trust rule stays: size and selling price come only from the active offer; `compare_at_price` is never a fallback price (`PublicCatalogCardTrustTest` updated accordingly). Verified 390/1440 locally. Released PR97 (production `16666fb`, 2026-10-23); production catalog pages show the struck-through price on cards with a higher compare price.
