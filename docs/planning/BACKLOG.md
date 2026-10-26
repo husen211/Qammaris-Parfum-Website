@@ -40,7 +40,7 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## WAIT-01 — "Kabari saya jika sudah ready" on sold-out products — IN_PROGRESS
+## WAIT-01 — "Kabari saya jika sudah ready" on sold-out products — DONE
 
 Owner 2026-10-26 (card #119, App card husen211/qammaris-reimbursement-management-system#68): a sold-out product page shows "Kabari saya jika sudah ready" instead of "Tanya restock via WhatsApp". The button opens a short form (name + WhatsApp number), and the request goes to the Qammaris App Daftar Tunggu. The "Habis" status dot is now red (`#c62828`) on catalog cards and the product page.
 
@@ -52,9 +52,8 @@ How it works:
 - Once the App accepts a request, the Website clears the name, number and body and keeps only a keyed hash for the repeat check.
 - The App contract was agreed between the agents on 2026-10-26. The App files the entry as "Dicatat lewat Website", adds the customer to Pelanggan, and sends a push without the number. An entry for a product that is already available goes to "Siap dikabari". Staff send the WhatsApp message from the App; the Website sends nothing to the customer.
 
-Status: everything sits behind `QAMMARIS_WAITLIST_ENABLED`, which is off by default. With the flag off, the WhatsApp button stays.
+Status: everything sits behind `QAMMARIS_WAITLIST_ENABLED`, which is off by default; with the flag off, the WhatsApp button stays. Released PR120 (production `5c7083c`, 2026-10-26). The `restock_requests` migration was run with Owner approval from a private copy of the package, before the release switch. End-to-end test with Owner approval: request `01M5VPP56GZKJ4N50W4918J4MN` (Mykonos Black Opera 15 ml, "Uji Website", the Owner's number) got HTTP 200 from the App and the contact data was cleared; the App marks that entry Batal "Uji coba Website". The flag was then turned on in production, and the form shows on Habis products (checked at 390 and 1440).
 - Verification: `RestockRequestTest`; checked locally at 390 and 1440 (form, validation, success, delivery retry when the App is unreachable).
-- Remaining: once the App endpoint is live, turn the flag on in production and run one end-to-end request.
 
 ## SEO-03 — Permanent collection and brand pages (phase 3 of 3) — DONE
 
