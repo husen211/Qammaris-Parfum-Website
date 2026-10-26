@@ -17,8 +17,8 @@
         ],
         \App\Models\Product::AVAILABILITY_SOLD_OUT => [
             'label' => 'Sold out',
-            'detail' => 'Produk tetap dapat ditanyakan untuk informasi restock.',
-            'dot' => 'bg-gray-400',
+            'detail' => \App\Support\RestockRequests::enabled() ? '' : 'Produk tetap dapat ditanyakan untuk informasi restock.',
+            'dot' => 'bg-[#c62828]',
             'text' => 'text-gray-600',
         ],
         default => [
@@ -242,7 +242,9 @@
                                 <span data-cart-state="added" hidden><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Ditambahkan</span>
                             </button>
                         @elseif ($effectiveAvailability === \App\Models\Product::AVAILABILITY_SOLD_OUT)
-                            @if ($productInquiryUrl)
+                            @if (\App\Support\RestockRequests::enabled())
+                                @include('products._restock-request')
+                            @elseif ($productInquiryUrl)
                                 <a href="{{ $productInquiryUrl }}" target="_blank" rel="noopener noreferrer"
                                     class="flex min-h-14 w-full items-center justify-center bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                                     Tanya restock via WhatsApp
