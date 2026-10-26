@@ -30,6 +30,11 @@ return [
     'webhook_retry_schedule_seconds' => [0, 60, 300, 900, 3600, 21600],
     'webhook_give_up_after_seconds' => 86400,
 
+    // WAIT-01: sold-out pages offer "Kabari saya saat ready" instead of WhatsApp and send each request to the App
+    // Daftar Tunggu, signed with the webhook client and secret above. Turn on only after the App endpoint is live.
+    'waitlist_enabled' => (bool) env('QAMMARIS_WAITLIST_ENABLED', false),
+    'waitlist_url' => env('QAMMARIS_WAITLIST_URL', 'https://api.qammarisapp.com/api/integrations/website/waitlist/events'),
+
     // WhatsApp group task links: Admin PWA until the App integration is live, then the App order page.
     'app_task_links' => (bool) env('QAMMARIS_ORDER_APP_TASK_LINKS', false),
 

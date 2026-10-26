@@ -578,6 +578,10 @@ select.catalog-filter-control {
     background: #947024;
 }
 
+.catalog-card__availability[data-status="sold_out"] .catalog-card__dot {
+    background: #c62828;
+}
+
 .catalog-pagination {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);

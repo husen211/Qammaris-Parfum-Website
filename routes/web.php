@@ -31,6 +31,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OnlineOrderController;
 use App\Http\Controllers\OnlineOrderStaffController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RestockRequestController;
 use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FragranceBrowser;
 use App\Models\Product;
@@ -54,6 +55,9 @@ Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name
 
         return redirect()->route('products.show', $target, 301);
     });
+// WAIT-01: sold-out product → Qammaris App Daftar Tunggu.
+Route::post('/products/{product:slug}/kabari', [RestockRequestController::class, 'store'])
+    ->middleware('throttle:restock-request')->name('products.restock-request');
 
 // Cart
 Route::prefix('cart')->name('cart.')->group(function () {

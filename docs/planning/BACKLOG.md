@@ -40,6 +40,22 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## WAIT-01 — "Kabari saya jika sudah ready" on sold-out products — IN_PROGRESS
+
+Owner 2026-10-26 (card #119, App card husen211/qammaris-reimbursement-management-system#68): a sold-out product page shows "Kabari saya jika sudah ready" instead of "Tanya restock via WhatsApp". The button opens a short form (name + WhatsApp number), and the request goes to the Qammaris App Daftar Tunggu. The "Habis" status dot is now red (`#c62828`) on catalog cards and the product page.
+
+How it works:
+- `RestockRequestController` validates the input (name 2–60 characters; number normalized to an Indonesian 628… number; hidden honeypot field; limit 5 per minute and 20 per hour per IP).
+- `RestockRequests::record` saves at most one request per product and number within 60 days (the App's waiting period). The `restock_requests` table is also the outbox.
+- `waitlist.requested` events go to the App endpoint, signed like the order webhook: same client, same secret, the waitlist path. Delivery runs on the job and on `qammaris:restock-requests:deliver` every minute, with the order-webhook retry schedule and a 24 h give-up.
+- App answers: 200 is accepted; 400/422 fail without retry; 401/503/5xx/timeout are retried. `--retry-failed` requeues requests that gave up.
+- Once the App accepts a request, the Website clears the name, number and body and keeps only a keyed hash for the repeat check.
+- The App contract was agreed between the agents on 2026-10-26. The App files the entry as "Dicatat lewat Website", adds the customer to Pelanggan, and sends a push without the number. An entry for a product that is already available goes to "Siap dikabari". Staff send the WhatsApp message from the App; the Website sends nothing to the customer.
+
+Status: everything sits behind `QAMMARIS_WAITLIST_ENABLED`, which is off by default. With the flag off, the WhatsApp button stays.
+- Verification: `RestockRequestTest`; checked locally at 390 and 1440 (form, validation, success, delivery retry when the App is unreachable).
+- Remaining: once the App endpoint is live, turn the flag on in production and run one end-to-end request.
+
 ## SEO-03 — Permanent collection and brand pages (phase 3 of 3) — DONE
 
 Owner 2026-10-25 (card #106) approved 3 gender collections and brand pages for the 10 brands with the most products (Fragrance World 36, Mykonos 33, Armaf 28, Bali Surfer's 27, Zimaya 24, Ahmed Al Maghribi 22, Afnan 20, French Avenue 19, Rasasi 18, Khadlaj 18; production gender split Unisex 205 / Pria 110 / Wanita 66). Before, the only way to such a list was a filter URL, which SEO-01 made noindex, and the footer "Koleksi" linked category filters. Built on the existing catalog engine (filters, sort, cart, pagination unchanged): own title, meta description, H1, short factual intro (with store and unisex links), a "Terlaris di sini" line from the first three default-sorted products, visible breadcrumb + BreadcrumbList, collection links row; locked filter hidden; extra filters noindex; product links remember the collection for "Kembali"; product brand name, footer (new Koleksi and Brand columns), home brand row and sitemap link the pages. Mobile: intro trimmed so the first product cards show in the first 390×844 screen. `SeoCollectionsTest`; 390/1440 checked locally. Released PR116 (production `86a3ef8`, 2026-10-25): all 13 pages answer 200 and `index,follow` with live counts (Pria 110, Wanita 66, Unisex 205; brands 36…18), unconfigured paths 404; the cached sitemap was cleared once and now lists the 13 URLs; home row 10 brand links; footer Koleksi/Brand columns. Search Console: sitemap resubmitted, indexing requested for the 3 collections, /brand/afnan and /brand/rasasi (daily request limit reached); the other 8 brand pages come through the sitemap. Owner follow-up the same day: the top text was too long, especially on phones. Now one short line sits above the products and the fuller text is a visible "Tentang …" section below them (not hidden text, which Google treats as spam); the "Terlaris di sini" line was removed. First product card on a 390×844 phone moved from 690 px to 521 px from the top.

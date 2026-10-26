@@ -91,6 +91,17 @@ AUD-03 uses `ShopeeContentReview` for one read-only row summary shared by contro
 
 AUD-07 adds `RecordProductAdminChange` and one additive `product_admin_changes` table. Editor saves require the authenticated actor explicitly, lock/read current product state, and record one combined committed outcome. Gallery primary/move/archive and direct restore pass that actor to existing operations; `ArchiveProduct` coordinates its state/history transaction. Changed field groups only, description/notes/SKU/key hashes and active-gallery IDs/order/primary metadata; no request body, file/URL or customer/user credential fields. Audit failure rolls back the same transaction and uses the existing new-file cleanup; unchanged operations create no record. Imports/feed retain their original separate audits and non-human callers do not invent an admin actor. IDs intentionally remain historical without FK deletion coupling; no history route/model observer/generic framework, backfill or automatic purge. Authenticated account identity does not prove physical human identity or distinguish shared-session automation. [ADR-031](decisions/ADR-031-admin-product-change-history.md), [runbook](../runbooks/ADMIN_PRODUCT_AUDIT.md), [verification](../verification/aud-07/README.md); [approved production release](../verification/audit-release/README.md).
 
+## Restock requests to the App Daftar Tunggu (WAIT-01)
+
+```text
+Sold-out product page -> POST /products/{slug}/kabari (throttle restock-request, flag QAMMARIS_WAITLIST_ENABLED)
+  -> RestockRequestController (validation, honeypot) -> RestockRequests::record
+     (one per product and number hash per 60 days; restock_requests row = outbox)
+  -> DeliverRestockRequest job + qammaris:restock-requests:deliver (every minute)
+  -> App POST /api/integrations/website/waitlist/events, signed with OrderApiSignature (order webhook client and secret)
+  -> 200 delivered (contact data cleared) | 400/422 failed | other errors retried until 24 h
+```
+
 ## Cart, recipient checkout, and UI navigation
 
 ```text

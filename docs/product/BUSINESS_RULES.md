@@ -115,6 +115,13 @@ Kontrak detail: [ADR-011](../architecture/decisions/ADR-011-canonical-product-cs
 
 Keputusan: [ADR-020](../architecture/decisions/ADR-020-public-catalog-state-and-inquiry-boundary.md) untuk state, [ADR-027](../architecture/decisions/ADR-027-relevant-typo-tolerant-search.md) untuk search.
 
+## Produk habis: Kabari saya (WAIT-01)
+
+- Produk Habis tetap tampil dan bisa ditemukan. Titik statusnya merah.
+- Saat saklar `QAMMARIS_WAITLIST_ENABLED` aktif, halaman produk Habis menampilkan **Kabari saya jika sudah ready**, bukan "Tanya restock via WhatsApp". Isinya nama dan nomor WhatsApp, dan permintaannya masuk ke Daftar Tunggu Qammaris App sebagai "Dicatat lewat Website".
+- Satu permintaan per produk dan nomor dalam 60 hari. Website tidak mengirim pesan apa pun ke customer: staf mengabari dari App saat produk tersedia lagi.
+- Setelah App menerima, nama dan nomor dihapus dari Website. App yang menyimpan data itu.
+
 ## Keranjang dan checkout WhatsApp
 
 - Ikon keranjang langsung ke `/cart`, tanpa drawer. Produk published/visible dengan offer valid dan effective availability Tersedia dapat dipesan; Habis/OTW tetap terlihat dengan kontak restok, unknown kontak ketersediaan.
