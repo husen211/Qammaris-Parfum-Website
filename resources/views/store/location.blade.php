@@ -30,6 +30,12 @@
     </div>
 </div>
 
+<section class="bg-white pb-4 md:pb-6 scroll-mt-28" aria-labelledby="virtual-tour-title">
+    <div class="container mx-auto px-4 lg:px-12">
+        <x-virtual-tour />
+    </div>
+</section>
+
 <section class="py-20 bg-white">
     <div class="container mx-auto px-4 lg:px-12">
         <div class="grid lg:grid-cols-2 gap-16 items-start">

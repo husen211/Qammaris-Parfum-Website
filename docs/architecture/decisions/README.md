@@ -59,5 +59,6 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-051 | [Order state cutover and payment/refund ledger](ADR-051-order-cutover-and-money-ledger.md) (alias: [ADR-040 filename](ADR-040-order-cutover-and-money-ledger.md)) |
 | ADR-052 | [Courier cost on the Website, automatic approved reimbursement in the App](ADR-052-website-courier-cost-and-auto-reimbursement.md) |
 | ADR-053 | [Web Push for new website orders (admin)](ADR-053-admin-web-push.md) |
+| ADR-054 | [Walkable 360 store tour](ADR-054-store-virtual-tour.md) |
 
 Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. ADR-032–040 belong to the Journal and fragrance preference on main. The order line first used 034/035, then 037–040; for the release candidate (2026-10-11) those order decisions became ADR-048–051, and every old order filename stays as an alias. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.

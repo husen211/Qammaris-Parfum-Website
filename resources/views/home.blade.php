@@ -13,6 +13,7 @@
     @include('home.sections.best-seller')
     @include('home.sections.quiz-cta')
     @include('home.sections.shopping-guide')
+    @include('home.sections.virtual-tour')
     @include('home.sections.journal')
     @include('home.sections.about')
 @endsection
