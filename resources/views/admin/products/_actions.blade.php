@@ -3,7 +3,7 @@
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
     </a>
 
-    @if($product->publication_status === \App\Models\Product::PUBLICATION_PUBLISHED)
+    @if(in_array($product->publication_status, [\App\Models\Product::PUBLICATION_PUBLISHED, \App\Models\Product::PUBLICATION_DRAFT], true))
         <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Arsipkan produk ini? Produk akan disembunyikan dari katalog, tetapi data dan gambar tetap tersimpan.');">
             @csrf
             @method('DELETE')

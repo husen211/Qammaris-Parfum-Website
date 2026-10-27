@@ -37,8 +37,9 @@ class AdminQammarisAppProductController extends Controller
 
             return ['source' => $source, 'product' => $product, 'price_review' => $priceReview];
         });
+        // Products the App hid or merged are tombstones; they live only under "Disembunyikan aplikasi".
         $counts = [
-            'all' => $sources->count(),
+            'all' => $sources->filter(fn ($r) => ! $r['source']['hidden'])->count(),
             'draft' => $sources->filter(fn ($r) => ! $r['source']['hidden'] && $r['product']?->publication_status === 'draft')->count(),
             'unlinked' => $sources->filter(fn ($r) => ! $r['source']['hidden'] && ! $r['product'])->count(),
             'hidden' => $sources->filter(fn ($r) => $r['source']['hidden'])->count(),
@@ -50,7 +51,7 @@ class AdminQammarisAppProductController extends Controller
                 'unlinked' => ! $r['source']['hidden'] && ! $r['product'],
                 'hidden' => $r['source']['hidden'],
                 'price_review' => $r['price_review'],
-                default => true,
+                default => ! $r['source']['hidden'],
             };
 
             return $matches;
@@ -63,7 +64,7 @@ class AdminQammarisAppProductController extends Controller
         $pageInput = $request->query('page', 1);
         $page = max(1, min(is_scalar($pageInput) ? (int) $pageInput : 1, max(1, (int) ceil($filtered->count() / 25))));
         $rows = new LengthAwarePaginator($filtered->forPage($page, 25)->map(function ($r) use ($readiness) {
-            $r['blockers'] = $r['product']?->publication_status === 'draft' ? $readiness->handle($r['product']) : [];
+            $r['blockers'] = $r['product']?->publication_status === 'draft' && ! $r['source']['hidden'] ? $readiness->handle($r['product']) : [];
 
             return $r;
         }), $filtered->count(), 25, $page, ['path' => route('admin.app-products.index'), 'query' => array_filter(['status' => $filter, 'search' => $search])]);

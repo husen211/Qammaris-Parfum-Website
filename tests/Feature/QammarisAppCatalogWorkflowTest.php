@@ -186,6 +186,29 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         $this->assertDatabaseCount('product_import_batches', 0);
     }
 
+    public function test_draft_of_a_product_hidden_in_the_app_leaves_semua_and_can_be_archived(): void
+    {
+        $s = $this->source(['name' => 'Merged app duplicate', 'source' => 'app', 'price' => null]);
+        $this->feed($s);
+        $this->feed(array_replace($s, ['revision' => 2, 'change_seq' => 2, 'hidden' => true, 'active' => false]));
+        $draft = Product::sole();
+        $this->assertSame('draft', $draft->publication_status);
+        $this->actingAs($this->admin());
+
+        $all = $this->get(route('admin.app-products.index'))->assertOk()->assertDontSee('Merged app duplicate');
+        $this->assertSame(0, $all->viewData('counts')['all']);
+        $this->get(route('admin.app-products.index', ['status' => 'hidden']))->assertOk()
+            ->assertSee('Merged app duplicate')->assertSee('Arsipkan draft')->assertDontSee('Lengkapi draft')->assertDontSee('Belum siap tayang');
+        $this->get(route('admin.products.index'))->assertSee('Arsipkan Merged app duplicate');
+
+        $this->from(route('admin.app-products.index', ['status' => 'hidden']))->delete(route('admin.products.destroy', $draft->id))
+            ->assertRedirect(route('admin.app-products.index', ['status' => 'hidden']))->assertSessionHas('success');
+        $draft->refresh();
+        $this->assertSame('archived', $draft->publication_status);
+        $this->assertNotNull($draft->archived_at);
+        $this->assertSame($s['id'], $draft->externalIdentities->sole()->external_product_id);
+    }
+
     public function test_admin_preview_apply_is_explicit_actor_bound_idempotent_and_never_publishes(): void
     {
         $s = $this->source();
