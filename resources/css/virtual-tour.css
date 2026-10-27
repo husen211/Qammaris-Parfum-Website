@@ -1,59 +1,156 @@
-/* TOUR-01: walkable 360 store tour. Overlays sit on photography, so they use fixed dark/white tones. */
+/* TOUR-01: walkable 360 store tour. Cover on the page, tour in a full-screen dialog.
+   Everything sits on photography, so the tones are fixed dark/white with the brand gold. */
+.vt { --vt-gold: #C5A059; --vt-ink: #1A1A1A; --vt-night: #0b0d0c; position: relative; }
+
+/* ---- cover ---------------------------------------------------------------------------------- */
+.vt-cover {
+    position: relative; overflow: hidden; aspect-ratio: 16 / 9; min-height: 420px;
+    background: #121614; color: #fff; cursor: pointer; isolation: isolate;
+}
+.vt-cover-img {
+    position: absolute; inset: 0; width: 100%; height: 100%; max-width: none;
+    object-fit: cover; object-position: 50% 55%; transition: transform 1.2s cubic-bezier(.2, .6, .2, 1);
+}
+/* The cover is a 150° strip of the entrance panorama; a slow pan shows that it goes around. */
+.vt-cover.is-panning .vt-cover-img { animation: vt-pan 28s ease-in-out infinite alternate; }
+@keyframes vt-pan { from { object-position: 22% 55%; } to { object-position: 78% 55%; } }
+.vt.is-entering .vt-cover-img { transform: scale(1.08); }
+.vt-cover::after {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(10, 12, 11, 0) 30%, rgba(10, 12, 11, .55) 58%, rgba(10, 12, 11, .9) 100%);
+}
+.vt-cover-body { text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
+.vt-cover-body {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: grid; gap: 10px; max-width: 640px; padding: clamp(22px, 4vw, 52px);
+}
+.vt-eyebrow { margin: 0; color: var(--vt-gold); font-size: .7rem; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; }
+.vt-title { margin: 0; font-size: clamp(1.9rem, 4.2vw, 3.3rem); font-weight: 400; line-height: 1.08; letter-spacing: -.03em; text-wrap: balance; }
+.vt-lead { margin: 0; max-width: 46ch; color: rgba(255, 255, 255, .8); font-size: .95rem; line-height: 1.6; }
+.vt-cover-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 8px; }
+.vt-enter {
+    display: inline-flex; align-items: center; gap: 12px; min-height: 50px; padding: 0 30px;
+    border: 0; background: #fff; color: var(--vt-ink); cursor: pointer;
+    font-size: .75rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+    transition: background-color .2s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.vt-enter svg { width: 18px; height: 18px; }
+.vt-enter:hover, .vt-cover:hover .vt-enter { background: var(--vt-gold); }
+.vt-enter:active { background: var(--vt-gold); }
+.vt-enter:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.vt-meta { margin: 0; color: rgba(255, 255, 255, .72); font-size: .78rem; }
+
+.vt-fallback[hidden] { display: none; }
+.vt-fallback { margin-top: 18px; }
+.vt-fallback-note { margin: 0 0 14px; text-align: center; color: #62635d; font-size: .9rem; }
+.vt-fallback-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.vt-fallback-grid figure { margin: 0; }
+.vt-fallback-grid img { display: block; width: 100%; height: auto; }
+.vt-fallback-grid figcaption { margin-top: 6px; font-size: .85rem; color: #62635d; }
+
+/* ---- full-screen tour ------------------------------------------------------------------------ */
+html.vt-lock { overflow: hidden; }
+.vt-dialog {
+    position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none;
+    margin: 0; padding: 0; border: 0; overflow: hidden; background: var(--vt-night); color: #fff;
+}
+.vt-dialog:not([open]) { display: none; }
+.vt-dialog::backdrop { background: #0b0d0c; }
 .vt-stage {
-    --vt-gold: #C5A059;
-    --vt-ink: #1A1A1A;
-    position: relative;
-    height: min(72svh, 640px);
-    min-height: 380px;
-    border-radius: 6px;
-    overflow: hidden;
-    background: #121614;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    cursor: grab;
-    outline: none;
+    position: absolute; inset: 0; touch-action: none; user-select: none; -webkit-user-select: none;
+    cursor: grab; outline: none;
 }
 .vt-stage.is-dragging { cursor: grabbing; }
-.vt-stage:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--vt-gold); }
+.vt-stage:focus-visible { box-shadow: inset 0 0 0 3px var(--vt-gold); }
 .vt-canvas, .vt-canvas canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .vt-hotspots { position: absolute; inset: 0; pointer-events: none; }
+
+/* "Walking in": the entrance photo pushes forward while the panorama loads, then hands over. */
+.vt-intro {
+    position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; max-width: none;
+    object-fit: cover; pointer-events: none; transition: opacity .6s ease;
+    animation: vt-walk-in 2.4s cubic-bezier(.2, .6, .2, 1) forwards;
+}
+.vt-intro.is-done { opacity: 0; }
+@keyframes vt-walk-in { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+.vt-top {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; pointer-events: none;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px));
+    background: linear-gradient(rgba(8, 10, 9, .62), rgba(8, 10, 9, 0));
+}
+.vt-top-count { margin: 0; color: var(--vt-gold); font-size: .68rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+.vt-top-name { margin: 3px 0 0; font-size: 1.3rem; font-weight: 500; letter-spacing: -.01em; }
+.vt-close {
+    pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px 0 12px;
+    border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; background: rgba(8, 10, 9, .45); color: #fff;
+    font-size: .82rem; font-weight: 600; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.vt-close svg { width: 18px; height: 18px; }
+.vt-close:hover { background: rgba(8, 10, 9, .7); }
+.vt-close:active { background: rgba(255, 255, 255, .2); }
 
 .vt-status, .vt-error {
     position: absolute; inset: 0; z-index: 4; margin: 0;
     display: grid; place-items: center; align-content: center; gap: 14px;
-    color: #e4e3dd; font-size: .9rem; text-align: center; padding: 24px;
-    pointer-events: none;
+    color: #e4e3dd; font-size: .9rem; text-align: center; padding: 24px; pointer-events: none;
 }
-.vt-stage[hidden], .vt-areas[hidden], .vt-status[hidden], .vt-error[hidden], .vt-hint[hidden], .vt-fallback[hidden] { display: none; }
-.vt-error { background: rgba(10, 12, 11, .78); pointer-events: auto; }
+.vt-status[hidden], .vt-error[hidden], .vt-hint[hidden], .vt-arrow[hidden] { display: none; }
+.vt-error { background: rgba(10, 12, 11, .8); pointer-events: auto; }
 .vt-error p { margin: 0; }
 .vt-retry {
-    border: 1px solid var(--vt-gold); color: #fff; background: transparent;
-    padding: 10px 22px; border-radius: 999px; font-size: .85rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--vt-gold); color: #fff; background: transparent; cursor: pointer;
+    padding: 10px 22px; border-radius: 999px; font-size: .85rem; font-weight: 600;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
 .vt-retry:active { background: rgba(197, 160, 89, .25); }
 
-/* Walk arrows. Positioned every frame by the viewer (translate). */
+.vt-hint {
+    position: absolute; left: 50%; top: calc(88px + env(safe-area-inset-top, 0px)); z-index: 3; transform: translateX(-50%);
+    width: max-content; max-width: calc(100% - 32px); margin: 0; padding: 7px 14px; border-radius: 999px;
+    background: rgba(8, 10, 9, .6); color: #fff; font-size: .78rem; text-align: center; pointer-events: none;
+}
+
+.vt-bottom {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+    display: grid; justify-items: center; gap: 12px; pointer-events: none;
+    padding: 40px max(12px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+    background: linear-gradient(rgba(8, 10, 9, 0), rgba(8, 10, 9, .66));
+}
+.vt-zoom, .vt-areas { pointer-events: auto; }
+.vt-zoom { display: flex; gap: 6px; padding: 4px; border-radius: 999px; background: rgba(8, 10, 9, .5); }
+.vt-zoom button {
+    width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .14); color: #fff; cursor: pointer;
+    font-size: .72rem; font-weight: 600; font-variant-numeric: tabular-nums; transition: background-color .2s ease, color .2s ease;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.vt-zoom button[aria-pressed="true"] { background: rgba(8, 10, 9, .9); color: var(--vt-gold); font-size: .78rem; }
+.vt-areas { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.vt-area {
+    min-height: 44px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, .32); border-radius: 999px;
+    background: rgba(8, 10, 9, .45); color: #fff; font-size: .8rem; font-weight: 500; cursor: pointer;
+    transition: background-color .2s ease, color .2s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.vt-area:hover { background: rgba(8, 10, 9, .7); }
+.vt-area[aria-pressed="true"] { background: #fff; border-color: #fff; color: var(--vt-ink); }
+.vt-zoom button:focus-visible, .vt-area:focus-visible, .vt-close:focus-visible, .vt-retry:focus-visible { outline: 2px solid var(--vt-gold); outline-offset: 2px; }
+
+/* Walk arrows, positioned every frame by the viewer (translate). */
 .vt-arrow {
     position: absolute; left: 0; top: 0; width: 56px; height: 56px; margin: -28px 0 0 -28px;
     pointer-events: auto; cursor: pointer; border: 0; padding: 0; background: none;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
-.vt-arrow[hidden] { display: none; }
 .vt-arrow-ring {
     width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
-    background: rgba(255, 255, 255, .92); border: 2px solid var(--vt-gold);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
-    transition: background-color .2s ease;
-    animation: vt-pulse 2.4s ease-in-out infinite;
+    background: rgba(255, 255, 255, .92); border: 2px solid var(--vt-gold); box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    transition: background-color .2s ease; animation: vt-pulse 2.4s ease-in-out infinite;
 }
-.vt-arrow-ring svg { width: 26px; height: 26px; color: var(--color-brand-emerald, #0D3F33); }
+.vt-arrow-ring svg { width: 26px; height: 26px; color: #0D3F33; }
 .vt-arrow-label {
     position: absolute; top: 62px; left: 50%; transform: translateX(-50%); white-space: nowrap;
-    color: #fff; background: rgba(10, 12, 11, .74); font-size: .75rem; font-weight: 500;
-    padding: 3px 9px; border-radius: 3px;
+    color: #fff; background: rgba(10, 12, 11, .74); font-size: .75rem; font-weight: 500; padding: 3px 9px; border-radius: 3px;
 }
 .vt-arrow:hover .vt-arrow-ring { background: #fff; }
 .vt-arrow:active .vt-arrow-ring { background: #f1e7d2; }
@@ -64,45 +161,14 @@
     50% { box-shadow: 0 6px 18px rgba(0, 0, 0, .35), 0 0 0 10px rgba(197, 160, 89, 0); }
 }
 
-.vt-hint {
-    position: absolute; left: 12px; top: 12px; z-index: 3; margin: 0; pointer-events: none;
-    color: #fff; font-size: .75rem; background: rgba(10, 12, 11, .55); padding: 4px 10px; border-radius: 3px;
-    max-width: calc(100% - 24px);
-}
-
-.vt-areas { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px; }
-.vt-areas-label { margin: 0; font-size: .68rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #8d713e; }
-.vt-area-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.vt-area {
-    min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid #deded7; background: #fff;
-    color: var(--color-brand-black, #1A1A1A); font-size: .85rem; font-weight: 500; cursor: pointer;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background-color .2s ease, border-color .2s ease;
-}
-.vt-area:hover { border-color: #b9b9b0; }
-.vt-area:active { background: #f4f2ec; }
-.vt-area[aria-pressed="true"] { background: var(--color-brand-black, #1A1A1A); border-color: var(--color-brand-black, #1A1A1A); color: #fff; }
-.vt-area:focus-visible, .vt-cta:focus-visible { outline: 2px solid #9a793b; outline-offset: 3px; }
-
-.vt-cta {
-    display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 999px;
-    background: var(--color-brand-black, #1A1A1A); color: #fff; font-size: .85rem; font-weight: 600;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-}
-.vt-cta--quiet { background: transparent; color: var(--color-brand-black, #1A1A1A); border: 1px solid #deded7; }
-.vt-cta:hover { background: #333; }
-.vt-cta--quiet:hover { background: #f4f2ec; }
-
-.vt-fallback-note { margin: 0 0 16px; text-align: center; color: #62635d; font-size: .9rem; }
-.vt-fallback-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.vt-fallback-grid figure { margin: 0; }
-.vt-fallback-grid img { width: 100%; height: auto; border-radius: 6px; display: block; }
-.vt-fallback-grid figcaption { margin-top: 6px; font-size: .85rem; color: #62635d; }
-
 @media (max-width: 640px) {
-    .vt-stage { height: 62svh; min-height: 340px; margin-inline: -4px; }
-    .vt-hint { font-size: .7rem; max-width: 150px; }
+    .vt-cover { aspect-ratio: 4 / 5; min-height: 0; }
+    .vt-cover::after { background: linear-gradient(180deg, rgba(10, 12, 11, 0) 12%, rgba(10, 12, 11, .62) 42%, rgba(10, 12, 11, .92) 100%); }
+    .vt-lead { font-size: .9rem; }
+    .vt-enter { flex: 1 1 100%; justify-content: center; }
+    .vt-meta { width: 100%; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .vt-arrow-ring { animation: none; }
-    .vt-arrow-ring, .vt-area { transition: none; }
+    .vt-cover.is-panning .vt-cover-img, .vt-intro, .vt-arrow-ring { animation: none; }
+    .vt-cover-img, .vt-intro, .vt-enter, .vt-zoom button, .vt-area, .vt-arrow-ring { transition: none; }
 }

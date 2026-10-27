@@ -97,7 +97,6 @@ Route::prefix('blog')->name('blog.')->group(function () {
 Route::prefix('store')->name('store.')->group(function () {
     Route::get('/location', [StoreController::class, 'location'])->name('location');
     Route::get('/about', [StoreController::class, 'about'])->name('about');
-    Route::get('/virtual-tour', [StoreController::class, 'virtualTour'])->name('virtual-tour');
 });
 
 // Anonymous preference access stays separate from account authentication.

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BlogPost;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,34 +16,57 @@ class StoreVirtualTourTest extends TestCase
         $this->withoutVite();
     }
 
-    public function test_tour_page_renders_viewer_data_fallback_and_breadcrumb(): void
+    public function test_location_page_has_the_tour_cover_dialog_and_data(): void
     {
-        $response = $this->get('/store/virtual-tour')->assertOk()
-            ->assertSee('Virtual Tour Toko Qammaris')
-            ->assertSee('data-tour-stage', false)
-            ->assertSee('id="virtual-tour-data"', false)
+        $response = $this->get('/store/location')->assertOk()
+            ->assertSee('id="virtual-tour"', false)
+            ->assertSee('Masuk ke toko Qammaris')
+            ->assertSee('data-tour-enter', false)
+            ->assertSee('<dialog class="vt-dialog"', false)
+            ->assertSee('data-tour-zoom="0.5" aria-pressed="true"', false)
             ->assertSee('data-tour-fallback', false)
-            ->assertSee('<link rel="canonical" href="'.route('store.virtual-tour').'"', false)
-            ->assertSee('"@type":"BreadcrumbList"', false);
+            ->assertSee(asset('images/virtual-tour/cover.webp'), false);
 
-        foreach (config('store_virtual_tour.spots') as $id => $spot) {
-            $response->assertSee('data-tour-goto="'.$id.'"', false)
-                ->assertSee(asset("images/virtual-tour/{$id}-preview.webp"), false);
-        }
-
-        $html = $response->getContent();
-        preg_match('#<script type="application/json" id="virtual-tour-data">(.*?)</script>#s', $html, $match);
-        $tour = json_decode($match[1], true, flags: JSON_THROW_ON_ERROR);
+        $tour = $this->tourData($response->getContent());
         $this->assertSame(config('store_virtual_tour.start'), $tour['start']);
         $this->assertSame(['pintu-masuk', 'tengah', 'depan-kasir'], array_column($tour['spots'], 'id'));
-        $this->assertFileDoesNotExist(public_path('images/virtual-tour/dalam-tengah-4096.jpg'));
-        $this->assertSame(asset('images/virtual-tour/tengah-4096.jpg'), collect($tour['spots'])->firstWhere('id', 'tengah')['images']['small']);
+        $this->assertSame(asset('images/virtual-tour/tengah-4096.jpg'), $tour['spots'][1]['images']['small']);
+        foreach ($tour['spots'] as $spot) {
+            $response->assertSee('data-tour-goto="'.$spot['id'].'"', false);
+        }
+    }
+
+    public function test_homepage_shows_the_tour_right_above_the_journal(): void
+    {
+        BlogPost::create([
+            'title' => 'Artikel Journal', 'excerpt' => 'Ringkasan.', 'content' => '<p>Isi.</p>', 'featured_image' => null,
+            'author' => 'Qammaris Team', 'category' => 'Tips', 'is_published' => true, 'published_at' => now()->subMinute(),
+            'view_count' => 0, 'meta_description' => 'Meta.',
+        ]);
+
+        $html = $this->get('/')->assertOk()->assertSee('Masuk ke toko Qammaris')->getContent();
+
+        $tour = strpos($html, 'id="virtual-tour"');
+        $this->assertNotFalse($tour);
+        $this->assertGreaterThan(strpos($html, 'id="how-to-order"'), $tour);
+        $this->assertLessThan(strpos($html, 'Qammaris Journal</h2>'), $tour);
+        $this->assertSame(1, substr_count($html, 'data-virtual-tour'));
+    }
+
+    public function test_tour_has_no_page_of_its_own_and_links_point_to_the_location_page(): void
+    {
+        $this->get('/store/virtual-tour')->assertNotFound();
+        $this->get('/store/location')->assertSee('href="'.route('store.location').'#virtual-tour"', false);
+        $this->get('/sitemap.xml')->assertOk()->assertDontSee('virtual-tour');
     }
 
     public function test_every_spot_has_its_images_and_walk_links_go_both_ways(): void
     {
         $spots = config('store_virtual_tour.spots');
         $this->assertArrayHasKey(config('store_virtual_tour.start'), $spots);
+        $this->assertFileExists(public_path('images/virtual-tour/cover.webp'));
+        $this->assertFileExists(public_path('images/virtual-tour/intro.webp'));
+        $this->assertFileDoesNotExist(public_path('images/virtual-tour/dalam-tengah-4096.jpg'));
 
         foreach ($spots as $id => $spot) {
             foreach (["{$id}-4096.jpg", "{$id}-6144.jpg", "{$id}-preview.webp"] as $file) {
@@ -61,12 +85,10 @@ class StoreVirtualTourTest extends TestCase
         }
     }
 
-    public function test_location_page_footer_and_sitemap_link_the_tour(): void
+    private function tourData(string $html): array
     {
-        $this->get('/store/location')->assertOk()
-            ->assertSee('href="'.route('store.virtual-tour').'"', false);
+        preg_match('#<script type="application/json" data-tour-data>(.*?)</script>#s', $html, $match);
 
-        $this->get('/sitemap.xml')->assertOk()
-            ->assertSee('<loc>'.route('store.virtual-tour').'</loc>', false);
+        return json_decode($match[1], true, flags: JSON_THROW_ON_ERROR);
     }
 }

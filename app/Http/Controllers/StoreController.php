@@ -63,34 +63,6 @@ class StoreController extends Controller
         ));
     }
 
-    public function virtualTour()
-    {
-        $config = config('store_virtual_tour');
-        $spots = collect($config['spots'])->map(fn (array $spot, string $id) => [
-            'id' => $id,
-            'name' => $spot['name'],
-            'yaw' => $spot['yaw'],
-            'images' => [
-                'small' => asset("images/virtual-tour/{$id}-4096.jpg"),
-                'large' => asset("images/virtual-tour/{$id}-6144.jpg"),
-            ],
-            'preview' => asset("images/virtual-tour/{$id}-preview.webp"),
-            'links' => $spot['links'],
-        ])->values();
-        $tour = ['start' => $config['start'], 'spots' => $spots];
-        $breadcrumbSchema = [
-            '@context' => 'https://schema.org',
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => [
-                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Beranda', 'item' => url('/')],
-                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Lokasi Toko', 'item' => route('store.location')],
-                ['@type' => 'ListItem', 'position' => 3, 'name' => 'Virtual Tour', 'item' => route('store.virtual-tour')],
-            ],
-        ];
-
-        return view('store.virtual-tour', compact('tour', 'spots', 'breadcrumbSchema'));
-    }
-
     public function about()
     {
         $storeInfo = cache()->remember('store_info', 3600, function () {
