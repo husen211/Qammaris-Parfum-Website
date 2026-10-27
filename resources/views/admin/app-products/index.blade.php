@@ -72,7 +72,13 @@
                         @endif
                     </div>
                     <div>
-                        @if($product)
+                        @if($product && $source['hidden'] && $product->publication_status === 'draft')
+                            <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" onsubmit="return confirm('Arsipkan draft ini? Produk sudah disembunyikan di aplikasi; data tetap tersimpan.');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2">Arsipkan draft</button>
+                            </form>
+                        @elseif($product)
                             <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => route('admin.app-products.index', ['status' => $filter, 'search' => $search, 'page' => $rows->currentPage()], false)]) }}" class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2">{{ $product->publication_status === 'draft' ? 'Lengkapi draft' : 'Edit produk' }}</a>
                         @else
                             <span class="text-xs text-gray-500">{{ $source['hidden'] ? 'Tombstone dipertahankan' : 'Review pasangan diperlukan' }}</span>
