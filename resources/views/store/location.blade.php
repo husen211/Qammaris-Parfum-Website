@@ -25,6 +25,7 @@
         </h1>
         <div class="text-gray-500 font-light text-lg max-w-2xl mx-auto leading-relaxed space-y-4 animate-fade-in-up" style="animation-delay: 0.2s;">
             <p>Qammaris Perfumes adalah toko parfum Timur Tengah dan lokal di Jl. Sis Aljufri, Siranindi, Palu Barat. Semua parfum di toko tersedia testernya, dan staf kami membantu membandingkan aroma sampai Anda menemukan yang paling cocok.</p>
+            <p>Ingin melihat isi toko dulu? Jelajahi <a href="{{ route('store.virtual-tour') }}" class="text-brand-black underline underline-offset-4 hover:text-brand-gold">virtual tour toko</a> dari pintu masuk sampai meja kasir.</p>
             <p>Tidak sempat datang? Pilih dari <a href="{{ route('products.index') }}" class="text-brand-black underline underline-offset-4 hover:text-brand-gold">katalog parfum</a> lalu pesan online. Kami kirim ke seluruh Indonesia, termasuk ke kota-kota di Sulawesi Tengah.</p>
         </div>
     </div>

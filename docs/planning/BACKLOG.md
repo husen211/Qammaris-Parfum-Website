@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## TOUR-01 — Walkable 360 store tour — IN_REVIEW
+
+Owner 2026-10-27 (card #128): customers can look around the Palu store in 360 photos and walk between areas. Seven Teleport 360 captures were retouched outside the repository (stitching repairs, logo disc over the photographer's feet, ceiling swirls, glass reflection); four are used: Pintu Masuk, Tengah, Dalam Tengah, Depan Kasir. The Owner approved a standalone walkable prototype before implementation.
+
+New page `/store/virtual-tour` (`StoreController::virtualTour`, `config/store_virtual_tour.php`, page-only `virtual-tour.css/js`): viewer on the existing three.js dependency, floor arrows that walk to the next area (turn, step in, cross-fade, step out, keeping the walking direction), a schematic floor plan with the viewing cone, area buttons, preview photos when WebGL or JS is missing, retry on load failure. Panoramas are static files in `public/images/virtual-tour/` (4096/6144 px + WebP previews, 8.5 MB); phones get 4096 px. Arrow directions come from relative camera poses between the four photos. Linked from `/store/location`, the footer and the sitemap. No database, migration, order or admin change. [ADR-054](../architecture/decisions/ADR-054-store-virtual-tour.md), [verification](../verification/tour-01/README.md).
+
+Status: checked locally at 390/375/1440 (walk both ways, drag, fallback); waiting for the Owner's localhost check. `StoreVirtualTourTest` 3 tests; full local suite 822 passed, 10 skipped, 3 failed — the same 3 fail on `main` locally (XAMPP PHP without GD: two J&T QR upload tests; `ReleaseCheckTest` VAPID check), not related to this item; CI runs with GD. Open limits: physical iPhone/Android touch and low-end GPUs untested; reconstructed cabinet/arch parts and the cut display-table end are noted in the verification; Qammaris 1 needs a reshoot to be added.
+
 ## CAT-APP-HIDDEN-01 — App-hidden products show twice in the admin — DONE
 
 Owner 2026-10-27 (card #124): the admin "Produk dari aplikasi" list showed "Project 1945 Water of maluku" (draft #639, App UUID `6ebaa494…`, created in the App, now hidden there) next to the published "Project 1945 Waters of Maluku Perfume | Extrait De Parfum Unisex 100ml" (#901, UUID `36e06f89…`, Majoo). The App lists only one product. The "Semua" tab counted every App snapshot including hidden/merged tombstones, and drafts had no archive control (only published products could be archived). Production had 8 such drafts linked to hidden App products (#477, #502, #639, #894, #895, #896, #897, #919).

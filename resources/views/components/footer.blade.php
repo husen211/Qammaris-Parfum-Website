@@ -35,6 +35,7 @@
                         <li><a href="{{ route('quiz.index') }}" class="footer-link">Tes Parfum</a></li>
                         <li><a href="{{ route('blog.index') }}" class="footer-link">Qammaris Journal</a></li>
                         <li><a href="{{ route('store.location') }}" class="footer-link">Lokasi Toko</a></li>
+                        <li><a href="{{ route('store.virtual-tour') }}" class="footer-link">Virtual Tour Toko</a></li>
                     </ul>
                 </nav>
                 @if($footerGenders->isNotEmpty())

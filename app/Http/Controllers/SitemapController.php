@@ -28,6 +28,7 @@ class SitemapController extends Controller
                 ['loc' => route('blog.index'), 'lastmod' => $posts->map(fn ($post) => $post->content_updated_at ?? $post->published_at)->max()?->toAtomString()],
                 ['loc' => route('store.about')],
                 ['loc' => route('store.location')],
+                ['loc' => route('store.virtual-tour')],
             ];
 
             // SEO-03: permanent collection and brand pages, dated by their newest product change.

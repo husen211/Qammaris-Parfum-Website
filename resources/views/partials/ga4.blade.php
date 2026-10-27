@@ -1,6 +1,6 @@
 @php($ga4Id = (string) config('analytics.ga4_measurement_id'))
 {{-- Only discovery pages: never checkout, forms, private links, or the Admin. --}}
-@if (app()->environment('production') && preg_match('/^G-[A-Z0-9]{10}$/', $ga4Id) && request()->routeIs('home', 'products.index', 'products.show', 'blog.index', 'blog.show', 'blog.category', 'store.location', 'store.about'))
+@if (app()->environment('production') && preg_match('/^G-[A-Z0-9]{10}$/', $ga4Id) && request()->routeIs('home', 'products.index', 'products.show', 'blog.index', 'blog.show', 'blog.category', 'store.location', 'store.about', 'store.virtual-tour'))
     <li>
     <aside data-ga4-consent data-measurement-id="{{ $ga4Id }}" aria-label="Pilihan statistik kunjungan" hidden
         class="fixed bottom-4 left-4 right-4 z-[110] border border-gray-300 bg-white p-4 text-sm text-brand-black shadow-sm sm:right-auto sm:max-w-md">
