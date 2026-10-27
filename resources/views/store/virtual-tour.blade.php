@@ -46,9 +46,6 @@
                 <p>Foto 360 gagal dimuat. Periksa koneksi internet Anda.</p>
                 <button type="button" class="vt-retry" data-tour-retry>Coba lagi</button>
             </div>
-            <div class="vt-plan" data-tour-plan hidden>
-                <svg viewBox="0 0 100 172" role="group" aria-label="Denah toko, pilih area"></svg>
-            </div>
             <p class="vt-hint" data-tour-hint hidden>Geser untuk melihat sekeliling</p>
         </div>
 

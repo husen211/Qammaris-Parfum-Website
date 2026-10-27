@@ -70,8 +70,6 @@ class StoreController extends Controller
             'id' => $id,
             'name' => $spot['name'],
             'yaw' => $spot['yaw'],
-            'theta' => $spot['theta'],
-            'plan' => $spot['plan'],
             'images' => [
                 'small' => asset("images/virtual-tour/{$id}-4096.jpg"),
                 'large' => asset("images/virtual-tour/{$id}-6144.jpg"),

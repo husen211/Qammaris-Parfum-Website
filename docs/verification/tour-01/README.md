@@ -4,35 +4,37 @@ Date: 2026-10-27. Branch `modernization/tour-01-virtual-tour`. Card #128. Decisi
 
 ## Source photos
 
-Seven Teleport 360 captures shared by the Owner (share links, full resolution 9088–10352 px wide). Retouched outside the repository; originals and full-resolution results stay on the Owner's laptop (`virtual-tour-foto/asli`, `virtual-tour-foto/hasil`), not in Git.
+Teleport 360 captures shared by the Owner (share links, full resolution 9088–10352 px wide). Retouched outside the repository; the three final full-resolution panoramas stay on the Owner's laptop (`virtual-tour-foto/hasil`: `1-pintu-masuk.jpg`, `2-tengah.jpg`, `3-depan-kasir.jpg`), not in Git.
 
-| Area | Capture | Main repairs | Known limit |
-|---|---|---|---|
-| Pintu Masuk | Qammaris 3 (second share) | photographer's reflection in the glass, feet (logo disc), ceiling light swirls | folding gate right of the glass still bent; the glass patch is soft when zoomed |
-| Tengah | Qammaris Tengah | ceiling swirls, broken nadir (logo disc), ghost bench | small tile-line breaks on the floor; staff member at the counter |
-| Dalam Tengah | Qammaris Dalam Tengah (first of two) | rebuilt lower cabinet of the large left arch, ghost bench, ceiling | display-table end next to the camera cut by the logo disc; rebuilt doors are a reconstruction |
-| Depan Kasir | Qammaris Depan Kasir | rebuilt slatted counter front and marble edge, both narrow arch bottoms, MUST TRY cabinet, ghost marble on the floor, ceiling | rebuilt lower parts are reconstructions; doubled trim at the foot of the marble panel |
+| Area | Main repairs | Known limit |
+|---|---|---|
+| Pintu Masuk | photographer's reflection in the glass, feet (logo disc), ceiling light swirls; second pass: the last narrow capsule on the side wall straightened (right trim kinked below the last shelf) | folding gate right of the glass still bent; the glass patch is soft when zoomed |
+| Tengah | ceiling swirls, broken nadir (logo disc), ghost bench | small tile-line breaks on the floor; staff member at the counter |
+| Depan Kasir | rebuilt slatted counter front and marble edge, both narrow arch bottoms, ghost marble on the floor, ceiling; second pass: MUST TRY cabinet rebuilt from the big arch cabinet's real wood (two doors, real aluminium strip) and the narrow capsule bottom copied from the intact capsule on the same wall | rebuilt lower parts are reconstructions; doubled trim at the foot of the marble panel |
 
-Not used: Qammaris 1 (display wall too broken, reshoot from 1.5–2 m), the second Dalam Tengah capture, the earlier Qammaris 3 capture.
+Owner review 2026-10-27 (three screenshots): the MUST TRY cabinet looked drawn, the narrow capsule bottom was lumpy, the last Pintu Masuk capsule was skewed. All three repaired as above. The Owner dropped Dalam Tengah ("berantakan"); the tour is Pintu Masuk → Tengah → Depan Kasir. The Owner may still colour-grade the three photos externally and send them back.
 
-Walk directions come from relative camera poses (SIFT matches on 24 views per panorama, essential matrix on bearing vectors; 186–2300 inliers per pair). Order from the door: Pintu Masuk → Tengah → Dalam Tengah → Depan Kasir, consistent with the capture names. Reported arrow yaws agree with the solved layout within ~5° except Dalam Tengah ↔ Pintu Masuk (not linked).
+Not used: Dalam Tengah (both captures), Qammaris 1 (display wall too broken, reshoot from 1.5–2 m), the earlier Qammaris 3 capture.
+
+Walk directions come from relative camera poses (SIFT matches on 24 views per panorama, essential matrix on bearing vectors; 186–2300 inliers per pair). Tengah → Depan Kasir uses the direct pair estimate (348 inliers; its two directions agree within 2° with the other pairs).
 
 ## Checks run
 
-- `php artisan test --filter='StoreVirtualTourTest|SeoTechnicalTest|SeoLocalPaluTest|StoreAboutTest'`: 18 passed (255 assertions). `StoreVirtualTourTest` covers the page, JSON data, canonical/breadcrumb, image files and 2:1 size, two-way links, location/footer/sitemap links.
-- Full suite (local XAMPP PHP): 822 passed, 10 skipped, 3 failed. The 3 failures (`OrderApiWriteTest` and `OrderOperationalUxTest` J&T QR uploads: GD not installed; `ReleaseCheckTest` everything-ready) fail identically on `main` with these changes stashed.
+- `php artisan test --filter=StoreVirtualTourTest`: 3 passed (53 assertions): page, JSON data in walking order without Dalam Tengah, canonical/breadcrumb, image files and 2:1 size, two-way links, location/footer/sitemap links. With the related store/SEO tests on the first pass: 18 passed.
+- Full suite (local XAMPP PHP, first pass): 822 passed, 10 skipped, 3 failed. The 3 failures (`OrderApiWriteTest` and `OrderOperationalUxTest` J&T QR uploads: GD not installed; `ReleaseCheckTest` everything-ready) fail identically on `main` with these changes stashed.
 - Pint (changed PHP), `git diff --check`, `npm run build`.
 - Browser, local `artisan serve` + built assets:
-  - 390×844 and 375×812 (mobile preset): page width equals viewport, viewer loads the 4096 px files, floor plan top right, walk arrow visible; pointer-event drag (touch type) turns the view and hides the hint; walking Pintu Masuk → Tengah → Dalam Tengah → Depan Kasir and back, then the "Depan Kasir" area button: every step updates the live region, pressed button and arrows, no error state, no console errors.
-  - 1440×900: viewer loads the 6144 px files, layout as shown below.
-  - Fallback: stage hidden and preview grid shown (4 photos, 4 columns at 1440); the no-JS path uses the same markup through `<noscript>`.
+  - 375×812 (mobile preset): page width equals viewport, no floor plan, wider start view (90° horizontal, both side walls visible), 4096 px files; walking Pintu Masuk → Tengah → Depan Kasir → Tengah → Pintu Masuk → Tengah plus the "Depan Kasir" area button: live region, pressed button and arrows update, no error state. Area buttons are 44 px high.
+  - 1440×900: 6144 px files; MUST TRY cabinet and capsule checked from the Depan Kasir view.
+  - Fallback: stage hidden and the preview grid shown; the no-JS path uses the same markup through `<noscript>`.
+  - The only console error seen was from a synthetic pointer event in an earlier test run (before the `setPointerCapture` guard was built in).
 
 | | |
 |---|---|
-| ![390](after-390-pintu-masuk.jpg) | ![1440](after-1440-pintu-masuk.jpg) |
-| 390×844, start at Pintu Masuk | 1440×900 |
-| ![drag](after-375-touch-drag.jpg) | |
-| 375×812 after a drag | |
+| ![375](after-375-pintu-masuk-wide.jpg) | ![1440](after-1440-depan-kasir-must-try.jpg) |
+| 375×812, start at Pintu Masuk | 1440×900, Depan Kasir MUST TRY wall |
+| ![capsule](pintu-masuk-capsule-before-after.jpg) | ![1440 start](after-1440-pintu-masuk.jpg) |
+| Pintu Masuk capsule, before / after | 1440×900 start (first pass, with the since removed floor plan) |
 
 Before: the page did not exist (404); `/store/location` gained one sentence linking the tour, the footer "Jelajahi" list one link.
 

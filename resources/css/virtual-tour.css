@@ -25,7 +25,7 @@
     color: #e4e3dd; font-size: .9rem; text-align: center; padding: 24px;
     pointer-events: none;
 }
-.vt-stage[hidden], .vt-areas[hidden], .vt-status[hidden], .vt-error[hidden], .vt-plan[hidden], .vt-hint[hidden], .vt-fallback[hidden] { display: none; }
+.vt-stage[hidden], .vt-areas[hidden], .vt-status[hidden], .vt-error[hidden], .vt-hint[hidden], .vt-fallback[hidden] { display: none; }
 .vt-error { background: rgba(10, 12, 11, .78); pointer-events: auto; }
 .vt-error p { margin: 0; }
 .vt-retry {
@@ -64,25 +64,10 @@
     50% { box-shadow: 0 6px 18px rgba(0, 0, 0, .35), 0 0 0 10px rgba(197, 160, 89, 0); }
 }
 
-/* Floor plan: store outline, the four camera spots and the viewing cone. Top corner, because the
-   walk arrows sit on the floor in the lower half of the view. */
-.vt-plan {
-    position: absolute; right: 12px; top: 12px; z-index: 3; width: 88px;
-    background: rgba(10, 12, 11, .62); border-radius: 6px; padding: 6px 6px 4px;
-}
-.vt-plan svg { display: block; width: 100%; height: auto; overflow: visible; }
-.vt-plan .room { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: 1.2; }
-.vt-plan .end { fill: rgba(255, 255, 255, .78); font-size: 8px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-.vt-plan .route { fill: none; stroke: rgba(197, 160, 89, .6); stroke-width: 1.2; stroke-dasharray: 2 3; }
-.vt-plan .cone { fill: rgba(197, 160, 89, .5); }
-.vt-plan .dot { fill: rgba(255, 255, 255, .88); stroke: rgba(10, 12, 11, .9); stroke-width: 1.5; cursor: pointer; outline: none; }
-.vt-plan .dot.is-here { fill: var(--vt-gold); }
-.vt-plan .dot:focus-visible { stroke: #fff; stroke-width: 2.5; }
-
 .vt-hint {
     position: absolute; left: 12px; top: 12px; z-index: 3; margin: 0; pointer-events: none;
     color: #fff; font-size: .75rem; background: rgba(10, 12, 11, .55); padding: 4px 10px; border-radius: 3px;
-    max-width: calc(100% - 130px);
+    max-width: calc(100% - 24px);
 }
 
 .vt-areas { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px; }
@@ -114,8 +99,7 @@
 .vt-fallback-grid figcaption { margin-top: 6px; font-size: .85rem; color: #62635d; }
 
 @media (max-width: 640px) {
-    .vt-stage { height: 68svh; margin-inline: -4px; }
-    .vt-plan { width: 66px; padding: 5px 5px 3px; }
+    .vt-stage { height: 62svh; min-height: 340px; margin-inline: -4px; }
     .vt-hint { font-size: .7rem; max-width: 150px; }
 }
 @media (prefers-reduced-motion: reduce) {

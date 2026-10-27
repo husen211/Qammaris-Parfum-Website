@@ -34,7 +34,8 @@ class StoreVirtualTourTest extends TestCase
         preg_match('#<script type="application/json" id="virtual-tour-data">(.*?)</script>#s', $html, $match);
         $tour = json_decode($match[1], true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame(config('store_virtual_tour.start'), $tour['start']);
-        $this->assertCount(4, $tour['spots']);
+        $this->assertSame(['pintu-masuk', 'tengah', 'depan-kasir'], array_column($tour['spots'], 'id'));
+        $this->assertFileDoesNotExist(public_path('images/virtual-tour/dalam-tengah-4096.jpg'));
         $this->assertSame(asset('images/virtual-tour/tengah-4096.jpg'), collect($tour['spots'])->firstWhere('id', 'tengah')['images']['small']);
     }
 

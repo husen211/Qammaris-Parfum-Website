@@ -3,7 +3,8 @@
 import { LinearFilter, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, SRGBColorSpace, TextureLoader, Vector3, WebGLRenderer } from 'three';
 
 const DEG = Math.PI / 180;
-const MAX_VFOV = 100;
+// Portrait phones are limited by the vertical field of view; 110° keeps them zoomed out (~90° wide).
+const MAX_VFOV = 110;
 const WALK_HFOV = 55;
 
 const stage = document.querySelector('[data-tour-stage]');
@@ -14,7 +15,7 @@ function init(tour) {
     const $ = (name) => document.querySelector(`[data-tour-${name}]`);
     const els = {
         canvas: $('canvas'), hotspots: $('hotspots'), status: $('status'), error: $('error'), retry: $('retry'),
-        plan: $('plan'), hint: $('hint'), fallback: $('fallback'), areas: $('areas'), live: $('live'),
+        hint: $('hint'), fallback: $('fallback'), areas: $('areas'), live: $('live'),
     };
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const spots = new Map(tour.spots.map((spot) => [spot.id, spot]));
@@ -80,7 +81,7 @@ function init(tour) {
     );
     const aspect = () => Math.max(stage.clientWidth, 1) / Math.max(stage.clientHeight, 1);
     const maxHfov = () => Math.min(110, 2 * Math.atan(Math.tan((MAX_VFOV / 2) * DEG) * aspect()) / DEG);
-    const baseHfov = () => Math.min(stage.clientWidth < 640 ? 85 : 100, maxHfov());
+    const baseHfov = () => Math.min(stage.clientWidth < 640 ? 90 : 100, maxHfov());
     const clampView = () => {
         view.pitch = Math.max(-85, Math.min(85, view.pitch));
         view.hfov = Math.max(30, Math.min(maxHfov(), view.hfov));
@@ -100,7 +101,6 @@ function init(tour) {
         camera.lookAt(direction(view.yaw, view.pitch));
         renderer.render(scene, camera);
         placeArrows();
-        turnCone();
     }
 
     function frame(time) {
@@ -177,7 +177,6 @@ function init(tour) {
             }
             state.spot = id;
             buildArrows();
-            drawPlan();
             syncAreas();
             els.live.textContent = `Sekarang di area ${spots.get(id).name}`;
             state.busy = false;
@@ -235,58 +234,6 @@ function init(tour) {
         }
     }
 
-    // ---- floor plan -----------------------------------------------------------------------------
-    const svg = els.plan.querySelector('svg');
-    const NS = 'http://www.w3.org/2000/svg';
-    const plan = (() => {
-        const xs = tour.spots.map((spot) => spot.plan[0]);
-        const ys = tour.spots.map((spot) => spot.plan[1]);
-        const scale = Math.min(68 / Math.max(Math.max(...xs) - Math.min(...xs), 0.1), 118 / Math.max(Math.max(...ys) - Math.min(...ys), 0.1));
-        const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
-        const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
-        return ([x, y]) => [50 + (x - cx) * scale, 86 - (y - cy) * scale];
-    })();
-    const node = (name, attrs, text) => {
-        const element = document.createElementNS(NS, name);
-        Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
-        if (text) element.textContent = text;
-        return element;
-    };
-    let cone = null;
-    function drawPlan() {
-        svg.textContent = '';
-        svg.append(
-            node('rect', { x: 4, y: 14, width: 92, height: 144, rx: 6, class: 'room' }),
-            node('text', { x: 50, y: 10, 'text-anchor': 'middle', class: 'end' }, 'Kasir'),
-            node('text', { x: 50, y: 170, 'text-anchor': 'middle', class: 'end' }, 'Pintu'),
-            node('path', { class: 'route', d: tour.spots.map((spot, i) => `${i ? 'L' : 'M'}${plan(spot.plan).join(' ')}`).join(' ') }),
-        );
-        cone = node('path', { class: 'cone', d: 'M0 0 L-11 -20 A23 23 0 0 1 11 -20 Z' });
-        svg.appendChild(cone);
-        for (const spot of tour.spots) {
-            const [x, y] = plan(spot.plan);
-            const here = spot.id === state.spot;
-            const dot = node('circle', { cx: x, cy: y, r: here ? 6 : 5, class: here ? 'dot is-here' : 'dot', tabindex: 0, role: 'button', 'aria-label': `Ke area ${spot.name}` });
-            dot.appendChild(node('title', {}, spot.name));
-            dot.addEventListener('click', () => goTo(spot.id));
-            dot.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    goTo(spot.id);
-                }
-            });
-            svg.appendChild(dot);
-        }
-        els.plan.hidden = false;
-        turnCone();
-    }
-    function turnCone() {
-        if (!cone || !state.spot) return;
-        const spot = spots.get(state.spot);
-        const [x, y] = plan(spot.plan);
-        cone.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(spot.theta + view.yaw).toFixed(1)})`);
-    }
-
     // ---- page controls ----------------------------------------------------------------------------
     const areaButtons = [...document.querySelectorAll('[data-tour-goto]')];
     areaButtons.forEach((button) => button.addEventListener('click', () => goTo(button.dataset.tourGoto)));
@@ -323,7 +270,7 @@ function init(tour) {
     const pointers = new Map();
     let pinch = null;
     stage.addEventListener('pointerdown', (event) => {
-        if (event.target.closest('button, .vt-plan')) return;
+        if (event.target.closest('button')) return;
         try {
             stage.setPointerCapture(event.pointerId);
         } catch {
