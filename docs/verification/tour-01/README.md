@@ -39,6 +39,12 @@ Walk directions come from relative camera poses (SIFT matches on 24 views per pa
 | ![1440 tour](after-1440-tour-open-05x.jpg) | ![capsule](pintu-masuk-capsule-before-after.jpg) |
 | 1440×900, tour open at 0,5× | Pintu Masuk capsule, before / after |
 
+## Production (PR #129, `290f2ac`)
+
+CI and "Production release" passed. Live, public GET only: `/store/location` and `/` 200 with the tour (homepage order "How it goes" → tour → Qammaris Journal), `/store/virtual-tour` 404, sitemap without it, cover/intro/preview/assets 200.
+
+Finding: the Hostinger CDN (`server: hcdn`) resized the JPEG panoramas: 1600×800 for a desktop or no user agent, 800×400 for an iPhone user agent, also converted to WebP when the browser accepts it. WebP originals pass unchanged (`cover.webp` 2400×992 and `intro.webp` 1400×1400 byte-identical, also for an iPhone user agent). Fix: panoramas re-encoded from the full-resolution results as WebP quality 80 (PSNR 40 dB against the previous JPEGs, 3.2 MB total). Local walk Pintu Masuk → Tengah → Depan Kasir → Tengah → Pintu Masuk with the WebP files passed (with reduced motion, because the hidden browser pane paused animation frames).
+
 ## Not verified
 
 - Genuine touch on a physical iPhone Safari or Android phone, and the Android hardware back button (simulated with `history.back()`).
