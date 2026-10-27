@@ -40,11 +40,11 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-APP-HIDDEN-01 — App-hidden products show twice in the admin — IN_PROGRESS
+## CAT-APP-HIDDEN-01 — App-hidden products show twice in the admin — DONE
 
 Owner 2026-10-27 (card #124): the admin "Produk dari aplikasi" list showed "Project 1945 Water of maluku" (draft #639, App UUID `6ebaa494…`, created in the App, now hidden there) next to the published "Project 1945 Waters of Maluku Perfume | Extrait De Parfum Unisex 100ml" (#901, UUID `36e06f89…`, Majoo). The App lists only one product. The "Semua" tab counted every App snapshot including hidden/merged tombstones, and drafts had no archive control (only published products could be archived). Production had 8 such drafts linked to hidden App products (#477, #502, #639, #894, #895, #896, #897, #919).
 
-Fix: "Semua" now counts and lists only products still visible in the App; hidden ones stay under "Disembunyikan aplikasi". There, a draft linked to a hidden App product shows "Arsipkan draft" (the existing archive operation; identity, data and media are kept) instead of "Lengkapi draft" and its publish blockers. The admin Products list also offers archive for drafts. No data is deleted. `QammarisAppCatalogWorkflowTest::test_draft_of_a_product_hidden_in_the_app_leaves_semua_and_can_be_archived`.
+Fix: "Semua" now counts and lists only products still visible in the App; hidden ones stay under "Disembunyikan aplikasi". There, a draft linked to a hidden App product shows "Arsipkan draft" (the existing archive operation; identity, data and media are kept) instead of "Lengkapi draft" and its publish blockers. The admin Products list also offers archive for drafts. No data is deleted. `QammarisAppCatalogWorkflowTest::test_draft_of_a_product_hidden_in_the_app_leaves_semua_and_can_be_archived`. Released PR125 (production `96da761`, 2026-10-27): "Semua" shows 481 (was 495; the 14 hidden stay in their tab) and a search for "water of" returns only #901. At the Owner's request, draft #639 was archived through the new button in the Owner's admin session (audited as the Owner; reversible). The other 7 drafts linked to hidden App products are left for the Owner to decide. Checked on desktop only; the button reuses the existing admin button style.
 
 ## WAIT-01 — "Kabari saya jika sudah ready" on sold-out products — DONE
 
