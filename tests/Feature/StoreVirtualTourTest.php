@@ -30,7 +30,7 @@ class StoreVirtualTourTest extends TestCase
         $tour = $this->tourData($response->getContent());
         $this->assertSame(config('store_virtual_tour.start'), $tour['start']);
         $this->assertSame(['pintu-masuk', 'tengah', 'depan-kasir'], array_column($tour['spots'], 'id'));
-        $this->assertSame(asset('images/virtual-tour/tengah-4096.jpg'), $tour['spots'][1]['images']['small']);
+        $this->assertSame(asset('images/virtual-tour/tengah-4096.webp'), $tour['spots'][1]['images']['small']);
         foreach ($tour['spots'] as $spot) {
             $response->assertSee('data-tour-goto="'.$spot['id'].'"', false);
         }
@@ -66,13 +66,15 @@ class StoreVirtualTourTest extends TestCase
         $this->assertArrayHasKey(config('store_virtual_tour.start'), $spots);
         $this->assertFileExists(public_path('images/virtual-tour/cover.webp'));
         $this->assertFileExists(public_path('images/virtual-tour/intro.webp'));
-        $this->assertFileDoesNotExist(public_path('images/virtual-tour/dalam-tengah-4096.jpg'));
+        $this->assertFileDoesNotExist(public_path('images/virtual-tour/dalam-tengah-4096.webp'));
+        // The Hostinger CDN shrinks JPEG/PNG to 1600 px (800 px on phones) but passes WebP through unchanged.
+        $this->assertSame([], glob(public_path('images/virtual-tour/*.{jpg,jpeg,png}'), GLOB_BRACE));
 
         foreach ($spots as $id => $spot) {
-            foreach (["{$id}-4096.jpg", "{$id}-6144.jpg", "{$id}-preview.webp"] as $file) {
+            foreach (["{$id}-4096.webp", "{$id}-6144.webp", "{$id}-preview.webp"] as $file) {
                 $this->assertFileExists(public_path("images/virtual-tour/{$file}"));
             }
-            [$width, $height] = getimagesize(public_path("images/virtual-tour/{$id}-4096.jpg"));
+            [$width, $height] = getimagesize(public_path("images/virtual-tour/{$id}-4096.webp"));
             $this->assertSame([4096, 2048], [$width, $height], "{$id} must stay a 2:1 panorama within 4096 px");
 
             $this->assertNotEmpty($spot['links'], "{$id} has no way out");

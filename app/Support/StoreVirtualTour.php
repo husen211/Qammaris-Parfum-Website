@@ -19,8 +19,8 @@ class StoreVirtualTour
                 'name' => $spot['name'],
                 'yaw' => $spot['yaw'],
                 'images' => [
-                    'small' => asset("images/virtual-tour/{$id}-4096.jpg"),
-                    'large' => asset("images/virtual-tour/{$id}-6144.jpg"),
+                    'small' => asset("images/virtual-tour/{$id}-4096.webp"),
+                    'large' => asset("images/virtual-tour/{$id}-6144.webp"),
                 ],
                 'preview' => asset("images/virtual-tour/{$id}-preview.webp"),
                 'links' => $spot['links'],

@@ -3,8 +3,9 @@
 /*
  * TOUR-01: walkable 360 tour of the Palu store.
  *
- * Panoramas are retouched Teleport 360 captures under public/images/virtual-tour/ (equirectangular,
- * 4096 and 6144 px wide; the viewer picks the larger one only when the device can draw it).
+ * Panoramas are retouched Teleport 360 captures under public/images/virtual-tour/ (equirectangular
+ * WebP, 4096 and 6144 px wide; the viewer picks the larger one only when the device can draw it).
+ * Keep them WebP: the Hostinger CDN shrinks JPEG/PNG to 1600 px (800 px on phones).
  * Yaw follows the panorama: 0 = image centre, positive to the right.
  * - yaw: view on arrival from the area buttons;
  * - links: walk arrows; yaw/pitch place the arrow in this panorama, arrive is the yaw faced in the
