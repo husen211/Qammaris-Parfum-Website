@@ -40,6 +40,19 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## ADS-01 — Meta Pixel for Meta Ads — BACKLOG
+
+Owner 2026-10-27 (card #122): the Owner plans Meta Ads on Instagram for Palu and Central Sulawesi. The first campaigns send people straight to a WhatsApp chat and need no website change. A Meta Pixel would later let ads reach people who viewed the catalog or tapped the WhatsApp order button without chatting, and measure those taps. Recorded only; not approved for implementation.
+
+Today the public site loads only the consent-gated GA4 tag (ANALYTICS-02); there is no Meta Pixel. The analytics rule in [BUSINESS_RULES](../product/BUSINESS_RULES.md) keeps advertising personalization off, so this item needs an Owner business-rule decision before it can become READY.
+
+Open decisions:
+- Owner approval to allow advertising measurement on public discovery pages.
+- Consent: a separate Meta choice or one shared with GA4; the Pixel loads only after an affirmative choice, like GA4.
+- Pages and events: at most the GA4 discovery-page allowlist, page views and product views, and a tap on the WhatsApp/checkout button as an intent event. Opening WhatsApp is not an order, so no purchase event from a tap. Cart and checkout forms, private order/task links and Admin stay excluded; no name, phone, address or order data goes to Meta.
+- Conversions API (server-side sending) is out of scope unless approved separately.
+- Pixel ID from the Owner's Meta Business account, as an environment setting that is empty by default.
+
 ## WAIT-01 — "Kabari saya jika sudah ready" on sold-out products — DONE
 
 Owner 2026-10-26 (card #119, App card husen211/qammaris-reimbursement-management-system#68): a sold-out product page shows "Kabari saya jika sudah ready" instead of "Tanya restock via WhatsApp". The button opens a short form (name + WhatsApp number), and the request goes to the Qammaris App Daftar Tunggu. The "Habis" status dot is now red (`#c62828`) on catalog cards and the product page.
