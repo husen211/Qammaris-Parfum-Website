@@ -1,6 +1,6 @@
 # ADR-054 — Walkable 360 store tour
 
-Status: accepted for review (TOUR-01, Owner 2026-10-27). Not deployed.
+Status: accepted (TOUR-01, Owner 2026-10-27). Released PR #129 (`290f2ac`) and PR #130 (`b61fcd1`), 2026-10-27.
 
 ## Context
 

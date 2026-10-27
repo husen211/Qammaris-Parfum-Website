@@ -45,6 +45,15 @@ CI and "Production release" passed. Live, public GET only: `/store/location` and
 
 Finding: the Hostinger CDN (`server: hcdn`) resized the JPEG panoramas: 1600×800 for a desktop or no user agent, 800×400 for an iPhone user agent, also converted to WebP when the browser accepts it. WebP originals pass unchanged (`cover.webp` 2400×992 and `intro.webp` 1400×1400 byte-identical, also for an iPhone user agent). Fix: panoramas re-encoded from the full-resolution results as WebP quality 80 (PSNR 40 dB against the previous JPEGs, 3.2 MB total). Local walk Pintu Masuk → Tengah → Depan Kasir → Tengah → Pintu Masuk with the WebP files passed (with reduced motion, because the hidden browser pane paused animation frames).
 
+## Production after the WebP fix (PR #130, `b61fcd1`)
+
+CI and "Production release" passed. Public GET only:
+
+- All six panoramas downloaded with iPhone, Android and desktop user agents (and `Accept: image/webp`): 4096×2048 / 6144×3072 WebP, byte sizes equal to the repository files (316–637 KB).
+- `/store/location` and `/` reference only the `.webp` panoramas; `/images/virtual-tour/pintu-masuk-4096.jpg` answers 404.
+- Live `/store/location` at 375×812 in the browser pane: "Masuk" opened the tour at 0,5×, walked Pintu Masuk → Tengah → Depan Kasir with the WebP files (motion reduced because the hidden pane pauses animation frames), no console errors.
+- `three.module-*.js` is served brotli-compressed (175 KB on the wire, 719 KB decoded), loaded only after "Masuk".
+
 ## Not verified
 
 - Genuine touch on a physical iPhone Safari or Android phone, and the Android hardware back button (simulated with `history.back()`).
