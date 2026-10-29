@@ -72,11 +72,11 @@ class CreateOnlineOrder
                     'postcode' => $address->type === 'intercity' ? $address->postcode : null, 'location_url' => $address->location_url,
                 ]);
             }
-            // Admins confirm stock in the chat, so any published offer with a valid price may be ordered.
+            // Admins confirm stock in the chat, so any published offer or App draft offer (ORD-12) with a valid price may be ordered.
             // Staging fixtures (never production) use draft products of the synthetic brand only.
             $fixture = ($options['fixture'] ?? false) === true && ! app()->environment('production');
             $variants = ProductVariant::with('product.brand')->active()
-                ->when(! $fixture, fn ($query) => $query->whereHas('product', fn ($product) => $product->published()))
+                ->when(! $fixture, fn ($query) => $query->whereHas('product', fn ($product) => $product->orderableByAdmin()))
                 ->when($fixture, fn ($query) => $query->whereHas('product.brand', fn ($brand) => $brand->where('name', self::FIXTURE_BRAND)))
                 ->whereIn('id', array_keys($lines))->get()->keyBy('id');
             if ($variants->count() !== count($lines)) {

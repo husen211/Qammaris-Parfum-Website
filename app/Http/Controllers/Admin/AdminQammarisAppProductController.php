@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\EvaluateProductPublicationReadiness;
+use App\Actions\Products\FillAppDraftOffer;
 use App\Actions\Products\PrepareQammarisAppDrafts;
 use App\Http\Controllers\Controller;
 use App\Jobs\SyncQammarisAppProducts;
@@ -20,7 +21,7 @@ use Throwable;
 
 class AdminQammarisAppProductController extends Controller
 {
-    public function index(Request $request, QammarisAppClient $client, EvaluateProductPublicationReadiness $readiness)
+    public function index(Request $request, QammarisAppClient $client, EvaluateProductPublicationReadiness $readiness, FillAppDraftOffer $fill)
     {
         $filter = in_array($request->query('status'), ['draft', 'unlinked', 'hidden', 'price_review'], true)
             ? $request->query('status') : 'all';
@@ -76,7 +77,19 @@ class AdminQammarisAppProductController extends Controller
         }
         $state = DB::table('qammaris_app_sync_states')->where('id', 'products')->first();
 
-        return view('admin.app-products.index', compact('rows', 'filter', 'search', 'counts', 'batch', 'state') + ['configured' => $client->configured()]);
+        return view('admin.app-products.index', compact('rows', 'filter', 'search', 'counts', 'batch', 'state') + [
+            'configured' => $client->configured(), 'waiting' => $fill->waiting(),
+        ]);
+    }
+
+    public function fillOffers(Request $request, FillAppDraftOffer $fill)
+    {
+        $data = $request->validate(['product_ids' => ['required', 'array', 'max:1000'], 'product_ids.*' => ['integer', 'min:1']]);
+        $filled = $fill->applyWaiting($request->user(), array_map('intval', $data['product_ids']));
+
+        return redirect()->route('admin.app-products.index')->with('success', $filled > 0
+            ? $filled.' draft sekarang punya ukuran dan harga, dan bisa dipilih di Pesanan Online.'
+            : 'Tidak ada draft yang diubah; datanya sudah berubah. Muat ulang halaman ini.');
     }
 
     public function preview(Request $request, PrepareQammarisAppDrafts $drafts)

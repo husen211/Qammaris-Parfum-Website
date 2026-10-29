@@ -132,6 +132,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
         Route::get('app-products', [AdminQammarisAppProductController::class, 'index'])->name('app-products.index');
         Route::post('app-products/preview', [AdminQammarisAppProductController::class, 'preview'])->middleware('throttle:6,1')->name('app-products.preview');
         Route::post('app-products/sync', [AdminQammarisAppProductController::class, 'sync'])->middleware('throttle:6,1')->name('app-products.sync');
+        Route::post('app-products/fill-offers', [AdminQammarisAppProductController::class, 'fillOffers'])->middleware('throttle:6,1')->name('app-products.fill-offers');
         Route::post('app-products/{productImportBatch}/apply', [AdminQammarisAppProductController::class, 'apply'])->name('app-products.apply');
 
         // Fragrance preference catalog profiles (merged from main): catalog data, same ability as products.
