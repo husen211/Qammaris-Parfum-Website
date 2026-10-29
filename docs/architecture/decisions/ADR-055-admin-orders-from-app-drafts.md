@@ -1,6 +1,6 @@
 # ADR-055 — Admin orders from App drafts; late App price fills the draft offer
 
-Status: accepted (ORD-12, Owner 2026-10-29, card #134). Stage 1 of the Owner's product simplification.
+Status: accepted (ORD-12, Owner 2026-10-29, card #134). Stage 1 of the Owner's product simplification. Released PR #135 (`1ce602c`, 2026-10-29).
 
 ## Context
 
