@@ -25,6 +25,7 @@ class ProductLinkApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
         $this->enableOrderApi();
         $brand = Brand::create(['name' => 'Mykonos', 'is_active' => true]);
         $make = function (string $uuid, string $name, array $state) use ($brand): Product {
