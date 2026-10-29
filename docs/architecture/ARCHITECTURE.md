@@ -61,6 +61,8 @@ Job / 30-minute schedule -> SyncQammarisAppFeed -> read-only HTTPS cursor feed
                          -> visible new UUID: PrepareQammarisAppDrafts
                          -> mapped product: availability + SyncQammarisAppPrice
                             (draft without offer + valid price + size in name: FillAppDraftOffer, ORD-12)
+                            (draft + merged_into: FollowQammarisAppMerge moves the identity or retires
+                             an untouched duplicate, CAT-APP-MERGE-01)
                          -> audit + checkpoint commit together
 ```
 

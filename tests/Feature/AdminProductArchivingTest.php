@@ -179,8 +179,13 @@ class AdminProductArchivingTest extends TestCase
 
         $this->product->markArchived();
 
+        // CAT-APP-MERGE-01: archived products leave the default list and live under their own filter.
         $this->actingAs($this->admin)
             ->get(route('admin.products.index'))
+            ->assertOk()
+            ->assertDontSee('Aktifkan kembali');
+        $this->actingAs($this->admin)
+            ->get(route('admin.products.index', ['publication' => 'archived']))
             ->assertOk()
             ->assertSee('Diarsipkan')
             ->assertSee('Aktifkan kembali');

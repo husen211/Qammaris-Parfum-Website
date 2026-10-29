@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## CAT-APP-MERGE-01 — App merges no longer leave duplicate drafts — IN_REVIEW
+
+Owner 2026-10-29 (card #138), stage 2 of simplifying the App/Website product flow: when the App merges an OTW product into the Majoo product on import, the Website kept the OTW draft and created a second draft for the Majoo product (Water of Maluku, SAFF). The Owner also found archived duplicates confusing because they still showed in the Products list.
+
+Change: a mapped draft that receives `merged_into` moves its App identity to the surviving UUID when that UUID has no Website product, and takes its stock/price (offer created when the size is in the name); if the surviving UUID already has a product, the merged draft is archived only when it was never published and has no photo or order line. Published products keep the existing tombstone rule. The admin Products list defaults to "Tayang dan draft"; archived products are under "Diarsipkan". No hard delete, no migration, no data change on deploy. [ADR-056](../architecture/decisions/ADR-056-website-drafts-follow-app-merges.md), [verification](../verification/cat-app-merge-01/README.md).
+
+Status: branch `fix-app-merge-follow`, verified locally at 375 and 1440; not released. Open limits: the 9 drafts already archived by hand stay archived (now out of the default list); permanent deletion of never-published drafts was not built and needs a separate Owner decision with a backup; stage 3 (one simple Products page) not started.
+
 ## ORD-12 — App products not yet published can be ordered — DONE
 
 Owner 2026-10-29 (card #134), stage 1 of simplifying the App/Website product flow: admin "Buat pesanan" only found published products, so a product already in stock and priced in Qammaris App but without a Website photo (BSP Black Edition 50ml) could not be ordered; the Owner had to complete and publish it first ("Peselancar Lokal"). Separately, drafts created while the product was OTW never got their size + price when the App price arrived later (47 of the 58 "Periksa harga" rows on production, e.g. Inception 100ml).

@@ -166,6 +166,71 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         $this->post(route('admin.app-products.fill-offers'), ['product_ids' => 'x'])->assertSessionHasErrors('product_ids');
     }
 
+    public function test_otw_draft_follows_the_app_merge_into_the_majoo_product_in_either_order(): void
+    {
+        // Merge arrives before the Majoo product: the draft moves, then takes the Majoo state when it arrives.
+        $otw = $this->source(['name' => 'Project 1945 Water of maluku', 'brand' => null, 'source' => 'app', 'price' => null]);
+        $majoo = $this->source(['name' => 'Project 1945 Waters of Maluku 100ml', 'brand' => 'Project 1945', 'price' => 350000, 'revision' => 3, 'change_seq' => 3]);
+        $this->feed($otw);
+        $draft = Product::sole();
+        $this->feed($this->merged($otw, $majoo['id'], 2));
+        $this->assertSame($majoo['id'], $draft->externalIdentities()->sole()->external_product_id);
+        $this->assertTrue($draft->fresh()->qammaris_app_hidden);
+        $this->feed($majoo);
+        $draft->refresh();
+        $this->assertSame(1, Product::count());
+        $this->assertSame(['draft', false, 'available'], [$draft->publication_status, $draft->qammaris_app_hidden, $draft->availability_status]);
+        $this->assertSame([100, '350000.00'], [$draft->activeOffer->volume, $draft->activeOffer->price]);
+        $this->assertSame('followed_merge', json_decode(DB::table('qammaris_app_changes')->where('external_id', $otw['id'])->where('revision', 2)->value('after'), true)['merge']);
+
+        // Majoo product synced first but held for review (no Website product): the merge links and applies it at once.
+        $otw2 = $this->source(['name' => 'Trails of Bromo', 'source' => 'app', 'price' => null, 'revision' => 4, 'change_seq' => 4]);
+        $this->feed($otw2);
+        $held = $this->source(['name' => 'Trails of Bromo 50ml', 'price' => 280000, 'revision' => 5]);
+        $this->cache($held);
+        $this->feed($this->merged($otw2, $held['id'], 6));
+        $moved = Product::where('name', 'Trails of Bromo')->sole();
+        $this->assertSame($held['id'], $moved->externalIdentities()->sole()->external_product_id);
+        $this->assertSame([false, 50, '280000.00'], [$moved->qammaris_app_hidden, $moved->activeOffer->volume, $moved->activeOffer->price]);
+        $this->assertSame(2, Product::count());
+
+        $this->actingAs($this->admin());
+        $page = $this->get('/admin/app-products')->assertOk();
+        $this->assertEqualsCanonicalizing([$moved->id, $draft->id], $page->viewData('rows')->getCollection()->pluck('product.id')->all());
+        $this->assertSame(0, $this->get('/admin/app-products?status=hidden')->viewData('rows')->getCollection()->whereNotNull('product')->count());
+    }
+
+    public function test_merge_into_a_majoo_product_that_already_has_a_page_retires_only_an_untouched_draft(): void
+    {
+        $majoo = $this->source(['name' => 'Saff Las Pozas 35ml', 'brand' => 'Saff', 'price' => 245000]);
+        $this->feed($majoo);
+        $kept = Product::sole();
+        $bare = $this->source(['name' => 'SAFF', 'source' => 'app', 'price' => null, 'revision' => 2, 'change_seq' => 2]);
+        $photo = $this->source(['name' => 'SAFF tester', 'source' => 'app', 'price' => null, 'revision' => 3, 'change_seq' => 3]);
+        $live = $this->source(['name' => 'Saff Live 35ml', 'price' => 245000, 'revision' => 4, 'change_seq' => 4]);
+        foreach ([$bare, $photo, $live] as $source) {
+            $this->feed($source);
+        }
+        Product::where('name', 'SAFF tester')->sole()->images()->create(['image_path' => 'products/tester.jpg', 'is_primary' => true, 'sort_order' => 0]);
+        Product::where('name', 'Saff Live 35ml')->sole()->forceFill(['publication_status' => 'published', 'is_active' => true, 'published_at' => now()])->save();
+
+        $this->feed($this->merged($bare, $majoo['id'], 5));
+        $this->feed($this->merged($photo, $majoo['id'], 6));
+        $this->feed($this->merged($live, $majoo['id'], 7));
+
+        $this->assertSame('archived', Product::where('name', 'SAFF')->sole()->publication_status);
+        $this->assertSame('draft', Product::where('name', 'SAFF tester')->sole()->publication_status, 'A draft with a photo waits for the Owner.');
+        $this->assertSame('published', Product::where('name', 'Saff Live 35ml')->sole()->publication_status);
+        $this->assertSame($majoo['id'], $kept->externalIdentities()->sole()->external_product_id);
+        $merge = fn (array $s, int $revision) => json_decode(DB::table('qammaris_app_changes')->where('external_id', $s['id'])->where('revision', $revision)->value('after'), true)['merge'] ?? null;
+        $this->assertSame(['archived_merged_duplicate', 'merged_review', null], [$merge($bare, 5), $merge($photo, 6), $merge($live, 7)]);
+
+        $this->actingAs($this->admin());
+        $this->get('/admin/products')->assertOk()->assertSee('Saff Las Pozas 35ml')->assertSee('SAFF tester')->assertDontSee('>SAFF<', false)
+            ->assertSee('Tayang dan draft');
+        $this->get('/admin/products?publication=archived')->assertOk()->assertSee('>SAFF<', false)->assertDontSee('Saff Las Pozas 35ml');
+    }
+
     public function test_invalid_source_prices_retain_last_price_without_blocking_availability_or_checkpoint(): void
     {
         $s = $this->source();
@@ -396,6 +461,11 @@ class QammarisAppCatalogWorkflowTest extends TestCase
             'availability' => 'available', 'restock_eta' => null, 'stock_status_at' => null,
             'active' => true, 'merged_into' => null, 'hidden' => false, 'revision' => 1, 'change_seq' => 1,
         ], $overrides);
+    }
+
+    private function merged(array $s, string $into, int $sequence): array
+    {
+        return array_replace($s, ['active' => false, 'merged_into' => $into, 'hidden' => true, 'revision' => $sequence, 'change_seq' => $sequence]);
     }
 
     private function feed(array $s): void
