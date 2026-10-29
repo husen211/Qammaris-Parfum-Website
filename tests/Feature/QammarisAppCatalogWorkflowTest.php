@@ -146,13 +146,13 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         $target = Product::where('name', 'Inception 100ml')->sole();
         $owner = $this->admin();
 
-        $page = $this->actingAs($owner)->get('/admin/app-products')->assertOk()
+        $page = $this->actingAs($owner)->get('/admin/products')->assertOk()
             ->assertSee('1 draft sudah punya harga di aplikasi, tapi belum bisa dipesan')->assertSee('100 ml · Rp 425.000');
         $this->assertSame([$target->id], $page->viewData('waiting')->map(fn ($row) => $row['product']->id)->all());
 
         $ids = Product::pluck('id')->all();
         $this->post(route('admin.app-products.fill-offers'), ['product_ids' => $ids])
-            ->assertRedirect(route('admin.app-products.index'))->assertSessionHas('success', '1 draft sekarang punya ukuran dan harga, dan bisa dipilih di Pesanan Online.');
+            ->assertRedirect(route('admin.products.index'))->assertSessionHas('success', '1 draft sekarang punya ukuran dan harga, dan bisa dipilih di Pesanan Online.');
         $this->assertSame([100, '425000.00'], [$target->activeOffer->volume, $target->activeOffer->price]);
         $this->assertSame('draft', $target->fresh()->publication_status);
         $this->assertSame(1, DB::table('product_variants')->count());
@@ -162,7 +162,7 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         $this->post(route('admin.app-products.fill-offers'), ['product_ids' => $ids])
             ->assertSessionHas('success', 'Tidak ada draft yang diubah; datanya sudah berubah. Muat ulang halaman ini.');
         $this->assertSame(1, DB::table('product_variants')->count());
-        $this->get('/admin/app-products')->assertDontSee('belum bisa dipesan');
+        $this->get('/admin/products')->assertDontSee('belum bisa dipesan');
         $this->post(route('admin.app-products.fill-offers'), ['product_ids' => 'x'])->assertSessionHasErrors('product_ids');
     }
 
@@ -227,8 +227,43 @@ class QammarisAppCatalogWorkflowTest extends TestCase
 
         $this->actingAs($this->admin());
         $this->get('/admin/products')->assertOk()->assertSee('Saff Las Pozas 35ml')->assertSee('SAFF tester')->assertDontSee('>SAFF<', false)
-            ->assertSee('Tayang dan draft');
+            ->assertSee('Perlu dicek');
         $this->get('/admin/products?publication=archived')->assertOk()->assertSee('>SAFF<', false)->assertDontSee('Saff Las Pozas 35ml');
+    }
+
+    public function test_one_product_list_shows_status_source_and_what_is_missing(): void
+    {
+        $ready = $this->source(['name' => 'Inception 100ml', 'price' => 425000]);
+        $unsized = $this->source(['name' => 'Hawaiian Crush', 'price' => 228000, 'revision' => 2, 'change_seq' => 2]);
+        $otw = $this->source(['name' => 'OTW Baru', 'source' => 'app', 'price' => null, 'revision' => 3, 'change_seq' => 3]);
+        $live = $this->source(['name' => 'Live Hidden 50ml', 'price' => 199000, 'revision' => 4, 'change_seq' => 4]);
+        foreach ([$ready, $unsized, $otw, $live] as $source) {
+            $this->feed($source);
+        }
+        $hidden = Product::where('name', 'Live Hidden 50ml')->sole();
+        $hidden->forceFill(['publication_status' => 'published', 'is_active' => true, 'published_at' => now()])->save();
+        $this->feed($this->merged($live, (string) Str::uuid(), 5));
+        $manual = Product::create(['name' => 'Manual Draft', 'publication_status' => 'draft', 'is_active' => false]);
+        $id = fn (string $name) => Product::where('name', $name)->sole()->id;
+
+        $this->actingAs($this->admin());
+        $page = $this->get('/admin/products')->assertOk()
+            ->assertSee('Perlu dicek: Ukuran belum diisi')->assertSee('Perlu dicek: Harga belum ada di aplikasi')
+            ->assertSee('Perlu dicek: Disembunyikan di aplikasi')->assertSee('· dari App')->assertSee('· manual')
+            ->assertSee('100 ml · Rp 425.000')->assertSee('Belum ada ukuran &amp; harga', false)->assertDontSee('Produk dari aplikasi');
+        $notes = $page->viewData('rowNotes');
+        $this->assertSame([true, null], [$notes[$id('Inception 100ml')]['from_app'], $notes[$id('Inception 100ml')]['check']]);
+        $this->assertContains('foto', $notes[$id('Inception 100ml')]['missing']);
+        $this->assertContains('deskripsi', $notes[$id('Inception 100ml')]['missing']);
+        $this->assertNotContains('ukuran & harga', $notes[$id('Inception 100ml')]['missing']);
+        $this->assertFalse($notes[$manual->id]['from_app']);
+        $this->assertSame(['all' => 5, 'draft' => 4, 'published' => 1, 'check' => 3, 'archived' => 0], $page->viewData('counts'));
+
+        $check = $this->get('/admin/products?publication=check')->assertOk()->assertSee('aria-current="page"', false);
+        $this->assertEqualsCanonicalizing([$id('Hawaiian Crush'), $id('OTW Baru'), $hidden->id], $check->viewData('products')->pluck('id')->all());
+        $this->assertSame([$hidden->id], $this->get('/admin/products?publication=published')->viewData('products')->pluck('id')->all());
+        $this->get('/admin/products?publication=check&search=zzzz')->assertOk()->assertSee('Produk tidak ditemukan');
+        $this->get('/admin/products?publication=nope')->assertOk();
     }
 
     public function test_invalid_source_prices_retain_last_price_without_blocking_availability_or_checkpoint(): void
@@ -402,7 +437,7 @@ class QammarisAppCatalogWorkflowTest extends TestCase
     {
         $this->feed($this->source());
         $this->actingAs($this->admin())->get(route('admin.products.edit', Product::sole()->id))
-            ->assertOk()->assertSee('Stok dan harga jual mengikuti Qammaris App.')
+            ->assertOk()->assertSee('Terhubung ke Qammaris App: Aoera Review EDP 50 ML')->assertSee('Dari Majoo · Harga di App Rp 180.000 · Stok di App Tersedia')
             ->assertSee('readonly', false)->assertSee('180000')->assertDontSee('36 jam')
             ->assertDontSee('name="availability_status"', false)->assertDontSee('Snapshot Stok');
     }

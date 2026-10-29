@@ -33,12 +33,10 @@
                 @endcan
                 
                 @can('catalog.manage')
-                <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
+                <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products*', 'admin.app-products*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    Products
+                    Produk
                 </a>
-
-                <a href="{{ route('admin.app-products.index') }}" class="{{ request()->routeIs('admin.app-products*') ? 'active-nav' : '' }} flex min-h-11 items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">Produk dari aplikasi</a>
 
                 <a href="{{ route('admin.brands.index') }}" class="{{ request()->routeIs('admin.brands*') ? 'active-nav' : '' }} flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M3 11l8.586-8.586A2 2 0 0113 2h6a2 2 0 012 2v6a2 2 0 01-.586 1.414L11.828 20a2 2 0 01-2.828 0l-6-6a2 2 0 010-2.828z"/></svg>
@@ -117,8 +115,7 @@
                         <a href="{{ route('admin.dashboard') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.dashboard') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Dashboard</a>
                         @endcan
                         @can('catalog.manage')
-                        <a href="{{ route('admin.products.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Products</a>
-                        <a href="{{ route('admin.app-products.index') }}" class="flex min-h-11 items-center rounded px-3 py-2 text-sm {{ request()->routeIs('admin.app-products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Produk dari aplikasi</a>
+                        <a href="{{ route('admin.products.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.products*', 'admin.app-products*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Produk</a>
                         <a href="{{ route('admin.brands.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.brands*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Brand</a>
                         <a href="{{ route('admin.categories.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.categories*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Kategori</a>
                         <a href="{{ route('admin.shopee-imports.index') }}" class="block rounded px-3 py-2 text-sm {{ request()->routeIs('admin.product-imports*', 'admin.shopee-imports*') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-600 hover:bg-gray-50' }}">Import Produk</a>

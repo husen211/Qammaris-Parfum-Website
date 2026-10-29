@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\ArchiveProduct;
 use App\Actions\Products\EvaluateProductPublicationReadiness;
+use App\Actions\Products\FillAppDraftOffer;
 use App\Actions\Products\PublishProduct;
 use App\Actions\Products\SaveProductEditor;
 use App\Exceptions\ProductNotReadyForPublication;
@@ -13,20 +14,29 @@ use App\Http\Requests\Admin\ProductUpdateRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductExternalIdentity;
 use App\Models\ProductImage;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class AdminProductController extends Controller
 {
     private const CATALOG_SORTS = ['latest', 'name_asc', 'name_desc'];
 
-    public function index(Request $request)
+    /** CAT-ADMIN-ONE-01: short words for the publish blockers a draft row lists. */
+    private const MISSING_LABELS = [
+        'name' => 'nama', 'slug' => 'slug', 'brand' => 'merek', 'category' => 'kategori', 'description' => 'deskripsi',
+        'gender' => 'peruntukan', 'offer' => 'ukuran & harga', 'volume' => 'ukuran & harga', 'price' => 'ukuran & harga',
+        'primary_image' => 'foto', 'primary_image_file' => 'foto',
+    ];
+
+    public function index(Request $request, EvaluateProductPublicationReadiness $readiness, FillAppDraftOffer $fill)
     {
         $catalogContext = $this->normalizeCatalogContext($request->query());
-        $query = Product::with(['brand', 'category', 'primaryImage', 'variants']);
+        $query = Product::with(['brand', 'category', 'primaryImage', 'variants', 'externalIdentities']);
 
         if (isset($catalogContext['brand_id'])) {
             $query->where('brand_id', $catalogContext['brand_id']);
@@ -36,12 +46,12 @@ class AdminProductController extends Controller
             $this->applyAvailabilityFilter($query, $catalogContext['availability']);
         }
 
-        if (isset($catalogContext['publication'])) {
-            $query->where('publication_status', $catalogContext['publication']);
-        } else {
-            // Archived products only appear under their own filter, so retired duplicates stop cluttering the list.
-            $query->where('publication_status', '!=', Product::PUBLICATION_ARCHIVED);
-        }
+        match ($catalogContext['publication'] ?? null) {
+            'check' => $query->needsAppCheck(),
+            // Archived products only appear under their own tab, so retired duplicates stop cluttering the list.
+            null => $query->where('publication_status', '!=', Product::PUBLICATION_ARCHIVED),
+            default => $query->where('publication_status', $catalogContext['publication']),
+        };
 
         if (isset($catalogContext['search'])) {
             $query->search($catalogContext['search'], ($catalogContext['sort'] ?? 'latest') === 'latest');
@@ -70,13 +80,52 @@ class AdminProductController extends Controller
 
         $brands = Brand::orderBy('name', 'asc')->get();
         $catalogReturnPath = route('admin.products.index', $catalogContext, false);
+        $blockers = $readiness->forReview($products->getCollection()->where('publication_status', Product::PUBLICATION_DRAFT));
+        $rowNotes = $products->getCollection()->mapWithKeys(fn (Product $product) => [$product->id => $this->rowNote($product, $blockers->get($product->id))]);
+        $counts = [
+            'all' => Product::where('publication_status', '!=', Product::PUBLICATION_ARCHIVED)->count(),
+            'draft' => Product::where('publication_status', Product::PUBLICATION_DRAFT)->count(),
+            'published' => Product::where('publication_status', Product::PUBLICATION_PUBLISHED)->count(),
+            'check' => Product::needsAppCheck()->count(),
+            'archived' => Product::where('publication_status', Product::PUBLICATION_ARCHIVED)->count(),
+        ];
+        // App products held back as possible duplicates have no Website product yet; the Owner pairs them on the App data page.
+        $unlinked = DB::table('qammaris_app_products')
+            ->whereNotIn('id', ProductExternalIdentity::where('provider', ProductExternalIdentity::PROVIDER_QAMMARIS_APP)->select('external_product_id'))
+            ->pluck('snapshot')->filter(fn ($snapshot) => ! json_decode($snapshot, true, flags: JSON_THROW_ON_ERROR)['hidden'])->count();
+        $sync = DB::table('qammaris_app_sync_states')->where('id', 'products')->first();
 
         return view('admin.products.index', compact(
             'products',
             'brands',
             'catalogContext',
-            'catalogReturnPath'
-        ));
+            'catalogReturnPath',
+            'rowNotes',
+            'counts',
+            'unlinked',
+            'sync'
+        ) + ['waiting' => $fill->waiting()]);
+    }
+
+    /** @return array{from_app: bool, check: ?string, missing: list<string>} */
+    private function rowNote(Product $product, ?array $blockers): array
+    {
+        $fromApp = $product->externalIdentities->contains('provider', ProductExternalIdentity::PROVIDER_QAMMARIS_APP);
+        $check = null;
+        // Same conditions as Product::scopeNeedsAppCheck.
+        if ($fromApp && $product->publication_status !== Product::PUBLICATION_ARCHIVED) {
+            if ($product->qammaris_app_hidden) {
+                $check = 'Disembunyikan di aplikasi';
+            } elseif (! $product->variants->contains(fn ($offer) => $offer->is_active && (float) $offer->price > 0)) {
+                $check = (float) $product->base_price > 0 ? 'Ukuran belum diisi' : 'Harga belum ada di aplikasi';
+            }
+        }
+
+        return [
+            'from_app' => $fromApp,
+            'check' => $check,
+            'missing' => array_values(array_unique(array_map(fn ($key) => self::MISSING_LABELS[$key] ?? $key, array_keys($blockers ?? [])))),
+        ];
     }
 
     public function create()
@@ -130,6 +179,10 @@ class AdminProductController extends Controller
             ->get();
         $catalogReturnPath = $this->catalogReturnPath($request->query('return_to'));
         $publicationBlockers = $evaluatePublicationReadiness->handle($product);
+        $appUuid = $product->externalIdentities()->where('provider', ProductExternalIdentity::PROVIDER_QAMMARIS_APP)->value('external_product_id');
+        $appSnapshot = $appUuid ? DB::table('qammaris_app_products')->where('id', $appUuid)->value('snapshot') : null;
+        $appSource = $appSnapshot ? json_decode($appSnapshot, true, flags: JSON_THROW_ON_ERROR) : null;
+        $appSyncedAt = $appUuid ? DB::table('qammaris_app_sync_states')->where('id', 'products')->value('last_synced_at') : null;
         $hasLegacyFractionalPrice = $product->variants->where('is_active', true)->pluck('price')
             ->push($product->base_price)->push($product->compare_at_price)
             ->filter(fn ($price) => $price !== null)
@@ -141,7 +194,10 @@ class AdminProductController extends Controller
             'categories',
             'catalogReturnPath',
             'publicationBlockers',
-            'hasLegacyFractionalPrice'
+            'hasLegacyFractionalPrice',
+            'appUuid',
+            'appSource',
+            'appSyncedAt'
         ));
     }
 
@@ -254,6 +310,7 @@ class AdminProductController extends Controller
             Product::PUBLICATION_DRAFT,
             Product::PUBLICATION_PUBLISHED,
             Product::PUBLICATION_ARCHIVED,
+            'check',
         ], true)) {
             $context['publication'] = $publication;
         }

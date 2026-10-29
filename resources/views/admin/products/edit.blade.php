@@ -7,7 +7,7 @@
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
             <li class="inline-flex items-center">
-                <a href="{{ $catalogReturnPath }}" class="text-sm text-gray-500 hover:text-black">Products</a>
+                <a href="{{ $catalogReturnPath }}" class="text-sm text-gray-500 hover:text-black">Produk</a>
             </li>
             <li>
                 <div class="flex items-center">
@@ -28,11 +28,23 @@
         </a>
     </div>
 
+    {{-- CAT-ADMIN-ONE-01: which App product this page follows, without opening another page. --}}
     @if($appManaged)
-        <div class="mb-6 border-l-2 border-brand-gold bg-white px-4 py-3 text-sm text-gray-600">
-            Stok dan harga jual mengikuti Qammaris App. Di sini, lengkapi deskripsi, foto, ukuran, klasifikasi, dan status tayang.
-            <a href="{{ route('admin.app-products.index') }}" class="ml-1 font-semibold underline">Lihat data aplikasi</a>
-        </div>
+        <section class="mb-6 border-l-2 border-brand-gold bg-white px-4 py-3 text-sm text-gray-600" aria-labelledby="app-link-title">
+            <h2 id="app-link-title" class="font-semibold text-gray-900">Terhubung ke Qammaris App{{ isset($appSource['name']) ? ': '.$appSource['name'] : '' }}</h2>
+            @if($appSource)
+                @php($appPrice = is_int($appSource['price'] ?? null) && $appSource['price'] > 0 && $appSource['price'] <= 99999999 ? format_rupiah($appSource['price']) : 'belum ada')
+                <p class="mt-1">{{ ($appSource['source'] ?? null) === 'app' ? 'Dibuat di aplikasi' : 'Dari Majoo' }} · Harga di App {{ $appPrice }} · Stok di App {{ ['available' => 'Tersedia', 'sold_out' => 'Habis'][$appSource['availability'] ?? null] ?? 'Belum dikonfirmasi' }}{{ $appSyncedAt ? ' · sinkron '.\Carbon\Carbon::parse($appSyncedAt)->format('d M Y H:i') : '' }}</p>
+                @if($appSource['hidden'] ?? false)
+                    <p class="mt-1 font-medium text-amber-800">Produk ini disembunyikan di aplikasi, jadi pelanggan tidak bisa melihatnya di website.</p>
+                @endif
+            @else
+                <p class="mt-1">Data aplikasi untuk produk ini muncul setelah sinkron berikutnya.</p>
+            @endif
+            <p class="mt-1">Harga dan stok mengikuti aplikasi. Di sini, lengkapi foto, deskripsi, ukuran, dan klasifikasi.</p>
+        </section>
+    @else
+        <p class="mb-6 text-sm text-gray-600">Produk manual: tidak terhubung ke Qammaris App, jadi harga dan stok diisi di sini.</p>
     @endif
 
     @if ($hasLegacyFractionalPrice)
