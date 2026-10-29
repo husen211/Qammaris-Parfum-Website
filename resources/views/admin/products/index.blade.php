@@ -36,7 +36,7 @@
     <div class="w-full relative">
         <label for="catalog-publication" class="sr-only">Filter publikasi</label>
         <select id="catalog-publication" name="publication" onchange="this.form.requestSubmit()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black text-sm cursor-pointer">
-            <option value="">Semua status</option>
+            <option value="">Tayang dan draft</option>
             <option value="draft" {{ ($catalogContext['publication'] ?? null) === 'draft' ? 'selected' : '' }}>Draft</option>
             <option value="published" {{ ($catalogContext['publication'] ?? null) === 'published' ? 'selected' : '' }}>Tayang</option>
             <option value="archived" {{ ($catalogContext['publication'] ?? null) === 'archived' ? 'selected' : '' }}>Diarsipkan</option>

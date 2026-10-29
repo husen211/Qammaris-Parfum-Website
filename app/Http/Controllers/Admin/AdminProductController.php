@@ -38,6 +38,9 @@ class AdminProductController extends Controller
 
         if (isset($catalogContext['publication'])) {
             $query->where('publication_status', $catalogContext['publication']);
+        } else {
+            // Archived products only appear under their own filter, so retired duplicates stop cluttering the list.
+            $query->where('publication_status', '!=', Product::PUBLICATION_ARCHIVED);
         }
 
         if (isset($catalogContext['search'])) {

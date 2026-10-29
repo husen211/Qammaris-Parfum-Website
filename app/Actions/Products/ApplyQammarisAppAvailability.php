@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class ApplyQammarisAppAvailability
 {
-    public function __construct(private SyncQammarisAppPrice $prices) {}
+    public function __construct(private SyncQammarisAppPrice $prices, private FollowQammarisAppMerge $merges) {}
 
     public function handle(Product $product, array $snapshot, bool $createdDraft = false): void
     {
@@ -31,10 +31,14 @@ class ApplyQammarisAppAvailability
             'availability_restock_eta' => $snapshot['restock_eta'],
         ])->save();
         $priceResult = $this->prices->handle($product, $snapshot);
+        $merge = $this->merges->handle($product, $snapshot);
         $after = $product->only($fields);
         $after['offer'] = $product->variants()->first()?->only(['id', 'volume', 'price', 'stock', 'sku', 'is_active']);
         $after['catalog'] = ['id' => $product->id, 'publication_status' => $product->publication_status];
         $after['price_sync'] = $priceResult;
+        if ($merge !== null) {
+            $after['merge'] = $merge;
+        }
         DB::table('qammaris_app_changes')->insert([
             'external_id' => $snapshot['id'], 'revision' => $snapshot['revision'],
             'product_id' => $product->id, 'actor' => 'qammaris_app',
@@ -42,5 +46,12 @@ class ApplyQammarisAppAvailability
             'after' => json_encode($after, JSON_THROW_ON_ERROR),
             'created_at' => now(),
         ]);
+
+        $survivor = $merge === 'followed_merge'
+            ? DB::table('qammaris_app_products')->where('id', $snapshot['merged_into'])->value('snapshot') : null;
+        if ($survivor !== null) {
+            // The surviving App product synced before the merge; its current state now applies to the moved product.
+            $this->handle($product, json_decode($survivor, true, flags: JSON_THROW_ON_ERROR));
+        }
     }
 }
