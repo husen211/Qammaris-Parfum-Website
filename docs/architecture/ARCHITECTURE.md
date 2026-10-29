@@ -102,6 +102,15 @@ Sold-out product page -> POST /products/{slug}/kabari (throttle restock-request,
   -> 200 delivered (contact data cleared) | 400/422 failed | other errors retried until 24 h
 ```
 
+Product links for the Daftar Tunggu message (WAIT-02, read-only, outside the frozen Order API OpenAPI baseline):
+
+```text
+App GET /integrations/qammaris-app/orders/v1/product-links?app_product_ids=<id>,<id> (1-50 ids, each [A-Za-z0-9_-]{1,128})
+  -> AuthenticateOrderApi (same client, secret and path+query signature as the Order API)
+  -> ProductLinkApiController: qammaris_app identities whose product is published, active and not hidden in the App
+  -> 200 {"data":[{"app_product_id","url": route('products.show', slug)}]}; other ids are left out; bad ids -> 422 validation_failed
+```
+
 ## Cart, recipient checkout, and UI navigation
 
 ```text
