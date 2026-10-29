@@ -20,7 +20,7 @@
         @if($product->availability_checked_at)
             Diperiksa {{ $product->availability_checked_at->format('d M, H:i') }}
             @if($product->availability_source)
-                · {{ $product->availability_source }}
+                · {{ ['qammaris_app' => 'dari App', 'manual' => 'manual'][$product->availability_source] ?? $product->availability_source }}
             @endif
         @else
             Belum pernah diperiksa

@@ -229,6 +229,17 @@ class Product extends Model
     }
 
     /**
+     * CAT-ADMIN-ONE-01 "Perlu dicek": an App product the Owner must look at, hidden by the App or not orderable yet.
+     */
+    public function scopeNeedsAppCheck($query)
+    {
+        return $query->where('publication_status', '!=', self::PUBLICATION_ARCHIVED)
+            ->whereHas('externalIdentities', fn ($identity) => $identity->where('provider', ProductExternalIdentity::PROVIDER_QAMMARIS_APP))
+            ->where(fn ($check) => $check->where('qammaris_app_hidden', true)
+                ->orWhereDoesntHave('activeOffer', fn ($offer) => $offer->where('price', '>', 0)));
+    }
+
+    /**
      * Scope: Best sellers
      */
     public function scopeBestSellers($query)

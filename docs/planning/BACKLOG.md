@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## CAT-ADMIN-ONE-01 — One simple Products page in the admin — IN_REVIEW
+
+Owner 2026-10-29 (card #141), stage 3 of simplifying the App/Website product flow: two product pages ("Products" and "Produk dari aplikasi") and terms like "Perlu pasangan", "Periksa harga" and "Tombstone" were confusing; the Owner rated the product list 6/10 and wanted to open a product and see at once which App product it follows.
+
+Change: `/admin/products` is the one list with tabs Semua · Perlu dicek · Belum tayang · Tayang · Diarsipkan. Rows say "dari App" or "manual", what a draft still needs ("Kurang: foto, deskripsi, …"), and why an App product needs a look (hidden in the App, no size, no App price); the price column shows size with price. The ORD-12 fill block, a notice for App products held back as possible duplicates, and a sync warning appear only when relevant. The editor shows "Terhubung ke Qammaris App: <App name>" with source, App price, App stock and last sync. "Produk dari aplikasi" left the navigation; the page remains as "Data Qammaris App" behind a footer link. On a phone the first product is now on the first screen. No migration, no data change. [Verification](../verification/cat-admin-one-01/README.md).
+
+Status: branch `feat-one-products-page`, verified locally at 390 and 1440 (before/after); not released. Open limits: physical phone not tested; the App data page itself was only renamed, not redesigned.
+
 ## CAT-APP-MERGE-01 — App merges no longer leave duplicate drafts — DONE
 
 Owner 2026-10-29 (card #138), stage 2 of simplifying the App/Website product flow: when the App merges an OTW product into the Majoo product on import, the Website kept the OTW draft and created a second draft for the Majoo product (Water of Maluku, SAFF). The Owner also found archived duplicates confusing because they still showed in the Products list.

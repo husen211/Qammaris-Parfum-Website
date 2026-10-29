@@ -4,10 +4,10 @@
 <div class="mx-auto max-w-7xl">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-gray-900">Produk dari Qammaris App</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Produk baru masuk sebagai draft. Lengkapi foto, deskripsi, dan klasifikasi sebelum ditayangkan. Stok dan harga jual mengikuti aplikasi.</p>
+            <a href="{{ route('admin.products.index') }}" class="inline-flex min-h-11 items-center text-sm text-gray-600 hover:text-black">&larr; Produk</a>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900">Data Qammaris App</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Data mentah dari aplikasi untuk pengecekan dan sinkron. Pekerjaan sehari-hari ada di halaman Produk.</p>
         </div>
-        <a href="{{ route('admin.products.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2">Semua produk website</a>
     </div>
 
     <section class="mt-6 border-y border-gray-200 py-4" aria-label="Status koneksi">
@@ -25,27 +25,6 @@
             </form>
         </div>
     </section>
-
-    @if($waiting->isNotEmpty())
-        {{-- ORD-12: drafts created while OTW got their App price later; the Owner fills them once, new ones fill automatically. --}}
-        <section class="mt-6 rounded-lg border border-gray-200 bg-white p-4" aria-labelledby="waiting-offers-title">
-            <h2 id="waiting-offers-title" class="text-base font-semibold text-gray-900">{{ $waiting->count() }} draft sudah punya harga di aplikasi, tapi belum bisa dipesan</h2>
-            <p class="mt-1 max-w-2xl text-sm text-gray-600">Ukuran diambil dari nama produk, harga dari aplikasi. Setelah diisi, produk langsung bisa dipilih di Pesanan Online dan tetap draft sampai Anda menayangkannya.</p>
-            <details class="mt-2 text-sm">
-                <summary class="inline-flex min-h-11 cursor-pointer items-center font-semibold">Lihat daftar</summary>
-                <ul class="divide-y divide-gray-100">
-                    @foreach($waiting as $row)
-                        <li class="flex justify-between gap-3 py-2"><span class="min-w-0 break-words">{{ $row['product']->name }}</span><span class="shrink-0 tabular-nums text-gray-600">{{ $row['size'] }} ml · {{ format_rupiah($row['price']) }}</span></li>
-                    @endforeach
-                </ul>
-            </details>
-            <form method="POST" action="{{ route('admin.app-products.fill-offers') }}" class="mt-2">
-                @csrf
-                @foreach($waiting as $row)<input type="hidden" name="product_ids[]" value="{{ $row['product']->id }}">@endforeach
-                <button class="min-h-11 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2">Isi ukuran &amp; harga {{ $waiting->count() }} draft</button>
-            </form>
-        </section>
-    @endif
 
     <nav class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Kelompok produk aplikasi">
         @foreach(['all' => 'Semua', 'draft' => 'Draft', 'unlinked' => 'Perlu pasangan', 'price_review' => 'Periksa harga', 'hidden' => 'Disembunyikan aplikasi'] as $key => $label)

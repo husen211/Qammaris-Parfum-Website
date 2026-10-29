@@ -3,7 +3,7 @@
     $publicationLabel = match ($publicationStatus) {
         'published' => 'Tayang',
         'archived' => 'Diarsipkan',
-        default => 'Draft',
+        default => 'Belum tayang',
     };
     $publicationClasses = match ($publicationStatus) {
         'published' => 'text-emerald-700',
