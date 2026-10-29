@@ -1,6 +1,6 @@
 # ADR-056 — Website drafts follow App merges
 
-Status: accepted (CAT-APP-MERGE-01, Owner 2026-10-29, card #138). Stage 2 of the Owner's product simplification.
+Status: accepted (CAT-APP-MERGE-01, Owner 2026-10-29, card #138). Stage 2 of the Owner's product simplification. Released PR #139 (`e055083`, 2026-10-29).
 
 ## Context
 
