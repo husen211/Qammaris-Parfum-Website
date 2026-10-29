@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Integrations\OrderApiReadController;
 use App\Http\Controllers\Integrations\OrderApiWriteController;
+use App\Http\Controllers\Integrations\ProductLinkApiController;
 use App\Http\Controllers\Integrations\QammarisAppWebhookController;
 use App\Http\Middleware\AuthenticateOrderApi;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,8 @@ Route::prefix('integrations/qammaris-app/orders/v1')->name('integrations.orders.
     Route::get('orders', [OrderApiReadController::class, 'index'])->name('index');
     Route::get('orders/{id}', [OrderApiReadController::class, 'show'])->name('show');
     Route::get('orders/{id}/jnt/qr', [OrderApiReadController::class, 'qr'])->name('jnt.qr.show');
+    // WAIT-02: product page links for the App Daftar Tunggu (outside the frozen OpenAPI baseline).
+    Route::get('product-links', ProductLinkApiController::class)->name('product-links');
 
     Route::controller(OrderApiWriteController::class)->group(function () {
         Route::post('orders/{id}/claims', 'claim')->name('claims.store');
