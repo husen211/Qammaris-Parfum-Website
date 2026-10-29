@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## ORD-12 — App products not yet published can be ordered — IN_REVIEW
+
+Owner 2026-10-29 (card #134), stage 1 of simplifying the App/Website product flow: admin "Buat pesanan" only found published products, so a product already in stock and priced in Qammaris App but without a Website photo (BSP Black Edition 50ml) could not be ordered; the Owner had to complete and publish it first ("Peselancar Lokal"). Separately, drafts created while the product was OTW never got their size + price when the App price arrived later (47 of the 58 "Periksa harga" rows on production, e.g. Inception 100ml).
+
+Change: admin order search and `CreateOnlineOrder::handle()` accept published products and App-linked drafts the App still shows (`Product::orderableByAdmin`); the result says "Belum tayang". Matching App drafts without a priced offer are listed as "Belum bisa dipesan · Ukuran belum diisi / Harga belum ada di aplikasi" with a "Lengkapi" link for catalog admins. Website checkout, catalog and product links stay published-only. A late App price now creates the draft's single offer when the size is in the name (`FillAppDraftOffer`); drafts already waiting are listed on "Produk dari aplikasi" with one Owner button ("Isi ukuran & harga N draft"), audited as the Owner. No migration. [ADR-055](../architecture/decisions/ADR-055-admin-orders-from-app-drafts.md), [verification](../verification/ord-12/README.md).
+
+Status: branch `feat-order-app-drafts`, verified locally at 375 and 1440; not released. After release the Owner presses the fill button once on production (or asks the agent to). Open limits: names without ml ("Hawaiian Crush", testers, "90 M") still need a size in the editor; stage 2 (App merges leaving duplicate drafts) and stage 3 (one simple Products page) are not started.
+
 ## TOUR-01 — Walkable 360 store tour — DONE
 
 Owner 2026-10-27 (card #128): customers can look around the Palu store in 360 photos and walk between areas. Teleport 360 captures were retouched outside the repository (stitching repairs, logo disc over the photographer's feet, ceiling swirls, glass reflection). Owner reviews on localhost: (1) drop Dalam Tengah, repair the MUST TRY cabinet and two capsules, phone-first, no floor plan; (2) no page of its own, the tour on the store location page and on the homepage above Qammaris Journal, visitors "enter" it, the camera starts at 0,5. The Owner decided not to colour-grade the photos in ChatGPT (it altered the content).

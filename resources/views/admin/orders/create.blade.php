@@ -160,20 +160,34 @@
                 url.searchParams.set('q', term);
                 const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
                 if (!response.ok) throw new Error('search failed');
-                const { items } = await response.json();
+                const { items, incomplete = [] } = await response.json();
                 results.replaceChildren(...items.map((item) => {
                     const li = el('li');
                     const button = el('button', 'flex min-h-14 w-full items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none');
                     button.type = 'button';
                     const img = el('img', 'h-12 w-10 shrink-0 object-contain'); img.src = item.image; img.alt = '';
                     const text = el('span', 'min-w-0 flex-1 text-sm');
-                    text.append(el('span', 'block font-semibold text-gray-900', item.name), el('span', 'block text-gray-500', `${item.brand} · ${item.volume} ml · ${item.availability}`));
+                    text.append(el('span', 'block font-semibold text-gray-900', item.name), el('span', 'block text-gray-500', `${item.brand} · ${item.volume} ml · ${item.availability}${item.published ? '' : ' · Belum tayang'}`));
                     button.append(img, text, el('span', 'shrink-0 text-sm font-semibold', item.price));
                     button.addEventListener('click', () => add(item));
                     li.append(button);
                     return li;
+                }), ...incomplete.map((product) => {
+                    // ORD-12: an App draft without size or price cannot be ordered yet; say what is missing.
+                    const li = el('li', 'flex min-h-14 items-center gap-3 px-3 py-2 text-sm');
+                    const text = el('span', 'min-w-0 flex-1');
+                    text.append(el('span', 'block font-semibold text-gray-500', product.name), el('span', 'block text-amber-800', `Belum bisa dipesan · ${product.reason}`));
+                    li.append(text);
+                    if (product.edit_url) {
+                        const link = el('a', 'inline-flex min-h-11 shrink-0 items-center px-2 font-semibold underline', 'Lengkapi');
+                        Object.assign(link, { href: product.edit_url, target: '_blank', rel: 'noopener' });
+                        link.setAttribute('aria-label', `Lengkapi ${product.name} di tab baru`);
+                        li.append(link);
+                    }
+                    return li;
                 }));
-                status.textContent = items.length ? `${items.length} produk` : 'Produk tidak ditemukan.';
+                status.textContent = items.length || incomplete.length
+                    ? `${items.length} produk${incomplete.length ? ` · ${incomplete.length} belum bisa dipesan` : ''}` : 'Produk tidak ditemukan.';
             } catch (error) {
                 if (error.name !== 'AbortError') status.textContent = 'Pencarian gagal. Periksa koneksi lalu ketik ulang.';
             }

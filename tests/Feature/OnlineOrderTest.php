@@ -6,10 +6,12 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\OnlineOrder;
 use App\Models\Product;
+use App\Models\ProductExternalIdentity;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class OnlineOrderTest extends TestCase
@@ -62,6 +64,48 @@ class OnlineOrderTest extends TestCase
         $customer = User::factory()->create(['role' => 'customer']);
         $this->actingAs($customer)->get(route('admin.orders.index'))->assertForbidden();
         $this->actingAs($customer)->post(route('admin.orders.store'), ['items' => [['variant_id' => $draft->id, 'quantity' => 1]]])->assertForbidden();
+    }
+
+    public function test_admin_orders_app_drafts_the_app_still_shows_but_not_manual_hidden_or_archived_ones(): void
+    {
+        $draft = ['publication_status' => 'draft', 'is_active' => false, 'published_at' => null];
+        $app = function (ProductVariant|Product $item, array $state = []): ProductVariant|Product {
+            $product = $item instanceof Product ? $item : $item->product;
+            $product->forceFill($state)->save();
+            $product->externalIdentities()->create(['provider' => ProductExternalIdentity::PROVIDER_QAMMARIS_APP, 'external_product_id' => (string) Str::uuid()]);
+
+            return $item;
+        };
+        $live = $this->offer('Inception Live 50ml', 300000);
+        $appDraft = $app($this->offer('Inception 100ml', 425000, $draft));
+        $hidden = $app($this->offer('Inception Hidden 100ml', 425000, $draft), ['qammaris_app_hidden' => true]);
+        $archived = $app($this->offer('Inception Archived 100ml', 425000, ['publication_status' => 'archived', 'is_active' => false]));
+        $manual = $this->offer('Inception Manual 100ml', 425000, $draft);
+        $noSize = $app($this->offer('Inception Tester', 228000, $draft)->product);
+        $noSize->variants()->delete();
+        $noPrice = $app($this->offer('Inception OTW', 0, $draft)->product);
+        $noPrice->variants()->delete();
+
+        $search = $this->actingAs($this->admin)->getJson(route('admin.orders.product-search', ['q' => 'inception']))->assertOk();
+        $this->assertEqualsCanonicalizing([$live->id, $appDraft->id], array_column($search->json('items'), 'variant_id'));
+        $this->assertEquals([$live->id => true, $appDraft->id => false], array_column($search->json('items'), 'published', 'variant_id'));
+        $this->assertEqualsCanonicalizing([
+            ['name' => 'Inception Tester', 'reason' => 'Ukuran belum diisi', 'edit_url' => route('admin.products.edit', $noSize->id)],
+            ['name' => 'Inception OTW', 'reason' => 'Harga belum ada di aplikasi', 'edit_url' => route('admin.products.edit', $noPrice->id)],
+        ], $search->json('incomplete'));
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER]);
+        $this->assertSame([null, null], array_column($this->actingAs($staff)->getJson(route('admin.orders.product-search', ['q' => 'inception']))->json('incomplete'), 'edit_url'));
+
+        foreach ([$hidden, $archived, $manual] as $variant) {
+            $this->actingAs($this->admin)->post(route('admin.orders.store'), ['items' => [['variant_id' => $variant->id, 'quantity' => 1]]])
+                ->assertSessionHas('error');
+        }
+        $this->assertSame(0, OnlineOrder::count());
+        $this->actingAs($this->admin)->post(route('admin.orders.store'), ['items' => [['variant_id' => $appDraft->id, 'quantity' => 1]]])
+            ->assertRedirect(route('admin.orders.show', OnlineOrder::sole()));
+        $this->assertSame(['Inception 100ml', '425000.00'], [OnlineOrder::sole()->items->sole()->product_name, OnlineOrder::sole()->subtotal()]);
+        $this->assertSame('draft', $appDraft->product->fresh()->publication_status, 'Ordering never publishes the draft.');
+        $this->get(route('products.show', $appDraft->product))->assertNotFound();
     }
 
     public function test_customer_completes_details_and_sees_private_status(): void

@@ -26,6 +26,27 @@
         </div>
     </section>
 
+    @if($waiting->isNotEmpty())
+        {{-- ORD-12: drafts created while OTW got their App price later; the Owner fills them once, new ones fill automatically. --}}
+        <section class="mt-6 rounded-lg border border-gray-200 bg-white p-4" aria-labelledby="waiting-offers-title">
+            <h2 id="waiting-offers-title" class="text-base font-semibold text-gray-900">{{ $waiting->count() }} draft sudah punya harga di aplikasi, tapi belum bisa dipesan</h2>
+            <p class="mt-1 max-w-2xl text-sm text-gray-600">Ukuran diambil dari nama produk, harga dari aplikasi. Setelah diisi, produk langsung bisa dipilih di Pesanan Online dan tetap draft sampai Anda menayangkannya.</p>
+            <details class="mt-2 text-sm">
+                <summary class="inline-flex min-h-11 cursor-pointer items-center font-semibold">Lihat daftar</summary>
+                <ul class="divide-y divide-gray-100">
+                    @foreach($waiting as $row)
+                        <li class="flex justify-between gap-3 py-2"><span class="min-w-0 break-words">{{ $row['product']->name }}</span><span class="shrink-0 tabular-nums text-gray-600">{{ $row['size'] }} ml · {{ format_rupiah($row['price']) }}</span></li>
+                    @endforeach
+                </ul>
+            </details>
+            <form method="POST" action="{{ route('admin.app-products.fill-offers') }}" class="mt-2">
+                @csrf
+                @foreach($waiting as $row)<input type="hidden" name="product_ids[]" value="{{ $row['product']->id }}">@endforeach
+                <button class="min-h-11 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2">Isi ukuran &amp; harga {{ $waiting->count() }} draft</button>
+            </form>
+        </section>
+    @endif
+
     <nav class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Kelompok produk aplikasi">
         @foreach(['all' => 'Semua', 'draft' => 'Draft', 'unlinked' => 'Perlu pasangan', 'price_review' => 'Periksa harga', 'hidden' => 'Disembunyikan aplikasi'] as $key => $label)
             <a href="{{ route('admin.app-products.index', ['status' => $key, 'search' => $search]) }}" @if($filter === $key) aria-current="page" @endif class="inline-flex min-h-11 items-center gap-2 border-b-2 {{ $filter === $key ? 'border-gray-900 font-semibold text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-900' }} focus-visible:outline-2 focus-visible:outline-offset-2">{{ $label }} <span class="tabular-nums">{{ $counts[$key] }}</span></a>

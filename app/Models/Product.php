@@ -218,6 +218,17 @@ class Product extends Model
     }
 
     /**
+     * ORD-12: admin orders also accept an App draft the App still shows, so a product can be sold before its photo.
+     */
+    public function scopeOrderableByAdmin($query)
+    {
+        return $query->where('qammaris_app_hidden', false)->where(fn ($orderable) => $orderable
+            ->where(fn ($published) => $published->where('publication_status', self::PUBLICATION_PUBLISHED)->where('is_active', true))
+            ->orWhere(fn ($draft) => $draft->where('publication_status', self::PUBLICATION_DRAFT)
+                ->whereHas('externalIdentities', fn ($identity) => $identity->where('provider', ProductExternalIdentity::PROVIDER_QAMMARIS_APP))));
+    }
+
+    /**
      * Scope: Best sellers
      */
     public function scopeBestSellers($query)

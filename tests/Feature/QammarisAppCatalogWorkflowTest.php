@@ -105,6 +105,67 @@ class QammarisAppCatalogWorkflowTest extends TestCase
         $this->assertDatabaseCount('qammaris_app_changes', 2);
     }
 
+    public function test_otw_draft_gets_its_offer_when_the_app_price_arrives_and_the_name_has_a_size(): void
+    {
+        $sized = $this->source(['name' => 'Inception 100ml', 'source' => 'app', 'price' => null]);
+        $unsized = $this->source(['name' => 'Hawaiian Crush', 'source' => 'app', 'price' => null, 'revision' => 2, 'change_seq' => 2]);
+        $this->feed($sized);
+        $this->feed($unsized);
+        $this->assertDatabaseCount('product_variants', 0);
+
+        $this->feed(array_replace($sized, ['price' => 425000, 'revision' => 3, 'change_seq' => 3]));
+        $this->feed(array_replace($unsized, ['price' => 228000, 'revision' => 4, 'change_seq' => 4]));
+        $product = Product::where('name', 'Inception 100ml')->sole();
+        $this->assertSame([100, '425000.00', true], [$product->activeOffer->volume, $product->activeOffer->price, $product->activeOffer->is_active]);
+        $this->assertSame(['draft', false], [$product->publication_status, $product->is_active], 'A price never publishes the draft.');
+        $this->assertSame('synced_new_offer', json_decode(DB::table('qammaris_app_changes')->where('external_id', $sized['id'])->where('revision', 3)->value('after'), true)['price_sync']);
+        $waiting = Product::where('name', 'Hawaiian Crush')->sole();
+        $this->assertSame([0, '228000.00'], [$waiting->variants()->count(), $waiting->base_price]);
+        $this->assertSame('review_missing_offer', json_decode(DB::table('qammaris_app_changes')->where('external_id', $unsized['id'])->where('revision', 4)->value('after'), true)['price_sync']);
+
+        $this->feed(array_replace($sized, ['price' => 430000, 'revision' => 5, 'change_seq' => 5]));
+        $this->assertSame([1, '430000.00'], [$product->variants()->count(), $product->activeOffer()->sole()->price]);
+    }
+
+    public function test_owner_fills_drafts_that_were_waiting_for_a_price_once_and_only_eligible_ones(): void
+    {
+        $waiting = $this->source(['name' => 'Inception 100ml', 'source' => 'app', 'price' => null]);
+        $unsized = $this->source(['name' => 'Hawaiian Crush', 'source' => 'app', 'price' => null, 'revision' => 2, 'change_seq' => 2]);
+        $hidden = $this->source(['name' => 'Merged OTW 50ml', 'source' => 'app', 'price' => null, 'revision' => 3, 'change_seq' => 3]);
+        foreach ([$waiting, $unsized, $hidden] as $source) {
+            $this->feed($source);
+        }
+        // Before ORD-12 the price revision was applied without an offer; the feed never replays it.
+        $this->cache(array_replace($waiting, ['price' => 425000, 'revision' => 5]));
+        $this->cache(array_replace($unsized, ['price' => 228000, 'revision' => 6]));
+        $this->cache(array_replace($hidden, ['price' => 199000, 'revision' => 7, 'hidden' => true, 'merged_into' => (string) Str::uuid()]));
+        $this->feed($this->source(['name' => 'Live 50ml', 'price' => 150000, 'revision' => 4, 'change_seq' => 4]));
+        $live = Product::where('name', 'Live 50ml')->sole();
+        $live->forceFill(['publication_status' => 'published', 'is_active' => true])->save();
+        $live->variants()->delete();
+        $target = Product::where('name', 'Inception 100ml')->sole();
+        $owner = $this->admin();
+
+        $page = $this->actingAs($owner)->get('/admin/app-products')->assertOk()
+            ->assertSee('1 draft sudah punya harga di aplikasi, tapi belum bisa dipesan')->assertSee('100 ml · Rp 425.000');
+        $this->assertSame([$target->id], $page->viewData('waiting')->map(fn ($row) => $row['product']->id)->all());
+
+        $ids = Product::pluck('id')->all();
+        $this->post(route('admin.app-products.fill-offers'), ['product_ids' => $ids])
+            ->assertRedirect(route('admin.app-products.index'))->assertSessionHas('success', '1 draft sekarang punya ukuran dan harga, dan bisa dipilih di Pesanan Online.');
+        $this->assertSame([100, '425000.00'], [$target->activeOffer->volume, $target->activeOffer->price]);
+        $this->assertSame('draft', $target->fresh()->publication_status);
+        $this->assertSame(1, DB::table('product_variants')->count());
+        $audit = DB::table('product_admin_changes')->sole();
+        $this->assertSame([$target->id, $owner->id, 'product_updated'], [$audit->product_id, $audit->actor_id, $audit->action]);
+
+        $this->post(route('admin.app-products.fill-offers'), ['product_ids' => $ids])
+            ->assertSessionHas('success', 'Tidak ada draft yang diubah; datanya sudah berubah. Muat ulang halaman ini.');
+        $this->assertSame(1, DB::table('product_variants')->count());
+        $this->get('/admin/app-products')->assertDontSee('belum bisa dipesan');
+        $this->post(route('admin.app-products.fill-offers'), ['product_ids' => 'x'])->assertSessionHasErrors('product_ids');
+    }
+
     public function test_invalid_source_prices_retain_last_price_without_blocking_availability_or_checkpoint(): void
     {
         $s = $this->source();

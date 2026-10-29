@@ -194,14 +194,26 @@ class AdminOnlineOrderController extends Controller
     {
         $term = SearchMatcher::term($request->query('q'));
         if (mb_strlen($term) < 2) {
-            return response()->json(['items' => []]);
+            return response()->json(['items' => [], 'incomplete' => []]);
         }
-        $products = Product::query()->published()->search($term)
+        $products = Product::query()->orderableByAdmin()->search($term)
             ->with(['brand', 'primaryImage', 'activeOffer'])
             ->whereHas('activeOffer', fn ($query) => $query->where('price', '>', 0))
             ->limit(12)->get();
+        // ORD-12: App drafts still missing a size or price are named with what is missing instead of silently absent.
+        $incomplete = Product::query()->orderableByAdmin()->where('publication_status', Product::PUBLICATION_DRAFT)->search($term)
+            ->whereDoesntHave('activeOffer', fn ($query) => $query->where('price', '>', 0))
+            ->limit(5)->get(['id', 'name', 'base_price']);
+        $canEdit = $request->user()->can('catalog.manage');
 
-        return response()->json(['items' => $products->map(fn (Product $product) => $this->option($product->activeOffer->setRelation('product', $product)))->values()]);
+        return response()->json([
+            'items' => $products->map(fn (Product $product) => $this->option($product->activeOffer->setRelation('product', $product)))->values(),
+            'incomplete' => $incomplete->map(fn (Product $product) => [
+                'name' => $product->name,
+                'reason' => (float) $product->base_price > 0 ? 'Ukuran belum diisi' : 'Harga belum ada di aplikasi',
+                'edit_url' => $canEdit ? route('admin.products.edit', $product->id) : null,
+            ])->values(),
+        ]);
     }
 
     private function option(ProductVariant $variant): array
@@ -215,6 +227,7 @@ class AdminOnlineOrderController extends Controller
             'volume' => $variant->volume,
             'price' => Rupiah::format($variant->price),
             'availability' => CatalogAvailability::label($product),
+            'published' => $product->isPublished(),
             'image' => $product->primaryImage?->image_url ?? asset('images/product-placeholder.svg'),
         ];
     }

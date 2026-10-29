@@ -6,7 +6,7 @@ use App\Models\Product;
 
 class SyncQammarisAppPrice
 {
-    public function __construct(private SyncSingleOffer $offers) {}
+    public function __construct(private SyncSingleOffer $offers, private FillAppDraftOffer $drafts) {}
 
     public function handle(Product $product, array $source): string
     {
@@ -19,6 +19,9 @@ class SyncQammarisAppPrice
         }
         $offer = $product->variants()->where('is_active', true)->lockForUpdate()->first();
         if (! $offer) {
+            if ($this->drafts->fill($product, $source)) {
+                return 'synced_new_offer';
+            }
             if ($product->publication_status === Product::PUBLICATION_DRAFT && ! $product->variants()->exists()) {
                 $product->forceFill(['base_price' => $price])->save();
             }
