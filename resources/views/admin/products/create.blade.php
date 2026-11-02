@@ -53,7 +53,7 @@
                     <div class="space-y-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Produk <span class="text-red-500">*</span></label>
-                            <input type="text" name="name" value="{{ old('name') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="e.g. Afnan 9 PM" required @error('name') aria-describedby="name-error" aria-invalid="true" @enderror>
+                            <input type="text" data-required-for-publish="nama" name="name" value="{{ old('name') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="e.g. Afnan 9 PM" required @error('name') aria-describedby="name-error" aria-invalid="true" @enderror>
                             @error('name')
                             <p id="name-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -62,7 +62,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Brand <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
-                                <select name="brand_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('brand_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('brand_id') aria-describedby="brand-error" aria-invalid="true" @enderror>
+                                <select data-required-for-publish="brand" name="brand_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('brand_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('brand_id') aria-describedby="brand-error" aria-invalid="true" @enderror>
                                     <option value="">Pilih brand</option>
                                     @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}" {{ old('brand_id') == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
@@ -74,7 +74,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
-                                <select name="category_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('category_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('category_id') aria-describedby="category-error" aria-invalid="true" @enderror>
+                                <select data-required-for-publish="kategori" name="category_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('category_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('category_id') aria-describedby="category-error" aria-invalid="true" @enderror>
                                     <option value="">Pilih kategori</option>
                                     @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -88,7 +88,7 @@
 
                         <div data-text-paste>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
-                            <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description') }}</textarea>
+                            <textarea data-required-for-publish="deskripsi" name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description') }}</textarea>
                             @error('description')
                             <p id="description-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -107,7 +107,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
-                                <select name="gender" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm">
+                                <select data-required-for-publish="gender" name="gender" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm">
                                     <option value="">Pilih gender</option>
                                     <option value="Unisex" {{ old('gender') == 'Unisex' ? 'selected' : '' }}>Unisex</option>
                                     <option value="Pria" {{ old('gender') == 'Pria' ? 'selected' : '' }}>Pria</option>
@@ -153,14 +153,14 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <div>
                             <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) <span class="text-gray-400">Wajib saat publish</span></label>
-                            <input id="offer-volume" type="number" data-required-for-publish="Isi ukuran (ml) sebelum publish." name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100">
+                            <input id="offer-volume" type="number" data-required-for-publish="ukuran (ml)" name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100">
                             @error('variants.0.volume')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
                             <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) <span class="text-gray-400">Wajib saat publish</span></label>
-                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input data-required-for-publish="Isi harga jual sebelum publish." name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000">
+                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input data-required-for-publish="harga jual" name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000">
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -200,6 +200,7 @@
                 </div>
 
                 <div class="sticky top-6 space-y-3">
+                    <p data-publish-check-summary role="alert" hidden class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"></p>
                     <button type="submit" name="publication_action" value="draft" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
                         Simpan sebagai draft
                     </button>

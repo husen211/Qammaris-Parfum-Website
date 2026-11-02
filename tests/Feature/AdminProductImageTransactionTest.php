@@ -160,7 +160,7 @@ class AdminProductImageTransactionTest extends TestCase
         $product = $this->createExistingProduct();
         $edit = route('admin.products.edit', $product->id);
         $page = $this->actingAs($this->admin)->get($edit)->assertOk()
-            ->assertSee('data-publish-check', false)->assertSee('data-required-for-publish="Isi ukuran (ml) sebelum publish."', false);
+            ->assertSee('data-publish-check', false)->assertSee('data-required-for-publish="ukuran (ml)"', false);
         $this->assertStringNotContainsString('data-restore', $page->getContent());
 
         $payload = $this->validUpdatePayload($product);
@@ -182,6 +182,24 @@ class AdminProductImageTransactionTest extends TestCase
                 ->assertSee('data-compare-input', false)->assertSee('data-price-input="#offer-price"', false)
                 ->assertSee('Pakai harga coret yang wajar');
         }
+    }
+
+    public function test_every_publish_requirement_is_marked_for_the_browser_check(): void
+    {
+        // CAT-PUBLISH-CHECK-01: the browser names all missing items before photos upload; a published product's save is checked too.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        $product->forceFill(['publication_status' => Product::PUBLICATION_DRAFT, 'is_active' => false])->save();
+        $labels = ['nama', 'brand', 'kategori', 'deskripsi', 'gender', 'ukuran (ml)', 'harga jual'];
+        foreach ([route('admin.products.create'), route('admin.products.edit', $product->id)] as $url) {
+            $html = $this->actingAs($this->admin)->get($url)->assertOk()->assertSee('data-publish-check-summary', false)->getContent();
+            preg_match_all('/data-required-for-publish="([^"]+)"/', $html, $marked);
+            $this->assertSame($labels, $marked[1], $url);
+        }
+        $this->assertStringNotContainsString('data-publish-check-always', $this->get(route('admin.products.edit', $product->id))->getContent());
+
+        $product->forceFill(['publication_status' => Product::PUBLICATION_PUBLISHED, 'is_active' => true, 'published_at' => now()])->save();
+        $this->get(route('admin.products.edit', $product->id))->assertOk()->assertSee('data-publish-check-always', false);
     }
 
     public function test_size_buttons_offer_the_most_used_active_sizes_smallest_first(): void

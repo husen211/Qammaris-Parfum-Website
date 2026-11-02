@@ -1,22 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { missingForPublish } from '../../resources/js/ui/product-publish-check.js';
+import { missingForPublish, summaryText } from '../../resources/js/ui/product-publish-check.js';
 
-const size = { value: '', message: 'Isi ukuran (ml) sebelum publish.' };
-const price = { value: '409.000', message: 'Isi harga jual sebelum publish.' };
+const field = (label, value) => ({ label, value });
+const form = (overrides = {}) => [
+    field('nama', 'Black Opera'), field('brand', '3'), field('kategori', overrides.kategori ?? ''),
+    field('deskripsi', 'Hangat'), field('gender', overrides.gender ?? ''), field('ukuran (ml)', '100'),
+    field('harga jual', '409.000'), field('foto', overrides.foto ?? '1'),
+];
 
-test('publishing with an empty size is stopped with the size message', () => {
-    assert.equal(missingForPublish('published', [size, price]), size);
-    assert.equal(missingForPublish('published', [{ ...size, value: '  ' }, price]).message, size.message);
+test('publish with gender and category empty names both at once, in page order', () => {
+    const missing = missingForPublish('published', form());
+    assert.deepEqual(missing.map((item) => item.label), ['kategori', 'gender']);
+    assert.equal(summaryText(missing), 'Belum bisa publish. Lengkapi: kategori, gender.');
 });
 
-test('saving a draft never blocks, and a complete publish passes', () => {
-    assert.equal(missingForPublish('draft', [size, price]), null);
-    assert.equal(missingForPublish('save', [size, price]), null);
-    assert.equal(missingForPublish(undefined, [size, price]), null);
-    assert.equal(missingForPublish('published', [{ ...size, value: '100' }, price]), null);
+test('a product without any photo cannot be published', () => {
+    const missing = missingForPublish('published', form({ kategori: '2', gender: 'Unisex', foto: '' }));
+    assert.deepEqual(missing.map((item) => item.label), ['foto']);
 });
 
-test('the first missing field in page order is reported', () => {
-    assert.equal(missingForPublish('published', [{ ...size, value: '100' }, { ...price, value: '' }]).message, price.message);
+test('saving a draft never blocks; saving a published product checks like publish', () => {
+    assert.deepEqual(missingForPublish('draft', form()), []);
+    assert.deepEqual(missingForPublish('save', form()), []);
+    assert.deepEqual(missingForPublish(undefined, form()), []);
+    assert.deepEqual(missingForPublish('save', form(), true).map((item) => item.label), ['kategori', 'gender']);
+});
+
+test('a complete form passes and whitespace counts as empty', () => {
+    assert.deepEqual(missingForPublish('published', form({ kategori: '2', gender: 'Pria' })), []);
+    assert.deepEqual(missingForPublish('published', [field('deskripsi', '   ')]).map((item) => item.label), ['deskripsi']);
+    assert.equal(summaryText([]), '');
 });

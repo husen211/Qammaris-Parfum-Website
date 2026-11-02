@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## CAT-PUBLISH-CHECK-01 — Publish with missing fields no longer looks stuck — IN_REVIEW
+
+Owner 2026-11-02 (card #154): pressing Publish with a required field still empty (e.g. gender or category) showed the loading overlay and seemed to hang before the publish was refused. Cause: the whole form, including pasted photos, went to the server first; the overlay covered the page during that round trip (5–6 s locally, longer on production and a phone connection) and the errors came back at the top of the page.
+
+Change: every publish requirement is checked in the browser before the request (name, brand, category, description, gender, size, editable selling price, at least one saved or pasted photo); all missing items are named together above the buttons and the first field is focused with its message; an already published product is checked on "Simpan perubahan" too. Drafts never block; server validation unchanged; no migration or data change. [Verification](../verification/cat-publish-check-01/README.md).
+
+Status: branch `fix-publish-stuck`, verified locally at 1440 and 390 (blocked publish, narrowing summary, then a successful publish); not released.
+
 ## CAT-SIZE-OPTIONS-01 — Size (ml) quick picks — DONE
 
 Owner 2026-11-02 (card #152): after the compare-at options, the Owner asked for the same one-click choice for the size in ml. Production on 2026-11-02 (438 offers): 100 ml 270, 50 ml 67, 75 ml 23, 37 ml 14, 90 ml 13, 15 ml 10, 35 ml 9, 80/105/200 ml 5 each.

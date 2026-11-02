@@ -74,7 +74,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" data-publish-check>
+    <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" data-publish-check @if($editingPublished) data-publish-check-always @endif>
         @csrf
         @method('PUT')
         <input type="hidden" name="return_to" value="{{ $catalogReturnPath }}">
@@ -88,7 +88,7 @@
                     <div class="space-y-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Produk <span class="text-red-500">*</span></label>
-                            <input type="text" name="name" value="{{ old('name', $product->name) }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="e.g. Afnan 9 PM" required @error('name') aria-describedby="name-error" aria-invalid="true" @enderror>
+                            <input type="text" data-required-for-publish="nama" name="name" value="{{ old('name', $product->name) }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="e.g. Afnan 9 PM" required @error('name') aria-describedby="name-error" aria-invalid="true" @enderror>
                             @error('name')
                             <p id="name-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -97,7 +97,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Brand @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
-                                <select name="brand_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('brand_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('brand_id') aria-describedby="brand-error" aria-invalid="true" @enderror>
+                                <select data-required-for-publish="brand" name="brand_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('brand_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('brand_id') aria-describedby="brand-error" aria-invalid="true" @enderror>
                                     <option value="">Pilih brand</option>
                                     @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>{{ $brand->name }}</option>
@@ -109,7 +109,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
-                                <select name="category_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('category_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('category_id') aria-describedby="category-error" aria-invalid="true" @enderror>
+                                <select data-required-for-publish="kategori" name="category_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('category_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" @error('category_id') aria-describedby="category-error" aria-invalid="true" @enderror>
                                     <option value="">Pilih kategori</option>
                                     @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -123,7 +123,7 @@
 
                         <div data-text-paste>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
-                            <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @if($editingPublished) required @endif @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description', $product->description) }}</textarea>
+                            <textarea data-required-for-publish="deskripsi" name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @if($editingPublished) required @endif @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description', $product->description) }}</textarea>
                             @error('description')
                             <p id="description-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -142,7 +142,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Gender @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-xs font-normal text-gray-400">Wajib saat publish</span>@endif</label>
-                                <select name="gender" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm">
+                                <select data-required-for-publish="gender" name="gender" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm">
                                     <option value="">Pilih gender</option>
                                     <option value="Unisex" {{ old('gender', $product->gender) == 'Unisex' ? 'selected' : '' }}>Unisex</option>
                                     <option value="Pria" {{ old('gender', $product->gender) == 'Pria' ? 'selected' : '' }}>Pria</option>
@@ -254,14 +254,14 @@
 
                         <div>
                             <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
-                            <input id="offer-volume" type="number" data-required-for-publish="Isi ukuran (ml) sebelum publish." name="variants[0][volume]" value="{{ old('variants.0.volume', $offer?->volume) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" @if($editingPublished) required @endif>
+                            <input id="offer-volume" type="number" data-required-for-publish="ukuran (ml)" name="variants[0][volume]" value="{{ old('variants.0.volume', $offer?->volume) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" @if($editingPublished) required @endif>
                             @error('variants.0.volume')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
                             <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
-                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input data-required-for-publish="Isi harga jual sebelum publish." name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
+                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input data-required-for-publish="harga jual" name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -316,6 +316,7 @@
                 @include('admin.products._media')
 
                 <div class="sticky top-6 space-y-3">
+                    <p data-publish-check-summary role="alert" hidden class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"></p>
                     <button type="submit" name="publication_action" value="save" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
                         {{ $editingPublished ? 'Simpan perubahan' : ($product->publication_status === 'draft' ? 'Simpan draft' : 'Simpan perubahan') }}
                     </button>
