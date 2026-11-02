@@ -24,4 +24,4 @@ Publishing with an empty gender or category sent the whole form (and any pasted 
 - `tests/js/product-publish-check.test.mjs` (4): all missing items in page order, photo required, drafts never blocked, published save checked, whitespace counts as empty.
 - `AdminProductImageTransactionTest::test_every_publish_requirement_is_marked_for_the_browser_check`.
 
-Synthetic data (one draft that was published locally, a temporary admin, one stored WebP) was removed afterwards.
+Synthetic data (one draft that was published locally, a temporary admin, one stored WebP) was removed afterwards. Owner check 2026-11-02 on localhost: "Sudah, aman".

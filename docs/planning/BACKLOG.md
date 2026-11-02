@@ -46,7 +46,7 @@ Owner 2026-11-02 (card #154): pressing Publish with a required field still empty
 
 Change: every publish requirement is checked in the browser before the request (name, brand, category, description, gender, size, editable selling price, at least one saved or pasted photo); all missing items are named together above the buttons and the first field is focused with its message; an already published product is checked on "Simpan perubahan" too. Drafts never block; server validation unchanged; no migration or data change. [Verification](../verification/cat-publish-check-01/README.md).
 
-Status: branch `fix-publish-stuck`, verified locally at 1440 and 390 (blocked publish, narrowing summary, then a successful publish); not released.
+Status: branch `fix-publish-stuck`, verified locally at 1440 and 390 (blocked publish, narrowing summary, then a successful publish); the Owner checked it on localhost on 2026-11-02 ("Sudah, aman"). Not released yet.
 
 ## CAT-SIZE-OPTIONS-01 — Size (ml) quick picks — DONE
 
