@@ -40,6 +40,22 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## CAT-TEXT-PASTE-01 — Pasted Shopee text fills notes, gender and size — IN_REVIEW
+
+Owner 2026-11-02 (card #150): the Owner copies a product description from Shopee and then copies each notes line again into Top/Middle/Base Notes. Most products already have a full Shopee description. AI generation for products without any source was discussed and not wanted for now.
+
+Change: pasting into "Deskripsi" (or "Pisahkan dari deskripsi") shows "Ditemukan dari teks" with the notes per tier, gender, size and how many lines will be removed; "Isi ke kolom" fills the notes fields, gender, the size only when it is still empty, and a description without notes/size/gender lines, seller boilerplate (ready stock, original, shipping, hashtags) and separator lines; "Kembalikan teks asli" undoes it. Parser rules: notes under `Top/Head`, `Middle/Heart`, `Base` (and Indonesian "Aroma awal/tengah/akhir") with inline or bulleted values; gender only from explicit words; size only when one ml value appears. Browser-only, nothing saved before "Simpan", no external service. [Verification](../verification/cat-text-paste-01/README.md).
+
+Status: on branch `fix-keep-pasted-photos` with CAT-MEDIA-PASTE-02 and CAT-COMPARE-PRICE-01 (Owner: merge together); verified locally at 1440 and 390; not released.
+
+## CAT-COMPARE-PRICE-01 — Compare-at price options — IN_REVIEW
+
+Owner 2026-11-02 (card #151): the compare-at price is always typed by hand; the Owner wants ready options (e.g. Rp 550.000 / 600.000 / 700.000 for Rp 409.000).
+
+Change: under "Compare At Price" one-click options at +30/+50/+70% of the selling price, rounded up to Rp 10.000 below Rp 200.000 and Rp 50.000 from there (Rp 409.000 → 550.000 / 650.000 / 700.000), following the selling price as it changes; the field stays optional and editable; a hint asks for a fair reference price. Server validation unchanged. [Verification](../verification/cat-text-paste-01/README.md#cat-compare-price-01--compare-at-price-options).
+
+Status: on branch `fix-keep-pasted-photos` (see above); verified locally; not released.
+
 ## CAT-MEDIA-PASTE-02 — Pasted photos survive a failed save — IN_REVIEW
 
 Owner 2026-11-02 (card #148): after pasting photos, "Publish" came back because the size (ml) was empty and the pasted photos were gone, so they had to be pasted again. A browser cannot refill a file input after the server returns the form.

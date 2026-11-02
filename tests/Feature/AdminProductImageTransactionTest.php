@@ -171,6 +171,19 @@ class AdminProductImageTransactionTest extends TestCase
         $this->assertStringNotContainsString('data-restore', $this->get($edit)->getContent());
     }
 
+    public function test_add_and_edit_pages_offer_text_split_and_compare_price_options(): void
+    {
+        // CAT-TEXT-PASTE-01 / CAT-COMPARE-PRICE-01: browser helpers only; the server rules for these fields are unchanged.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        foreach ([route('admin.products.create'), route('admin.products.edit', $product->id)] as $url) {
+            $this->actingAs($this->admin)->get($url)->assertOk()
+                ->assertSee('data-text-paste', false)->assertSee('Pisahkan dari deskripsi')
+                ->assertSee('data-compare-input', false)->assertSee('data-price-input="#offer-price"', false)
+                ->assertSee('Pakai harga coret yang wajar');
+        }
+    }
+
     private function failOnSecondProductImageCreate(): void
     {
         $createdImages = 0;

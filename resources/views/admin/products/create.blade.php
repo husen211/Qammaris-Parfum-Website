@@ -86,18 +86,19 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div data-text-paste>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
                             <textarea name="description" rows="5" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="Profil aroma dan informasi penting produk." @error('description') aria-describedby="description-error" aria-invalid="true" @enderror>{{ old('description') }}</textarea>
                             @error('description')
                             <p id="description-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
+                            @include('admin.products._text_paste_panel')
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Compare At Price (Rp) <span class="text-gray-400 text-xs">(Optional)</span></label>
-                            <input type="text" inputmode="numeric" data-rupiah-input name="compare_at_price" value="{{ old('compare_at_price') }}" min="1" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
-                            <p class="mt-1 text-xs text-gray-400">Kosongkan jika tidak ingin harga coret.</p>
+                            <input type="text" inputmode="numeric" data-rupiah-input data-compare-input name="compare_at_price" value="{{ old('compare_at_price') }}" min="1" step="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-black focus:border-black sm:text-sm @error('compare_at_price') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" placeholder="750000" @error('compare_at_price') aria-describedby="compare-at-price-error" aria-invalid="true" @enderror>
+                            @include('admin.products._compare_price_options')
                             @error('compare_at_price')
                             <p id="compare-at-price-error" class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
