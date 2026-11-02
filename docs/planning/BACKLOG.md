@@ -40,37 +40,37 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-SIZE-OPTIONS-01 — Size (ml) quick picks — IN_REVIEW
+## CAT-SIZE-OPTIONS-01 — Size (ml) quick picks — DONE
 
 Owner 2026-11-02 (card #152): after the compare-at options, the Owner asked for the same one-click choice for the size in ml. Production on 2026-11-02 (438 offers): 100 ml 270, 50 ml 67, 75 ml 23, 37 ml 14, 90 ml 13, 15 ml 10, 35 ml 9, 80/105/200 ml 5 each.
 
 Change: under the size/price/stock row on add and edit, "Ukuran yang sering dipakai" shows the eight sizes most used by active offers (computed on each page load, smallest first; on production today 15, 35, 37, 50, 75, 80, 90, 100 ml). A click fills "Ukuran (ml)" and marks the chosen size; any other size can still be typed. Server validation unchanged. [Verification](../verification/cat-text-paste-01/README.md#cat-size-options-01--size-quick-picks).
 
-Status: on branch `fix-keep-pasted-photos` with the other editor items (Owner: merge together); verified locally at 1440 and 390; not released.
+Status: on branch `fix-keep-pasted-photos` with the other editor items (Owner: merge together); verified locally at 1440 and 390; the Owner chose to release without a separate localhost check of the size picks. Released together in PR #149 at the Owner's request (production `f795ef7`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only): "Tambah produk" has the photo keeper, publish check, text split and compare-at options bound, and size picks 15, 35, 37, 50, 75, 80, 90, 100 ml.
 
-## CAT-TEXT-PASTE-01 — Pasted Shopee text fills notes, gender and size — IN_REVIEW
+## CAT-TEXT-PASTE-01 — Pasted Shopee text fills notes, gender and size — DONE
 
 Owner 2026-11-02 (card #150): the Owner copies a product description from Shopee and then copies each notes line again into Top/Middle/Base Notes. Most products already have a full Shopee description. AI generation for products without any source was discussed and not wanted for now.
 
 Change: pasting into "Deskripsi" (or "Pisahkan dari deskripsi") shows "Ditemukan dari teks" with the notes per tier, gender, size and how many lines will be removed; "Isi ke kolom" fills the notes fields, gender, the size only when it is still empty, and a description without notes/size/gender lines, seller boilerplate (ready stock, original, shipping, hashtags) and separator lines; "Kembalikan teks asli" undoes it. Parser rules: notes under `Top/Head`, `Middle/Heart`, `Base` (and Indonesian "Aroma awal/tengah/akhir") with inline or bulleted values; gender only from explicit words; size only when one ml value appears. Browser-only, nothing saved before "Simpan", no external service. [Verification](../verification/cat-text-paste-01/README.md).
 
-Status: on branch `fix-keep-pasted-photos` with CAT-MEDIA-PASTE-02 and CAT-COMPARE-PRICE-01 (Owner: merge together); verified locally at 1440 and 390; the Owner checked it on localhost on 2026-11-02 ("overall udah aman"); not released.
+Status: on branch `fix-keep-pasted-photos` with CAT-MEDIA-PASTE-02 and CAT-COMPARE-PRICE-01 (Owner: merge together); verified locally at 1440 and 390; the Owner checked it on localhost on 2026-11-02 ("overall udah aman"). Released together in PR #149 at the Owner's request (production `f795ef7`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only): "Tambah produk" has the photo keeper, publish check, text split and compare-at options bound, and size picks 15, 35, 37, 50, 75, 80, 90, 100 ml.
 
-## CAT-COMPARE-PRICE-01 — Compare-at price options — IN_REVIEW
+## CAT-COMPARE-PRICE-01 — Compare-at price options — DONE
 
 Owner 2026-11-02 (card #151): the compare-at price is always typed by hand; the Owner wants ready options (e.g. Rp 550.000 / 600.000 / 700.000 for Rp 409.000).
 
 Change: under "Compare At Price" one-click options at +30/+50/+70% of the selling price, rounded up to Rp 10.000 below Rp 200.000 and Rp 50.000 from there (Rp 409.000 → 550.000 / 650.000 / 700.000), following the selling price as it changes; the field stays optional and editable; a hint asks for a fair reference price. Server validation unchanged. [Verification](../verification/cat-text-paste-01/README.md#cat-compare-price-01--compare-at-price-options).
 
-Status: on branch `fix-keep-pasted-photos` (see above); verified locally; the Owner checked it on localhost on 2026-11-02 ("overall udah aman"); not released.
+Status: on branch `fix-keep-pasted-photos` (see above); verified locally; the Owner checked it on localhost on 2026-11-02 ("overall udah aman"). Released together in PR #149 at the Owner's request (production `f795ef7`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only): "Tambah produk" has the photo keeper, publish check, text split and compare-at options bound, and size picks 15, 35, 37, 50, 75, 80, 90, 100 ml.
 
-## CAT-MEDIA-PASTE-02 — Pasted photos survive a failed save — IN_REVIEW
+## CAT-MEDIA-PASTE-02 — Pasted photos survive a failed save — DONE
 
 Owner 2026-11-02 (card #148): after pasting photos, "Publish" came back because the size (ml) was empty and the pasted photos were gone, so they had to be pasted again. A browser cannot refill a file input after the server returns the form.
 
 Change: before a submit with pasted photos, the photo box keeps them in this browser's IndexedDB (`qammaris-admin-photos`, per form page) and then submits with the same button; a page returned with validation errors (`data-restore`) puts them back as "Belum disimpan". The copy is dropped when that page loads again without errors, on a submit without pasted photos, or after one hour, and is never restored on a page without errors. "Publish" with an empty size or price is now stopped in the browser with the field's message, without a reload; drafts are never blocked and the server keeps all its checks. No server, migration or data change. [Verification](../verification/cat-media-paste-02/README.md).
 
-Status: branch `fix-keep-pasted-photos`, verified locally at 1440 and 390 on both add and edit (blocked publish, server error with restore, then save); the Owner checked it on localhost on 2026-11-02 and confirmed the photos stay ("Sudah, aman"). Not released yet.
+Status: branch `fix-keep-pasted-photos`, verified locally at 1440 and 390 on both add and edit (blocked publish, server error with restore, then save); the Owner checked it on localhost on 2026-11-02 and confirmed the photos stay ("Sudah, aman"). Released together in PR #149 at the Owner's request (production `f795ef7`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only): "Tambah produk" has the photo keeper, publish check, text split and compare-at options bound, and size picks 15, 35, 37, 50, 75, 80, 90, 100 ml.
 
 ## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — DONE
 
