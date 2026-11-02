@@ -40,7 +40,7 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — IN_REVIEW
+## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — DONE
 
 Owner 2026-11-02 (card #144): on "Tambah produk" and "Edit produk" the Owner wants to paste a photo copied in the browser ("Copy image", not "Copy image address") with Ctrl+V instead of saving it to a folder first, and the photo should come out tidy without manual resizing.
 
@@ -53,7 +53,7 @@ Scope (approved by the Owner 2026-11-02):
 
 Acceptance: a pasted PNG larger than 2 MB is saved as one WebP under 2 MB on both pages; three-photo limit and messages behave as above; 390 and 1440 checked; Owner confirms a real Ctrl+V from Google Images on localhost. Tests: Node unit tests for the clipboard/size logic, a feature test for an edit that adds pasted photos next to existing ones, browser check with a synthetic paste event. Limits: some sites copy only a link, Firefox may copy only HTML, iPhone Safari has no page paste; photos found on the internet may be copyrighted (prefer brand or Shopee photos).
 
-Status: built on branch `feat-paste-product-photos` (shared partial `admin/products/_photo_picker`, `resources/js/ui/product-photo-paste.js` loaded only on admin pages). Verified locally at 390 and 1440 with synthetic paste events: a 24.55 MB PNG became a 1.87 MB 2000×1600 WebP in 1.2 s, link/text/full-gallery/remove cases behave as specified, and "Simpan draft" stored the pasted photos as WebP. Decoding uses `createImageBitmap` because `Image.decode()` could hang while the page was not painting. [Verification](../verification/cat-media-paste-01/README.md). The Owner tested a real Ctrl+V from Google Images on localhost on 2026-11-02 and confirmed it works. Not released yet.
+Status: built on branch `feat-paste-product-photos` (shared partial `admin/products/_photo_picker`, `resources/js/ui/product-photo-paste.js` loaded only on admin pages). Verified locally at 390 and 1440 with synthetic paste events: a 24.55 MB PNG became a 1.87 MB 2000×1600 WebP in 1.2 s, link/text/full-gallery/remove cases behave as specified, and "Simpan draft" stored the pasted photos as WebP. Decoding uses `createImageBitmap` because `Image.decode()` could hang while the page was not painting. [Verification](../verification/cat-media-paste-01/README.md). The Owner tested a real Ctrl+V from Google Images on localhost on 2026-11-02 and confirmed it works. Released PR #146 at the Owner's request (production `3cd5138`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only): "Tambah produk" shows "Tempel foto dengan Ctrl+V" with the script bound. Open limit: iPhone/Android use the file picker.
 
 ## CAT-ADMIN-ONE-01 — One simple Products page in the admin — DONE
 
@@ -87,9 +87,11 @@ Owner 2026-10-27 (card #128): customers can look around the Palu store in 360 ph
 
 Status: released PR #129 (production `290f2ac`) and the WebP fix PR #130 (production `b61fcd1`), 2026-10-27, both merged at the Owner's request. After #129 the live check found the Hostinger CDN serving the JPEG panoramas resized to 1600×800 (800×400 for an iPhone user agent) while WebP passes through unchanged; #130 made the panoramas WebP (3.2 MB instead of 6.5 MB, PSNR 40 dB against the JPEGs) and added a test that keeps JPEG/PNG out of the folder. Live after #130 (public GET only): all six panoramas arrive at full size and byte-identical for iPhone, Android and desktop user agents (4096×2048 / 6144×3072); `/store/location` and `/` reference only the WebP files; the old JPEG URLs 404; on the live location page "Masuk" opens the tour at 0,5× and walks Pintu Masuk → Tengah → Depan Kasir without console errors; three.js arrives brotli-compressed (175 KB) and only after "Masuk". `StoreVirtualTourTest` 4 tests; CI green on both PRs. Open limits: physical iPhone/Android touch, Android back button and low-end GPUs untested; rebuilt cabinet/arch parts are reconstructions; Qammaris 1 needs a reshoot to be added.
 
-## WAIT-02 — Daftar Tunggu message links to the product page — IN_PROGRESS
+## WAIT-02 — Daftar Tunggu message links to the product page — DONE
 
 Owner 2026-10-29 in the App session, relayed by the App agent with the Owner's approval to build, merge and release on both sides: the App's "Siap dikabari" WhatsApp message should link to the product page instead of `/products`. Staff-entered waitlist entries only carry an App product id, and the App does not know Website slugs. New read-only endpoint `GET /integrations/qammaris-app/orders/v1/product-links?app_product_ids=…` behind the existing Order API HMAC auth: returns `url` = `route('products.show', slug)` only for App ids linked to a product a customer can open now (published, active, not hidden in the App); unknown, draft, archived or hidden ids are left out; empty, more than 50 or malformed ids → 422 `validation_failed`. It sits outside the frozen Order API OpenAPI baseline (no change to the order contract). The App caches about 10 minutes and falls back to `/products`. `ProductLinkApiTest`.
+
+Status: released PR #133 (production `935655d`, 2026-10-29); App #78 (`0052c9d`) is live. An unsigned request returns 401 `unknown_client`. On 2026-11-02 the Owner tried "Kabari via WhatsApp" from "Siap dikabari" in production and confirmed the product link works ("udh aman kok", relayed by the App agent and confirmed by the Owner in this session); the App logged no failed calls. The Website does not store successful Order API requests and the production access log was not read, so no status codes or request ids are recorded here.
 
 ## CAT-APP-HIDDEN-01 — App-hidden products show twice in the admin — DONE
 
