@@ -40,7 +40,7 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — IN_REVIEW
+## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — DONE
 
 Owner 2026-11-02 (card #144): on "Tambah produk" and "Edit produk" the Owner wants to paste a photo copied in the browser ("Copy image", not "Copy image address") with Ctrl+V instead of saving it to a folder first, and the photo should come out tidy without manual resizing.
 
@@ -53,7 +53,7 @@ Scope (approved by the Owner 2026-11-02):
 
 Acceptance: a pasted PNG larger than 2 MB is saved as one WebP under 2 MB on both pages; three-photo limit and messages behave as above; 390 and 1440 checked; Owner confirms a real Ctrl+V from Google Images on localhost. Tests: Node unit tests for the clipboard/size logic, a feature test for an edit that adds pasted photos next to existing ones, browser check with a synthetic paste event. Limits: some sites copy only a link, Firefox may copy only HTML, iPhone Safari has no page paste; photos found on the internet may be copyrighted (prefer brand or Shopee photos).
 
-Status: built on branch `feat-paste-product-photos` (shared partial `admin/products/_photo_picker`, `resources/js/ui/product-photo-paste.js` loaded only on admin pages). Verified locally at 390 and 1440 with synthetic paste events: a 24.55 MB PNG became a 1.87 MB 2000×1600 WebP in 1.2 s, link/text/full-gallery/remove cases behave as specified, and "Simpan draft" stored the pasted photos as WebP. Decoding uses `createImageBitmap` because `Image.decode()` could hang while the page was not painting. [Verification](../verification/cat-media-paste-01/README.md). The Owner tested a real Ctrl+V from Google Images on localhost on 2026-11-02 and confirmed it works. Not released yet.
+Status: built on branch `feat-paste-product-photos` (shared partial `admin/products/_photo_picker`, `resources/js/ui/product-photo-paste.js` loaded only on admin pages). Verified locally at 390 and 1440 with synthetic paste events: a 24.55 MB PNG became a 1.87 MB 2000×1600 WebP in 1.2 s, link/text/full-gallery/remove cases behave as specified, and "Simpan draft" stored the pasted photos as WebP. Decoding uses `createImageBitmap` because `Image.decode()` could hang while the page was not painting. [Verification](../verification/cat-media-paste-01/README.md). The Owner tested a real Ctrl+V from Google Images on localhost on 2026-11-02 and confirmed it works. Released PR #146 at the Owner's request (production `3cd5138`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only): "Tambah produk" shows "Tempel foto dengan Ctrl+V" with the script bound. Open limit: iPhone/Android use the file picker.
 
 ## CAT-ADMIN-ONE-01 — One simple Products page in the admin — DONE
 
