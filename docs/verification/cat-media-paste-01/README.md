@@ -36,4 +36,4 @@ Found while testing: `Image.decode()` never resolved while the page was not pain
 - `AdminProductImageTransactionTest::test_pasted_webp_photos_save_next_to_existing_ones_within_the_three_photo_limit`.
 - `AdminProductMediaManagementTest::test_product_editor_exposes_clear_media_states_and_safe_controls` updated for the new box.
 
-Synthetic data (one draft, a temporary admin, the two stored WebP files) was removed afterwards. Not covered here: a real Ctrl+V from Google Images in the Owner's Chrome (clipboard permission and site behaviour), iPhone/Android.
+Synthetic data (one draft, a temporary admin, the two stored WebP files) was removed afterwards. Owner check 2026-11-02: a real Ctrl+V from Google Images in the Owner's Chrome on localhost works ("Sudah, lancar"). Not covered: iPhone/Android (they use the file picker).
