@@ -184,6 +184,23 @@ class AdminProductImageTransactionTest extends TestCase
         }
     }
 
+    public function test_size_buttons_offer_the_most_used_active_sizes_smallest_first(): void
+    {
+        // CAT-SIZE-OPTIONS-01: sizes come from active offers; an inactive offer's size is not suggested.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        foreach ([50, 50, 15, 999] as $index => $volume) {
+            $other = Product::create(['name' => "Size {$index}", 'brand_id' => $this->brand->id, 'base_price' => 100000]);
+            ProductVariant::create(['product_id' => $other->id, 'volume' => $volume, 'price' => 100000, 'stock' => 0, 'is_active' => $volume !== 999]);
+        }
+
+        foreach ([route('admin.products.create'), route('admin.products.edit', $product->id)] as $url) {
+            $html = $this->actingAs($this->admin)->get($url)->assertOk()->assertSee('Ukuran yang sering dipakai')->getContent();
+            preg_match_all('/data-size="(\d+)"/', $html, $sizes);
+            $this->assertSame(['15', '50', '100'], $sizes[1], $url);
+        }
+    }
+
     private function failOnSecondProductImageCreate(): void
     {
         $createdImages = 0;

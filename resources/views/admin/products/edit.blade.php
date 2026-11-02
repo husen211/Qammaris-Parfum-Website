@@ -278,6 +278,7 @@
                             @enderror
                         </div>
                         @endif
+                        @include('admin.products._size_options')
                     </div>
                 </div>
             </div>

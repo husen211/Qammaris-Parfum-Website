@@ -19,6 +19,12 @@ Rules: a size is taken only when the text names exactly one ml value and the siz
 
 `resources/js/ui/compare-price-options.js` (partial `admin/products/_compare_price_options`). Options +30/+50/+70% of the selling price, rounded up to Rp 10.000 below Rp 200.000 and Rp 50.000 from there; one click fills the field, the chosen option is marked, the field stays optional and editable, and options follow the selling price as it changes. Rp 409.000 → Rp 550.000 (+34%), Rp 650.000 (+59%), Rp 700.000 (+71%); a stored "409000.00" is read correctly; the saved compare-at price was 550000.
 
+## CAT-SIZE-OPTIONS-01 — size quick picks
+
+`resources/js/ui/product-size-options.js` (partial `admin/products/_size_options`, sizes from `AdminProductController::commonSizes()`: the eight most used active offer sizes, smallest first; inactive offers ignored). Local data showed 50, 75, 80, 90, 100, 1000 ml; a click on 100 ml filled the field and marked the button, typing 37 cleared the mark. Production sizes on 2026-11-02 make the buttons 15, 35, 37, 50, 75, 80, 90, 100 ml. Screenshots: [size-options-1440](size-options-1440.jpg), [size-options-390](size-options-390.jpg). Test: `AdminProductImageTransactionTest::test_size_buttons_offer_the_most_used_active_sizes_smallest_first`.
+
+Owner check 2026-11-02 on localhost for text split and compare-at options: "overall udah aman".
+
 ## Screenshots
 
 | Check | 390 | 1440 |
