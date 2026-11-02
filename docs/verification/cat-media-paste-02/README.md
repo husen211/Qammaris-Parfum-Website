@@ -26,4 +26,4 @@ Problem reported by the Owner: photos pasted with Ctrl+V disappeared when "Publi
 - `AdminProductImageTransactionTest::test_editor_sent_back_with_errors_asks_the_browser_to_restore_pasted_photos`.
 - JS 85/85; full local PHP suite 833 passed, 10 skipped, 3 known local-only failures (VAPID, 2× J&T QR without GD).
 
-Synthetic data (one draft, a temporary admin, two stored WebP files, the browser's IndexedDB copy) was removed afterwards.
+Synthetic data (one draft, a temporary admin, two stored WebP files, the browser's IndexedDB copy) was removed afterwards. Owner check 2026-11-02 on localhost: pasted photos stay after a failed save ("Sudah, aman").

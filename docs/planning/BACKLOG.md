@@ -46,7 +46,7 @@ Owner 2026-11-02 (card #148): after pasting photos, "Publish" came back because 
 
 Change: before a submit with pasted photos, the photo box keeps them in this browser's IndexedDB (`qammaris-admin-photos`, per form page) and then submits with the same button; a page returned with validation errors (`data-restore`) puts them back as "Belum disimpan". The copy is dropped when that page loads again without errors, on a submit without pasted photos, or after one hour, and is never restored on a page without errors. "Publish" with an empty size or price is now stopped in the browser with the field's message, without a reload; drafts are never blocked and the server keeps all its checks. No server, migration or data change. [Verification](../verification/cat-media-paste-02/README.md).
 
-Status: branch `fix-keep-pasted-photos`, verified locally at 1440 and 390 on both add and edit (blocked publish, server error with restore, then save); not released.
+Status: branch `fix-keep-pasted-photos`, verified locally at 1440 and 390 on both add and edit (blocked publish, server error with restore, then save); the Owner checked it on localhost on 2026-11-02 and confirmed the photos stay ("Sudah, aman"). Not released yet.
 
 ## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — DONE
 
