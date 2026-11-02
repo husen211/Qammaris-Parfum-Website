@@ -130,6 +130,29 @@ class AdminProductImageTransactionTest extends TestCase
         $this->assertSame(['products/existing.png'], Storage::disk('product-media-test')->allFiles('products'));
     }
 
+    public function test_pasted_webp_photos_save_next_to_existing_ones_within_the_three_photo_limit(): void
+    {
+        // CAT-MEDIA-PASTE-01: the browser turns a pasted image into foto-tempel-N.webp and submits it as a normal upload.
+        $webp = fn (string $name) => UploadedFile::fake()->createWithContent($name, base64_decode('UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA=', true));
+        $product = $this->createExistingProduct();
+        Storage::disk('product-media-test')->put('products/existing.png', 'existing-image');
+        $product->images()->create(['image_path' => 'products/existing.png', 'is_primary' => true, 'sort_order' => 0]);
+
+        $payload = $this->validUpdatePayload($product);
+        $payload['new_images'] = [$webp('foto-tempel-1.webp'), $webp('foto-tempel-2.webp')];
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)->assertSessionHasNoErrors();
+
+        $images = $product->images()->orderBy('sort_order')->get();
+        $this->assertCount(3, $images);
+        $this->assertSame([true, false, false], $images->pluck('is_primary')->all());
+        $this->assertStringEndsWith('.webp', $images[1]->image_path);
+        Storage::disk('product-media-test')->assertExists($images[2]->image_path);
+
+        $payload['new_images'] = [$webp('foto-tempel-3.webp')];
+        $this->actingAs($this->admin)->put(route('admin.products.update', $product->id), $payload)->assertSessionHasErrors('new_images');
+        $this->assertSame(3, $product->images()->count());
+    }
+
     private function failOnSecondProductImageCreate(): void
     {
         $createdImages = 0;

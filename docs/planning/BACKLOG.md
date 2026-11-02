@@ -40,11 +40,11 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — BACKLOG
+## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — IN_REVIEW
 
 Owner 2026-11-02 (card #144): on "Tambah produk" and "Edit produk" the Owner wants to paste a photo copied in the browser ("Copy image", not "Copy image address") with Ctrl+V instead of saving it to a folder first, and the photo should come out tidy without manual resizing.
 
-Proposed scope (awaiting Owner approval):
+Scope (approved by the Owner 2026-11-02):
 - The photo box becomes "Tempel, seret, atau pilih foto": Ctrl+V anywhere on the page adds the copied image; drag-and-drop and the file picker keep working. Text pasted into a text field is never intercepted.
 - Tidy in the browser before upload, no new dependency: decode, scale the longest side down to at most 2000 px (never up), encode WebP (JPEG fallback, transparent areas on white), lower quality step by step until under 2 MB. No automatic cropping.
 - Previews marked "Belum disimpan" with remove; the first photo becomes the main photo when the product has none; the 3-photo limit is enforced with a clear message; leaving the page with unsaved pasted photos asks for confirmation.
@@ -52,6 +52,8 @@ Proposed scope (awaiting Owner approval):
 - Server path unchanged: pasted photos are written into the existing file input (`images[]` / `new_images[]`) and saved by "Simpan" through the same validation (JPEG/PNG/WebP, 2 MB, max 3) and the same product media disk. No migration, no remote URL fetch.
 
 Acceptance: a pasted PNG larger than 2 MB is saved as one WebP under 2 MB on both pages; three-photo limit and messages behave as above; 390 and 1440 checked; Owner confirms a real Ctrl+V from Google Images on localhost. Tests: Node unit tests for the clipboard/size logic, a feature test for an edit that adds pasted photos next to existing ones, browser check with a synthetic paste event. Limits: some sites copy only a link, Firefox may copy only HTML, iPhone Safari has no page paste; photos found on the internet may be copyrighted (prefer brand or Shopee photos).
+
+Status: built on branch `feat-paste-product-photos` (shared partial `admin/products/_photo_picker`, `resources/js/ui/product-photo-paste.js` loaded only on admin pages). Verified locally at 390 and 1440 with synthetic paste events: a 24.55 MB PNG became a 1.87 MB 2000×1600 WebP in 1.2 s, link/text/full-gallery/remove cases behave as specified, and "Simpan draft" stored the pasted photos as WebP. Decoding uses `createImageBitmap` because `Image.decode()` could hang while the page was not painting. [Verification](../verification/cat-media-paste-01/README.md). Waiting for the Owner's real Ctrl+V test on localhost; not released.
 
 ## CAT-ADMIN-ONE-01 — One simple Products page in the admin — DONE
 

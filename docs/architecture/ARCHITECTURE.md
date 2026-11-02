@@ -47,7 +47,7 @@ Entry files: `app/Http/Controllers/AuthController.php`, `app/Http/Controllers/Ad
 
 One product retains one active `ProductVariant`; offer is selling-price authority, base_price compatibility mirror. Draft-without-size preparation may retain source price without inventing an offer. IDs, slugs, active/archived media and provider identities survive ordinary archive/code rollback. Brand/category archive/constraints protect existing relations.
 
-`ProductMediaStorage` resolves the configured Laravel disk (`config/media.php`, `config/filesystems.php`); public URLs come from storage, never domain-hardcoded cloud code. Last verified production uses persistent public storage. R2 adapter/copy-verifier remain available from earlier staging work; no current R2 migration requirement. New file IO must be checked/cleaned on failed attachment; soft-archived files are retained for recovery.
+Admin photo boxes (add/edit) accept Ctrl+V, drag-and-drop or the file picker; `resources/js/ui/product-photo-paste.js` tidies images in the browser (longest side ≤ 2000 px, WebP under 2 MB, transparency on white) and writes them into the form's own file input, so uploads keep the server validation and storage path (CAT-MEDIA-PASTE-01). `ProductMediaStorage` resolves the configured Laravel disk (`config/media.php`, `config/filesystems.php`); public URLs come from storage, never domain-hardcoded cloud code. Last verified production uses persistent public storage. R2 adapter/copy-verifier remain available from earlier staging work; no current R2 migration requirement. New file IO must be checked/cleaned on failed attachment; soft-archived files are retained for recovery.
 
 ## App feed, webhook, and automatic drafts/prices
 

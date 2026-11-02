@@ -180,34 +180,8 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <h3 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Foto Produk</h3>
                     
-                    <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Foto <span class="text-xs font-normal text-gray-400">Wajib saat publish</span></label>
-                    <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors group focus-within:ring-2 focus-within:ring-black">
-                        <input id="images" name="images[]" type="file" multiple accept="image/*"
-                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                            onchange="previewImages(this)" @error('images') aria-describedby="images-error" aria-invalid="true" @enderror>
-                            
-                        <div class="space-y-3">
-                            <div class="mx-auto h-12 w-12 text-gray-400 group-hover:text-black transition-colors">
-                                <svg stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <div class="text-sm text-gray-600">
-                                <span class="font-bold text-black hover:underline">Click to Upload</span>
-                            </div>
-                            <p class="text-xs text-gray-400">Maksimum 3 foto · PNG, JPG, atau WebP · 2 MB per foto</p>
-                        </div>
-                    </div>
-                    @error('images')
-                    <p id="images-error" class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                    @error('images.*')
-                    <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                    <p id="image-client-error" class="mt-2 hidden text-xs text-red-600" role="alert"></p>
-                    <p class="mt-2 text-xs text-gray-500">Foto pertama otomatis menjadi cover katalog. Urutan dapat diubah setelah draft disimpan.</p>
-
-                    <div id="image-preview-container" class="grid grid-cols-3 gap-2 mt-4 hidden"></div>
+                    <p class="mb-3 text-xs text-gray-500">Wajib saat publish. Foto pertama otomatis menjadi cover katalog; urutan dapat diubah setelah draft disimpan.</p>
+                    @include('admin.products._photo_picker', ['inputId' => 'images', 'inputName' => 'images[]', 'errorKey' => 'images', 'slots' => \App\Models\ProductImage::MAX_PER_PRODUCT, 'existing' => 0])
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -237,37 +211,4 @@
     </form>
 </div>
 
-<script>
-    function previewImages(input) {
-        const container = document.getElementById('image-preview-container');
-        const error = document.getElementById('image-client-error');
-        container.innerHTML = '';
-        error.classList.add('hidden');
-        error.textContent = '';
-
-        if (input.files && input.files.length > 3) {
-            input.value = '';
-            container.classList.add('hidden');
-            error.textContent = 'Pilih maksimal tiga foto.';
-            error.classList.remove('hidden');
-            return;
-        }
-        
-        if (input.files) {
-            container.classList.remove('hidden');
-            Array.from(input.files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.className = 'relative aspect-square rounded-lg overflow-hidden border border-gray-200';
-                    div.innerHTML = `<img src="${e.target.result}" alt="Preview foto ${index + 1}" class="w-full h-full object-cover"><span class="absolute left-2 top-2 rounded bg-white/95 px-2 py-1 text-xs font-semibold text-gray-800">${index === 0 ? 'Foto utama' : `Foto ${index + 1}`}</span>`;
-                    container.appendChild(div);
-                }
-                reader.readAsDataURL(file);
-            });
-        } else {
-            container.classList.add('hidden');
-        }
-    }
-</script>
 @endsection

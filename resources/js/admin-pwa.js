@@ -4,6 +4,7 @@
  * and catalog state. Logout removes only caches named qammaris-admin-*.
  */
 import { initAdminPush } from './admin-push.js';
+import './ui/product-photo-paste.js';
 
 export const ADMIN_CACHE_PREFIX = 'qammaris-admin-';
 

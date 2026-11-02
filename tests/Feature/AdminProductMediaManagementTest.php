@@ -183,7 +183,8 @@ class AdminProductMediaManagementTest extends TestCase
             ->get(route('admin.products.edit', $emptyDraft->id))
             ->assertOk()
             ->assertSee('Belum ada foto produk')
-            ->assertSee('Tersisa 3 slot')
+            ->assertSee('Tempel foto dengan Ctrl+V')
+            ->assertSee('data-max-new="3" data-existing="0"', false)
             ->assertSee('name="new_images[]"', false);
     }
 
