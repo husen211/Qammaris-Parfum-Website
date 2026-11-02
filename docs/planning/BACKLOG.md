@@ -40,13 +40,13 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
-## CAT-PUBLISH-CHECK-01 — Publish with missing fields no longer looks stuck — IN_REVIEW
+## CAT-PUBLISH-CHECK-01 — Publish with missing fields no longer looks stuck — DONE
 
 Owner 2026-11-02 (card #154): pressing Publish with a required field still empty (e.g. gender or category) showed the loading overlay and seemed to hang before the publish was refused. Cause: the whole form, including pasted photos, went to the server first; the overlay covered the page during that round trip (5–6 s locally, longer on production and a phone connection) and the errors came back at the top of the page.
 
 Change: every publish requirement is checked in the browser before the request (name, brand, category, description, gender, size, editable selling price, at least one saved or pasted photo); all missing items are named together above the buttons and the first field is focused with its message; an already published product is checked on "Simpan perubahan" too. Drafts never block; server validation unchanged; no migration or data change. [Verification](../verification/cat-publish-check-01/README.md).
 
-Status: branch `fix-publish-stuck`, verified locally at 1440 and 390 (blocked publish, narrowing summary, then a successful publish); the Owner checked it on localhost on 2026-11-02 ("Sudah, aman"). Not released yet.
+Status: branch `fix-publish-stuck`, verified locally at 1440 and 390 (blocked publish, narrowing summary, then a successful publish); the Owner checked it on localhost on 2026-11-02 ("Sudah, aman"). Released PR #155 at the Owner's request (production `3ccc59a`, 2026-11-02; CI and Production release green, `/up` 200); live check in the Owner's admin session (read-only, nothing submitted): "Tambah produk" marks the seven required fields and has the summary line.
 
 ## CAT-SIZE-OPTIONS-01 — Size (ml) quick picks — DONE
 
