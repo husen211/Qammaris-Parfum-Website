@@ -69,17 +69,7 @@
 
     <div class="border-t border-gray-100 pt-4">
         @if($remainingSlots > 0)
-            <label for="new-images" class="block text-sm font-semibold text-gray-800">Tambah foto</label>
-            <input id="new-images" type="file" name="new_images[]" accept="image/jpeg,image/png,image/webp" @if($remainingSlots > 1) multiple @endif
-                class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-xs file:font-semibold file:text-gray-700 hover:file:bg-gray-200 @error('new_images') rounded-lg border border-red-300 p-2 @enderror"
-                @error('new_images') aria-describedby="new-images-error" aria-invalid="true" @enderror>
-            <p class="mt-2 text-xs text-gray-500">Tersisa {{ $remainingSlots }} slot. PNG, JPG, atau WebP; maksimum 2 MB per foto.</p>
-            @error('new_images')
-                <p id="new-images-error" class="mt-2 text-xs text-red-600">{{ $message }}</p>
-            @enderror
-            @error('new_images.*')
-                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-            @enderror
+            @include('admin.products._photo_picker', ['inputId' => 'new-images', 'inputName' => 'new_images[]', 'errorKey' => 'new_images', 'slots' => $remainingSlots, 'existing' => $imageCount])
         @else
             <div class="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
                 Galeri sudah penuh. Arsipkan salah satu foto sebelum menambahkan foto baru.
