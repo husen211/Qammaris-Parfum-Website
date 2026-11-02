@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { copiedLinkOnly, encodeUnderLimit, fitWithin, imageFiles, keepsOriginal, MAX_BYTES, photoName } from '../../resources/js/ui/product-photo-paste.js';
+import { copiedLinkOnly, encodeUnderLimit, fitWithin, imageFiles, isFresh, KEEP_FOR_MS, keepsOriginal, MAX_BYTES, photoName, photoStoreKey } from '../../resources/js/ui/product-photo-paste.js';
 
 const file = (type, size = 1000, name = 'x') => ({ type, size, name });
 const transfer = ({ files = [], items = [], types = [], text = '' } = {}) => ({ files, items, types, getData: (type) => (type === 'text/plain' ? text : '') });
@@ -60,4 +60,14 @@ test('browsers that cannot write WebP fall back to JPEG; nothing fitting returns
     assert.equal(await encodeUnderLimit(async (type) => ({ type, size: MAX_BYTES * 3 })), null);
     assert.equal(photoName(2, 'image/jpeg'), 'foto-tempel-2.jpg');
     assert.equal(photoName(1, 'image/webp'), 'foto-tempel-1.webp');
+});
+
+test('pasted photos are kept per form page and only for an hour', () => {
+    assert.equal(photoStoreKey('https://qammarisparfum.id/admin/products/639'), 'photos:/admin/products/639');
+    assert.equal(photoStoreKey('/admin/products', 'http://localhost:8010/admin/products/create'), 'photos:/admin/products');
+    const now = 1_000_000_000;
+    assert.equal(isFresh(now - 5 * 60 * 1000, now), true);
+    assert.equal(isFresh(now - KEEP_FOR_MS, now), false);
+    assert.equal(isFresh(now + 1000, now), false);
+    assert.equal(isFresh(undefined, now), false);
 });

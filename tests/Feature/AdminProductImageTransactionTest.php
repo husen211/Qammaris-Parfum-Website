@@ -153,6 +153,54 @@ class AdminProductImageTransactionTest extends TestCase
         $this->assertSame(3, $product->images()->count());
     }
 
+    public function test_editor_sent_back_with_errors_asks_the_browser_to_restore_pasted_photos(): void
+    {
+        // CAT-MEDIA-PASTE-02: only a page returned with validation errors restores the photos kept from the failed submit.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        $edit = route('admin.products.edit', $product->id);
+        $page = $this->actingAs($this->admin)->get($edit)->assertOk()
+            ->assertSee('data-publish-check', false)->assertSee('data-required-for-publish="Isi ukuran (ml) sebelum publish."', false);
+        $this->assertStringNotContainsString('data-restore', $page->getContent());
+
+        $payload = $this->validUpdatePayload($product);
+        $payload['variants'][0]['volume'] = '';
+        $payload['publication_action'] = 'published';
+        $this->from($edit)->put(route('admin.products.update', $product->id), $payload)->assertRedirect($edit)->assertSessionHasErrors();
+        $this->get($edit)->assertOk()->assertSee('data-restore', false);
+        $this->assertStringNotContainsString('data-restore', $this->get($edit)->getContent());
+    }
+
+    public function test_add_and_edit_pages_offer_text_split_and_compare_price_options(): void
+    {
+        // CAT-TEXT-PASTE-01 / CAT-COMPARE-PRICE-01: browser helpers only; the server rules for these fields are unchanged.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        foreach ([route('admin.products.create'), route('admin.products.edit', $product->id)] as $url) {
+            $this->actingAs($this->admin)->get($url)->assertOk()
+                ->assertSee('data-text-paste', false)->assertSee('Pisahkan dari deskripsi')
+                ->assertSee('data-compare-input', false)->assertSee('data-price-input="#offer-price"', false)
+                ->assertSee('Pakai harga coret yang wajar');
+        }
+    }
+
+    public function test_size_buttons_offer_the_most_used_active_sizes_smallest_first(): void
+    {
+        // CAT-SIZE-OPTIONS-01: sizes come from active offers; an inactive offer's size is not suggested.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        foreach ([50, 50, 15, 999] as $index => $volume) {
+            $other = Product::create(['name' => "Size {$index}", 'brand_id' => $this->brand->id, 'base_price' => 100000]);
+            ProductVariant::create(['product_id' => $other->id, 'volume' => $volume, 'price' => 100000, 'stock' => 0, 'is_active' => $volume !== 999]);
+        }
+
+        foreach ([route('admin.products.create'), route('admin.products.edit', $product->id)] as $url) {
+            $html = $this->actingAs($this->admin)->get($url)->assertOk()->assertSee('Ukuran yang sering dipakai')->getContent();
+            preg_match_all('/data-size="(\d+)"/', $html, $sizes);
+            $this->assertSame(['15', '50', '100'], $sizes[1], $url);
+        }
+    }
+
     private function failOnSecondProductImageCreate(): void
     {
         $createdImages = 0;

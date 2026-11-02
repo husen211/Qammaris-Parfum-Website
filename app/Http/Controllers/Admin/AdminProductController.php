@@ -16,6 +16,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductExternalIdentity;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Support\Rupiah;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -132,8 +133,18 @@ class AdminProductController extends Controller
     {
         $brands = Brand::where('is_active', true)->orderBy('name')->get();
         $categories = Category::active()->orderBy('name')->get();
+        $commonSizes = $this->commonSizes();
 
-        return view('admin.products.create', compact('brands', 'categories'));
+        return view('admin.products.create', compact('brands', 'categories', 'commonSizes'));
+    }
+
+    /** CAT-SIZE-OPTIONS-01: the eight sizes most used by active offers, smallest first. */
+    private function commonSizes(): array
+    {
+        return ProductVariant::query()->where('is_active', true)->where('volume', '>', 0)
+            ->selectRaw('volume, COUNT(*) as uses')->groupBy('volume')
+            ->orderByDesc('uses')->orderBy('volume')->limit(8)
+            ->pluck('volume')->map(fn ($volume) => (int) $volume)->sort()->values()->all();
     }
 
     public function store(ProductStoreRequest $request, SaveProductEditor $saveProduct)
@@ -198,7 +209,7 @@ class AdminProductController extends Controller
             'appUuid',
             'appSource',
             'appSyncedAt'
-        ));
+        ) + ['commonSizes' => $this->commonSizes()]);
     }
 
     public function update(ProductUpdateRequest $request, $id, SaveProductEditor $saveProduct)

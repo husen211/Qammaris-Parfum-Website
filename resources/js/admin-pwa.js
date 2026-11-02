@@ -5,6 +5,10 @@
  */
 import { initAdminPush } from './admin-push.js';
 import './ui/product-photo-paste.js';
+import './ui/product-publish-check.js';
+import './ui/product-text-paste.js';
+import './ui/compare-price-options.js';
+import './ui/product-size-options.js';
 
 export const ADMIN_CACHE_PREFIX = 'qammaris-admin-';
 
