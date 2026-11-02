@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## CAT-MEDIA-PASTE-02 — Pasted photos survive a failed save — IN_REVIEW
+
+Owner 2026-11-02 (card #148): after pasting photos, "Publish" came back because the size (ml) was empty and the pasted photos were gone, so they had to be pasted again. A browser cannot refill a file input after the server returns the form.
+
+Change: before a submit with pasted photos, the photo box keeps them in this browser's IndexedDB (`qammaris-admin-photos`, per form page) and then submits with the same button; a page returned with validation errors (`data-restore`) puts them back as "Belum disimpan". The copy is dropped when that page loads again without errors, on a submit without pasted photos, or after one hour, and is never restored on a page without errors. "Publish" with an empty size or price is now stopped in the browser with the field's message, without a reload; drafts are never blocked and the server keeps all its checks. No server, migration or data change. [Verification](../verification/cat-media-paste-02/README.md).
+
+Status: branch `fix-keep-pasted-photos`, verified locally at 1440 and 390 on both add and edit (blocked publish, server error with restore, then save); not released.
+
 ## CAT-MEDIA-PASTE-01 — Paste product photos with Ctrl+V — DONE
 
 Owner 2026-11-02 (card #144): on "Tambah produk" and "Edit produk" the Owner wants to paste a photo copied in the browser ("Copy image", not "Copy image address") with Ctrl+V instead of saving it to a folder first, and the photo should come out tidy without manual resizing.

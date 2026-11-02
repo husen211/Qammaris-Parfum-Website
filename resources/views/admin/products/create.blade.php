@@ -41,7 +41,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" data-publish-check>
         @csrf
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -152,14 +152,14 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <div>
                             <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) <span class="text-gray-400">Wajib saat publish</span></label>
-                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100">
+                            <input id="offer-volume" type="number" data-required-for-publish="Isi ukuran (ml) sebelum publish." name="variants[0][volume]" value="{{ old('variants.0.volume') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100">
                             @error('variants.0.volume')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
                             <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) <span class="text-gray-400">Wajib saat publish</span></label>
-                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000">
+                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input data-required-for-publish="Isi harga jual sebelum publish." name="variants[0][price]" value="{{ old('variants.0.price') }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000">
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror

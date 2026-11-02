@@ -111,6 +111,46 @@ export async function tidy(file, index) {
     throw new Error('too_large');
 }
 
+// CAT-MEDIA-PASTE-02: a browser cannot refill a file input after the server sends the form back with an error,
+// so pasted photos wait in this browser's IndexedDB while the form is submitted and come back on that page.
+export const KEEP_FOR_MS = 60 * 60 * 1000;
+
+export function photoStoreKey(action, base = 'http://localhost') {
+    return `photos:${new URL(action, base).pathname}`;
+}
+
+export function isFresh(savedAt, now = Date.now()) {
+    return Number.isFinite(savedAt) && now - savedAt >= 0 && now - savedAt < KEEP_FOR_MS;
+}
+
+function photoStore(mode, run) {
+    return new Promise((resolve, reject) => {
+        const open = indexedDB.open('qammaris-admin-photos', 1);
+        open.onupgradeneeded = () => open.result.createObjectStore('pending');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+            const db = open.result;
+            const transaction = db.transaction('pending', mode);
+            const request = run(transaction.objectStore('pending'));
+            transaction.oncomplete = () => { db.close(); resolve(request?.result); };
+            transaction.onerror = transaction.onabort = () => { db.close(); reject(transaction.error); };
+        };
+    });
+}
+
+const keepPhotos = (key, files) => photoStore('readwrite', (store) => store.put({ savedAt: Date.now(), files }, key));
+const takePhotos = (key) => photoStore('readonly', (store) => store.get(key));
+const forgetPhotos = (key) => photoStore('readwrite', (store) => store.delete(key));
+const forgetStalePhotos = () => photoStore('readwrite', (store) => {
+    const cursor = store.openCursor();
+    cursor.onsuccess = () => {
+        if (!cursor.result) return;
+        if (!isFresh(cursor.result.value?.savedAt)) cursor.result.delete();
+        cursor.result.continue();
+    };
+    return cursor;
+});
+
 export function bindPhotoPaste(root) {
     if (root.dataset.photoPasteBound) return;
     root.dataset.photoPasteBound = '1';
@@ -225,7 +265,48 @@ export function bindPhotoPaste(root) {
         if (files.length) add(files);
         else say('Yang diseret bukan file foto.', 'error');
     });
-    input.form?.addEventListener('submit', () => { submitting = true; });
+    const form = input.form;
+    const storeKey = form ? photoStoreKey(form.getAttribute('action') || location.href, location.href) : null;
+    let resubmitting = false;
+    form?.addEventListener('submit', async (event) => {
+        // Another check (e.g. publish requirements) already stopped this submit.
+        if (event.defaultPrevented) return;
+        if (resubmitting || !pending.length || typeof indexedDB === 'undefined') {
+            submitting = true;
+            if (!resubmitting && storeKey && typeof indexedDB !== 'undefined') forgetPhotos(storeKey).catch(() => {});
+            return;
+        }
+        event.preventDefault();
+        try {
+            await keepPhotos(storeKey, pending.map(({ file }) => file));
+        } catch {
+            // Storage blocked or full: the upload still goes ahead, only the safety copy is missing.
+        }
+        resubmitting = true;
+        submitting = true;
+        form.requestSubmit(event.submitter ?? undefined);
+    });
+    if (storeKey && typeof indexedDB !== 'undefined') {
+        // The page came back with validation errors: put the photos from the failed submit back in the box.
+        const restore = root.hasAttribute('data-restore')
+            ? takePhotos(storeKey).then((saved) => {
+                if (!saved || !isFresh(saved.savedAt) || !Array.isArray(saved.files)) return;
+                const files = saved.files.filter((file) => file instanceof Blob).slice(0, capacity - pending.length);
+                files.forEach((file) => {
+                    pending.push({ file, url: URL.createObjectURL(file) });
+                    counter++;
+                });
+                if (files.length) {
+                    sync();
+                    say(`${files.length} foto dikembalikan, belum disimpan. Lengkapi kolom yang ditandai, lalu simpan lagi.`);
+                }
+            })
+            : Promise.resolve();
+        restore.catch(() => {}).finally(() => {
+            forgetPhotos(storeKey).catch(() => {});
+            forgetStalePhotos().catch(() => {});
+        });
+    }
     window.addEventListener('beforeunload', (event) => {
         if (pending.length && !submitting) {
             event.preventDefault();

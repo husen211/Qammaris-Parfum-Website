@@ -153,6 +153,24 @@ class AdminProductImageTransactionTest extends TestCase
         $this->assertSame(3, $product->images()->count());
     }
 
+    public function test_editor_sent_back_with_errors_asks_the_browser_to_restore_pasted_photos(): void
+    {
+        // CAT-MEDIA-PASTE-02: only a page returned with validation errors restores the photos kept from the failed submit.
+        $this->withoutVite();
+        $product = $this->createExistingProduct();
+        $edit = route('admin.products.edit', $product->id);
+        $page = $this->actingAs($this->admin)->get($edit)->assertOk()
+            ->assertSee('data-publish-check', false)->assertSee('data-required-for-publish="Isi ukuran (ml) sebelum publish."', false);
+        $this->assertStringNotContainsString('data-restore', $page->getContent());
+
+        $payload = $this->validUpdatePayload($product);
+        $payload['variants'][0]['volume'] = '';
+        $payload['publication_action'] = 'published';
+        $this->from($edit)->put(route('admin.products.update', $product->id), $payload)->assertRedirect($edit)->assertSessionHasErrors();
+        $this->get($edit)->assertOk()->assertSee('data-restore', false);
+        $this->assertStringNotContainsString('data-restore', $this->get($edit)->getContent());
+    }
+
     private function failOnSecondProductImageCreate(): void
     {
         $createdImages = 0;

@@ -1,5 +1,5 @@
 {{-- CAT-MEDIA-PASTE-01: one photo picker for add and edit; Ctrl+V, drop or file. resources/js/ui/product-photo-paste.js --}}
-<div data-photo-paste data-max-new="{{ $slots }}" data-existing="{{ $existing }}">
+<div data-photo-paste data-max-new="{{ $slots }}" data-existing="{{ $existing }}" @if($errors->any()) data-restore @endif>
     <label for="{{ $inputId }}" class="block text-sm font-semibold text-gray-800">Tambah foto</label>
     <div data-photo-dropzone tabindex="0" aria-describedby="{{ $inputId }}-hint"
         class="mt-2 rounded-xl border-2 border-dashed border-gray-300 px-4 py-5 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black data-[dragging]:border-black data-[dragging]:bg-gray-50 @error($errorKey) border-red-300 @enderror">

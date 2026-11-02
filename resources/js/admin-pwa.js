@@ -5,6 +5,7 @@
  */
 import { initAdminPush } from './admin-push.js';
 import './ui/product-photo-paste.js';
+import './ui/product-publish-check.js';
 
 export const ADMIN_CACHE_PREFIX = 'qammaris-admin-';
 

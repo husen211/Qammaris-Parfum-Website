@@ -74,7 +74,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" data-publish-check>
         @csrf
         @method('PUT')
         <input type="hidden" name="return_to" value="{{ $catalogReturnPath }}">
@@ -253,14 +253,14 @@
 
                         <div>
                             <label for="offer-volume" class="block text-xs font-medium text-gray-600 mb-1">Ukuran (ml) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
-                            <input id="offer-volume" type="number" name="variants[0][volume]" value="{{ old('variants.0.volume', $offer?->volume) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" @if($editingPublished) required @endif>
+                            <input id="offer-volume" type="number" data-required-for-publish="Isi ukuran (ml) sebelum publish." name="variants[0][volume]" value="{{ old('variants.0.volume', $offer?->volume) }}" min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.volume') border-red-500 @enderror" placeholder="100" @if($editingPublished) required @endif>
                             @error('variants.0.volume')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
                             <label for="offer-price" class="block text-xs font-medium text-gray-600 mb-1">Harga Jual (Rp) @if($editingPublished)<span class="text-red-500">*</span>@else<span class="text-gray-400">Wajib saat publish</span>@endif</label>
-                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
+                            <input id="offer-price" type="text" inputmode="numeric" data-rupiah-input data-required-for-publish="Isi harga jual sebelum publish." name="variants[0][price]" value="{{ $appManaged ? ($offer?->price ?? $product->base_price) : old('variants.0.price', $offer?->price) }}" @readonly($appManaged) min="1" step="1" class="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-black focus:border-black @error('variants.0.price') border-red-500 @enderror" placeholder="500000" @if($editingPublished) required @endif>
                             @error('variants.0.price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
