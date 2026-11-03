@@ -25,6 +25,10 @@ Measured: at 1200 px the product card now starts at 298 px (was 1632 px down the
 
 Test: `WebsiteCheckoutOrderTest::test_order_page_shows_what_was_ordered_first_with_photo_quantity_and_count` (order of the card before the current step, count, quantities, `@` unit price, photo and placeholder, checklist wording, snapshot name kept after a catalog rename, single card in the HTML).
 
+## Release (2026-11-03)
+
+Owner approved ("gas rilis"). PR #158 merged as `524b9f9`; CI and Production release green; `/up` 200. Live, read-only in the Owner's admin session at 1707 px: QAM-0030 (completed website order) shows "Produk dipesan · 2 barang", both product photos loaded (no placeholder), lines "1× Inception 100ml · 100 ml · Rp 425.000" and "1× Conquer 100 ML · 100 ml · Rp 449.000". Nothing was submitted.
+
 ## Open limits
 
 - Physical phone not tested.
