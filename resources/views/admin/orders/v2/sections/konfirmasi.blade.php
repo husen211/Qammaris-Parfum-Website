@@ -16,7 +16,7 @@
     </dl>
     <ol class="mt-3 list-decimal space-y-1 pl-5 text-sm text-gray-700">
         <li>Cocokkan dengan chat WhatsApp customer (nomor {{ $order->code }}).</li>
-        <li>Cek stok{{ match (true) {
+        <li>Cek stok {{ $order->items->sum('quantity') }} barang di Produk dipesan{{ match (true) {
             $order->fulfillment === 'pickup' => ' (ambil di toko: tanpa ongkir)',
             $order->shipping_payer === 'cash_to_driver' => ' (ongkir dibayar customer langsung ke driver)',
             default => ', lalu isi ongkir di bawah',

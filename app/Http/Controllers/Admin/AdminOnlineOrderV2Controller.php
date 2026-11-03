@@ -53,7 +53,7 @@ class AdminOnlineOrderV2Controller extends Controller
 
     public function show(OnlineOrder $order, OnlineOrderMessages $messages, InquiryWhatsApp $whatsApp)
     {
-        $order->load(['items', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses', 'claims', 'costs']);
+        $order->load(['items.product.primaryImage', 'events.actor', 'issues', 'payments.recorder', 'adjustments', 'changeRequests', 'customer.addresses', 'claims', 'costs']);
         $customerUrl = route('orders.customer.show', $order->customer_token_encrypted);
         $taskLink = OrderTaskLink::for($order);
         $groupMessage = $messages->staffGroupV2($order, $taskLink['url'], $taskLink['in_app']);

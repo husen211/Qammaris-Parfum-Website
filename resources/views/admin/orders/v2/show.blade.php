@@ -139,8 +139,39 @@
         </p>
     </nav>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start">
-        <div class="min-w-0 space-y-3">
+    {{-- ADM-05: what was ordered comes first. Below xl the items sit right under the stepper; from xl they head the
+         right column while the step column spans both rows (the 1fr row absorbs its extra height). --}}
+    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem] xl:grid-rows-[auto_1fr] xl:items-start">
+        <section id="ringkasan" class="scroll-mt-20 rounded-xl border border-gray-300 bg-white p-4 sm:p-5 xl:col-start-2 xl:row-start-1" aria-labelledby="items-title" data-order-items>
+            <div class="flex items-baseline justify-between gap-3">
+                <h2 id="items-title" class="text-base font-semibold text-gray-900">Produk dipesan</h2>
+                <span class="text-sm text-gray-600" data-order-item-count>{{ $order->items->sum('quantity') }} barang</span>
+            </div>
+            <ul class="mt-3 divide-y divide-gray-200 rounded-lg bg-gray-50 px-3">
+                @foreach ($order->items as $item)
+                    <li class="flex items-center gap-3 py-3" data-order-item>
+                        <img src="{{ $item->product?->primaryImage?->image_url ?? asset('images/product-placeholder.svg') }}" alt="" loading="lazy" decoding="async" class="h-14 w-14 shrink-0 rounded-lg border border-gray-200 bg-white object-cover">
+                        <span class="min-w-0 flex-1">
+                            <span class="block break-words text-base font-semibold leading-snug text-gray-900"><span class="tabular-nums text-gray-500">{{ $item->quantity }}×</span> {{ $item->product_name }}</span>
+                            <span class="mt-0.5 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+                                <span class="text-gray-600">{{ collect([$item->volume ? $item->volume.' ml' : null, $item->quantity > 1 ? '@ '.format_rupiah($item->unit_price) : null])->filter()->join(' · ') }}</span>
+                                <span class="ml-auto font-semibold tabular-nums text-gray-900">{{ format_rupiah($item->lineTotal()) }}</span>
+                            </span>
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+            <dl class="mt-3 space-y-1 text-sm">
+                @if (Rupiah::minorUnits($order->packagingFee()) > 0)<div class="flex justify-between"><dt class="text-gray-600">Paperbag</dt><dd class="tabular-nums">{{ format_rupiah($order->packagingFee()) }}</dd></div>@endif
+                @if ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)<div class="flex justify-between"><dt class="text-gray-600">Ongkir</dt><dd class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</dd></div>@endif
+                @if ($order->approvedAdjustmentCents() !== 0)<div class="flex justify-between"><dt class="text-gray-600">Penyesuaian</dt><dd class="tabular-nums">{{ $rp($order->approvedAdjustmentCents()) }}</dd></div>@endif
+                <div class="flex justify-between text-base font-semibold"><dt>Total</dt><dd class="tabular-nums">{{ $rp($totalCents) }}</dd></div>
+                @if ($received > 0)<div class="flex justify-between"><dt class="text-gray-600">Sudah diterima</dt><dd class="tabular-nums">{{ $rp($received) }}</dd></div>@endif
+            </dl>
+            <p class="mt-1 text-sm text-gray-600">{{ OnlineOrder::PACKAGING[$order->packaging] ?? 'Paperbag belum dipilih' }}</p>
+        </section>
+
+        <div class="min-w-0 space-y-3 xl:col-start-1 xl:row-span-2 xl:row-start-1">
             @if ($order->lifecycle === 'cancelled')
                 <p class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" data-next-step>Pesanan dibatalkan {{ $time($order->closed_at) }}: {{ $order->cancel_reason }}</p>
             @endif
@@ -245,28 +276,7 @@
             @endcan
         </div>
 
-        <div class="min-w-0 space-y-3">
-            {{-- Items and totals stay visible: price and quantity are what staff check most. --}}
-            <section id="ringkasan" class="{{ $card }}" aria-labelledby="items-title">
-                <h2 id="items-title" class="text-base font-semibold text-gray-900">Produk</h2>
-                <ul class="mt-2 divide-y divide-gray-100 text-sm">
-                    @foreach ($order->items as $item)
-                        <li class="flex justify-between gap-3 py-2">
-                            <span class="min-w-0"><span class="block font-medium text-gray-900">{{ $item->label() }}</span><span class="text-gray-500">{{ $item->quantity }} × {{ format_rupiah($item->unit_price) }}</span></span>
-                            <span class="shrink-0 font-semibold tabular-nums">{{ format_rupiah($item->lineTotal()) }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <dl class="mt-2 space-y-1 border-t border-gray-100 pt-2 text-sm">
-                    @if (Rupiah::minorUnits($order->packagingFee()) > 0)<div class="flex justify-between"><dt class="text-gray-600">Paperbag</dt><dd class="tabular-nums">{{ format_rupiah($order->packagingFee()) }}</dd></div>@endif
-                    @if ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)<div class="flex justify-between"><dt class="text-gray-600">Ongkir</dt><dd class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</dd></div>@endif
-                    @if ($order->approvedAdjustmentCents() !== 0)<div class="flex justify-between"><dt class="text-gray-600">Penyesuaian</dt><dd class="tabular-nums">{{ $rp($order->approvedAdjustmentCents()) }}</dd></div>@endif
-                    <div class="flex justify-between text-base font-semibold"><dt>Total</dt><dd class="tabular-nums">{{ $rp($totalCents) }}</dd></div>
-                    @if ($received > 0)<div class="flex justify-between"><dt class="text-gray-600">Sudah diterima</dt><dd class="tabular-nums">{{ $rp($received) }}</dd></div>@endif
-                </dl>
-                <p class="mt-1 text-sm text-gray-600">{{ OnlineOrder::PACKAGING[$order->packaging] ?? 'Paperbag belum dipilih' }}</p>
-            </section>
-
+        <div class="min-w-0 space-y-3 xl:col-start-2 xl:row-start-2">
             {{-- Editable recipient details. --}}
             <details id="detail" class="{{ $card }}" @if ($isOpen('detail')) open @endif>
                 <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
