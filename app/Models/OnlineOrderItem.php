@@ -23,6 +23,12 @@ class OnlineOrderItem extends Model
         static::creating(fn (OnlineOrderItem $item) => $item->line_id ??= (string) Str::ulid());
     }
 
+    /** Current catalog product, for the admin thumbnail only; the order keeps its own name/price snapshot. */
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     public function lineTotal(): string
     {
         return Rupiah::decimal(Rupiah::minorUnits($this->unit_price) * $this->quantity);

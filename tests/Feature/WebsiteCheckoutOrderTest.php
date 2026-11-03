@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\IntegrationOutbox;
 use App\Models\OnlineOrder;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Support\InquiryWhatsApp;
@@ -19,6 +20,7 @@ use App\Support\OrderApi\OrderSerializer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Concerns\SignsOrderApiRequests;
 use Tests\TestCase;
@@ -310,6 +312,34 @@ class WebsiteCheckoutOrderTest extends TestCase
     }
 
     /** Puts the lines into the cart and opens the checkout like a customer (quote + checkout key in the session). */
+    public function test_order_page_shows_what_was_ordered_first_with_photo_quantity_and_count(): void
+    {
+        Storage::fake('public');
+        config(['media.product_disk' => 'public']);
+        $withPhoto = $this->variant('Oud Sintetis', 300000);
+        $photo = ProductImage::create(['product_id' => $withPhoto->product_id, 'image_path' => 'products/oud-sintetis.webp', 'is_primary' => true, 'sort_order' => 0]);
+        Storage::disk('public')->put($photo->image_path, 'image-content');
+        $withoutPhoto = $this->variant('Musk Sintetis', 150000);
+        $this->review([$withPhoto->id => 2, $withoutPhoto->id => 1]);
+        $this->post(route('cart.checkout'), $this->form('local_delivery'));
+        $order = OnlineOrder::sole();
+        // The order keeps its own name snapshot; a later catalog rename only reaches the thumbnail lookup.
+        $withPhoto->product->update(['name' => 'Oud Nama Baru']);
+
+        $this->actingAs(User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh());
+        $page = $this->get(route('admin.orders.show', $order))->assertOk();
+        $html = $page->getContent();
+
+        $page->assertSeeInOrder(['data-order-items', 'Produk dipesan', '3 barang', 'data-step-current'], false)
+            ->assertSeeInOrder(['2×', 'Oud Sintetis', '50 ml · @ Rp 300.000', 'Rp 600.000', '1×', 'Musk Sintetis'], false)
+            ->assertSee('src="'.$photo->image_url.'"', false)
+            ->assertSee('src="'.asset('images/product-placeholder.svg').'"', false)
+            ->assertSee('Cek stok 3 barang di Produk dipesan, lalu isi ongkir di bawah.')
+            ->assertDontSee('Oud Nama Baru');
+        $this->assertSame(2, substr_count($html, 'data-order-item>'));
+        $this->assertSame(1, substr_count($html, 'id="ringkasan"'), 'one product summary, not one per breakpoint');
+    }
+
     private function review(array $lines, bool $savesOrder = true): void
     {
         $cart = [];
