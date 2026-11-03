@@ -46,7 +46,7 @@ Owner 2026-11-03 (card #157): on a website order waiting for confirmation the Ow
 
 Change: the card is "Produk dipesan · N barang" with a photo per line (current primary photo, else the placeholder), quantity before the name, size below and the line total on the right, on a light grey tray (no new colour; gold stays for the current step). Below `xl` it comes right after the stepper; from `xl` it heads the right column. The confirmation checklist says "Cek stok N barang di Produk dipesan". Name/size/price stay the order snapshot. No migration, no data change. [Verification](../verification/adm-05/README.md).
 
-Status: branch `order-produk-highlight`, verified locally at 1440, 1200 and 390 (before/after); waiting for the Owner's check on localhost.
+Status: branch `order-produk-highlight`, verified locally at 1440, 1200 and 390 (before/after); the Owner approved the release on 2026-11-03 ("gas rilis"). Local synthetic order and temporary admin removed.
 
 ## CAT-PUBLISH-CHECK-01 — Publish with missing fields no longer looks stuck — DONE
 
