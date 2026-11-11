@@ -68,6 +68,9 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
     Route::get('/checkout', [CartController::class, 'showCheckout'])->name('checkout.show');
     Route::post('/checkout', [CartController::class, 'checkout'])->middleware('throttle:website-checkout')->name('checkout');
+    // ORD-13: courier prices for the checkout; JSON for the page's own script, bound to this session's cart.
+    Route::post('/checkout/ongkir', [CartController::class, 'shippingQuote'])->middleware('throttle:shipping-quote')->name('checkout.shipping');
+    Route::get('/checkout/wilayah', [CartController::class, 'shippingAreas'])->middleware('throttle:shipping-area')->name('checkout.areas');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
 });

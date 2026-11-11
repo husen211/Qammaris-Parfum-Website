@@ -93,6 +93,7 @@ final class InquiryWhatsApp
     public function websiteOrderMessage(OnlineOrder $order): string
     {
         $delivery = config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-';
+        $quote = $order->shipping_quote;
 
         return implode("\n", [
             'Halo Qammaris, saya baru memesan lewat website.',
@@ -103,8 +104,12 @@ final class InquiryWhatsApp
             'Subtotal produk: '.Rupiah::format($order->subtotal()),
             ...(Rupiah::minorUnits($order->packagingFee()) > 0 ? ['Paperbag: '.Rupiah::format($order->packagingFee())] : []),
             ...($order->fulfillment === 'local_delivery' && $order->shipping_payer === 'cash_to_driver' ? ['Ongkir: bayar langsung ke driver'] : []),
+            ...($quote ? [
+                'Ongkir '.$quote['label'].': '.Rupiah::format($order->shipping_fee).($quote['discount'] > 0 ? ' (potongan ongkir '.$quote['percent'].'% dari Qammaris)' : ''),
+                'Total: '.Rupiah::format($order->customerTotal()),
+            ] : []),
             '',
-            'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
+            $quote ? 'Mohon konfirmasi stok dan pembayarannya. Terima kasih.' : 'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
             '',
             'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
         ]);

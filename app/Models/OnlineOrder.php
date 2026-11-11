@@ -66,13 +66,15 @@ class OnlineOrder extends Model
         'driver_funding', 'payment_method', 'recorded_in_majoo', 'staff_note',
     ];
 
-    protected $hidden = ['customer_token_hash', 'customer_token_encrypted', 'staff_token_hash', 'staff_token_encrypted'];
+    protected $hidden = ['customer_token_hash', 'customer_token_encrypted', 'staff_token_hash', 'staff_token_encrypted', 'shipping_quote'];
 
     protected $casts = [
         'customer_token_encrypted' => 'encrypted',
         'staff_token_encrypted' => 'encrypted',
         'customer_link_expires_at' => 'datetime',
         'shipping_fee' => 'decimal:2',
+        'shipping_estimate' => 'decimal:2',
+        'shipping_quote' => 'array',
         'packaging_fee' => 'decimal:2',
         'staff_advance_amount' => 'decimal:2',
         'staff_reimbursed_at' => 'datetime',
@@ -270,7 +272,8 @@ class OnlineOrder extends Model
      */
     public function customerSetsShippingPayment(): bool
     {
-        return $this->isV2() && $this->lifecycle !== 'draft' && $this->shipping_payer !== 'store_free'
+        // ORD-13: ongkir priced at checkout is part of the transfer; paying the driver would bypass the locked price.
+        return $this->isV2() && $this->lifecycle !== 'draft' && $this->shipping_payer !== 'store_free' && $this->shipping_quote === null
             && ($this->lifecycle === 'awaiting_customer' || ($this->customerCanEdit() && $this->preparation_status === 'not_started'))
             && OnlineOrderMoney::totals($this)['received'] === 0;
     }

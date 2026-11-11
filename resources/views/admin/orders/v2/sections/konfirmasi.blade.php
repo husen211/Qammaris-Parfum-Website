@@ -7,7 +7,9 @@
     </summary>
     @include('admin.orders.v2._notice', ['section' => 'konfirmasi'])
     <dl class="mt-3 space-y-2 text-sm">
-        <div><dt class="text-gray-500">Pengiriman</dt><dd class="font-medium text-gray-900">{{ config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? (OnlineOrder::FULFILLMENTS[$order->fulfillment] ?? '-') }}</dd></div>
+        <div><dt class="text-gray-500">Pengiriman</dt><dd class="font-medium text-gray-900">{{ $order->shipping_quote
+            ? $order->shipping_quote['label'].' · '.($order->shipping_quote['kind'] === 'instant' ? 'kurir instan' : ($order->shipping_quote['destination']['area_label'] ?? 'J&T'))
+            : (config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? (OnlineOrder::FULFILLMENTS[$order->fulfillment] ?? '-')) }}</dd></div>
         @if ($order->fulfillment !== 'pickup')
             <div><dt class="text-gray-500">Alamat</dt><dd class="break-words text-gray-900">{{ $order->address }}{{ $order->subdistrict ? ', '.$order->subdistrict : '' }}{{ $order->district ? ', '.$order->district : '' }}{{ $order->postcode ? ' '.$order->postcode : '' }}</dd></div>
         @endif
@@ -18,6 +20,7 @@
         <li>Cocokkan dengan chat WhatsApp customer (nomor {{ $order->code }}).</li>
         <li>Cek stok {{ $order->items->sum('quantity') }} barang di Produk dipesan{{ match (true) {
             $order->fulfillment === 'pickup' => ' (ambil di toko: tanpa ongkir)',
+            $order->shipping_quote !== null => ' (ongkir '.$order->shipping_quote['label'].' sudah dihitung otomatis)',
             $order->shipping_payer === 'cash_to_driver' => ' (ongkir dibayar customer langsung ke driver)',
             default => ', lalu isi ongkir di bawah',
         } }}.</li>

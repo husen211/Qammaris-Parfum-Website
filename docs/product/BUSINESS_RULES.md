@@ -163,10 +163,7 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
 - **Batas kirim:** 6 checkout per menit dan 30 per jam per perangkat/IP.
 - **Pelanggan.** Pesanan checkout website tersimpan sebagai pelanggan saat Staff Order **mengonfirmasi** pesanannya (bukan saat masih draft), dengan aturan nomor WhatsApp yang sama = pelanggan yang sama (ORD-05).
 - **Privasi.** Data penerima checkout (nama, HP, alamat, kelurahan/kecamatan, catatan) disimpan seperti Pesanan Online lain: hanya untuk mengurus pesanan, terlihat oleh tim Qammaris dan detail tugas App setelah aktif. Tidak ada penghapusan otomatis; Super Admin bisa menghapus data pelanggan atas permintaan (ORD-05).
-- **Tahap 2 (belum dihitung):**
-  - Kolom estimasi ongkir dan sumbernya (manual/zona/jarak/API) serta berat produk/item tersedia tetapi kosong.
-  - Berat yang belum diketahui tetap kosong, tidak diisi 1 kg.
-  - Tidak ada panggilan Maxim, GoSend, atau RajaOngkir.
+- **Ongkir otomatis:** lihat "Ongkir otomatis di checkout (ORD-13)" di bawah. Tanpa saklarnya, ongkir tetap dikonfirmasi staf.
 
 Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md).
 
@@ -273,6 +270,22 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - **Kirim ke luar kota (J&T)** tidak ditanya: ongkirnya selalu sekalian dibayar. **Ambil di toko** tidak ditanya.
 - Staf tetap bisa mengganti pilihan bila customer minta lain lewat chat. **Gratis ongkir** tetap keputusan toko: setelah toko memilih gratis, customer tidak ditanya lagi.
 - Setelah ada uang masuk (termasuk pembayaran sebagian) atau packing dimulai, link customer tidak lagi menanyakan atau mengubah metode ini; perubahan total mengikuti aturan ongkir dan penyesuaian harga yang berlaku.
+
+### Ongkir otomatis di checkout (ORD-13, Owner 2026-11-11, saklar `ORDERS_SHIPPING_QUOTES`)
+
+- **Pilihan pengiriman di checkout:** Ambil di toko; **Kurir instan** (GoSend atau GrabExpress, customer memilih) dari titik pin peta; **J&T** (dalam dan luar kota) dari kecamatan/kota tujuan. Harga dari Biteship, dihitung di server.
+- **Diskon ongkir dari Qammaris (ditanggung toko):**
+  - Instan: ongkir mulai Rp20.000 dipotong 15%; di bawah Rp20.000 tanpa potongan.
+  - J&T: dipotong 30%, maksimal Rp30.000.
+  - Hasil dibulatkan ke bawah ke Rp500. Tampil sebagai harga coret dengan tulisan "Potongan ongkir N% dari Qammaris".
+- **Berat:** setiap produk dihitung 800 g (termasuk dus dan bubble wrap), dikali jumlah.
+- **Ongkir dikunci.** Ongkir yang ditagih saat checkout masuk total pembayaran dan tidak pernah dinaikkan ke customer. Bila biaya kurir sebenarnya lebih mahal, selisihnya ditanggung toko (J&T: karyawan bayar, lalu reimburse seperti biasa). Staf boleh menurunkan atau menggratiskan, tetapi tidak menaikkan atau mengubahnya menjadi "bayar ke driver".
+- **Harga berlaku 30 menit** untuk isi keranjang yang sama. Keranjang berubah atau lewat waktu: customer memilih kurir lagi.
+- **Tidak pernah buntu.** Kurir tidak menjangkau, titik di luar area Palu dan sekitarnya, atau Biteship tidak menjawab: customer tetap bisa memesan dengan **Ongkir dikonfirmasi admin** (alur ORD-04/ORD-10).
+- **Lokasi.** Sebelum HP meminta izin lokasi, checkout menampilkan pop-up Qammaris yang menjelaskan alasannya. Lokasi bisa ditolak: customer menggeser peta sendiri. Titik antar disimpan di pesanan seperti alamat, dikirim ke Biteship untuk harga, dan terlihat staf sebagai tautan peta.
+- **Pesan WhatsApp** checkout memuat ongkir dan total; admin cukup mengonfirmasi stok dan pembayaran.
+
+Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-biteship.md). Akun dan kunci: [runbook Biteship](../runbooks/BITESHIP.md).
 
 ### Status pesanan terpisah (ORD-02c, branch review)
 

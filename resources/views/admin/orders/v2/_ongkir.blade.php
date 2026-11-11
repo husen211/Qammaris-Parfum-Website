@@ -37,4 +37,17 @@
             <p class="mt-2 text-sm text-gray-600">{{ $received > 0 ? 'Sudah ada pembayaran. Ubah total lewat Opsi lanjutan → penyesuaian harga.' : 'Ongkir diatur Super Admin.' }}</p>
         @endif
     </details>
+    @if ($quote = $order->shipping_quote)
+        {{-- ORD-13: priced at checkout and locked for the customer; staff may lower it, never raise it. --}}
+        <div class="mt-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700" data-ongkir-quote>
+            <p><span class="font-semibold text-gray-900">{{ $quote['label'] }}</span>{{ $quote['eta'] ? ' · '.$quote['eta'] : '' }} · dihitung otomatis di checkout</p>
+            <p class="mt-0.5 tabular-nums">Harga kurir {{ format_rupiah($quote['price']) }}@if ($quote['discount'] > 0) · potongan {{ format_rupiah($quote['discount']) }}@endif · ditagih {{ format_rupiah($quote['charged']) }}</p>
+            @if (isset($quote['destination']['latitude']))
+                <a href="https://www.google.com/maps?q={{ $quote['destination']['latitude'] }},{{ $quote['destination']['longitude'] }}" target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex min-h-9 items-center font-semibold text-gray-900 underline underline-offset-2">Buka titik antar di Maps</a>
+            @elseif (isset($quote['destination']['area_label']))
+                <p class="mt-0.5">Tujuan: {{ $quote['destination']['area_label'] }}</p>
+            @endif
+            <p class="mt-1 text-xs text-gray-500">Tidak bisa dinaikkan ke customer; selisih biaya kurir ditanggung toko.</p>
+        </div>
+    @endif
 @endif

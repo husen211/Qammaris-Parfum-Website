@@ -132,7 +132,7 @@ ORD-04 (flag `ORDERS_WEBSITE_CHECKOUT` + `ORDERS_V2_ENABLED`): POST checkout →
 - **Confirmation.** `OnlineOrderFulfillment::confirmWebsiteOrder()` moves draft → active.
 - **Contract.** API v1 r4.2 unchanged; a draft has `queue=null`.
 - **Limits.** Throttled by the named limiter `website-checkout`.
-- **Phase-2 columns** (nullable): `district`, `subdistrict`, `shipping_estimate`, `shipping_estimate_source`, `weight_grams` on variants and order items.
+- **Phase-2 columns** (nullable): `district`, `subdistrict`, `shipping_estimate`, `shipping_estimate_source`, `weight_grams` on variants and order items; ORD-13 fills `shipping_estimate(_source)` and the JSON `shipping_quote` when checkout priced the courier (item weights stay empty; checkout counts 800 g per unit).
 
 See [ADR-044](decisions/ADR-044-website-checkout-orders.md).
 
@@ -210,6 +210,7 @@ A route-table test fails if any new `admin.*` route lacks its area ability. ORD-
 - `OnlineOrderDetails` is the V2 counterpart of ORD-01 data edits, the customer form, and the customer link.
 - ORD-05: `RememberCustomer::link()` (same normalized WhatsApp number = same customer) runs in the order transaction of admin creation, the customer link, admin detail edits and website confirmation; `rememberAddress()` runs in `markHandedOver`. `AnonymizeCustomer` (gate `customers.delete`, Super Admin) clears customer/order/change-request/outbox personal data and bumps each order's revision so the App receives the cleared copy. Pages: `AdminCustomerController` (`admin.customers.*`, `can:orders.manage`). Backfill: `qammaris:customers:backfill` (preview unless `--apply`, no revision bump).
 - ORD-10: the customer link and checkout write "Metode pembayaran ongkir" into `shipping_payer` through `OnlineOrder::customerSetsShippingPayment()` / `customerShippingPayer()` (local courier: customer choice; J&T: `added_to_transfer`). `OnlineOrderStepper::totalIsFinal()` treats `cash_to_driver` as final without an amount.
+- ORD-13 (`ORDERS_SHIPPING_QUOTES` + `BITESHIP_API_KEY`): `CartController@shippingQuote` (`POST cart/checkout/ongkir`) and `@shippingAreas` (`GET cart/checkout/wilayah`) use `ShippingQuotes` / `BiteshipClient`. Options are kept in the session (`shipping_quotes`, 30 min, bound to `checkout_quote`); `placeOrder` resolves the posted `shipping_option` id and `CreateOnlineOrder::fromWebsiteCheckout` writes `shipping_fee`, `shipping_estimate(_source)=api` and `shipping_quote` (JSON). `OnlineOrderDetails::updateByAdmin` refuses raising it. Front end: `resources/js/checkout-shipping.js`, lazy `checkout-shipping/map.js` (Leaflet/OSM). [ADR-057](decisions/ADR-057-checkout-shipping-quotes-biteship.md).
 - The ORD-01 workflow and bearer staff links refuse V2 orders.
 - `CreateOnlineOrder` options (source, repeat customer, saved address) apply in the order's transaction.
 - `OnlineOrderMessages::staffGroupV2` uses the stable task link `admin.orders.task`. It opens the Admin PWA order page, or the App page when `QAMMARIS_ORDER_APP_TASK_LINKS=true`.

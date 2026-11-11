@@ -91,6 +91,13 @@ class OnlineOrderDetails
                     throw new OrderActionNotAllowed('Data penerima tidak dapat diubah setelah pesanan diserahkan atau ditutup. Hubungi Super Admin.');
                 }
             }
+            // ORD-13 (Owner 2026-11-11): ongkir priced at checkout never goes up for the customer; a costlier courier
+            // is the store's difference. Lowering it, or making it free, stays possible.
+            $locked = $order->shipping_quote['charged'] ?? null;
+            if ($locked !== null && ($order->isDirty('shipping_fee') && $order->shipping_fee !== null && Rupiah::minorUnits((string) $order->shipping_fee) > $locked * 100
+                || $order->isDirty('shipping_payer') && $order->shipping_payer === 'cash_to_driver')) {
+                throw new OrderActionNotAllowed('Ongkir dari checkout sudah dikunci untuk customer dan tidak bisa dinaikkan. Selisih biaya kurir ditanggung toko.');
+            }
             // ORD-04: switching paperbag changes the total; after money came in that is a Super Admin correction.
             if ($order->isDirty('packaging') && ($order->getOriginal('packaging') === 'paperbag') !== ($order->packaging === 'paperbag')
                 && OnlineOrderMoney::totals($order)['received'] > 0 && ! Gate::forUser($actor)->allows('orders.finance')) {

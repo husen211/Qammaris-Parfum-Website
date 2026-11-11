@@ -46,7 +46,7 @@
         @if ($order->lifecycle === 'draft')
             <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="next-title" data-checkout-next>
                 <h2 id="next-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim pesan WhatsApp</h2>
-                <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok, ongkir, dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
+                <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok{{ $order->shipping_quote ? '' : ', ongkir,' }} dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
                 @if ($checkoutWhatsappUrl)
                     <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Kirim ke WhatsApp</a>
                     <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan Kirim ke WhatsApp lagi. Pesanan Anda tetap tersimpan.</p>
@@ -126,7 +126,13 @@
                     <span>Paperbag</span><span class="tabular-nums">{{ format_rupiah($order->packagingFee()) }}</span>
                 </div>
             @endif
-            @if ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
+            @if ($order->shipping_quote && $order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
+                @php($quote = $order->shipping_quote)
+                <div class="mt-1 flex flex-wrap items-start justify-between gap-2 text-sm text-gray-700" data-ongkir-quote>
+                    <span>Ongkir {{ $quote['label'] }}@if ($quote['discount'] > 0 && \App\Support\Rupiah::minorUnits((string) $order->shipping_fee) === $quote['charged'] * 100)<span class="block text-xs text-[#8A6A2E]">Potongan ongkir {{ $quote['percent'] }}% dari Qammaris</span>@endif</span>
+                    <span class="text-right tabular-nums">@if ($quote['discount'] > 0)<s class="mr-1 text-xs text-gray-400">{{ format_rupiah($quote['price']) }}</s>@endif{{ format_rupiah($order->shipping_fee) }}</span>
+                </div>
+            @elseif ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
                     <span>Ongkir</span><span class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</span>
                 </div>

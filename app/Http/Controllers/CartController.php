@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Orders\CreateOnlineOrder;
+use App\Actions\Orders\ShippingQuotes;
 use App\Exceptions\CheckoutChanged;
 use App\Exceptions\OnlineOrderRejected;
 use App\Http\Requests\Cart\AddToCartRequest;
@@ -12,11 +13,15 @@ use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StoreInfo;
+use App\Services\BiteshipClient;
 use App\Support\CatalogAvailability;
 use App\Support\CustomerOrderHistory;
 use App\Support\InquiryWhatsApp;
 use App\Support\Rupiah;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class CartController extends Controller
 {
@@ -158,8 +163,14 @@ class CartController extends Controller
         $whatsappAvailable = $this->inquiryWhatsApp->hasValidNumber($this->whatsappNumber());
 
         $paperbagFee = (int) config('orders.paperbag_fee');
+        $autoShipping = ShippingQuotes::enabled();
+        // ORD-13: after a failed submit the courier the customer picked is shown again, if still valid for this cart.
+        $oldOption = old('shipping_option');
+        $shippingSelected = $autoShipping && is_string($oldOption) && $oldOption !== 'manual'
+            ? app(ShippingQuotes::class)->remembered($oldOption, $checkoutQuote) : null;
+        $shippingSelected = $shippingSelected ? ShippingQuotes::public($shippingSelected) : null;
 
-        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey', 'paperbagFee'))
+        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey', 'paperbagFee', 'autoShipping', 'shippingSelected'))
             ->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
@@ -218,9 +229,19 @@ class CartController extends Controller
         foreach ($items as $item) {
             $lines[$item['id']] = ['quantity' => $item['quantity'], 'price' => $item['price']];
         }
+        $details = $request->orderDetails();
+        // ORD-13: the picked courier option must be one this session priced for this very cart.
+        $option = $request->validated('shipping_option');
+        if (is_string($option) && $option !== 'manual') {
+            $details['shipping'] = app(ShippingQuotes::class)->resolve($option, $quote, $details['fulfillment']);
+            if ($details['shipping'] === null) {
+                return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())
+                    ->with('error', 'Ongkir perlu dihitung ulang karena sudah lewat 30 menit atau keranjang berubah. Pilih kurir lagi, lalu kirim.'));
+            }
+        }
 
         try {
-            [$order, $token] = $create->fromWebsiteCheckout($lines, $request->orderDetails(), $key);
+            [$order, $token] = $create->fromWebsiteCheckout($lines, $details, $key);
             CustomerOrderHistory::remember($order);
         } catch (CheckoutChanged $changed) {
             return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())->with('error', $changed->getMessage()));
@@ -230,6 +251,53 @@ class CartController extends Controller
         session()->forget(['cart', 'checkout_quote']);
 
         return $this->placed($token);
+    }
+
+    /** ORD-13: courier options for the checkout (instant from a map pin, J&T from a destination area). */
+    public function shippingQuote(Request $request, ShippingQuotes $quotes): JsonResponse
+    {
+        abort_unless(ShippingQuotes::enabled(), 404);
+        $area = config('orders.shipping_quotes.service_area');
+        $data = $request->validate([
+            'mode' => ['required', 'in:instant,jnt'],
+            'latitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-90,90'],
+            'longitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-180,180'],
+            'area_id' => ['exclude_unless:mode,jnt', 'required', 'string', 'regex:/^[A-Za-z0-9]{1,64}$/'],
+            'area_label' => ['exclude_unless:mode,jnt', 'required', 'string', 'max:160'],
+        ]);
+        $items = $this->resolveCartItems(session('cart', []));
+        if (! $items || ! $this->canOrder($items)) {
+            return response()->json(['options' => [], 'reason' => 'cart'], 409);
+        }
+        if ($data['mode'] === 'instant' && ((float) $data['latitude'] < $area['south'] || (float) $data['latitude'] > $area['north']
+            || (float) $data['longitude'] < $area['west'] || (float) $data['longitude'] > $area['east'])) {
+            return response()->json(['options' => [], 'reason' => 'outside_area']);
+        }
+
+        try {
+            $options = $data['mode'] === 'instant'
+                ? $quotes->instant($items, $this->quote($items), (float) $data['latitude'], (float) $data['longitude'])
+                : $quotes->jnt($items, $this->quote($items), $data['area_id'], trim($data['area_label']));
+        } catch (RuntimeException) {
+            return response()->json(['options' => [], 'reason' => 'unavailable']);
+        }
+
+        return response()->json(['options' => array_map([ShippingQuotes::class, 'public'], $options), 'reason' => $options ? null : 'no_courier'])
+            ->header('Cache-Control', 'no-store, private');
+    }
+
+    /** ORD-13: destination areas for J&T (kecamatan, city and postal code), searched by the customer. */
+    public function shippingAreas(Request $request, BiteshipClient $biteship): JsonResponse
+    {
+        abort_unless(ShippingQuotes::enabled(), 404);
+        $data = $request->validate(['q' => ['required', 'string', 'min:3', 'max:60']]);
+        try {
+            $areas = $biteship->areas(trim($data['q']));
+        } catch (RuntimeException) {
+            return response()->json(['areas' => [], 'reason' => 'unavailable']);
+        }
+
+        return response()->json(['areas' => $areas])->header('Cache-Control', 'no-store, private');
     }
 
     private function placed(string $token)
