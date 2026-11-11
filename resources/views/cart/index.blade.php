@@ -50,7 +50,6 @@
                         <div class="flex items-end justify-between gap-4 border-b border-gray-200 pb-4">
                             <div>
                                 <h2 id="inquiry-items-title" class="font-mayluxa text-2xl text-brand-black">Pilihan Anda</h2>
-                                <p class="mt-1 text-xs text-gray-500">Harga dan ketersediaan mengikuti katalog saat ini.</p>
                             </div>
                             <span class="shrink-0 text-xs font-semibold uppercase tracking-widest text-gray-400">{{ count($items) }} produk</span>
                         </div>
@@ -117,15 +116,11 @@
 
                         <div class="mt-6 border-y border-gray-200 py-5">
                             <div class="flex flex-wrap items-end justify-between gap-4">
-                                <div>
-                                    <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Subtotal produk</p>
-                                    <p class="mt-1 text-xs leading-5 text-gray-500">Berdasarkan harga yang tampil saat ini.</p>
-                                </div>
+                                <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Subtotal produk</p>
                                 <p class="text-xl font-semibold tabular-nums whitespace-nowrap text-brand-black">{{ format_rupiah($estimateTotal) }}</p>
                             </div>
                         </div>
 
-                        <p class="mt-4 text-xs leading-5 text-gray-500">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
                         @if ($canCheckout)
                             <a href="{{ route('cart.checkout.show') }}" class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                                 Lanjut ke checkout

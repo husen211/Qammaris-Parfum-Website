@@ -143,7 +143,7 @@ class OrderPolishTest extends TestCase
     {
         $variants = [$this->variant('Polish Satu', 100000), $this->variant('Polish Dua', 50000)];
         $this->withSession(['cart' => [$variants[0]->id => ['variant_id' => $variants[0]->id, 'quantity' => 2], $variants[1]->id => ['variant_id' => $variants[1]->id, 'quantity' => 1]]])
-            ->get(route('cart.checkout.show'))->assertSee('Total sementara')->assertSee('+ Rp 4.000');
+            ->get(route('cart.checkout.show'))->assertSee('Total')->assertDontSee('Total sementara')->assertSee('+ Rp 4.000');
         $form = ['customer_name' => 'E2E Polish', 'customer_phone' => '080000000301', 'delivery' => 'pickup', 'packaging' => 'paperbag', 'payment_preference' => 'transfer',
             'checkout_quote' => session('checkout_quote'), 'checkout_key' => session('checkout_key')];
         $this->post(route('cart.checkout'), $form);

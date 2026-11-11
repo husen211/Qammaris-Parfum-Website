@@ -239,7 +239,7 @@ class CartController extends Controller
         }
         $details = $request->orderDetails();
         // ORD-16: Biteship's own label of the searched destination (never the browser's text), for the order's kecamatan.
-        $details['area_label'] = session(self::AREA_SESSION, [])[(string) $request->validated('delivery_area_id')] ?? null;
+        $details['area_label'] = self::areaLabel((string) $request->validated('delivery_area_id'));
         // ORD-13: the picked courier option must be one this session priced for this very cart.
         $option = $request->validated('shipping_option');
         if (is_string($option) && $option !== 'manual') {
@@ -280,7 +280,7 @@ class CartController extends Controller
             return response()->json(['options' => [], 'reason' => 'cart'], 409);
         }
         // The label staff ship to must be the one Biteship gave for this area id, not text sent by the browser.
-        $areaLabel = $data['mode'] === 'jnt' ? (session(self::AREA_SESSION, [])[$data['area_id']] ?? null) : null;
+        $areaLabel = $data['mode'] === 'jnt' ? self::areaLabel($data['area_id']) : null;
         if ($data['mode'] === 'jnt' && $areaLabel === null) {
             return response()->json(['options' => [], 'reason' => 'unavailable']);
         }
@@ -299,6 +299,16 @@ class CartController extends Controller
 
         return response()->json(['options' => array_map([ShippingQuotes::class, 'public'], $options), 'reason' => $options ? null : 'no_courier'])
             ->header('Cache-Control', 'no-store, private');
+    }
+
+    /** ORD-18: Biteship's own label for an area id this session (or any customer) searched; never text from the browser. */
+    private static function areaLabel(string $id): ?string
+    {
+        if ($id === '') {
+            return null;
+        }
+
+        return session(self::AREA_SESSION, [])[$id] ?? Cache::get('biteship-area-label:'.$id);
     }
 
     /** ORD-17: the kecamatan OpenStreetMap gives for the customer's pin, to warn when it differs from the chosen one. */
@@ -331,8 +341,12 @@ class CartController extends Controller
         } catch (RuntimeException) {
             return response()->json(['areas' => [], 'reason' => 'unavailable']);
         }
+        // ORD-18: a customer who searched several times may pick an older result; it must still price.
         $known = array_replace(session(self::AREA_SESSION, []), array_column($areas, 'label', 'id'));
-        session([self::AREA_SESSION => array_slice($known, -40, null, true)]);
+        session([self::AREA_SESSION => array_slice($known, -300, null, true)]);
+        foreach ($areas as $found) {
+            Cache::put('biteship-area-label:'.$found['id'], $found['label'], now()->addDays(30));
+        }
 
         return response()->json(['areas' => $areas])->header('Cache-Control', 'no-store, private');
     }

@@ -320,16 +320,19 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
 
 - Dengan ongkir otomatis aktif, checkout berurutan:
   1. data penerima;
-  2. **Cara menerima** (Dikirim ke alamat / Ambil di toko);
+  2. **Metode pengiriman** (Dikirim ke alamat dengan logo kurir / Ambil di toko dengan ikon toko);
   3. **Alamat pengiriman**: kecamatan/kota, alamat lengkap, dan titik peta untuk area Palu, Sigi, Donggala;
   4. **Pilih pengiriman**: Instan GoSend/GrabExpress, Reguler J&T, masing-masing dengan harga;
   5. paperbag dan catatan.
 - Tidak ada pilihan kurir yang terpilih otomatis; customer memilih sendiri. Jenis pengiriman pesanan mengikuti pilihan itu.
+- Ringkasan checkout menulis **Total** (produk + paperbag + ongkir yang dipilih), bukan "Total sementara". Teks keranjang dan checkout dibuat singkat (ORD-18).
 - Kecamatan dan kode pos pesanan diisi dari tujuan yang dicari, untuk kurir instan maupun J&T.
-- **Pencarian kecamatan/kota (ORD-17):**
-  - membuka layar pencarian sendiri dengan pilihan cepat 8 kecamatan Palu;
-  - tombol Search di keyboard memilih hasil pertama;
-  - hasil pencarian disimpan 30 hari.
+- **Pencarian kecamatan/kota (ORD-17, diperbaiki ORD-18):**
+  - membuka kartu pencarian (bukan layar penuh, paling tinggi sekitar 70% layar, di tengah saat keyboard tertutup), tanpa daftar Palu di awal;
+  - menampilkan semua hasil Biteship (paling banyak 10) dalam daftar yang bisa di-scroll; bila 10 hasil, ada saran mengetik lebih lengkap;
+  - tombol Search/Enter di keyboard hanya mencari dan menutup keyboard; customer selalu mengetuk sendiri hasilnya;
+  - hasil pencarian disimpan 30 hari; area yang pernah dicari tetap bisa dihitung ongkirnya.
+- **Ongkir gagal dihitung:** sambungan ke Biteship yang putus dicoba ulang sekali otomatis (hanya cek harga dan pencarian, tidak pernah pemesanan kurir). Bila tetap gagal, customer melihat tombol "Hitung ulang ongkir" di samping pilihan "Ongkir dikonfirmasi admin".
 - **Titik antar:** sesudah dipilih tampil peta kecil.
 - **Titik vs kecamatan:** bila titik tampak berada di kecamatan lain (OpenStreetMap dan pusat kecamatan terdekat sama-sama menunjuk kecamatan lain), customer diberi peringatan dan tombol ganti kecamatan. Kecamatan tidak diganti otomatis. Ongkir instan selalu dari titik.
 
