@@ -14,7 +14,7 @@ Only the Website changes. The App and the Order API contract do not change.
 | Official bank account in production | BRI, verified and in use (checked read-only in the admin) |
 | Static QRIS | Coming from the bank; until uploaded the customer sees "QRIS · Segera tersedia" (disabled). Never upload the local sample QRIS |
 | Driver pickup contact | The phone in **Info Toko** = the store admin's phone held at the store (Owner 2026-11-11). Check it in production before step 5 |
-| Website DB backup | Fresh dump streamed off-server, as in [RELEASE_ORD_08_09 §1](RELEASE_ORD_08_09.md) |
+| Website DB backup | Owner 2026-11-11: no manual dump for this release. The three migrations only add empty nullable columns and change no existing row, and the code rollback leaves them in place. Hostinger's automatic backup (hPanel → Files → Backups) is the fallback; check its date before step 2 |
 
 ## 2. Migrations first (build package, server)
 
