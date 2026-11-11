@@ -326,6 +326,12 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
   5. paperbag dan catatan.
 - Tidak ada pilihan kurir yang terpilih otomatis; customer memilih sendiri. Jenis pengiriman pesanan mengikuti pilihan itu.
 - Kecamatan dan kode pos pesanan diisi dari tujuan yang dicari, untuk kurir instan maupun J&T.
+- **Pencarian kecamatan/kota (ORD-17):**
+  - membuka layar pencarian sendiri dengan pilihan cepat 8 kecamatan Palu;
+  - tombol Search di keyboard memilih hasil pertama;
+  - hasil pencarian disimpan 30 hari.
+- **Titik antar:** sesudah dipilih tampil peta kecil.
+- **Titik vs kecamatan:** bila titik tampak berada di kecamatan lain (OpenStreetMap dan pusat kecamatan terdekat sama-sama menunjuk kecamatan lain), customer diberi peringatan dan tombol ganti kecamatan. Kecamatan tidak diganti otomatis. Ongkir instan selalu dari titik.
 
 ### Logo kurir dan bank, batal otomatis bila belum dibayar (ORD-15, Owner 2026-11-11)
 

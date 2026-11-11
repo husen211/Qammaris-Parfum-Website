@@ -71,6 +71,8 @@ Route::prefix('cart')->name('cart.')->group(function () {
     // ORD-13: courier prices for the checkout; JSON for the page's own script, bound to this session's cart.
     Route::post('/checkout/ongkir', [CartController::class, 'shippingQuote'])->middleware('throttle:shipping-quote')->name('checkout.shipping');
     Route::get('/checkout/wilayah', [CartController::class, 'shippingAreas'])->middleware('throttle:shipping-area')->name('checkout.areas');
+    // ORD-17: the kecamatan of the delivery pin (OpenStreetMap), only to warn about a mismatch.
+    Route::get('/checkout/titik', [CartController::class, 'pinKecamatan'])->middleware('throttle:shipping-quote')->name('checkout.pin');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
 });

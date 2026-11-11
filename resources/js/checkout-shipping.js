@@ -2,7 +2,7 @@
 // (destination area, full address and, for instant couriers, a map pin), then picks a priced option grouped as
 // Instan (GoSend, GrabExpress) or Reguler (J&T). The server prices and keeps every option; the page only shows them,
 // submits the chosen option id and keeps the hidden `delivery` in step with it.
-import { deliveryFor, discountText, distanceKm, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, placeResults, reasonText } from './checkout-shipping/logic.js';
+import { areaParts, deliveryFor, discountText, distanceKm, exactArea, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, pinWarning, placeResults, reasonText } from './checkout-shipping/logic.js';
 
 const root = document.querySelector('[data-shipping-quotes]');
 if (root) setup(root);
@@ -20,7 +20,14 @@ function setup(root) {
     const manual = root.querySelector('[data-manual-option]');
     const manualInput = manual.querySelector('input');
     const template = root.querySelector('[data-option-template]');
-    const areaInput = root.querySelector('#delivery-area');
+    const areaButton = root.querySelector('[data-area-open]');
+    const areaText = root.querySelector('[data-area-text]');
+    const areaDialog = document.querySelector('[data-area-dialog]');
+    const areaSearch = areaDialog.querySelector('#area-search');
+    const areaResults = areaDialog.querySelector('#area-results');
+    const areaState = areaDialog.querySelector('[data-area-state]');
+    const preview = root.querySelector('[data-pin-preview]');
+    const mismatch = root.querySelector('[data-pin-mismatch]');
     const areaIdInput = root.querySelector('[data-area-id]');
     const areaLabelInput = root.querySelector('[data-area-label]');
     const address = root.querySelector('#customer_address');
@@ -30,7 +37,10 @@ function setup(root) {
     const runs = { instant: 0, jnt: 0 };
     let area = areaIdInput.value && areaLabelInput.value ? { id: areaIdInput.value, label: areaLabelInput.value } : null;
     let map = null;
-    let pin = null;
+    let previewMap = null;
+    // After a failed submit the page brings the customer's own pin back for the small map.
+    let pin = preview.dataset.point ? JSON.parse(preview.dataset.point) : null;
+    let pinKecamatan = null;
 
     const receive = () => form.querySelector('[data-receive]:checked')?.value ?? '';
     const selected = () => form.querySelector('[data-shipping-choice]:checked:not(:disabled)');
@@ -138,6 +148,9 @@ function setup(root) {
         area = choice;
         areaIdInput.value = choice?.id ?? '';
         areaLabelInput.value = choice?.label ?? '';
+        areaText.textContent = choice?.label ?? 'Cari kecamatan atau kota';
+        areaText.classList.toggle('text-gray-500', !choice);
+        showMismatch();
         const instant = instantArea(choice?.label);
         pinBlock.hidden = !instant;
         groups.instant.hidden = !instant;
@@ -163,9 +176,9 @@ function setup(root) {
         document.documentElement.style.overflow = 'hidden';
     };
     const closeDialog = (dialog) => { if (dialog.open) dialog.close(); };
-    [locationDialog, mapDialog].forEach((dialog) => {
+    [locationDialog, mapDialog, areaDialog].forEach((dialog) => {
         dialog.addEventListener('close', () => {
-            if (!locationDialog.open && !mapDialog.open) document.documentElement.style.overflow = '';
+            if (!locationDialog.open && !mapDialog.open && !areaDialog.open) document.documentElement.style.overflow = '';
         });
         dialog.addEventListener('click', (event) => { if (event.target === dialog) closeDialog(dialog); });
         dialog.querySelectorAll('[data-dialog-close]').forEach((button) => button.addEventListener('click', () => closeDialog(dialog)));
@@ -289,32 +302,194 @@ function setup(root) {
         pinBlock.querySelector('[data-open-location]').hidden = true;
         pinBlock.querySelector('[data-pin-summary]').hidden = false;
         pinBlock.querySelector('[data-pin-text]').textContent = pinSummary(distanceKm(config.origin, pin));
+        showPreview();
+        checkPinKecamatan();
         quote('instant', { mode: 'instant', latitude: pin[0], longitude: pin[1] });
     });
 
-    // Destination: kecamatan, city or postcode from the server's area search.
-    combobox({
-        input: areaInput,
-        list: root.querySelector('#delivery-area-list'),
-        idPrefix: 'delivery-area',
-        onInput: () => { if (area) setArea(null); },
-        search: async (query, signal) => {
-            const response = await fetch(`${config.areaUrl}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal });
-            const data = await response.json().catch(() => ({}));
-            if (response.status === 429) return { items: [], note: reasonText('busy') };
-            if (!response.ok || data.reason) throw new Error('areas');
+    // ORD-17: kecamatan/kota search screen. Palu kecamatan as quick picks before typing; "Mencari…" at once; results
+    // kept per query in the page (and cached on the server); the keyboard's Search key picks the first result and
+    // never sends the checkout form.
+    const areaCache = new Map();
+    let areaItems = [];
+    let areaActive = -1;
+    let areaTimer;
+    let areaController;
+    let enterWhenReady = false;
+    const fetchAreas = async (query) => {
+        const key = query.toLowerCase();
+        if (areaCache.has(key)) return areaCache.get(key);
+        areaController?.abort();
+        areaController = new AbortController();
+        const response = await fetch(`${config.areaUrl}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal: areaController.signal });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 429) throw Object.assign(new Error('busy'), { reason: 'busy' });
+        if (!response.ok || data.reason) throw new Error('areas');
+        areaCache.set(key, data.areas ?? []);
 
-            return { items: data.areas ?? [], note: 'Belum ada hasil. Coba nama kecamatan, kota, atau kode pos lain.' };
-        },
-        failed: () => {
-            groups.jnt.hidden = false;
-            hint.hidden = true;
-            status(groups.jnt, reasonText('unavailable', 'jnt'));
-            offerManual(true);
-            sync();
-        },
-        onChoose: (choice) => setArea(choice),
+        return data.areas ?? [];
+    };
+    const areaRows = () => [...areaResults.querySelectorAll('[role="option"]')];
+    const highlightArea = (index) => {
+        areaActive = index;
+        areaRows().forEach((row, position) => row.setAttribute('aria-selected', String(position === index)));
+        const row = areaRows()[index];
+        if (row) {
+            areaSearch.setAttribute('aria-activedescendant', row.id);
+            row.scrollIntoView({ block: 'nearest' });
+        } else {
+            areaSearch.removeAttribute('aria-activedescendant');
+        }
+    };
+    const chooseArea = (choice) => {
+        if (!choice) return;
+        closeDialog(areaDialog);
+        setArea(choice);
+        areaButton.focus({ preventScroll: true });
+    };
+    const optionRow = (id, title, detail, onPick) => {
+        const row = document.createElement('li');
+        row.id = id;
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', 'false');
+        row.className = 'flex min-h-14 cursor-pointer flex-col justify-center gap-0.5 border-b border-gray-100 px-3 py-2 [touch-action:manipulation] last:border-b-0 aria-selected:bg-[#FAF8F3] active:bg-[#FAF8F3]';
+        row.append(Object.assign(document.createElement('span'), { className: 'text-base font-medium leading-6 text-brand-black', textContent: title }));
+        if (detail) row.append(Object.assign(document.createElement('span'), { className: 'text-sm leading-5 text-gray-600', textContent: detail }));
+        // Keep the keyboard open until the tap lands on the row.
+        row.addEventListener('pointerdown', (event) => event.preventDefault());
+        row.addEventListener('click', onPick);
+
+        return row;
+    };
+    const showQuickPicks = () => {
+        areaItems = [];
+        areaState.textContent = 'Kecamatan di Kota Palu, atau ketik kecamatan/kota lain.';
+        areaResults.replaceChildren(...Object.keys(config.kecamatan).map((name, index) => optionRow(`area-quick-${index}`, name, 'Palu, Sulawesi Tengah', () => pickKecamatan(name))));
+        highlightArea(-1);
+    };
+    const showAreas = (found, query) => {
+        areaItems = found;
+        areaState.textContent = found.length ? `${found.length} hasil` : `Belum ada hasil untuk "${query}". Coba nama kecamatan, kota, atau kode pos lain.`;
+        areaResults.replaceChildren(...found.map((entry, index) => {
+            const { title, detail } = areaParts(entry.label);
+
+            return optionRow(`area-${index}`, title, detail, () => chooseArea(entry));
+        }));
+        highlightArea(found.length ? 0 : -1);
+        if (enterWhenReady && found.length) chooseArea(found[0]);
+        enterWhenReady = false;
+    };
+    const failedAreas = (error) => {
+        areaItems = [];
+        enterWhenReady = false;
+        areaResults.replaceChildren();
+        areaState.textContent = error?.reason === 'busy' ? reasonText('busy') : 'Pencarian sedang tidak bisa dipakai. Coba lagi sebentar.';
+    };
+    const searchAreas = (query) => {
+        clearTimeout(areaTimer);
+        enterWhenReady = false;
+        if (!query) {
+            showQuickPicks();
+
+            return;
+        }
+        if (query.length < 3) {
+            areaItems = [];
+            areaResults.replaceChildren();
+            areaState.textContent = 'Ketik minimal 3 huruf.';
+
+            return;
+        }
+        const cached = areaCache.get(query.toLowerCase());
+        if (cached) {
+            showAreas(cached, query);
+
+            return;
+        }
+        areaState.textContent = 'Mencari…';
+        areaTimer = setTimeout(async () => {
+            try {
+                const found = await fetchAreas(query);
+                if (areaSearch.value.trim() === query) showAreas(found, query);
+            } catch (error) {
+                if (error.name !== 'AbortError') failedAreas(error);
+            }
+        }, 200);
+    };
+    // A Palu kecamatan from the quick list: its Biteship area is taken directly.
+    const pickKecamatan = async (name) => {
+        areaSearch.value = name;
+        areaState.textContent = 'Mencari…';
+        try {
+            const found = await fetchAreas(name);
+            const exact = exactArea(found, name);
+            if (exact) chooseArea(exact); else showAreas(found, name);
+        } catch (error) {
+            if (error.name !== 'AbortError') failedAreas(error);
+        }
+    };
+    const openAreaSearch = () => {
+        openDialog(areaDialog);
+        areaSearch.value = '';
+        showQuickPicks();
+        areaSearch.focus();
+    };
+    areaButton.addEventListener('click', openAreaSearch);
+    areaSearch.addEventListener('input', () => searchAreas(areaSearch.value.trim()));
+    areaSearch.addEventListener('keydown', (event) => {
+        const rows = areaRows();
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            if (!rows.length) return;
+            event.preventDefault();
+            highlightArea((areaActive + (event.key === 'ArrowDown' ? 1 : rows.length - 1) + (areaActive < 0 && event.key === 'ArrowUp' ? 1 : 0)) % rows.length);
+        } else if (event.key === 'Enter') {
+            event.preventDefault();
+            if (areaItems.length) rows[Math.max(areaActive, 0)]?.click();
+            else if (areaState.textContent === 'Mencari…') enterWhenReady = true;
+        }
     });
+
+    // ORD-17: the chosen pin on a small map, and a hint when OpenStreetMap places it in another kecamatan.
+    const showPreview = async () => {
+        if (!pin) {
+            preview.hidden = true;
+
+            return;
+        }
+        preview.hidden = false;
+        const { createPreviewMap } = await import('./checkout-shipping/map.js');
+        if (!previewMap) previewMap = createPreviewMap(preview.querySelector('[data-pin-preview-map]'), pin);
+        previewMap.show(pin);
+    };
+    const showMismatch = () => {
+        const differs = pinWarning(area?.label, pin, pinKecamatan, config.kecamatan);
+        mismatch.hidden = !differs;
+        if (!differs) return;
+        mismatch.querySelector('[data-pin-mismatch-text]').textContent = `Titik antar ini sepertinya di Kecamatan ${pinKecamatan}, sedangkan kecamatan yang dipilih ${areaParts(area.label).title}. Pastikan titik dan kecamatan sesuai.`;
+        mismatch.querySelector('[data-pin-mismatch-fix]').textContent = `Ganti kecamatan ke ${pinKecamatan}`;
+    };
+    mismatch.querySelector('[data-pin-mismatch-fix]').addEventListener('click', async () => {
+        try {
+            const exact = exactArea(await fetchAreas(pinKecamatan), pinKecamatan);
+            if (exact) setArea(exact); else openAreaSearch();
+        } catch {
+            openAreaSearch();
+        }
+    });
+    const checkPinKecamatan = async () => {
+        pinKecamatan = null;
+        showMismatch();
+        if (!pin) return;
+        const asked = pin;
+        try {
+            const response = await fetch(`${config.pinUrl}?latitude=${asked[0]}&longitude=${asked[1]}`, { headers: { Accept: 'application/json' } });
+            const data = await response.json().catch(() => ({}));
+            if (asked === pin) pinKecamatan = response.ok ? (data.kecamatan ?? null) : null;
+        } catch {
+            pinKecamatan = null;
+        }
+        showMismatch();
+    };
 
     // The form refused to send without an option: point at the first thing that is missing.
     form.addEventListener('shipping-missing', () => {
@@ -326,8 +501,8 @@ function setup(root) {
             element?.focus({ preventScroll: true });
         };
         if (!area) {
-            focusOn(areaInput, 'Isi kecamatan atau kota tujuan dulu, lalu pilih pengiriman.');
-            areaInput.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+            focusOn(areaButton, 'Isi kecamatan atau kota tujuan dulu, lalu pilih pengiriman.');
+            areaButton.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
         } else {
             focusOn(root.querySelector('[data-shipping-choice]:not(:disabled)') ?? pinBlock.querySelector('[data-open-location]:not([hidden])'),
                 'Pilih salah satu pengiriman di bawah.');
@@ -345,6 +520,10 @@ function setup(root) {
 
     // Back from a failed submit: the area is known again; J&T is priced again (an instant option stays as chosen).
     if (area) setArea(area, { requote: !root.querySelector('[data-shipping-group="jnt"] [data-shipping-choice]') || selected()?.dataset.kind !== 'jnt' });
+    if (pin) {
+        showPreview();
+        checkPinKecamatan();
+    }
     sync();
 }
 
@@ -393,8 +572,17 @@ function combobox({ input, list, idPrefix, search, onChoose, onInput, failed }) 
         input.setAttribute('aria-expanded', 'true');
         highlight(-1);
     };
+    // ORD-17: "Mencari…" shows at once; the answer follows after a short pause in typing.
+    const searching = () => {
+        items = [];
+        list.replaceChildren(Object.assign(document.createElement('li'), { className: 'px-3 py-3 text-sm leading-6 text-gray-600', textContent: 'Mencari…' }));
+        list.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+    };
+    let pendingEnter = false;
     input.addEventListener('input', () => {
         clearTimeout(timer);
+        pendingEnter = false;
         onInput?.();
         const query = input.value.trim();
         if (query.length < 3) {
@@ -402,28 +590,42 @@ function combobox({ input, list, idPrefix, search, onChoose, onInput, failed }) 
 
             return;
         }
+        searching();
         timer = setTimeout(async () => {
             controller?.abort();
             controller = new AbortController();
             try {
                 const result = await search(query, controller.signal);
                 show(result.items, result.note);
+                if (result.items.length) highlight(0);
+                if (pendingEnter && result.items.length) choose(0);
+                pendingEnter = false;
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     close();
                     failed?.();
                 }
             }
-        }, 350);
+        }, 250);
+    });
+    // Tapping the box again shows the last results instead of making the customer type again.
+    input.addEventListener('focus', () => {
+        if (items.length && input.value.trim().length >= 3) show(items, '');
     });
     input.addEventListener('keydown', (event) => {
+        // The keyboard's Search key never sends the checkout form: it picks the highlighted (first) result,
+        // or the first one as soon as the search answers.
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (items.length) choose(Math.max(active, 0));
+            else if (input.value.trim().length >= 3) pendingEnter = true;
+
+            return;
+        }
         if (list.hidden || !items.length) return;
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
             highlight((active + (event.key === 'ArrowDown' ? 1 : items.length - 1) + (active < 0 && event.key === 'ArrowUp' ? 1 : 0)) % items.length);
-        } else if (event.key === 'Enter' && active >= 0) {
-            event.preventDefault();
-            choose(active);
         } else if (event.key === 'Escape') {
             event.preventDefault();
             close();
