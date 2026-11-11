@@ -10,6 +10,12 @@
     $chosen = old('courier', $customerCourier);
     $stale = $state === 'booking' && now()->getTimestamp() - (int) ($booking['started_at'] ?? 0) >= 120;
     $carrying = in_array($booking['status'] ?? null, OnlineOrderFulfillment::BITESHIP_CARRYING, true);
+    // ORD-14 (Owner 2026-11-11): no chat in the courier app for staff, so WhatsApp/phone from here once a driver is assigned.
+    $whatsApp = app(\App\Support\InquiryWhatsApp::class);
+    $driverPhone = $booking['driver_phone'] ?? null;
+    $driverChatUrl = $state === 'active' && $driverPhone ? $whatsApp->textUrl($driverPhone, $whatsApp->driverMessage($order)) : null;
+    $customerUpdateUrl = $state === 'active' && ! empty($booking['driver_name']) && $order->customer_phone
+        ? $whatsApp->textUrl($order->customer_phone, $whatsApp->courierUpdateMessage($order)) : null;
 @endphp
 @if ($state === 'active')
     <div class="mt-3 rounded-lg border border-gray-200 p-3" data-biteship-status="{{ $booking['status'] ?? '' }}">
@@ -23,8 +29,16 @@
         @if (! empty($booking['driver_name']))
             <p class="mt-2 text-sm text-gray-800" data-biteship-driver>
                 Driver <span class="font-semibold">{{ $booking['driver_name'] }}</span>@if (! empty($booking['driver_plate'])) · <span class="font-mono">{{ $booking['driver_plate'] }}</span>@endif
-                @if (! empty($booking['driver_phone'])) · <a href="tel:{{ preg_replace('/[^0-9+]/', '', $booking['driver_phone']) }}" class="underline underline-offset-2">{{ $booking['driver_phone'] }}</a>@endif
+                @if ($driverPhone) · <span class="tabular-nums">{{ $driverPhone }}</span>@endif
             </p>
+            @if ($order->delivery_status !== 'delivered' && ($driverChatUrl || $driverPhone || $customerUpdateUrl))
+                <div class="mt-3 grid grid-cols-2 gap-2" data-biteship-contact>
+                    @if ($driverChatUrl)<a href="{{ $driverChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} w-full gap-2" data-biteship-chat-driver data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Chat driver</a>@endif
+                    @if ($driverPhone)<a href="tel:{{ preg_replace('/[^0-9+]/', '', $driverPhone) }}" class="{{ $secondary }} w-full" data-biteship-call-driver>Telepon driver</a>@endif
+                    @if ($customerUpdateUrl)<a href="{{ $customerUpdateUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} col-span-2 w-full gap-2" data-biteship-tell-customer data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Kabari customer + link lacak</a>@endif
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Nomor driver dari Gojek/Grab bisa nomor samaran: bila WhatsApp tidak tersambung, telepon. Driver juga menerima nomor customer dan nomor admin toko.</p>
+            @endif
         @else
             <p class="mt-2 text-sm text-gray-600">Driver belum ditemukan. Status berubah sendiri saat Biteship mengabari.</p>
         @endif

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -137,6 +138,57 @@ final class InquiryWhatsApp
             'Cek status pesanan saya: '.route('orders.customer.show', $order->customer_token_encrypted),
             'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
         ]);
+    }
+
+    /**
+     * ORD-14: staff to the Biteship driver. The driver gets everything needed to reach the customer without the
+     * courier app's chat: recipient, WhatsApp/phone number, address, note and the pin.
+     */
+    public function driverMessage(OnlineOrder $order): string
+    {
+        $booking = $order->courier_booking ?? [];
+
+        return implode("\n", array_filter([
+            'Halo '.$this->plainText((string) ($booking['driver_name'] ?? 'Kak')).', saya admin Qammaris Perfumes.',
+            'Pesanan '.$order->code.' ('.OnlineOrderFulfillment::biteshipLabel($booking['courier'] ?? null).').',
+            '',
+            'Penerima: '.$this->plainText((string) $order->customer_name),
+            'No. HP/WA penerima: '.self::localNumber($order->customer_phone),
+            'Alamat: '.$this->plainText((string) $order->address),
+            $order->customer_note ? 'Catatan: '.$this->plainText($order->customer_note) : null,
+            $order->location_url ? 'Titik antar: '.$order->location_url : null,
+            '',
+            'Ada kendala? Balas chat ini. Terima kasih.',
+        ], fn ($line) => $line !== null));
+    }
+
+    /** ORD-14: staff tell the customer who is coming, with Biteship's tracking link and their order page. */
+    public function courierUpdateMessage(OnlineOrder $order): string
+    {
+        $booking = $order->courier_booking ?? [];
+        $courier = OnlineOrderFulfillment::biteshipLabel($booking['courier'] ?? null);
+        $onTheWay = in_array($booking['status'] ?? null, OnlineOrderFulfillment::BITESHIP_CARRYING, true);
+        $driver = $this->plainText((string) ($booking['driver_name'] ?? '')).(! empty($booking['driver_plate']) ? ' ('.$this->plainText($booking['driver_plate']).')' : '');
+
+        return implode("\n", array_filter([
+            'Halo Kak '.$this->plainText((string) $order->customer_name).',',
+            $onTheWay
+                ? 'pesanan Qammaris '.$order->code.' sedang diantar '.$courier.'.'
+                : 'kurir '.$courier.' untuk pesanan Qammaris '.$order->code.' sudah ditemukan dan sedang menuju toko.',
+            '',
+            $driver !== '' ? 'Driver: '.$driver : null,
+            ! empty($booking['link']) ? 'Lacak driver: '.$booking['link'] : null,
+            '',
+            'Driver akan menghubungi nomor ini bila perlu. Status pesanan: '.route('orders.customer.show', $order->customer_token_encrypted),
+        ], fn ($line) => $line !== null));
+    }
+
+    /** 62812… or +62 812… shown the way people type it: 0812…. */
+    public static function localNumber(?string $number): string
+    {
+        $normalized = PhoneNumber::normalize($number);
+
+        return $normalized === null ? (string) $number : (str_starts_with($normalized, '62') ? '0'.substr($normalized, 2) : $normalized);
     }
 
     public function availabilityLabel(string $availability): string

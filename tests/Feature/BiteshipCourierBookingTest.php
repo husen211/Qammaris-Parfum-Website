@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\OnlineOrder;
+use App\Models\StoreInfo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -47,6 +48,7 @@ class BiteshipCourierBookingTest extends TestCase
 
     public function test_staff_book_the_customers_courier_and_every_later_status_comes_from_biteship(): void
     {
+        StoreInfo::getSetting()->forceFill(['phone_number' => '082200001111'])->save();
         $order = $this->packed($this->instantOrder());
         $page = $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertOk();
         $page->assertSee('data-biteship-book', false)->assertSee('Pesan kurir sekarang')->assertSee('Customer memilih GoSend')
@@ -65,11 +67,13 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertSame(['latitude' => -0.9012345, 'longitude' => 119.8701234], $booking['destination_coordinate']);
         $this->assertSame([800, 800], array_column($booking['items'], 'weight'));
         $this->assertSame('081234567890', $booking['destination_contact_phone']);
+        $this->assertSame(['082200001111', 'Pesanan '.$order->code.'. Ada kendala? WhatsApp admin toko 082200001111.'], [$booking['origin_contact_phone'], $booking['origin_note']]);
         $this->assertSame('biteship_test.fake', $this->sent[0]->header('Authorization')[0]);
 
         // A second click books nothing.
         $this->bookCourier($order->fresh(), 'gojek')->assertSessionHas('order_notice.message', 'Kurir sudah dipesan. Batalkan dulu bila perlu memesan ulang.');
         $this->assertCount(1, $this->sent);
+        $this->get(route('admin.orders.show', $order))->assertDontSee('data-biteship-chat-driver', false)->assertDontSee('data-biteship-tell-customer', false);
 
         // Driver found: saved quietly (no new revision for staff working on the page), shown to staff and the customer.
         $revision = $order->revision;
@@ -80,10 +84,17 @@ class BiteshipCourierBookingTest extends TestCase
         $this->get(route('admin.orders.show', $order))->assertSee('Driver ditemukan')->assertSee('Budi Kurir')->assertSee('DN 1234 AB')
             ->assertSee('data-biteship-track', false)->assertSee('Batalkan kurir')->assertDontSee('data-biteship-book', false)
             // The driver's pickup is the handover: no manual button, only the note.
-            ->assertDontSee('data-handover-form', false)->assertSee('Saat driver mengambil paket, pesanan otomatis tercatat sudah diserahkan.');
+            ->assertDontSee('data-handover-form', false)->assertSee('Saat driver mengambil paket, pesanan otomatis tercatat sudah diserahkan.')
+            // Owner 2026-11-11: WhatsApp the driver (with the customer's number, note and pin) and tell the customer with the tracking link.
+            ->assertSee('href="https://wa.me/6281200000000?text=', false)->assertSee(rawurlencode('No. HP/WA penerima: 081234567890'), false)
+            ->assertSee(rawurlencode('Titik antar: https://www.google.com/maps?q=-0.9012345,119.8701234'), false)
+            ->assertSee('href="tel:081200000000"', false)
+            ->assertSee('href="https://wa.me/6281234567890?text=', false)->assertSee(rawurlencode('Lacak driver: https://track.example.test/bs_order_1'), false)
+            ->assertSee(rawurlencode('sudah ditemukan dan sedang menuju toko'), false);
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertOk()
             ->assertSee('data-customer-courier="allocated"', false)->assertSee('Driver menuju toko untuk mengambil pesanan')->assertSee('Budi Kurir')
             ->assertSee('https://track.example.test/bs_order_1', false)->assertDontSee('081200000000')
+            ->assertSee('Driver akan menghubungi nomor Anda, <span class="tabular-nums">081234567890</span>', false)
             // The checkout pin is the location: no Sharelok is asked again.
             ->assertDontSee('Kirim Sharelok')->assertDontSee('data-location-test-note', false);
 

@@ -39,6 +39,16 @@ Biteship dashboard (Owner's Chrome, read-only, 2026-11-11): the Owner's own test
 | — (customer page had no courier block) | ![Customer courier](after-390-customer-courier.jpg) |
 | Website order payment card with "Salin Total & Instruksi Pembayaran" (unchanged for staff-made orders) | ![Payment card, 390](after-390-admin-payment-website.jpg) ![1440](after-1440-admin-payment-website.jpg) |
 
+## Driver and customer contact (Owner 2026-11-11)
+
+- Booking payload: `origin_contact_phone` = store admin phone, `origin_note` = "Pesanan QAM-…. Ada kendala? WhatsApp admin toko 08…", customer as recipient (tested).
+- QAM-0023-4 "Teralokasi" in Biteship test mode (driver "John Doe", Rp26.000 after Biteship's price update), read with "Perbarui status": the admin shows **Chat driver**, **Telepon driver** and **Kabari customer + link lacak**; the messages carry the customer's number, address, pin, and the driver, plate, Biteship tracking link and order page. The customer page says "Driver akan menghubungi nomor Anda, 081200001414". "Chat admin toko" only appears where the store number exists (not in this local test environment).
+- The Owner's QAM-0022 went to delivered in the dashboard; "Perbarui status" recorded "Diterima customer (otomatis)" and the courier block left both pages.
+
+| Admin | Customer |
+|---|---|
+| ![Contact, 390](after-390-admin-driver-contact.jpg) ![1440](after-1440-admin-driver-contact.jpg) | ![Customer, 390](after-390-customer-driver-contact.jpg) |
+
 ## UX notes
 
 - One primary action per state: "Pesan kurir sekarang" while unbooked; once booked, the status card leads. Owner review 2026-11-11: no "Sudah diserahkan ke kurir" for a Biteship driver (the pickup is the handover; the card says so), none before staff choose Biteship or the manual path, and no "Tandai diterima customer" while Biteship delivers.

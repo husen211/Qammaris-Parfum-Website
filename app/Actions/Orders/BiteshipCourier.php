@@ -8,6 +8,7 @@ use App\Models\OnlineOrderItem;
 use App\Models\StoreInfo;
 use App\Models\User;
 use App\Services\BiteshipClient;
+use App\Support\InquiryWhatsApp;
 use App\Support\OrderActor;
 use RuntimeException;
 
@@ -94,15 +95,18 @@ class BiteshipCourier
         $destination = $order->shipping_quote['destination'];
         $weight = (int) config('orders.shipping_quotes.item_weight_grams');
         $phone = fn (?string $number) => preg_replace('/\D+/', '', (string) $number);
+        $adminPhone = $phone($origin['contact_phone'] ?: $store->getRawOriginal('phone_number'));
 
         return [
             'shipper_contact_name' => $origin['contact_name'] ?: $store->store_name,
-            'shipper_contact_phone' => $phone($origin['contact_phone'] ?: $store->getRawOriginal('phone_number')),
+            'shipper_contact_phone' => $adminPhone,
             'origin_contact_name' => $origin['contact_name'] ?: $store->store_name,
-            'origin_contact_phone' => $phone($origin['contact_phone'] ?: $store->getRawOriginal('phone_number')),
+            'origin_contact_phone' => $adminPhone,
             'origin_address' => mb_substr((string) ($origin['address'] ?: $store->address), 0, 300),
             'origin_postal_code' => (int) $origin['postal_code'],
             'origin_coordinate' => ['latitude' => $origin['latitude'], 'longitude' => $origin['longitude']],
+            // ORD-14: the driver can always reach the store, whatever number the courier app shows.
+            'origin_note' => mb_substr('Pesanan '.$order->code.'.'.($adminPhone !== '' ? ' Ada kendala? WhatsApp admin toko '.InquiryWhatsApp::localNumber($adminPhone).'.' : ''), 0, 100),
             'destination_contact_name' => mb_substr((string) $order->customer_name, 0, 100),
             'destination_contact_phone' => $phone($order->customer_phone),
             'destination_address' => mb_substr((string) $order->address, 0, 300),

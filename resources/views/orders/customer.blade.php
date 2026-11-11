@@ -56,6 +56,9 @@
                         Lacak driver
                     </a>
                 @endif
+                @if ($order->customer_phone)
+                    <p class="mt-3 text-sm leading-6 text-gray-700" data-customer-driver-contact>Driver akan menghubungi nomor Anda, <span class="tabular-nums">{{ \App\Support\InquiryWhatsApp::localNumber($order->customer_phone) }}</span>. Pastikan HP aktif.@if ($whatsappUrl) Belum bisa terhubung dengan driver? <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-black underline underline-offset-2" data-customer-courier-help>Chat admin toko</a>.@endif</p>
+                @endif
                 <p class="mt-2 text-xs text-gray-500">Status diperbarui otomatis dari kurir. Muat ulang halaman untuk melihat yang terbaru.</p>
             </section>
         @endif
