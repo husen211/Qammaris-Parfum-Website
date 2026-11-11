@@ -56,8 +56,11 @@ class CheckoutShippingQuoteTest extends TestCase
             ->assertSee('data-partner-logo="gosend"', false)->assertSee('data-partner-logo="grab"', false)->assertSee('data-partner-logo="jnt"', false)
             ->assertSee('images\/partners\/gojek.svg', false)
             // ORD-16: marketplace order: how to receive, the address, then the options grouped Instan and Reguler.
-            ->assertSeeInOrder(['Cara menerima', 'Dikirim ke alamat', 'Ambil di toko', 'Alamat pengiriman', 'Kecamatan atau kota', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Paperbag'])
-            ->assertSee('data-delivery-value', false)->assertDontSee('name="delivery" value="local_delivery"', false);
+            ->assertSeeInOrder(['Metode pengiriman', 'Dikirim ke alamat', 'Ambil di toko', 'Alamat pengiriman', 'Kecamatan atau kota', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Paperbag'])
+            ->assertSee('data-delivery-value', false)->assertDontSee('name="delivery" value="local_delivery"', false)
+            // ORD-17: the area field opens our own search screen; the pin check has its own endpoint.
+            ->assertSee('data-area-open', false)->assertSee('data-area-dialog', false)->assertSee('data-pin-preview', false)
+            ->assertSee(json_encode(route('cart.checkout.pin')), false);
         $response = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.916, 'longitude' => 119.886])->assertOk();
         $options = collect($response->json('options'))->keyBy('provider');
 
@@ -114,6 +117,9 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->getJson(route('cart.checkout.areas', ['q' => 'Makassar']))->assertOk()
             ->assertExactJson(['areas' => [['id' => 'IDNP28IDNC248IDND2564IDZ90141', 'label' => 'Makassar, Makassar, Sulawesi Selatan. 90141']]]);
         $this->getJson(route('cart.checkout.areas', ['q' => 'Ma']))->assertUnprocessable();
+        // ORD-17: the same search (any spacing or case) answers from the cache, without another paid Biteship call.
+        $this->getJson(route('cart.checkout.areas', ['q' => '  makassar ']))->assertOk()->assertJsonPath('areas.0.label', 'Makassar, Makassar, Sulawesi Selatan. 90141');
+        Http::assertSentCount(1);
         // Review 2026-11-11: an area this session never searched is not priced, and the label always comes from Biteship.
         $this->postJson(route('cart.checkout.shipping'), ['mode' => 'jnt', 'area_id' => 'IDNP99UNSEARCHED', 'area_label' => 'Makassar'])
             ->assertOk()->assertJson(['options' => [], 'reason' => 'unavailable']);
@@ -224,6 +230,19 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->actingAs(User::where('role', User::ROLE_SUPER_ADMIN)->first())->post(route('admin.orders.payment-accounts.qris.remove'))->assertSessionHas('success');
         $this->assertNull(StoreInfo::query()->value('qris_image_path'));
         Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_the_pin_kecamatan_comes_from_openstreetmap_once_and_only_inside_the_area(): void
+    {
+        Http::fake(['nominatim.openstreetmap.org/*' => Http::response(['address' => ['village' => 'Tatura Utara', 'municipality' => 'Kecamatan Palu Selatan']])]);
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.916, 'longitude' => 119.886]))->assertOk()->assertExactJson(['kecamatan' => 'Palu Selatan']);
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.91601, 'longitude' => 119.88602]))->assertOk()->assertExactJson(['kecamatan' => 'Palu Selatan']);
+        Http::assertSentCount(1);
+        Http::assertSent(fn (HttpRequest $request) => str_starts_with($request->header('User-Agent')[0] ?? '', 'QammarisPerfumes/'));
+        // Outside Palu and its surroundings nothing is asked.
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -5.14, 'longitude' => 119.42]))->assertUnprocessable();
     }
 
     public function test_discount_rules_round_down_and_respect_the_threshold_and_cap(): void

@@ -1,6 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cheapest, deliveryFor, discountText, distanceKm, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, placeResults, reasonText } from '../../resources/js/checkout-shipping/logic.js';
+import { areaParts, cheapest, deliveryFor, discountText, distanceKm, exactArea, instantArea, kecamatanCenter, locationStep, locationText, nearestKecamatan, pinMismatch, pinSummary, pinWarning, placeResults, reasonText } from '../../resources/js/checkout-shipping/logic.js';
+
+test('ORD-17: an area label reads in two lines', () => {
+    assert.deepEqual(areaParts('Palu Timur, Palu, Sulawesi Tengah. 94111'), { title: 'Palu Timur', detail: 'Palu, Sulawesi Tengah · 94111' });
+    assert.deepEqual(areaParts('Makassar'), { title: 'Makassar', detail: '' });
+});
+
+test('ORD-17: the quick pick finds the exact Palu kecamatan, not a namesake elsewhere', () => {
+    const areas = [{ id: 'x', label: 'Palu Barat, Ternate, Maluku Utara. 97711' }, { id: 'p', label: 'Palu Barat, Palu, Sulawesi Tengah. 94221' }];
+    assert.equal(exactArea(areas, 'Palu Barat').id, 'p');
+    assert.equal(exactArea(areas, 'Mantikulore'), null);
+});
+
+test('ORD-17: a pin warning needs OpenStreetMap and the nearest kecamatan centre to agree', () => {
+    const kecamatan = { 'Palu Barat': [-0.895, 119.856], 'Palu Selatan': [-0.916, 119.886], Ulujadi: [-0.865, 119.83] };
+    const chosen = 'Palu Barat, Palu, Sulawesi Tengah. 94221';
+    assert.equal(pinMismatch(chosen, 'Palu Barat'), false);
+    assert.equal(nearestKecamatan([-0.916, 119.886], kecamatan), 'Palu Selatan');
+    // Balaroa, near the store: OpenStreetMap says Ulujadi, the centre says Palu Barat: no false warning.
+    assert.equal(pinWarning(chosen, [-0.8981, 119.8595], 'Ulujadi', kecamatan), false);
+    assert.equal(pinWarning(chosen, [-0.916, 119.886], 'Palu Selatan', kecamatan), true);
+    assert.equal(pinWarning(chosen, [-0.916, 119.886], null, kecamatan), false);
+});
 
 test('ORD-16: instant couriers are offered for Palu and its neighbours only', () => {
     assert.equal(instantArea('Palu Barat, Palu, Sulawesi Tengah. 94221'), true);

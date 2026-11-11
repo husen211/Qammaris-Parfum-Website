@@ -438,4 +438,4 @@ details[open] > summary [data-chevron] { rotate: 180deg; }
 .qm-map .leaflet-control-zoom a { width: 40px; height: 40px; line-height: 40px; font-size: 20px; color: #1a1a1a; }
 .qm-map .leaflet-control-attribution { font-size: 10px; }
 /* ORD-13: the checkout pop-ups dim the page behind them (plain CSS: ::backdrop does not see Tailwind's variables everywhere). */
-[data-location-dialog]::backdrop, [data-map-dialog]::backdrop { background: rgba(0, 0, 0, 0.55); }
+[data-location-dialog]::backdrop, [data-map-dialog]::backdrop, [data-area-dialog]::backdrop { background: rgba(0, 0, 0, 0.55); }

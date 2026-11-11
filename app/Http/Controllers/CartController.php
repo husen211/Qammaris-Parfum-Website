@@ -14,12 +14,14 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StoreInfo;
 use App\Services\BiteshipClient;
+use App\Services\PinKecamatan;
 use App\Support\CatalogAvailability;
 use App\Support\CustomerOrderHistory;
 use App\Support\InquiryWhatsApp;
 use App\Support\Rupiah;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -171,9 +173,12 @@ class CartController extends Controller
         $oldOption = old('shipping_option');
         $shippingSelected = $autoShipping && is_string($oldOption) && $oldOption !== 'manual'
             ? app(ShippingQuotes::class)->remembered($oldOption, $checkoutQuote) : null;
+        // ORD-17: the customer's own pin, to show it again on the small map after a failed submit.
+        $pinPoint = ($shippingSelected['kind'] ?? null) === 'instant' && isset($shippingSelected['destination']['latitude'])
+            ? [$shippingSelected['destination']['latitude'], $shippingSelected['destination']['longitude']] : null;
         $shippingSelected = $shippingSelected ? ShippingQuotes::public($shippingSelected) : null;
 
-        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey', 'paperbagFee', 'autoShipping', 'shippingSelected'))
+        return response()->view('cart.checkout', compact('items', 'subtotal', 'checkoutQuote', 'whatsappAvailable', 'savesOrder', 'checkoutKey', 'paperbagFee', 'autoShipping', 'shippingSelected', 'pinPoint'))
             ->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
@@ -296,13 +301,33 @@ class CartController extends Controller
             ->header('Cache-Control', 'no-store, private');
     }
 
+    /** ORD-17: the kecamatan OpenStreetMap gives for the customer's pin, to warn when it differs from the chosen one. */
+    public function pinKecamatan(Request $request, PinKecamatan $lookup): JsonResponse
+    {
+        abort_unless(ShippingQuotes::enabled(), 404);
+        $area = config('orders.shipping_quotes.service_area');
+        $data = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:'.$area['south'].','.$area['north']],
+            'longitude' => ['required', 'numeric', 'between:'.$area['west'].','.$area['east']],
+        ]);
+
+        return response()->json(['kecamatan' => $lookup->find((float) $data['latitude'], (float) $data['longitude'])])
+            ->header('Cache-Control', 'no-store, private');
+    }
+
     /** ORD-13: destination areas for J&T (kecamatan, city and postal code), searched by the customer. */
     public function shippingAreas(Request $request, BiteshipClient $biteship): JsonResponse
     {
         abort_unless(ShippingQuotes::enabled(), 404);
         $data = $request->validate(['q' => ['required', 'string', 'min:3', 'max:60']]);
+        // ORD-17: the same search answers at once the next time, for every customer, without a paid Biteship call.
+        $query = mb_strtolower(preg_replace('/\s+/u', ' ', trim($data['q'])));
         try {
-            $areas = $biteship->areas(trim($data['q']));
+            $areas = Cache::get('biteship-areas:'.md5($query));
+            if ($areas === null) {
+                $areas = $biteship->areas($query);
+                Cache::put('biteship-areas:'.md5($query), $areas, now()->addDays(30));
+            }
         } catch (RuntimeException) {
             return response()->json(['areas' => [], 'reason' => 'unavailable']);
         }

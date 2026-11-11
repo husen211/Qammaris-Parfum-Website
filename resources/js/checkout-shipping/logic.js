@@ -103,3 +103,57 @@ export function kecamatanCenter(label, kecamatan) {
 
     return name ? kecamatan[name] : null;
 }
+
+/** ORD-17: a Biteship area label in two lines: "Palu Timur" over "Palu, Sulawesi Tengah · 94111". */
+export function areaParts(label) {
+    const text = String(label ?? '').trim();
+    const [first, ...rest] = text.split(',').map((part) => part.trim()).filter(Boolean);
+    const tail = rest.join(', ');
+    const postcode = tail.match(/\.\s*(\d{5})$/);
+
+    return { title: first ?? '', detail: postcode ? `${tail.slice(0, postcode.index).trim()} · ${postcode[1]}` : tail };
+}
+
+/** ORD-17: the pin's kecamatan differs from the chosen one (both known, compared without case). */
+export function pinMismatch(areaLabel, pinKecamatan) {
+    const chosen = areaParts(areaLabel).title.toLowerCase();
+
+    return Boolean(chosen && pinKecamatan) && chosen !== String(pinKecamatan).trim().toLowerCase();
+}
+
+/** ORD-17: the search result that is exactly this kecamatan in Palu (for the quick picks and the mismatch fix). */
+export function exactArea(areas, name, city = 'palu') {
+    const wanted = String(name ?? '').trim().toLowerCase();
+
+    return (areas ?? []).find((area) => {
+        const parts = String(area.label ?? '').toLowerCase().split(',').map((part) => part.trim());
+
+        return parts[0] === wanted && parts.slice(1).some((part) => part.startsWith(city));
+    }) ?? null;
+}
+
+/** ORD-17: the Palu kecamatan whose centre is closest to the pin (a second, independent signal). */
+export function nearestKecamatan(point, kecamatan) {
+    if (!point) return null;
+    let best = null;
+    let bestKm = Infinity;
+    Object.entries(kecamatan ?? {}).forEach(([name, centre]) => {
+        const km = distanceKm(point, centre);
+        if (km < bestKm) {
+            best = name;
+            bestKm = km;
+        }
+    });
+
+    return best;
+}
+
+/**
+ * ORD-17: warn only when OpenStreetMap and the nearest kecamatan centre agree that the pin lies in another kecamatan
+ * than the chosen one. OpenStreetMap alone is wrong in places (Balaroa reads as Ulujadi, Biteship says Palu Barat).
+ */
+export function pinWarning(areaLabel, pin, osmKecamatan, kecamatan) {
+    if (!pinMismatch(areaLabel, osmKecamatan)) return false;
+
+    return (nearestKecamatan(pin, kecamatan) ?? '').toLowerCase() === String(osmKecamatan).trim().toLowerCase();
+}

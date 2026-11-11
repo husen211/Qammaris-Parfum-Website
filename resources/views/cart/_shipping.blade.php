@@ -17,6 +17,7 @@
         'placeSearchUrl' => 'https://photon.komoot.io/api/',
         'serviceArea' => config('orders.shipping_quotes.service_area'),
         'logos' => \App\Support\PartnerLogos::urls(),
+        'pinUrl' => route('cart.checkout.pin'),
     ];
 @endphp
 @vite('resources/js/checkout-shipping.js')
@@ -29,7 +30,7 @@
 <div data-shipping-quotes data-config='@json($config)' class="space-y-5">
     <input type="hidden" name="delivery" value="{{ $delivery }}" data-delivery-value>
     <fieldset @if ($errors->has('delivery')) aria-describedby="delivery-error" @endif>
-        <legend class="text-sm font-medium text-brand-black">Cara menerima <span aria-hidden="true">*</span></legend>
+        <legend class="text-sm font-medium text-brand-black">Metode pengiriman <span aria-hidden="true">*</span></legend>
         <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <label class="{{ $choiceClass }}">
                 <input type="radio" name="receive" value="delivery" @checked($receive === 'delivery') required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-receive>
@@ -55,16 +56,14 @@
         <section class="{{ $panelClass }}" aria-labelledby="address-title">
             <h3 id="address-title" class="{{ $sectionTitle }}">Alamat pengiriman</h3>
             <div>
-                <label for="delivery-area" class="block text-sm font-medium text-brand-black">Kecamatan atau kota <span aria-hidden="true">*</span></label>
-                <div class="relative mt-2" data-area-combobox>
-                    <input id="delivery-area" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="delivery-area-list" autocomplete="off" enterkeyhint="search"
-                        value="{{ $areaLabel }}" placeholder="Contoh: Palu Barat atau Makassar" aria-describedby="delivery-area-help"
-                        class="min-h-12 w-full border border-gray-300 bg-white px-3 py-3 text-base text-brand-black focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">
-                    <ul id="delivery-area-list" role="listbox" hidden class="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-y-auto border border-brand-black bg-white shadow-lg"></ul>
-                </div>
+                {{-- ORD-17: our own search screen (full screen on phones), so typing and the keyboard's Search key behave the same everywhere. --}}
+                <p id="delivery-area-title" class="block text-sm font-medium text-brand-black">Kecamatan atau kota <span aria-hidden="true">*</span></p>
+                <button type="button" id="delivery-area" data-area-open aria-haspopup="dialog" aria-labelledby="delivery-area-title delivery-area" class="mt-2 flex min-h-12 w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 py-2.5 text-left text-base text-brand-black [touch-action:manipulation] active:bg-gray-50 focus-visible:border-brand-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-black">
+                    <span data-area-text class="min-w-0 {{ $areaLabel ? '' : 'text-gray-500' }}">{{ $areaLabel ?: 'Cari kecamatan atau kota' }}</span>
+                    <svg aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                </button>
                 <input type="hidden" name="delivery_area_id" value="{{ old('delivery_area_id') }}" data-area-id>
                 <input type="hidden" name="delivery_area_label" value="{{ $areaLabel }}" data-area-label>
-                <p id="delivery-area-help" class="mt-2 text-xs leading-5 text-gray-500">Ketik minimal 3 huruf, lalu pilih dari daftar.</p>
             </div>
             <div>
                 <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
@@ -82,6 +81,16 @@
                 <div data-pin-summary @if ($selectedKind !== 'instant') hidden @endif class="flex flex-wrap items-center justify-between gap-2 bg-[#FAF8F3] px-3 py-2 text-sm text-brand-black">
                     <span class="flex items-center gap-2"><svg aria-hidden="true" class="h-4 w-4 shrink-0 text-[#8A6A2E]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg><span data-pin-text>{{ isset($shippingSelected['distance_km']) ? 'Titik antar dipilih · ±'.number_format($shippingSelected['distance_km'], 1, ',', '.').' km dari toko' : 'Titik antar dipilih' }}</span></span>
                     <button type="button" data-change-pin class="min-h-11 px-2 font-medium underline underline-offset-4">Ubah titik</button>
+                </div>
+                <div data-pin-preview @if (! $pinPoint) hidden @endif @if ($pinPoint) data-point="{{ json_encode($pinPoint) }}" @endif class="relative h-40 w-full overflow-hidden border border-gray-200 bg-[#eef0ea]" role="img" aria-label="Peta kecil titik antar">
+                    <div data-pin-preview-map class="qm-map absolute inset-0"></div>
+                    <div class="pointer-events-none absolute left-1/2 top-1/2 z-[500] -translate-x-1/2 -translate-y-full">
+                        <svg aria-hidden="true" width="28" height="36" viewBox="0 0 34 44"><path d="M17 43C17 43 33 27.5 33 16.5A16 16 0 0 0 1 16.5C1 27.5 17 43 17 43Z" fill="#C5A059" stroke="#1a1a1a" stroke-width="2"/><circle cx="17" cy="16.5" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/></svg>
+                    </div>
+                </div>
+                <div data-pin-mismatch hidden role="status" class="space-y-2 border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+                    <p data-pin-mismatch-text></p>
+                    <button type="button" data-pin-mismatch-fix class="min-h-11 font-semibold underline underline-offset-4"></button>
                 </div>
             </div>
         </section>
@@ -116,6 +125,28 @@
 
     <template data-option-template>@include('cart._shipping_option', ['option' => null, 'checked' => false])</template>
 </div>
+
+{{-- ORD-17: kecamatan/kota search. Full screen on phones (keyboard and list never fight), a centred panel on wider screens. --}}
+<dialog data-area-dialog aria-labelledby="area-dialog-title" class="m-0 h-dvh max-h-none w-full max-w-none bg-white p-0 text-brand-black sm:m-auto sm:h-[36rem] sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:shadow-2xl">
+    <div class="flex h-full flex-col">
+        <div class="flex items-center gap-1 border-b border-gray-200 py-1 pl-1 pr-4">
+            <button type="button" data-dialog-close aria-label="Kembali" class="flex h-11 w-11 shrink-0 items-center justify-center text-brand-black active:bg-gray-100">
+                <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <h2 id="area-dialog-title" class="font-mayluxa text-xl">Kecamatan atau kota</h2>
+        </div>
+        <div class="px-4 pt-3">
+            <div class="relative">
+                <label for="area-search" class="sr-only">Cari kecamatan, kota, atau kode pos</label>
+                <svg aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input id="area-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="area-results" autocomplete="off" autocapitalize="words" enterkeyhint="search"
+                    placeholder="Ketik kecamatan, kota, atau kode pos" class="min-h-12 w-full border border-gray-300 bg-white pl-10 pr-3 text-base text-brand-black focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">
+            </div>
+            <p data-area-state role="status" aria-live="polite" class="mt-2 min-h-5 text-sm text-gray-600"></p>
+        </div>
+        <ul id="area-results" role="listbox" aria-label="Hasil pencarian" class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[max(1rem,env(safe-area-inset-bottom))]"></ul>
+    </div>
+</dialog>
 
 {{-- Location pop-up: our own explanation before the phone's permission prompt. Centered, never full width. --}}
 <dialog data-location-dialog aria-labelledby="location-title" class="m-auto w-[calc(100%-3rem)] max-w-xs bg-white p-0 text-brand-black shadow-2xl">
