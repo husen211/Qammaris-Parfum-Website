@@ -83,6 +83,8 @@ Local had no verified bank account, so the first run said the account is sent on
 | 390 QRIS chosen | [pay-390-qris](pay-390-qris.jpg) |
 | 1440 payment step | [pay-1440-transfer-bri](pay-1440-transfer-bri.jpg) |
 
+Owner review: customers lose the order page after WhatsApp. Both website WhatsApp messages (order and payment proof) now carry "Cek status pesanan saya: <customer link>" above the staff link, and the order page starts with "Link pesanan Anda" and a "Salin link" button ([pay-390-order-link](pay-390-order-link.jpg)).
+
 ## Tests
 
 - `CheckoutShippingQuoteTest` (11, four for the payment step: single pieces pay at once and the choice opens WhatsApp; 2 pcs or staff-priced ongkir wait and payment opens after confirmation; QRIS upload rights, size check, payment with QRIS and removal; J&T fills kecamatan and postcode). Earlier seven: instant pricing and discount, the request sent to Biteship (key header, couriers, 800 g × quantity, store origin), order locking and display, WhatsApp text; J&T area search and pricing; discount rules; forged / other delivery / expired / other cart options refused; no courier, Biteship down and outside the area fall back to "dikonfirmasi admin"; staff may lower but not raise or send to the driver; flag off or no key leaves the checkout as before. The pin becomes `location_url`.

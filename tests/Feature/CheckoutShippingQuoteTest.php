@@ -85,6 +85,10 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->assertStringContainsString('Ongkir GoSend: Rp 17.000 (potongan ongkir 15% dari Qammaris)', $message);
         $this->assertStringContainsString('Total: Rp 824.000', $message);
         $this->assertStringContainsString('Mohon konfirmasi stok dan pembayarannya.', $message);
+        $customerLink = route('orders.customer.show', $order->customer_token_encrypted);
+        $this->assertStringContainsString('Cek status pesanan saya: '.$customerLink, $message, 'the customer keeps their own link in the chat');
+        $this->assertStringContainsString('Cek status pesanan saya: '.$customerLink, app(InquiryWhatsApp::class)->paymentProofMessage($order, 'transfer'));
+        $this->get($customerLink)->assertSee('data-order-link', false)->assertSee('Link pesanan Anda')->assertSee('data-copy-account="'.$customerLink.'"', false);
     }
 
     public function test_jnt_is_priced_from_the_searched_area_with_30_percent_off_capped_at_30000(): void

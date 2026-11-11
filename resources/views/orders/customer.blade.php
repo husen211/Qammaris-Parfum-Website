@@ -21,6 +21,18 @@
             {{ $editing ? ($order->stage === 'awaiting_customer' ? 'Lengkapi data pesanan' : 'Ubah data pesanan') : ($order->lifecycle === 'draft' ? 'Pesanan tersimpan' : 'Status pesanan') }}
         </h1>
 
+        {{-- ORD-13: the customer keeps their own link (also in the WhatsApp chat and "Pesanan Saya"). --}}
+        @unless ($editing)
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border border-gray-200 bg-white px-3 py-3" data-copy-box data-order-link>
+                <p class="min-w-0 flex-1 text-sm leading-5 text-gray-700"><span class="block font-semibold text-brand-black">Link pesanan Anda</span>Buka lagi kapan saja untuk cek status. Link ini juga ada di chat WhatsApp dan menu Pesanan Saya.</p>
+                <button type="button" data-copy-account="{{ route('orders.customer.show', $token) }}" data-copy-done="Link pesanan disalin." class="inline-flex min-h-11 shrink-0 items-center gap-2 border border-brand-black bg-white px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">
+                    <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Salin link
+                </button>
+                <p data-copy-status role="status" aria-live="polite" class="w-full text-sm text-gray-600 empty:hidden"></p>
+            </div>
+        @endunless
+
         {{-- ORD-04: receipt confirmation stays at the top while the parcel is on its way. --}}
         @if ($order->isV2() ? ($order->handover_status === 'handed_over' && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled') : ($order->stage === 'shipped' && $order->fulfillment !== 'pickup'))
             @php($jnt = $order->fulfillment === 'intercity')
@@ -425,12 +437,12 @@
 })();
 // ORD-04: copy an official account number.
 document.querySelectorAll('[data-copy-account]').forEach((button) => button.addEventListener('click', async () => {
-    const feedback = document.querySelector('[data-copy-account-feedback]');
+    const feedback = button.closest('[data-copy-box]')?.querySelector('[data-copy-status]') ?? document.querySelector('[data-copy-account-feedback]');
     try {
         await navigator.clipboard.writeText(button.dataset.copyAccount);
         feedback.textContent = button.dataset.copyDone ?? 'Nomor rekening disalin.';
     } catch {
-        feedback.textContent = 'Salin otomatis tidak tersedia. Nomor: ' + button.dataset.copyAccount;
+        feedback.textContent = 'Salin otomatis tidak tersedia. Salin manual: ' + button.dataset.copyAccount;
     }
 }));
 // ORD-07: copy the order message where no store chat is available; the selected text is the fallback.

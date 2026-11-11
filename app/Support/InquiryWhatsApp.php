@@ -116,6 +116,7 @@ final class InquiryWhatsApp
             '',
             $quote ? 'Mohon konfirmasi stok dan pembayarannya. Terima kasih.' : 'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
             '',
+            'Cek status pesanan saya: '.route('orders.customer.show', $order->customer_token_encrypted),
             'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
         ]);
     }
@@ -133,6 +134,7 @@ final class InquiryWhatsApp
             '',
             'Bukti pembayaran saya kirim di chat ini.',
             '',
+            'Cek status pesanan saya: '.route('orders.customer.show', $order->customer_token_encrypted),
             'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
         ]);
     }
