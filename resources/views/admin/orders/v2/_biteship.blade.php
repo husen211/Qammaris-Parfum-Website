@@ -73,8 +73,18 @@
             <p class="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert" data-biteship-error>Pemesanan terakhir gagal: {{ $booking['error'] ?? 'Biteship tidak menjawab.' }}</p>
         @elseif ($state === 'ended')
             <p class="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900" data-biteship-ended>Kurir sebelumnya: {{ OnlineOrderLabels::BITESHIP[$booking['status'] ?? ''] ?? 'selesai' }}. Pesan ulang bila perlu.</p>
-        @elseif ($state === 'booking')
-            <p class="mt-2 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700" data-biteship-pending>{{ $stale ? 'Hasil pemesanan sebelumnya belum pasti. Cek dashboard Biteship dulu supaya tidak dobel, lalu pesan ulang bila belum ada.' : 'Sedang memesan kurir… muat ulang halaman sebentar lagi.' }}</p>
+        @elseif ($state === 'booking' && ! $stale)
+            <p class="mt-2 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700" data-biteship-pending>Sedang memesan kurir… muat ulang halaman sebentar lagi.</p>
+        @endif
+        @if ($state === 'unsure' || $stale)
+            {{-- Biteship may have booked the driver although no answer arrived: an explicit check before booking again. --}}
+            <div class="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert" data-biteship-unsure>
+                <p>Hasil pemesanan sebelumnya belum pasti{{ ! empty($booking['error']) ? ': '.$booking['error'] : '.' }} Cari <span class="font-mono">{{ $order->code }}-{{ (int) ($booking['attempt'] ?? 1) }}</span> di dashboard Biteship dulu supaya driver tidak dobel.</p>
+                <label class="mt-2 flex min-h-11 cursor-pointer items-center gap-3 font-medium">
+                    <input type="checkbox" name="checked_biteship" value="1" required class="h-5 w-5 shrink-0"> Sudah saya cek, belum ada pesanan di Biteship
+                </label>
+                @error('checked_biteship') <p class="text-sm text-red-700">{{ $message }}</p> @enderror
+            </div>
         @endif
         <fieldset class="mt-3">
             <legend class="text-sm text-gray-700">Kurir</legend>

@@ -301,6 +301,15 @@ class OnlineOrder extends Model
             && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null);
     }
 
+    /** ORD-14: a Biteship driver is booked, or a booking started less than two minutes ago is still waiting for Biteship. */
+    public function biteshipBusy(): bool
+    {
+        $booking = $this->courier_booking ?? [];
+
+        return ($booking['state'] ?? null) === 'active'
+            || (($booking['state'] ?? null) === 'booking' && now()->getTimestamp() - (int) ($booking['started_at'] ?? 0) < 120);
+    }
+
     /** ORD-04/ORD-13: the customer page shows how to pay: final total, unpaid, and confirmed or payable before confirmation. */
     public function customerCanPay(): bool
     {

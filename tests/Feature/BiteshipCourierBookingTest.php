@@ -161,6 +161,39 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertSame(0, $order->costs()->count());
     }
 
+    public function test_a_booked_driver_blocks_cancelling_the_order_and_a_second_courier(): void
+    {
+        $order = $this->packed($this->instantOrder());
+        $this->answer('POST /v1/orders', $this->biteshipOrder('allocated'));
+        $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'success');
+
+        $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
+        $this->actingAs($owner)->post(route('admin.orders.v2.cancel', $order), ['revision' => $order->fresh()->revision, 'reason' => 'Customer batal pesan', 'refund_due' => '10000'])
+            ->assertSessionHas('order_notice.message', 'Kurir Biteship masih dipesan. Batalkan kurir dulu di bagian Pengiriman, lalu batalkan pesanan.');
+        $this->post(route('admin.orders.v2.courier', $order), ['revision' => $order->fresh()->revision, 'provider' => 'maxim', 'status' => 'requested',
+            'cost_amount' => '15000', 'cost_payer' => 'cashier'])
+            ->assertSessionHas('order_notice.message', 'Kurir sedang atau sudah dipesan lewat Biteship. Batalkan kurir Biteship dulu bila ingin memesan manual.');
+        $this->assertSame(['active', 'gosend', 0], [$order->fresh()->lifecycle, $order->fresh()->courier_provider, $order->costs()->count()]);
+    }
+
+    public function test_an_unanswered_booking_is_unsure_and_booking_again_needs_the_dashboard_check(): void
+    {
+        $order = $this->packed($this->instantOrder());
+        // No readable answer: Biteship may still have booked the driver.
+        $this->answer('POST /v1/orders', ['message' => 'Gateway Timeout'], 504);
+        $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'error');
+        $this->assertSame(['unsure', 'unassigned'], [$order->fresh()->courier_booking['state'], $order->fresh()->courier_status]);
+        $this->get(route('admin.orders.show', $order))->assertSee('data-biteship-unsure', false)->assertSee($order->code.'-1')
+            ->assertSee('Sudah saya cek, belum ada pesanan di Biteship');
+
+        $this->bookCourier($order, 'gojek')->assertSessionHasErrors('checked_biteship');
+        $this->assertCount(1, $this->sent);
+        $this->answer('POST /v1/orders', $this->biteshipOrder('confirmed'));
+        $this->post(route('admin.orders.v2.biteship.book', $order), ['revision' => $order->fresh()->revision, 'courier' => 'gojek', 'checked_biteship' => '1'])
+            ->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame([$order->code.'-2', 'active'], [end($this->sent)->data()['reference_id'], $order->fresh()->courier_booking['state']]);
+    }
+
     public function test_pickup_after_the_booking_admin_was_removed_still_records_the_cost(): void
     {
         $order = $this->packed($this->instantOrder());

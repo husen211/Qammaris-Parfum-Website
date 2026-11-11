@@ -25,6 +25,9 @@ use RuntimeException;
 
 class CartController extends Controller
 {
+    /** ORD-13: Biteship areas this session searched (id => label), so a J&T quote uses Biteship's own label. */
+    private const AREA_SESSION = 'shipping_areas';
+
     public function __construct(private readonly InquiryWhatsApp $inquiryWhatsApp) {}
 
     public function index()
@@ -263,11 +266,16 @@ class CartController extends Controller
             'latitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-90,90'],
             'longitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-180,180'],
             'area_id' => ['exclude_unless:mode,jnt', 'required', 'string', 'regex:/^[A-Za-z0-9]{1,64}$/'],
-            'area_label' => ['exclude_unless:mode,jnt', 'required', 'string', 'max:160'],
+            'area_label' => ['exclude_unless:mode,jnt', 'nullable', 'string', 'max:160'],
         ]);
         $items = $this->resolveCartItems(session('cart', []));
         if (! $items || ! $this->canOrder($items)) {
             return response()->json(['options' => [], 'reason' => 'cart'], 409);
+        }
+        // The label staff ship to must be the one Biteship gave for this area id, not text sent by the browser.
+        $areaLabel = $data['mode'] === 'jnt' ? (session(self::AREA_SESSION, [])[$data['area_id']] ?? null) : null;
+        if ($data['mode'] === 'jnt' && $areaLabel === null) {
+            return response()->json(['options' => [], 'reason' => 'unavailable']);
         }
         if ($data['mode'] === 'instant' && ((float) $data['latitude'] < $area['south'] || (float) $data['latitude'] > $area['north']
             || (float) $data['longitude'] < $area['west'] || (float) $data['longitude'] > $area['east'])) {
@@ -277,7 +285,7 @@ class CartController extends Controller
         try {
             $options = $data['mode'] === 'instant'
                 ? $quotes->instant($items, $this->quote($items), (float) $data['latitude'], (float) $data['longitude'])
-                : $quotes->jnt($items, $this->quote($items), $data['area_id'], trim($data['area_label']));
+                : $quotes->jnt($items, $this->quote($items), $data['area_id'], $areaLabel);
         } catch (RuntimeException) {
             return response()->json(['options' => [], 'reason' => 'unavailable']);
         }
@@ -296,6 +304,8 @@ class CartController extends Controller
         } catch (RuntimeException) {
             return response()->json(['areas' => [], 'reason' => 'unavailable']);
         }
+        $known = array_replace(session(self::AREA_SESSION, []), array_column($areas, 'label', 'id'));
+        session([self::AREA_SESSION => array_slice($known, -40, null, true)]);
 
         return response()->json(['areas' => $areas])->header('Cache-Control', 'no-store, private');
     }

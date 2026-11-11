@@ -8,8 +8,8 @@ use App\Models\OnlineOrderItem;
 use App\Models\StoreInfo;
 use App\Models\User;
 use App\Services\BiteshipClient;
-use App\Support\InquiryWhatsApp;
 use App\Support\OrderActor;
+use App\Support\PhoneNumber;
 use RuntimeException;
 
 /**
@@ -29,20 +29,22 @@ class BiteshipCourier
         return (bool) config('orders.shipping_quotes.enabled') && $this->client->configured();
     }
 
-    public function book(OnlineOrder $order, int $revision, User $user, string $courier): OnlineOrder
+    public function book(OnlineOrder $order, int $revision, User $user, string $courier, bool $checkedDashboard = false): OnlineOrder
     {
         if (! $this->enabled()) {
             throw new InvalidOrderTransition('Pemesanan kurir lewat Biteship belum aktif. Pesan manual di aplikasinya.');
         }
         $actor = OrderActor::user($user);
-        $reserved = $this->fulfillment->startBiteshipBooking($order, $revision, $actor, $courier);
+        $reserved = $this->fulfillment->startBiteshipBooking($order, $revision, $actor, $courier, $checkedDashboard);
         $attempt = (int) $reserved->courier_booking['attempt'];
         try {
             $result = $this->client->createOrder($this->payload($reserved, $courier, $attempt));
         } catch (RuntimeException $failure) {
             $reason = self::reason($failure->getMessage());
-            $this->fulfillment->finishBiteshipBooking($reserved, $actor, $attempt, null, $reason);
-            throw new InvalidOrderTransition('Kurir belum terpesan: '.$reason);
+            // No answer (or an unreadable one) may still mean Biteship booked the driver.
+            $unsure = in_array($failure->getMessage(), ['biteship_unavailable', 'biteship_invalid_order'], true);
+            $this->fulfillment->finishBiteshipBooking($reserved, $actor, $attempt, null, $reason, $unsure);
+            throw new InvalidOrderTransition(($unsure ? 'Hasil pemesanan belum pasti: ' : 'Kurir belum terpesan: ').$reason);
         }
 
         return $this->fulfillment->finishBiteshipBooking($reserved, $actor, $attempt, $result);
@@ -106,7 +108,7 @@ class BiteshipCourier
             'origin_postal_code' => (int) $origin['postal_code'],
             'origin_coordinate' => ['latitude' => $origin['latitude'], 'longitude' => $origin['longitude']],
             // ORD-14: the driver can always reach the store, whatever number the courier app shows.
-            'origin_note' => mb_substr('Pesanan '.$order->code.'.'.($adminPhone !== '' ? ' Ada kendala? WhatsApp admin toko '.InquiryWhatsApp::localNumber($adminPhone).'.' : ''), 0, 100),
+            'origin_note' => mb_substr('Pesanan '.$order->code.'.'.($adminPhone !== '' ? ' Ada kendala? WhatsApp admin toko '.PhoneNumber::local($adminPhone).'.' : ''), 0, 100),
             'destination_contact_name' => mb_substr((string) $order->customer_name, 0, 100),
             'destination_contact_phone' => $phone($order->customer_phone),
             'destination_address' => mb_substr((string) $order->address, 0, 300),

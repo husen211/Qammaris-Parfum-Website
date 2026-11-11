@@ -117,7 +117,7 @@ class AdminOnlineOrderV2Controller extends Controller
             ->orderBy('name')->limit(8)->get();
 
         return response()->json(['items' => $customers->map(fn (Customer $customer) => [
-            'id' => $customer->id, 'name' => $customer->name, 'phone' => '0'.substr($customer->phone, 2),
+            'id' => $customer->id, 'name' => $customer->name, 'phone' => PhoneNumber::local($customer->phone),
             'addresses' => $customer->addresses->map(fn ($address) => [
                 'id' => $address->id, 'label' => $address->label, 'type' => $address->type, 'address' => $address->address, 'postcode' => $address->postcode,
             ])->values(),
@@ -219,9 +219,9 @@ class AdminOnlineOrderV2Controller extends Controller
     /** ORD-14: book the instant courier through Biteship with the customer's checkout pin. */
     public function bookBiteship(Request $request, OnlineOrder $order, BiteshipCourier $biteship): RedirectResponse
     {
-        $data = $request->validate(['revision' => ['required', 'integer'], 'courier' => ['required', Rule::in(['gojek', 'grab'])]]);
+        $data = $request->validate(['revision' => ['required', 'integer'], 'courier' => ['required', Rule::in(['gojek', 'grab'])], 'checked_biteship' => ['nullable', 'boolean']]);
 
-        return $this->attempt($order, 'pengiriman', fn () => $biteship->book($order, (int) $data['revision'], $request->user(), $data['courier']),
+        return $this->attempt($order, 'pengiriman', fn () => $biteship->book($order, (int) $data['revision'], $request->user(), $data['courier'], (bool) ($data['checked_biteship'] ?? false)),
             'Kurir dipesan lewat Biteship. Status driver berubah otomatis.');
     }
 

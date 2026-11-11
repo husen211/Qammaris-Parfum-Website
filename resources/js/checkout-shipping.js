@@ -25,9 +25,14 @@ function setup(root) {
 
     // All options share one radio name, so picking J&T unchecks the instant courier; each delivery keeps its own pick.
     const picked = { [delivery()]: form.querySelector('[data-shipping-choice]:checked')?.value };
+    // The courier (GoSend, Grab) the customer chose survives a new price check for another pin.
+    const pickedProvider = {};
     form.addEventListener('change', (event) => {
-        if (event.target.matches?.('[data-shipping-choice]')) picked[delivery()] = event.target.value;
+        if (!event.target.matches?.('[data-shipping-choice]')) return;
+        picked[delivery()] = event.target.value;
+        pickedProvider[delivery()] = event.target.dataset.provider;
     });
+    let quoteRun = 0;
 
     const announce = () => form.dispatchEvent(new Event('shipping-options'));
 
@@ -62,6 +67,7 @@ function setup(root) {
         const node = template.content.firstElementChild.cloneNode(true);
         const input = node.querySelector('input');
         input.value = option.id;
+        input.dataset.provider = option.provider;
         input.dataset.charged = option.charged;
         input.dataset.price = option.price;
         node.querySelector('[data-option-label]').textContent = option.label;
@@ -78,6 +84,8 @@ function setup(root) {
     };
 
     const quote = async (panel, body) => {
+        // Only the latest price check may fill the panel; an older, slower answer is for a previous pin or area.
+        const run = ++quoteRun;
         const box = panel.querySelector('[data-shipping-options]');
         box.replaceChildren();
         offerManual(false);
@@ -91,20 +99,24 @@ function setup(root) {
                 body: JSON.stringify(body),
             });
             const data = await response.json().catch(() => ({}));
+            if (run !== quoteRun) return;
             reason = { 419: 'session', 429: 'busy' }[response.status] ?? data.reason ?? 'unavailable';
             if (response.ok && data.options?.length) {
                 box.replaceChildren(...data.options.map(card));
-                box.querySelector(`input[value="${cheapest(data.options).id}"]`).checked = true;
-                picked[delivery()] = cheapest(data.options).id;
-                status(panel, data.options.length > 1 ? 'Pilih kurir. Yang termurah sudah dipilihkan.' : '');
+                const kept = data.options.find((option) => option.provider === pickedProvider[delivery()]);
+                const chosen = kept ?? cheapest(data.options);
+                box.querySelector(`input[value="${chosen.id}"]`).checked = true;
+                picked[delivery()] = chosen.id;
+                status(panel, data.options.length > 1 ? (kept ? 'Kurir pilihan Anda tetap dipilih; harga sudah diperbarui.' : 'Pilih kurir. Yang termurah sudah dipilihkan.') : '');
                 announce();
 
                 return;
             }
         } catch {
+            if (run !== quoteRun) return;
             reason = 'unavailable';
         } finally {
-            panel.removeAttribute('aria-busy');
+            if (run === quoteRun) panel.removeAttribute('aria-busy');
         }
         status(panel, reasonText(reason, body.mode), reason === 'cart' || reason === 'session');
         if (!['cart', 'session', 'busy'].includes(reason)) offerManual(true);

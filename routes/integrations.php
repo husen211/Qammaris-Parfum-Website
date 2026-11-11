@@ -13,7 +13,7 @@ Route::post('/integrations/qammaris-app/webhook', QammarisAppWebhookController::
 
 // ORD-14: Biteship order events; the secret path segment is the only credential Biteship offers.
 Route::post('/integrations/biteship/webhook/{secret}', BiteshipWebhookController::class)
-    ->where('secret', '[A-Za-z0-9_-]{32,128}')->middleware('throttle:120,1')->name('integrations.biteship.webhook');
+    ->where('secret', '[^/]{32,256}')->middleware('throttle:120,1')->name('integrations.biteship.webhook');
 
 // Private Order API v1 (ORD-02e, contract r4.1 baseline). No sessions or cookies; every request is HMAC-signed.
 Route::prefix('integrations/qammaris-app/orders/v1')->name('integrations.orders.')->middleware(AuthenticateOrderApi::class)->group(function () {

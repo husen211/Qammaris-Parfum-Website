@@ -301,7 +301,8 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 - **Dibayar dari saldo Biteship (dana Owner).** Saat driver mengambil paket, ongkir kurir tercatat otomatis sebagai "saldo Biteship (Owner)", tanpa memilih uang siapa dan tanpa reimburse.
 - **Status berubah sendiri** dari Biteship: Mencari driver → Driver ditemukan → Driver menuju toko → Paket diambil driver (= sudah diserahkan) → Dalam perjalanan → Sudah diterima (= diterima customer). Riwayat menulis "Biteship (otomatis)". Tombol **Perbarui status** membaca ulang dari Biteship kapan saja.
 - **Driver tidak ditemukan / dibatalkan kurir** sebelum paket diambil: langkah kurir kembali kosong dan staf bisa memesan ulang. Setelah paket diambil, status bermasalah (ditahan, dikembalikan) hanya dicatat di riwayat; staf mengecek dan mencatat kendala bila perlu.
-- **Batalkan kurir** bisa sebelum paket diambil, dengan alasan; saldo dikembalikan Biteship.
+- **Batalkan kurir** bisa sebelum paket diambil, dengan alasan; saldo dikembalikan Biteship. Selama kurir Biteship masih dipesan, pesanan tidak bisa dibatalkan dan kurir manual tidak bisa dicatat: batalkan kurir Biteship dulu.
+- **Hasil pemesanan belum pasti** (Biteship tidak menjawab): staf mencari kode pesanan (misalnya `QAM-0023-1`) di dashboard Biteship dulu, lalu mencentang "Sudah saya cek" sebelum bisa memesan ulang, supaya driver tidak dobel.
 - **Customer** melihat kurir, status singkat, nama driver dan plat, serta tombol **Lacak driver** di halaman pesanannya, ditambah "Driver akan menghubungi nomor Anda, 08…" dan tautan **Chat admin toko** bila belum bisa terhubung. Nomor HP driver hanya untuk staf.
 - **Kontak tanpa chat aplikasi kurir** (Owner 2026-11-11). Customer tidak perlu aplikasi Gojek/Grab:
   - driver menerima nomor HP customer (penerima), alamat, dan catatan pesanan, lalu menghubungi customer langsung;

@@ -49,6 +49,20 @@ Biteship dashboard (Owner's Chrome, read-only, 2026-11-11): the Owner's own test
 |---|---|
 | ![Contact, 390](after-390-admin-driver-contact.jpg) ![1440](after-1440-admin-driver-contact.jpg) | ![Customer, 390](after-390-customer-driver-contact.jpg) |
 
+## Review pass (2026-11-11, PR #161)
+
+A high-effort code review of the whole branch found 10 points; all were fixed with tests:
+- cancelling an order, or recording a manual/App courier, is refused while a Biteship driver is booked;
+- a booking without a readable answer is "belum pasti" and needs the dashboard check before booking again;
+- J&T labels come from the session's Biteship search;
+- the area label is plain text in WhatsApp;
+- the webhook path accepts any secret format;
+- the customer payment choice is throttled;
+- only the newest checkout price answer is shown, and the customer's chosen courier stays chosen on a new price check;
+- local phone formatting moved to `PhoneNumber::local()`.
+
+Full suite after the fixes: 857 passed, 10 skipped, 3 known local-only failures; JS 103 passed.
+
 ## UX notes
 
 - One primary action per state: "Pesan kurir sekarang" while unbooked; once booked, the status card leads. Owner review 2026-11-11: no "Sudah diserahkan ke kurir" for a Biteship driver (the pickup is the handover; the card says so), none before staff choose Biteship or the manual path, and no "Tandai diterima customer" while Biteship delivers.

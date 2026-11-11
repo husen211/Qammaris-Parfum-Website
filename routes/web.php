@@ -86,7 +86,7 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
     Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
     // ORD-13: the customer picks transfer or QRIS and opens WhatsApp to send the proof.
-    Route::post('/pesanan/{token}/bayar', [OnlineOrderController::class, 'pay'])->name('orders.customer.pay');
+    Route::post('/pesanan/{token}/bayar', [OnlineOrderController::class, 'pay'])->middleware('throttle:10,1')->name('orders.customer.pay');
     Route::post('/tugas-pesanan/{token}/langkah', [OnlineOrderStaffController::class, 'advance'])->name('orders.staff.advance');
     Route::post('/tugas-pesanan/{token}/talangan', [OnlineOrderStaffController::class, 'recordAdvance'])->name('orders.staff.advance-cost');
 });

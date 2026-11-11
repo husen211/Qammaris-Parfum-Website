@@ -3,7 +3,7 @@
 @php
     $card = 'rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5';
     $input = 'mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10 sm:text-sm';
-    $local = '0'.substr($customer->phone, 2);
+    $local = \App\Support\PhoneNumber::local($customer->phone);
 @endphp
 
 @section('content')

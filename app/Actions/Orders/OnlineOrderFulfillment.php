@@ -514,6 +514,10 @@ class OnlineOrderFulfillment
             }
             $this->assertPaid($order);
             $this->assertClaim($order, $actor, 'courier_booking');
+            // ORD-14: never a second courier next to a Biteship booking in progress or active.
+            if ($order->biteshipBusy()) {
+                throw new InvalidOrderTransition('Kurir sedang atau sudah dipesan lewat Biteship. Batalkan kurir Biteship dulu bila ingin memesan manual.');
+            }
             if ($order->courier_status === 'arrived' && $status === 'requested') {
                 throw new InvalidOrderTransition('Kurir sudah tiba.');
             }
@@ -537,9 +541,9 @@ class OnlineOrderFulfillment
      * ORD-14 step 1: reserve the Biteship booking under the order lock, so a double click or a second tab never books
      * two drivers. The call to Biteship happens after this, outside the lock (BiteshipCourier).
      */
-    public function startBiteshipBooking(OnlineOrder $order, int $revision, OrderActor $actor, string $courier): OnlineOrder
+    public function startBiteshipBooking(OnlineOrder $order, int $revision, OrderActor $actor, string $courier, bool $checkedDashboard = false): OnlineOrder
     {
-        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $courier): void {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $courier, $checkedDashboard): void {
             $this->assertActive($order);
             if ($actor->user === null) {
                 throw new OrderActionNotAllowed('Kurir Biteship dipesan dari halaman pesanan Website.');
@@ -556,6 +560,11 @@ class OnlineOrderFulfillment
             if (($booking['state'] ?? null) === 'booking' && now()->getTimestamp() - (int) ($booking['started_at'] ?? 0) < 120) {
                 throw new InvalidOrderTransition('Kurir sedang dipesan. Tunggu sebentar, lalu muat ulang halaman.');
             }
+            // Biteship may have created the order although its answer never arrived: book again only after checking.
+            if (in_array($booking['state'] ?? null, ['booking', 'unsure'], true) && ! $checkedDashboard) {
+                throw new OrderValidationFailed('Cek dulu dashboard Biteship: pastikan belum ada pesanan '.$order->code.', lalu centang konfirmasinya.',
+                    ['checked_biteship' => 'Wajib dicentang']);
+            }
             if (($booking['state'] ?? null) === 'active' || $order->courier_status !== 'unassigned') {
                 throw new InvalidOrderTransition('Kurir sudah dipesan. Batalkan dulu bila perlu memesan ulang.');
             }
@@ -568,16 +577,16 @@ class OnlineOrderFulfillment
     }
 
     /** ORD-14 step 2: what Biteship answered for that reservation; a late answer for an older attempt is ignored. */
-    public function finishBiteshipBooking(OnlineOrder $order, OrderActor $actor, int $attempt, ?array $result, ?string $error = null): OnlineOrder
+    public function finishBiteshipBooking(OnlineOrder $order, OrderActor $actor, int $attempt, ?array $result, ?string $error = null, bool $unsure = false): OnlineOrder
     {
-        return $this->run($order, null, $actor, function (OnlineOrder $order) use ($attempt, $result, $error): void {
+        return $this->run($order, null, $actor, function (OnlineOrder $order) use ($attempt, $result, $error, $unsure): void {
             $booking = $order->courier_booking ?? [];
             if (($booking['state'] ?? null) !== 'booking' || ($booking['attempt'] ?? null) !== $attempt) {
                 return;
             }
             $label = self::biteshipLabel($booking['courier'] ?? null);
             if ($result === null) {
-                $order->courier_booking = ['state' => 'failed', 'error' => Str::limit((string) $error, 160), 'ended_at' => now()->getTimestamp()] + $booking;
+                $order->courier_booking = ['state' => $unsure ? 'unsure' : 'failed', 'error' => Str::limit((string) $error, 160), 'ended_at' => now()->getTimestamp()] + $booking;
                 $this->record('courier_booking_failed', $label.' · '.($error ?? 'Biteship tidak menjawab'));
 
                 return;
@@ -867,6 +876,10 @@ class OnlineOrderFulfillment
             }
             if ($order->lifecycle === 'completed') {
                 throw new InvalidOrderTransition('Pesanan yang sudah selesai tidak dapat dibatalkan.');
+            }
+            // ORD-14: a booked Biteship driver would still come (and be paid); cancel the courier first.
+            if ($order->handover_status === 'pending' && $order->biteshipBusy()) {
+                throw new InvalidOrderTransition('Kurir Biteship masih dipesan. Batalkan kurir dulu di bagian Pengiriman, lalu batalkan pesanan.');
             }
             if (! Gate::forUser($actor->user)->allows('orders.cancel', $order)) {
                 throw new OrderActionNotAllowed('Pesanan yang sudah ada pembayaran atau sudah diserahkan hanya dapat dibatalkan Super Admin.');

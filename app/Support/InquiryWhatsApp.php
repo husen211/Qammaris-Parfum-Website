@@ -97,7 +97,7 @@ final class InquiryWhatsApp
         // ORD-13: the priced courier says more than the delivery type (J&T also delivers inside Palu).
         $delivery = match ($quote['kind'] ?? null) {
             'instant' => $quote['label'].' (kurir instan)',
-            'jnt' => 'J&T ke '.($quote['destination']['area_label'] ?? '-'),
+            'jnt' => 'J&T ke '.$this->plainText((string) ($quote['destination']['area_label'] ?? '-')),
             default => config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-',
         };
 
@@ -153,7 +153,7 @@ final class InquiryWhatsApp
             'Pesanan '.$order->code.' ('.OnlineOrderFulfillment::biteshipLabel($booking['courier'] ?? null).').',
             '',
             'Penerima: '.$this->plainText((string) $order->customer_name),
-            'No. HP/WA penerima: '.self::localNumber($order->customer_phone),
+            'No. HP/WA penerima: '.PhoneNumber::local($order->customer_phone),
             'Alamat: '.$this->plainText((string) $order->address),
             $order->customer_note ? 'Catatan: '.$this->plainText($order->customer_note) : null,
             $order->location_url ? 'Titik antar: '.$order->location_url : null,
@@ -181,14 +181,6 @@ final class InquiryWhatsApp
             '',
             'Driver akan menghubungi nomor ini bila perlu. Status pesanan: '.route('orders.customer.show', $order->customer_token_encrypted),
         ], fn ($line) => $line !== null));
-    }
-
-    /** 62812… or +62 812… shown the way people type it: 0812…. */
-    public static function localNumber(?string $number): string
-    {
-        $normalized = PhoneNumber::normalize($number);
-
-        return $normalized === null ? (string) $number : (str_starts_with($normalized, '62') ? '0'.substr($normalized, 2) : $normalized);
     }
 
     public function availabilityLabel(string $availability): string

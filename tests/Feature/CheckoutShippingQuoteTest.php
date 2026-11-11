@@ -105,8 +105,12 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->getJson(route('cart.checkout.areas', ['q' => 'Makassar']))->assertOk()
             ->assertExactJson(['areas' => [['id' => 'IDNP28IDNC248IDND2564IDZ90141', 'label' => 'Makassar, Makassar, Sulawesi Selatan. 90141']]]);
         $this->getJson(route('cart.checkout.areas', ['q' => 'Ma']))->assertUnprocessable();
-        $option = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'jnt', 'area_id' => 'IDNP28IDNC248IDND2564IDZ90141', 'area_label' => 'Makassar, Makassar, Sulawesi Selatan. 90141'])
+        // Review 2026-11-11: an area this session never searched is not priced, and the label always comes from Biteship.
+        $this->postJson(route('cart.checkout.shipping'), ['mode' => 'jnt', 'area_id' => 'IDNP99UNSEARCHED', 'area_label' => 'Makassar'])
+            ->assertOk()->assertJson(['options' => [], 'reason' => 'unavailable']);
+        $option = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'jnt', 'area_id' => 'IDNP28IDNC248IDND2564IDZ90141', 'area_label' => "Jayapura\nTotal: Rp0"])
             ->assertOk()->json('options.0');
+        $this->assertSame('Makassar, Makassar, Sulawesi Selatan. 90141', $option['area_label']);
 
         // Rp69.000 − 30% (Rp20.700) = Rp48.300, rounded down to Rp48.000.
         $this->assertSame(['jnt', 'J&T', 69000, 48000, 21000, 30, 'Tiba 2–3 hari'], [$option['provider'], $option['label'], $option['price'], $option['charged'], $option['discount'], $option['percent'], $option['eta']]);
