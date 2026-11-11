@@ -314,7 +314,7 @@ function setup(root) {
         quote('instant', { mode: 'instant', latitude: pin[0], longitude: pin[1] });
     });
 
-    // ORD-17/18: kecamatan/kota search card. Typing searches after a short pause ("Mencari…" at once); the keyboard's
+    // ORD-17/18: kecamatan/kota search screen. Typing searches after a short pause ("Mencari…" at once); the keyboard's
     // Search key searches straight away and closes the keyboard so the results can be read and scrolled; the customer
     // always taps the result. Results are kept per query in the page and cached on the server.
     const areaCache = new Map();
@@ -425,24 +425,27 @@ function setup(root) {
         if (now) runAreaSearch(query);
         else areaTimer = setTimeout(() => runAreaSearch(query), 250);
     };
-    // The card always fits the space above the keyboard (the results scroll inside it) and never covers more than
-    // about 70% of the screen; with the keyboard closed it sits in the middle.
+    // On phones the full-screen search is exactly as tall as the space above the keyboard and follows the visible
+    // area when the browser shifts it, so the results scroll inside it and nothing jumps.
     const fitAreaCard = () => {
         const viewport = window.visualViewport;
-        const visible = viewport ? viewport.height : window.innerHeight;
-        const keyboard = visible < window.innerHeight * 0.8;
-        areaDialog.dataset.keyboard = keyboard ? 'open' : 'closed';
-        areaDialog.style.setProperty('--area-max', `${Math.max(240, Math.floor(Math.min(visible - 24, window.innerHeight * 0.72)))}px`);
+        if (!viewport) return;
+        areaDialog.style.setProperty('--area-h', `${Math.floor(viewport.height)}px`);
+        areaDialog.style.marginTop = window.matchMedia('(min-width: 640px)').matches ? '' : `${Math.max(0, Math.floor(viewport.offsetTop))}px`;
     };
     const openAreaSearch = () => {
         openDialog(areaDialog);
         fitAreaCard();
         window.visualViewport?.addEventListener('resize', fitAreaCard);
+        window.visualViewport?.addEventListener('scroll', fitAreaCard);
         areaSearch.value = '';
         showIntro();
         areaSearch.focus({ preventScroll: true });
     };
-    areaDialog.addEventListener('close', () => window.visualViewport?.removeEventListener('resize', fitAreaCard));
+    areaDialog.addEventListener('close', () => {
+        window.visualViewport?.removeEventListener('resize', fitAreaCard);
+        window.visualViewport?.removeEventListener('scroll', fitAreaCard);
+    });
     areaButton.addEventListener('click', openAreaSearch);
     areaSearch.addEventListener('input', () => searchAreas(areaSearch.value.trim()));
     areaSearch.addEventListener('keydown', (event) => {

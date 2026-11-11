@@ -328,7 +328,7 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
 - Ringkasan checkout menulis **Total** (produk + paperbag + ongkir yang dipilih), bukan "Total sementara". Teks keranjang dan checkout dibuat singkat (ORD-18).
 - Kecamatan dan kode pos pesanan diisi dari tujuan yang dicari, untuk kurir instan maupun J&T.
 - **Pencarian kecamatan/kota (ORD-17, diperbaiki ORD-18):**
-  - membuka kartu pencarian (bukan layar penuh, paling tinggi sekitar 70% layar, di tengah saat keyboard tertutup), tanpa daftar Palu di awal;
+  - membuka layar pencarian penuh di HP (panel di tengah di desktop), setinggi area di atas keyboard, tanpa daftar Palu di awal;
   - menampilkan semua hasil Biteship (paling banyak 10) dalam daftar yang bisa di-scroll; bila 10 hasil, ada saran mengetik lebih lengkap;
   - tombol Search/Enter di keyboard hanya mencari dan menutup keyboard; customer selalu mengetuk sendiri hasilnya;
   - hasil pencarian disimpan 30 hari; area yang pernah dicari tetap bisa dihitung ongkirnya.
