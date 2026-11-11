@@ -71,6 +71,10 @@ function setup(root) {
         input.dataset.charged = option.charged;
         input.dataset.price = option.price;
         node.querySelector('[data-option-label]').textContent = option.label;
+        const logo = node.querySelector('[data-option-logo]');
+        const logoUrl = config.logos?.[option.provider];
+        if (logoUrl) logo.src = logoUrl; else logo.removeAttribute('src');
+        logo.hidden = !logoUrl;
         node.querySelector('[data-option-eta]').textContent = option.eta ?? '';
         const discount = node.querySelector('[data-option-discount]');
         discount.textContent = discountText(option);

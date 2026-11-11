@@ -57,6 +57,7 @@
                 </div>
                 @if ($received > 0)<p class="text-sm text-gray-600">Sudah diterima {{ $rp($received) }} · sisa {{ $rp($remainingCents) }}</p>@endif
                 <p class="mt-1 text-sm text-gray-700">Cara bayar: <strong>{{ $order->payment_preference ? (config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference) : 'belum dipilih customer' }}</strong></p>
+                @include('admin.orders.v2._payment-deadline')
                 <p class="mt-1 text-xs text-gray-500">Rekening dan QRIS sudah tampil di halaman pesanan customer. Cek bukti bayar di chat WhatsApp, lalu tandai lunas.</p>
                 @if (! $hasPaymentAccount)
                     <p class="mt-2 text-xs text-amber-900">Belum ada rekening resmi terverifikasi; customer diminta menunggu nomor rekening dari admin.@can('orders.payment-accounts') <a href="{{ route('admin.orders.payment-accounts.index') }}" class="underline underline-offset-2">Atur rekening</a>@endcan</p>
@@ -70,6 +71,7 @@
                     <strong class="text-xl tabular-nums">{{ $rp($totalCents) }}</strong>
                 </div>
                 @if ($received > 0)<p class="text-sm text-gray-600">Sudah diterima {{ $rp($received) }} · sisa {{ $rp($remainingCents) }}</p>@endif
+                @include('admin.orders.v2._payment-deadline')
                 @if ($order->payment_preference)
                     <p class="mt-1 text-sm text-gray-700">Customer memilih <strong>{{ config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference }}</strong> <span class="text-gray-500">(boleh berubah lewat chat)</span></p>
                 @endif

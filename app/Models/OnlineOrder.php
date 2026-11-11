@@ -77,6 +77,7 @@ class OnlineOrder extends Model
         'shipping_estimate' => 'decimal:2',
         'shipping_quote' => 'array',
         'courier_booking' => 'array',
+        'payment_due_at' => 'datetime',
         'packaging_fee' => 'decimal:2',
         'staff_advance_amount' => 'decimal:2',
         'staff_reimbursed_at' => 'datetime',

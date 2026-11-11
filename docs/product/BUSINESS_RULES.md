@@ -316,6 +316,15 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 
 Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-biteship.md).
 
+### Logo kurir dan bank, batal otomatis bila belum dibayar (ORD-15, Owner 2026-11-11)
+
+- **Logo:** checkout menampilkan logo Gojek dan Grab di samping "Kurir instan", logo J&T di samping "J&T", dan logo kurir di setiap pilihan harga. Rekening BRI memakai logo BRI asli; bank lain tetap tanda warna. File logo dari Wikimedia Commons (public domain).
+- **Batal otomatis 48 jam:** pesanan (website maupun buatan admin) yang sudah bisa dibayar tetapi **belum menerima uang sama sekali** dibatalkan otomatis 48 jam setelah pertama kali bisa dibayar:
+  - bisa dibayar berarti total sudah final, dan pesanan sudah dikonfirmasi atau pesanan website boleh langsung bayar;
+  - pesanan yang **sedang Keep**, sudah ada **pembayaran sebagian**, atau sudah diserahkan tidak pernah dibatalkan otomatis.
+- Customer melihat "Bayar sebelum (hari, tanggal, jam WITA). Lewat dari itu, pesanan dibatalkan otomatis." Staf melihat "Batal otomatis bila belum dibayar sampai …" di kartu Konfirmasi/Pembayaran. Riwayat menulis "Sistem (otomatis)".
+- Pesanan yang sudah menunggu bayar saat fitur ini dirilis mendapat 48 jam dihitung dari rilis. Saklar `ORDERS_UNPAID_CANCEL_HOURS` (0 = mati).
+
 ### Status pesanan terpisah (ORD-02c, branch review)
 
 - Pembayaran, persiapan, kurir/J&T, penyerahan, dan diterima dicatat sebagai status terpisah.

@@ -21,6 +21,7 @@
         @php($multiple = $order->items->where('quantity', '>', 1))
         @if ($order->payableBeforeConfirmation())
             <p class="mt-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-900" data-pay-now-note>Customer sudah bisa bayar langsung (semua produk 1 pcs, ongkir final). Setelah bukti bayar masuk di WhatsApp: konfirmasi pesanan, lalu Tandai Lunas.</p>
+            @include('admin.orders.v2._payment-deadline')
         @elseif ($multiple->isNotEmpty())
             <p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" data-stock-check-note>Perlu cek stok: <strong>{{ $multiple->map(fn ($item) => $item->label().' × '.$item->quantity)->join(', ') }}</strong>. Customer bisa bayar setelah pesanan dikonfirmasi.</p>
         @endif

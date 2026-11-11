@@ -141,6 +141,13 @@
                         <button type="button" data-copy-account="{{ (int) \App\Support\Rupiah::minorUnits($order->customerTotal()) / 100 }}" data-copy-done="Total disalin." class="inline-flex min-h-10 items-center border border-brand-black bg-white px-2.5 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin</button></span>
                 </div>
                 @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.</p>@endif
+                {{-- ORD-15 (Owner 2026-11-11): unpaid orders are cancelled automatically after the deadline. --}}
+                @if ($receivedCents === 0 && config('orders.unpaid_cancel_hours') > 0 && $order->keep_status !== 'active')
+                    <p class="mt-2 flex items-start gap-2 text-sm leading-6 text-gray-700" data-payment-deadline>
+                        <svg aria-hidden="true" class="mt-1 h-4 w-4 shrink-0 text-[#8A6A2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        <span>@if ($order->payment_due_at)Bayar sebelum <strong class="text-brand-black">{{ $order->payment_due_at->timezone('Asia/Makassar')->locale('id')->translatedFormat('l, j M Y, H.i') }} WITA</strong>.@else Bayar dalam {{ config('orders.unpaid_cancel_hours') }} jam.@endif Lewat dari itu, pesanan dibatalkan otomatis.</span>
+                    </p>
+                @endif
                 <form method="POST" action="{{ route('orders.customer.pay', $token) }}" class="mt-4" data-pay-form>
                     @csrf
                     <fieldset>
