@@ -45,3 +45,15 @@ Full suite: 862 passed, 10 skipped, 3 known local-only failures. JS: 109 passed.
 |---|---|
 | ![Area field before](../ord-16/after-390-area-jnt.jpg) | ![Quick picks 390](after-390-area-quick-picks.jpg) ![Results 1440](after-1440-area-results.jpg) |
 | ![Pin before](../ord-16/after-390-options.jpg) | ![Pin preview 390](after-390-pin-preview.jpg) ![Mismatch 390](after-390-pin-mismatch.jpg) |
+
+## Live (qammarisparfum.id, after PR #169)
+
+One available product in the cart, "Dikirim ke alamat":
+
+- the label reads "Metode pengiriman" and the search screen opened with 8 quick picks;
+- typing "Palu Barat" and pressing Enter at once picked Palu Barat and priced J&T from Biteship live;
+- the pin endpoint answered "Palu Selatan" for a Palu Selatan point.
+
+The cart was cleared and no order was placed.
+
+![Live 390](live-390-area-jnt.jpg)
