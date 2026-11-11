@@ -56,17 +56,24 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'Content-Type: application/j
 
 **(Biteship)** With Mode Testing off: Pengaturan → API → Webhook URL. Paste the URL; Biteship sends a test with an empty body and the site answers 200. Then clear the terminal scrollback.
 
-## 5. Turn on and test with one real order (quiet hour, about 30 minutes)
+## 5. Turn on, check prices, first customer order is the courier test
+
+Owner 2026-11-11 ("cara A"): no test order of our own. The Owner checks prices on the live checkout, and the first real customer order with an instant courier is the booking test, with staff briefed. Every failure has a fallback:
+- no price → "Ongkir dikonfirmasi admin";
+- booking refused → Biteship's reason and "Pesan manual di aplikasi kurir";
+- no webhook → "Perbarui status".
 
 1. **(server)** `ORDERS_SHIPPING_QUOTES=true` in `.env`, then `php artisan config:cache`.
-2. From the Owner's phone (Android, and an iPhone if one is available), over the real site:
-   - Checkout → Kurir instan: the location pop-up, the map, GoSend/GrabExpress prices with the discount, then J&T for another city.
-   - Order one real, cheap item to a nearby address the Owner controls. Check the WhatsApp message, the order link, and the BRI account on the payment page.
-3. Staff on the store laptop, as on any order:
-   - Konfirmasi → Tandai Lunas (after the transfer arrives) → packing → **Pesan kurir sekarang**;
-   - check that statuses change **without** "Perbarui status" (the webhook works), and try "Chat driver" and "Kabari customer";
+2. From the Owner's phone (Android, and an iPhone if one is available), on the real site, **without placing an order**:
+   - Checkout → Kurir instan: the location pop-up, the map, and GoSend/GrabExpress prices with the discount;
+   - J&T: search a city and the price shows.
+
+   Each price check costs Rp5 from the Biteship balance.
+3. Brief staff (§6) before the store opens.
+4. On the first customer order with an instant courier, staff:
+   - press **Pesan kurir sekarang** and check that the statuses change by themselves (otherwise the webhook is not arriving: use "Perbarui status" and tell the agent);
    - **note whether the driver's number accepts WhatsApp or only calls** (masked number check).
-4. Check the result: after pickup the order shows "Diserahkan ke kurir", the courier cost is "saldo Biteship (Owner)" with no reimbursement, and the Biteship balance went down by the same amount.
+5. After pickup, check that the order shows "Diserahkan ke kurir", that the courier cost is "saldo Biteship (Owner)" with no reimbursement, and that the Biteship balance went down by the same amount.
 
 If anything is wrong: switch off (§7). Checkout goes back to "Ongkir dikonfirmasi staf" at once.
 
