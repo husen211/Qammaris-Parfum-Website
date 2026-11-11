@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Orders\BiteshipCourier;
 use App\Actions\Orders\OnlineOrderAdjustments;
 use App\Actions\Orders\OnlineOrderChangeRequests;
 use App\Actions\Orders\OnlineOrderCustomers;
 use App\Actions\Orders\OnlineOrderDetails;
 use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\RecordOnlineOrderMoney;
+use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderRevisionConflict;
 use App\Exceptions\OrderValidationFailed;
@@ -97,6 +99,7 @@ class AdminOnlineOrderV2Controller extends Controller
             'courierCostPayers' => $shipped ? OnlineOrderFulfillment::courierCostPayers($viewer, $courierCost) : [],
             'courierCostByOwner' => $viewer->isOwner(),
             'employeesStale' => $shipped && ! $viewer->isOwner() && $employees['stale'],
+            'biteshipEnabled' => app(BiteshipCourier::class)->enabled(),
         ])->header('Cache-Control', 'no-store, private')->header('Referrer-Policy', 'no-referrer');
     }
 
@@ -211,6 +214,34 @@ class AdminOnlineOrderV2Controller extends Controller
 
         return $this->attempt($order, 'pengiriman', fn () => $this->fulfillment->recordCourierCost($order, (int) $data['revision'], $this->actor($request), $cost['amount'], $cost['payer']),
             'Ongkir kurir disimpan.');
+    }
+
+    /** ORD-14: book the instant courier through Biteship with the customer's checkout pin. */
+    public function bookBiteship(Request $request, OnlineOrder $order, BiteshipCourier $biteship): RedirectResponse
+    {
+        $data = $request->validate(['revision' => ['required', 'integer'], 'courier' => ['required', Rule::in(['gojek', 'grab'])]]);
+
+        return $this->attempt($order, 'pengiriman', fn () => $biteship->book($order, (int) $data['revision'], $request->user(), $data['courier']),
+            'Kurir dipesan lewat Biteship. Status driver berubah otomatis.');
+    }
+
+    public function refreshBiteship(Request $request, OnlineOrder $order, BiteshipCourier $biteship): RedirectResponse
+    {
+        return $this->attempt($order, 'pengiriman', function () use ($order, $biteship) {
+            try {
+                $biteship->refresh($order);
+            } catch (\RuntimeException $failure) {
+                throw new InvalidOrderTransition('Status belum bisa diperbarui: '.BiteshipCourier::reason($failure->getMessage()));
+            }
+        }, 'Status kurir diperbarui dari Biteship.');
+    }
+
+    public function cancelBiteship(Request $request, OnlineOrder $order, BiteshipCourier $biteship): RedirectResponse
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'max:200']], ['reason.required' => 'Tulis alasan pembatalan kurir.']);
+
+        return $this->attempt($order, 'pengiriman', fn () => $biteship->cancel($order, $request->user(), $data['reason']),
+            'Kurir Biteship dibatalkan. Pesan ulang bila perlu.');
     }
 
     /** ORD-03: optional J&T QR photo, stored privately; never required for pickup. */

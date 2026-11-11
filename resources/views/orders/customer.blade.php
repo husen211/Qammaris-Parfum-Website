@@ -33,6 +33,33 @@
             </div>
         @endunless
 
+        {{-- ORD-14: the driver booked through Biteship, from booking until the parcel is received. --}}
+        @php($courierTrip = $order->isV2() && ($order->courier_booking['state'] ?? null) === 'active' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled' ? $order->courier_booking : null)
+        @if ($courierTrip)
+            <section class="mt-6 border border-gray-200 bg-white p-4" aria-labelledby="courier-title" data-customer-courier="{{ $courierTrip['status'] ?? '' }}">
+                <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">{{ \App\Actions\Orders\OnlineOrderFulfillment::biteshipLabel($courierTrip['courier'] ?? null) }}</p>
+                <h2 id="courier-title" class="mt-1 text-base font-semibold text-brand-black">{{ match ($courierTrip['status'] ?? null) {
+                    'allocated', 'picking_up' => 'Driver menuju toko untuk mengambil pesanan',
+                    'picked', 'in_transit' => 'Pesanan dalam perjalanan ke alamat Anda',
+                    'dropping_off' => 'Driver hampir sampai',
+                    'on_hold' => 'Pengiriman ditahan sementara. Admin akan menghubungi Anda.',
+                    'return_in_transit', 'returned' => 'Pesanan dikembalikan ke toko. Admin akan menghubungi Anda.',
+                    default => 'Mencari driver untuk pesanan Anda',
+                } }}</h2>
+                @if (! empty($courierTrip['driver_name']))
+                    <p class="mt-1 text-sm text-gray-700" data-customer-driver>Driver {{ $courierTrip['driver_name'] }}@if (! empty($courierTrip['driver_plate'])) · <span class="font-mono">{{ $courierTrip['driver_plate'] }}</span>@endif</p>
+                @endif
+                @if (! empty($courierTrip['link']))
+                    <a href="{{ $courierTrip['link'] }}" target="_blank" rel="noopener noreferrer" class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 border border-brand-black bg-white px-4 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black" data-customer-track>
+                        {{-- Lucide "map-pin"; docs/licenses/lucide.txt --}}
+                        <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                        Lacak driver
+                    </a>
+                @endif
+                <p class="mt-2 text-xs text-gray-500">Status diperbarui otomatis dari kurir. Muat ulang halaman untuk melihat yang terbaru.</p>
+            </section>
+        @endif
+
         {{-- ORD-04: receipt confirmation stays at the top while the parcel is on its way. --}}
         @if ($order->isV2() ? ($order->handover_status === 'handed_over' && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled') : ($order->stage === 'shipped' && $order->fulfillment !== 'pickup'))
             @php($jnt = $order->fulfillment === 'intercity')
@@ -361,7 +388,7 @@
         @else
 
             {{-- ADM-01: also right after a website checkout (draft), when the customer is already in the WhatsApp chat. --}}
-            @if ($order->fulfillment === 'local_delivery' && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled' && ! $locationUrl && \App\Models\StoreInfo::usesTestWhatsapp())
+            @if ($order->fulfillment === 'local_delivery' && ! $order->location_url && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled' && ! $locationUrl && \App\Models\StoreInfo::usesTestWhatsapp())
                 <p class="mt-6 border border-dashed border-gray-300 p-3 text-xs leading-5 text-gray-600" data-location-test-note>Mode uji: tombol Kirim Sharelok tampil di website live. Di sini WhatsApp toko sengaja tidak aktif.</p>
             @endif
             @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')

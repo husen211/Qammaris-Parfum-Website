@@ -48,7 +48,8 @@ class OnlineOrderController extends Controller
         $canEdit = $order->customerCanEdit() || $requestsChange;
         $editing = $canEdit && ($order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER
             || $request->boolean('ubah') || session()->has('errors'));
-        $locationUrl = $order->fulfillment === 'local_delivery'
+        // ORD-13: a delivery pin from checkout (or one staff saved) is already the location; no Sharelok is asked again.
+        $locationUrl = $order->fulfillment === 'local_delivery' && ! $order->location_url
             ? $whatsApp->textUrl($this->storeNumber(), $messages->customerLocation($order))
             : null;
 

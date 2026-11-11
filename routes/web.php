@@ -227,6 +227,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('courier', 'courier')->name('courier');
             Route::post('jnt', 'jnt')->name('jnt');
             Route::post('courier-cost', 'updateCourierCost')->name('courier-cost');
+            // ORD-14: instant courier through Biteship (book, re-read status, cancel before pickup).
+            Route::post('biteship', 'bookBiteship')->middleware('throttle:10,1')->name('biteship.book');
+            Route::post('biteship/refresh', 'refreshBiteship')->middleware('throttle:20,1')->name('biteship.refresh');
+            Route::post('biteship/cancel', 'cancelBiteship')->middleware('throttle:10,1')->name('biteship.cancel');
             // ORD-03: optional J&T QR (private file) and the customer-charged shipping fee.
             Route::post('jnt/qr', 'jntQr')->name('jnt.qr');
             Route::get('jnt/qr', 'showJntQr')->name('jnt.qr.show');

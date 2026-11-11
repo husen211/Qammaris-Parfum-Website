@@ -67,7 +67,7 @@ class OnlineOrder extends Model
         'driver_funding', 'payment_method', 'recorded_in_majoo', 'staff_note',
     ];
 
-    protected $hidden = ['customer_token_hash', 'customer_token_encrypted', 'staff_token_hash', 'staff_token_encrypted', 'shipping_quote'];
+    protected $hidden = ['customer_token_hash', 'customer_token_encrypted', 'staff_token_hash', 'staff_token_encrypted', 'shipping_quote', 'courier_booking'];
 
     protected $casts = [
         'customer_token_encrypted' => 'encrypted',
@@ -76,6 +76,7 @@ class OnlineOrder extends Model
         'shipping_fee' => 'decimal:2',
         'shipping_estimate' => 'decimal:2',
         'shipping_quote' => 'array',
+        'courier_booking' => 'array',
         'packaging_fee' => 'decimal:2',
         'staff_advance_amount' => 'decimal:2',
         'staff_reimbursed_at' => 'datetime',
@@ -288,6 +289,16 @@ class OnlineOrder extends Model
         return $this->isV2() && $this->source === 'website' && $this->lifecycle === 'draft'
             && (bool) config('orders.shipping_quotes.enabled') && OnlineOrderStepper::totalIsFinal($this)
             && $this->items->every(fn (OnlineOrderItem $item) => $item->quantity === 1);
+    }
+
+    /** ORD-14: a store-booked instant courier with the customer's checkout pin can be booked through Biteship. */
+    public function biteshipBookable(): bool
+    {
+        $quote = $this->shipping_quote;
+
+        return $this->isV2() && $this->fulfillment === 'local_delivery' && $this->courier_booking_responsibility === 'store'
+            && $this->handover_status === 'pending' && ($quote['kind'] ?? null) === 'instant'
+            && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null);
     }
 
     /** ORD-04/ORD-13: the customer page shows how to pay: final total, unpaid, and confirmed or payable before confirmation. */

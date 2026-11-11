@@ -48,6 +48,20 @@
     @elseif ($order->lifecycle !== 'cancelled' && $remainingCents > 0)
         @if (! $totalFinal)
             <p class="mt-3 text-sm text-gray-700">{{ $order->shipping_payer ? 'Isi nominal ongkir dulu supaya total pembayaran final.' : 'Isi ongkir dan metode pembayarannya dulu supaya total pembayaran final.' }}</p>
+        @elseif ($order->source === 'website')
+            {{-- ORD-14 (Owner 2026-11-11): a website customer already sees the total, accounts and QRIS on their order page and sends the proof in WhatsApp; staff only check it and mark paid. --}}
+            <div class="mt-3 rounded-lg bg-gray-50 p-3" data-payment-website>
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <span class="text-sm text-gray-700">Total pembayaran</span>
+                    <strong class="text-xl tabular-nums">{{ $rp($totalCents) }}</strong>
+                </div>
+                @if ($received > 0)<p class="text-sm text-gray-600">Sudah diterima {{ $rp($received) }} · sisa {{ $rp($remainingCents) }}</p>@endif
+                <p class="mt-1 text-sm text-gray-700">Cara bayar: <strong>{{ $order->payment_preference ? (config('orders.payment_preferences')[$order->payment_preference] ?? $order->payment_preference) : 'belum dipilih customer' }}</strong></p>
+                <p class="mt-1 text-xs text-gray-500">Rekening dan QRIS sudah tampil di halaman pesanan customer. Cek bukti bayar di chat WhatsApp, lalu tandai lunas.</p>
+                @if (! $hasPaymentAccount)
+                    <p class="mt-2 text-xs text-amber-900">Belum ada rekening resmi terverifikasi; customer diminta menunggu nomor rekening dari admin.@can('orders.payment-accounts') <a href="{{ route('admin.orders.payment-accounts.index') }}" class="underline underline-offset-2">Atur rekening</a>@endcan</p>
+                @endif
+            </div>
         @else
             {{-- ORD-04: total + official accounts for the customer; staff still mark paid only after the proof. --}}
             <div class="mt-3 rounded-lg bg-gray-50 p-3" data-payment-instructions>
@@ -68,6 +82,8 @@
                     <p class="mt-2 text-xs text-amber-900">Belum ada rekening resmi terverifikasi; instruksi meminta customer menunggu nomor rekening dari admin.@can('orders.payment-accounts') <a href="{{ route('admin.orders.payment-accounts.index') }}" class="underline underline-offset-2">Atur rekening</a>@endcan</p>
                 @endif
             </div>
+        @endif
+        @if ($totalFinal)
             {{-- ADM-03 (Owner 2026-10-21): marking paid opens a short check; the payment must already be in the cashier (Majoo). --}}
             <form method="POST" action="{{ route('admin.orders.v2.payments', $order) }}" class="mt-3 space-y-3" data-paid-form>
                 @csrf {!! $hidden('pembayaran') !!}

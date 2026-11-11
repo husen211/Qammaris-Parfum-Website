@@ -7,8 +7,9 @@ use RuntimeException;
 use Throwable;
 
 /**
- * ORD-13: the two Biteship calls checkout needs (area search and courier rates). Failures surface as one
- * RuntimeException code and never carry the key, the request or the response body.
+ * ORD-13: the two Biteship calls checkout needs (area search and courier rates); ORD-14: booking, reading and
+ * cancelling an instant courier. Failures surface as a RuntimeException code (or Biteship's short refusal for a
+ * booking) and never carry the key, the request or the response body.
  */
 class BiteshipClient
 {
@@ -62,7 +63,56 @@ class BiteshipClient
         return $rates;
     }
 
-    private function call(string $method, string $path, array $data): array
+    /**
+     * ORD-14: book a courier. Returns the order as normalised by order(); a refusal throws with Biteship's own
+     * message (e.g. balance or account), never the key or the request.
+     */
+    public function createOrder(array $body): array
+    {
+        return $this->normalise($this->call('post', '/v1/orders', $body, keepError: true));
+    }
+
+    /** @return array{id: string, status: string, price: ?int, company: ?string, link: ?string, driver_name: ?string, driver_phone: ?string, driver_plate: ?string, waybill: ?string} */
+    public function order(string $id): array
+    {
+        return $this->normalise($this->call('get', '/v1/orders/'.rawurlencode($id), []));
+    }
+
+    public function cancelOrder(string $id, string $reason): array
+    {
+        // The cancel answer may leave out the courier block; the id is the one that was cancelled.
+        return $this->normalise(['id' => $id] + $this->call('post', '/v1/orders/'.rawurlencode($id).'/cancel',
+            ['cancellation_reason_code' => 'others', 'cancellation_reason' => mb_substr($reason, 0, 200)], keepError: true));
+    }
+
+    /** Biteship writes statuses as "picking_up" or "pickingUp"; both become picking_up. */
+    public static function status(?string $status): string
+    {
+        return strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', trim((string) $status)));
+    }
+
+    private function normalise(array $order): array
+    {
+        $courier = is_array($order['courier'] ?? null) ? $order['courier'] : [];
+        $text = fn ($value, int $max = 160) => is_string($value) && trim($value) !== '' ? mb_substr(trim($value), 0, $max) : null;
+        if (! is_string($order['id'] ?? null) || ! preg_match('/^[A-Za-z0-9_-]{1,64}$/', $order['id'])) {
+            throw new RuntimeException('biteship_invalid_order');
+        }
+
+        return [
+            'id' => $order['id'],
+            'status' => self::status($order['status'] ?? null),
+            'price' => is_numeric($order['price'] ?? null) ? (int) $order['price'] : null,
+            'company' => $text($courier['company'] ?? null, 40),
+            'link' => is_string($courier['link'] ?? null) && str_starts_with($courier['link'], 'https://') ? mb_substr($courier['link'], 0, 500) : null,
+            'driver_name' => $text($courier['driver_name'] ?? $courier['name'] ?? null, 80),
+            'driver_phone' => $text($courier['driver_phone'] ?? $courier['phone'] ?? null, 30),
+            'driver_plate' => $text($courier['driver_plate_number'] ?? null, 20),
+            'waybill' => $text($courier['waybill_id'] ?? null, 60),
+        ];
+    }
+
+    private function call(string $method, string $path, array $data, bool $keepError = false): array
     {
         if (! $this->configured()) {
             throw new RuntimeException('biteship_not_configured');
@@ -84,7 +134,9 @@ class BiteshipClient
             return ['pricing' => []];
         }
         if (! $response->successful() || ! is_array($payload) || ($payload['success'] ?? null) !== true) {
-            throw new RuntimeException('biteship_unavailable');
+            // Booking refusals carry Biteship's short reason for staff; anything else stays generic.
+            $reason = $keepError && is_array($payload) && is_string($payload['error'] ?? null) ? mb_substr(strip_tags($payload['error']), 0, 160) : null;
+            throw new RuntimeException($reason ?? 'biteship_unavailable');
         }
 
         return $payload;

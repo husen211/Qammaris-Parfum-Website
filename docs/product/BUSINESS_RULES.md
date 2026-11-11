@@ -245,7 +245,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 
 - Semua pekerjaan pesanan dilakukan di Website. Qammaris App hanya tampilan cadangan dan tempat reimburse masuk.
 - Peran:
-  - **Super Admin (Owner, dari Jakarta)** membuat pesanan dan mengirim link ke customer. Owner tidak perlu mengonfirmasi pembayaran, packing, atau uang siapa;
+  - **Super Admin (Owner, dari Jakarta)** membuat pesanan dan mengirim link ke customer. Owner tidak perlu mengonfirmasi pembayaran, packing, atau uang siapa, tetapi boleh mengerjakan packing bila perlu (ORD-14, Owner 2026-11-11);
   - **Staff Order** (Andi/Ikrar, satu akun bersama di laptop toko) mengerjakan pembayaran → packing → pesan kurir (ongkir + uang siapa) → serah terima.
 - Pesanan Online di App hanya untuk dilihat: tanpa "Dilakukan oleh", tombol langkah, atau "Catat ongkir", dengan tombol "Buka di Website". Link pesanan di grup WhatsApp membuka halaman pesanan Website ("Buka pesanan"), dan saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dimatikan saat rilis.
 - Langkah kurir dalam kota: **Kurir sudah dipesan → Sudah diserahkan ke kurir** (tanpa langkah "Kurir tiba").
@@ -256,7 +256,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Uang Andi/Ikrar otomatis menjadi reimburse karyawan itu di Qammaris App, **langsung disetujui, bukti opsional** (keputusan Owner). Owner tinggal membayar.
   - Pilihan karyawan diambil langsung dari karyawan aktif di Qammaris App dan disambungkan lewat ID akun. Karyawan baru atau yang berhenti otomatis ikut berubah. Ganti nama akun di App langsung terlihat di halaman pesanan Website, reimburse, dan ongkir pesanan orang itu.
   - Nama yang tidak cocok tidak membuat reimburse dan memberi notifikasi ke Owner.
-- Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin tidak mengerjakan packing.
+- Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin boleh mengerjakan packing (ORD-14, Owner 2026-11-11).
 - Uang Owner, Kasir, dan Customer bayar driver tidak membuat reimburse.
 - Semua isian rupiah di admin memakai pemisah ribuan (15.000).
 - **Notifikasi pesanan (ORD-09):** Super Admin dan Staff Order bisa mengaktifkan push notification per perangkat. Setiap ada pesanan baru dari checkout website, muncul notifikasi berisi kode, jumlah barang, total, dan "menunggu konfirmasi", tanpa nomor HP atau alamat. Ketuk notifikasi untuk membuka pesanannya.
@@ -294,6 +294,20 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
   - **QRIS statis** di-upload Super Admin di halaman Rekening pembayaran (PNG/JPG/WebP, minimal 300 × 300 piksel); sebelum ada, pilihan QRIS tampil "Segera tersedia".
 
 Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-biteship.md). Akun dan kunci: [runbook Biteship](../runbooks/BITESHIP.md).
+
+### Pesan kurir instan dari admin lewat Biteship (ORD-14, Owner 2026-11-11, saklar yang sama)
+
+- **Tombol "Pesan kurir sekarang"** muncul di Pengiriman untuk pesanan website dengan kurir instan dan titik antar dari checkout, setelah lunas dan dipacking, bila toko yang memesan kurir. Kurir pilihan customer sudah terpilih; staf boleh ganti ke GoSend/GrabExpress yang lain (misalnya driver tidak ditemukan). Ongkir customer tidak berubah.
+- **Dibayar dari saldo Biteship (dana Owner).** Saat driver mengambil paket, ongkir kurir tercatat otomatis sebagai "saldo Biteship (Owner)", tanpa memilih uang siapa dan tanpa reimburse.
+- **Status berubah sendiri** dari Biteship: Mencari driver → Driver ditemukan → Driver menuju toko → Paket diambil driver (= sudah diserahkan) → Dalam perjalanan → Sudah diterima (= diterima customer). Riwayat menulis "Biteship (otomatis)". Tombol **Perbarui status** membaca ulang dari Biteship kapan saja.
+- **Driver tidak ditemukan / dibatalkan kurir** sebelum paket diambil: langkah kurir kembali kosong dan staf bisa memesan ulang. Setelah paket diambil, status bermasalah (ditahan, dikembalikan) hanya dicatat di riwayat; staf mengecek dan mencatat kendala bila perlu.
+- **Batalkan kurir** bisa sebelum paket diambil, dengan alasan; saldo dikembalikan Biteship.
+- **Customer** melihat kurir, status singkat, nama driver dan plat, serta tombol **Lacak driver** di halaman pesanannya. Nomor HP driver hanya untuk staf.
+- **Jalur manual tetap ada:** "Pesan manual di aplikasi kurir" dan "Sudah diserahkan ke kurir". Pesanan tanpa titik dari checkout (dibuat staf), J&T, dan ambil di toko tetap seperti sebelumnya.
+- **Kartu Pembayaran pesanan website** di admin hanya menampilkan total, cara bayar pilihan customer, dan Tandai Lunas; rekening dan QRIS sudah tampil di halaman pesanan customer. Pesanan buatan staf tetap punya "Salin Total & Instruksi Pembayaran".
+- **Halaman customer tidak meminta Sharelok** bila pesanan sudah punya titik lokasi (dari checkout atau diisi staf).
+
+Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-biteship.md).
 
 ### Status pesanan terpisah (ORD-02c, branch review)
 

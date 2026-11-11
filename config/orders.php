@@ -36,7 +36,9 @@ return [
     'shipping_quotes' => [
         'enabled' => (bool) env('ORDERS_SHIPPING_QUOTES', false),
         // Pickup point (store pin in Biteship) and its Biteship postal area for J&T.
-        'origin' => ['latitude' => -0.8981125, 'longitude' => 119.8594844, 'postal_code' => 94221],
+        'origin' => ['latitude' => -0.8981125, 'longitude' => 119.8594844, 'postal_code' => 94221,
+            // ORD-14: pickup contact for Biteship drivers; empty uses the store name, phone and address in Info Toko.
+            'contact_name' => env('BITESHIP_ORIGIN_NAME', ''), 'contact_phone' => env('BITESHIP_ORIGIN_PHONE', ''), 'address' => env('BITESHIP_ORIGIN_ADDRESS', '')],
         // Owner 2026-11-11: every product counts as 800 g including box and bubble wrap.
         'item_weight_grams' => 800,
         'quote_minutes' => 30,

@@ -1,0 +1,33 @@
+# ADR-058 — Staff book the instant courier through Biteship
+
+Status: accepted (ORD-14, Owner 2026-11-11, card #160). Stage B of automatic ongkir; stage A (prices at checkout) is [ADR-057](ADR-057-checkout-shipping-quotes-biteship.md).
+
+## Context
+
+After ORD-13 a website order with an instant courier already has the customer's pin, the chosen courier (GoSend or GrabExpress) and a locked ongkir. Staff still opened the Gojek or Grab app, typed the address again, paid with their own money or the Owner's GoPay, and recorded "Kurir sudah dipesan" plus the fee and "uang siapa" (ORD-08). The Owner asked for one button in the admin, statuses that change by themselves, the driver visible to the customer, and a tidy page. Biteship (Starter plan) books Gojek and Grab instant couriers through `POST /v1/orders` from the Biteship balance and reports changes through webhooks (`order.status`, `order.price`, `order.waybill_id`); Biteship documents no webhook signature.
+
+Owner decisions (2026-11-11): build the admin booking before the release; J&T keeps the manual flow and employee reimbursement; Super Admin may pack; the admin payment card for a website order no longer repeats the instructions the customer already sees.
+
+## Decision
+
+- **Who and when.** Staff Order or Super Admin, on a website order with an instant `shipping_quote` and its pin (`OnlineOrder::biteshipBookable()`), store-booked, paid and packed, before handover. The customer's courier is preselected; staff may switch to the other (for example when no driver was found); the charged ongkir does not change.
+- **No double booking.** `OnlineOrderFulfillment::startBiteshipBooking` reserves the booking under the order lock (`courier_booking.state = booking`, attempt n, saved without a new revision). `BiteshipCourier::book` then calls Biteship outside the lock with `reference_id = <code>-<attempt>`, and `finishBiteshipBooking` records the answer: `active` (courier `requested`, provider `gosend`/`grab`, `courier_reference` = Biteship order id, event `courier_requested`) or `failed` with Biteship's short reason (event `courier_booking_failed`). A late answer for an older attempt is ignored. A reservation older than two minutes without an answer is shown as "belum pasti" and may be booked again after checking the Biteship dashboard.
+- **Statuses come from Biteship, never from a webhook body.** `POST /integrations/biteship/webhook/{secret}` (secret ≥ 32 characters, `BITESHIP_WEBHOOK_SECRET`; unknown or missing → 404) only reads `order_id`, finds the order by `courier_reference`, and re-reads the order from Biteship (`GET /v1/orders/{id}`). The admin button "Perbarui status" does the same. `applyBiteshipStatus`:
+  - driver details and early statuses (`confirmed`, `allocated`, `picking_up`) are saved quietly (no revision, no event, no App webhook);
+  - `picked`, `in_transit`, `dropping_off` or `delivered`: the handover (`handed_to = courier`, without the packed check, since the driver already has the parcel), and once the courier cost is recorded as `owner_fund` from the Biteship price (reporter "Biteship", no reimbursement);
+  - `delivered`: `delivery_status = delivered` (`confirmed_by = website`);
+  - `courier_not_found`, `rejected`, `cancelled`, `disposed` before pickup: the booking ends and the courier step is free again (`courier_status = unassigned`);
+  - after pickup, `on_hold`, returns or cancellation write an event asking staff to check and open an issue; nothing is reversed automatically.
+- **System actor.** Automatic changes use `OrderActor::biteship()` (`actor_type = system`, `source = biteship`, shown as "Biteship (otomatis)"). Only the Biteship operation accepts it (`run(..., allowSystem: true)`); every other operation still needs a person.
+- **Cancel** before pickup from the admin with a reason (`POST /v1/orders/{id}/cancel`, `cancellation_reason_code = others`); the event names the admin.
+- **The manual path stays.** "Pesan manual di aplikasi kurir" (the ORD-08 form) and "Sudah diserahkan ke kurir" remain as quiet fallbacks; orders without a pin (made by staff, J&T, pickup) are unchanged.
+- **Customer page** shows the courier, a plain status ("Mencari driver", "Driver menuju toko", "Pesanan dalam perjalanan"), the driver's name and plate, and "Lacak driver" (Biteship's tracking link). The driver's phone is shown to staff only.
+- **Payment card and packing** (same review). A website order's Pembayaran card shows the total, the customer's chosen method and "Tandai Lunas", without the copy/send instructions block (still used for orders made by staff). The packing form is shown to Super Admin too; the server already allowed it.
+
+## Consequences
+
+- One click books the driver from the Owner's Biteship balance; the cost appears on the order without anyone choosing "uang siapa", and the App receives it as owner funding with no reimbursement (no contract change).
+- The store pays Biteship's price; the customer paid the locked charged ongkir. The difference is visible as before (`shipping_estimate`, `shipping_fee`, the recorded cost). A later `order.price` change after pickup is not applied to the recorded cost.
+- Statuses depend on webhooks reaching the server; when one is missed, "Perbarui status" or the next webhook catches up, and the manual handover button remains.
+- Biteship booking needs the account verification approved and enough balance; a refusal shows Biteship's reason and nothing changes on the order.
+- New nullable JSON column `online_orders.courier_booking` (hidden from `toArray()`, not serialized to the App). Rollback: turn `ORDERS_SHIPPING_QUOTES` off (hides the button) or remove the webhook URL in Biteship; the column can stay.

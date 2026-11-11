@@ -49,6 +49,17 @@ final class OrderActor
         return $this->user === null && $this->appRole === 'customer';
     }
 
+    /** ORD-14: courier status pushed by Biteship (webhook or "Perbarui status"); only the Biteship courier operations accept it. */
+    public static function biteship(): self
+    {
+        return new self(null, null, 'Biteship', 'system');
+    }
+
+    public function isSystem(): bool
+    {
+        return $this->user === null && $this->appRole === 'system';
+    }
+
     /** Owner-level for override rules: Super Admin on the Website, `owner` in the App. */
     public function isOwner(): bool
     {
@@ -71,6 +82,7 @@ final class OrderActor
         return match (true) {
             $this->user !== null => ['actor_type' => 'admin', 'source' => 'website', 'actor_user_id' => $this->user->id],
             $this->isCustomer() => ['actor_type' => 'customer', 'source' => 'customer'],
+            $this->isSystem() => ['actor_type' => 'system', 'source' => 'biteship'],
             default => ['actor_type' => 'app', 'source' => 'app', 'actor_app_user_id' => $this->appUserId, 'actor_display_name' => $this->displayName,
                 'idempotency_key' => $this->idempotencyKey, 'request_id' => $this->requestId, 'delivery' => $this->delivery],
         };
