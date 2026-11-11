@@ -4,9 +4,9 @@ Checkout menghitung ongkir GoSend, GrabExpress, dan J&T lewat Biteship; staf mem
 
 ## Akun
 
-- Paket **Starter** (gratis): 100 pengiriman/bulan, 3 kurir aktif, 2 lokasi asal. API dibayar per permintaan (cek ongkir Rp5, lacak Rp10, peta Rp2) dari saldo Biteship.
+- Paket **Starter** (Rp0 per bulan): 100 pengiriman per periode bulanan, 3 kurir aktif, 2 lokasi asal, 10 retur. API dibayar per permintaan sejak permintaan pertama (cek ongkir Rp5, lacak Rp10, peta Rp2) dari saldo Biteship; ongkir kurir juga dari saldo. Tagihan → Ringkasan menampilkan periode berjalan ("Berakhir pada …" = akhir periode kuota bulan itu, mis. 11 Nov–11 Des 2026). Lebih dari 100 pengiriman per periode perlu naik paket.
 - Kurir terpasang: **Gojek, Grab, J&T**. Alamat jemput: toko Qammaris, Palu Barat, pin di Jl. Sis Aljufri (kode area Biteship 94221).
-- Verifikasi akun personal diajukan 2026-11-11. Pemesanan kurir lewat API (tahap B) baru bisa setelah disetujui.
+- Verifikasi akun personal diajukan 2026-11-11, sempat hilang setelah Owner mengganti nama profil, lalu diajukan ulang. Dicek 2026-11-11 malam: Perorangan/UMKM bertanda "Selesai" dan banner "Verifikasi Akunmu Sekarang" di dasbor sudah hilang. Hindari mengganti nama profil atau data rekening selama verifikasi.
 - Pemilik akun: Owner. Agen tidak membuat akun, tidak menyalin kunci, dan tidak mengubah saldo.
 
 ## Kunci API
