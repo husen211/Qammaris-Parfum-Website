@@ -37,7 +37,7 @@
         <h1 id="checkout-title" class="mt-4 font-mayluxa text-3xl text-brand-black md:text-4xl">Checkout</h1>
         <p class="mt-3 max-w-xl text-sm leading-6 text-gray-600">
             {{ $savesOrder
-                ? 'Lengkapi data penerima. Pesanan disimpan dengan nomor pesanan, lalu WhatsApp terbuka untuk konfirmasi stok'.($autoShipping ? ' dan pembayaran.' : ', ongkir, dan pembayaran.')
+                ? 'Lengkapi data penerima.'
                 : 'Lengkapi data penerima. Rincian produk dan alamat akan disiapkan untuk dikirim ke WhatsApp Qammaris.' }}
         </p>
         @if (session('error') || $errors->any())
@@ -193,7 +193,7 @@
                         <span class="min-w-0">Ongkir<span class="block text-xs font-semibold text-[#8A6A2E]" data-ongkir-discount hidden></span></span><span class="shrink-0 text-right tabular-nums"><s class="mr-1 text-xs text-gray-400" data-ongkir-price hidden></s><span data-ongkir-summary>{{ $delivery === 'local_delivery' && old('shipping_payment') === 'cash_to_driver' ? 'Dibayar langsung ke driver' : 'Menunggu konfirmasi staf' }}</span></span>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-3">
-                        <span class="text-sm text-gray-600" data-total-label>Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span></span><strong class="text-lg tabular-nums" data-running-total>{{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($subtotal) + (old('packaging') === 'paperbag' ? $paperbagFee * 100 : 0))) }}</strong>
+                        <span class="text-sm text-gray-600" data-total-label>Total</span><strong class="text-lg tabular-nums" data-running-total>{{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($subtotal) + (old('packaging') === 'paperbag' ? $paperbagFee * 100 : 0))) }}</strong>
                     </div>
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
@@ -201,8 +201,8 @@
                 <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 gap-3" @if ($autoShipping) data-label-check="{{ $needsStockCheck ? 'Pesan & minta cek stok' : 'Pesan & minta cek ongkir' }}" data-label-pay="{{ $submitLabel }}" @endif>@if ($whatsappAvailable && ! $autoShipping)<x-icon name="whatsapp" class="text-[1.2rem]" />@endif<span data-submit-label>{{ $submitLabel }}</span></button>
                 @if ($autoShipping)
                     <p class="mt-3 text-xs leading-5 text-gray-600" data-next-hint>{{ $needsStockCheck
-                        ? 'Ada produk lebih dari 1 pcs: admin mengecek stoknya dulu lewat WhatsApp, lalu cara bayar muncul di halaman pesanan.'
-                        : 'Setelah ini pilih transfer atau QRIS, lalu kirim bukti bayar lewat WhatsApp. Data penerima hanya dipakai untuk pesanan ini.' }}</p>
+                        ? 'Stok dicek admin dulu, lalu pesanan bisa dibayar.'
+                        : 'Bayar dengan transfer atau QRIS di langkah berikutnya.' }}</p>
                 @elseif ($savesOrder)
                     <p class="mt-3 text-xs leading-5 text-gray-600">Pesanan diproses setelah admin mengonfirmasi lewat WhatsApp. Data penerima disimpan hanya untuk mengurus pesanan ini dan hanya dapat dilihat tim Qammaris.</p>
                 @else
@@ -283,7 +283,6 @@ const syncTotal = (ongkir = undefined) => {
     paperbagSummary.querySelector('[data-paperbag-amount]').textContent = choice ? rupiah(fee) : 'Pilih di atas';
     const known = ongkir !== null && ongkir !== undefined;
     document.querySelector('[data-running-total]').textContent = rupiah(Number(paperbagSummary.dataset.subtotal) + fee + (known ? ongkir : 0));
-    document.querySelector('[data-total-label]').innerHTML = known ? 'Total' : 'Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span>';
 };
 orderForm?.querySelectorAll('[data-shipping-payment]').forEach((input) => input.addEventListener('change', syncOngkir));
 orderForm?.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncDelivery));

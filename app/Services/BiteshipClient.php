@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Throwable;
@@ -25,9 +26,9 @@ class BiteshipClient
     /** @return list<array{id: string, label: string}> */
     public function areas(string $input): array
     {
-        $payload = $this->call('get', '/v1/maps/areas', ['countries' => 'ID', 'input' => $input, 'type' => 'single']);
+        $payload = $this->call('get', '/v1/maps/areas', ['countries' => 'ID', 'input' => $input, 'type' => 'single'], retry: true);
         $areas = [];
-        foreach (array_slice(is_array($payload['areas'] ?? null) ? $payload['areas'] : [], 0, 8) as $area) {
+        foreach (array_slice(is_array($payload['areas'] ?? null) ? $payload['areas'] : [], 0, 20) as $area) {
             if (is_string($area['id'] ?? null) && preg_match('/^[A-Za-z0-9]{1,64}$/', $area['id']) && is_string($area['name'] ?? null)) {
                 $areas[] = ['id' => $area['id'], 'label' => mb_substr(trim($area['name']), 0, 160)];
             }
@@ -43,7 +44,7 @@ class BiteshipClient
      */
     public function rates(array $body): array
     {
-        $payload = $this->call('post', '/v1/rates/couriers', $body);
+        $payload = $this->call('post', '/v1/rates/couriers', $body, retry: true);
         $rates = [];
         foreach (is_array($payload['pricing'] ?? null) ? $payload['pricing'] : [] as $rate) {
             $price = $rate['price'] ?? null;
@@ -112,7 +113,8 @@ class BiteshipClient
         ];
     }
 
-    private function call(string $method, string $path, array $data, bool $keepError = false): array
+    /** ORD-18: `retry` repeats a price or area request once when the connection drops; never a booking. */
+    private function call(string $method, string $path, array $data, bool $keepError = false, bool $retry = false): array
     {
         if (! $this->configured()) {
             throw new RuntimeException('biteship_not_configured');
@@ -123,6 +125,9 @@ class BiteshipClient
                 ->withHeaders(['Authorization' => (string) config('services.biteship.key')])
                 ->connectTimeout(3)->timeout((int) config('services.biteship.timeout', 8))
                 ->withOptions(['allow_redirects' => false]);
+            if ($retry) {
+                $request = $request->retry(2, 300, fn ($exception) => $exception instanceof ConnectionException, throw: false);
+            }
             $url = rtrim((string) config('services.biteship.base_url'), '/').$path;
             $response = $method === 'get' ? $request->get($url, $data) : $request->asJson()->post($url, $data);
             $payload = strlen($response->body()) <= 512 * 1024 ? $response->json() : null;

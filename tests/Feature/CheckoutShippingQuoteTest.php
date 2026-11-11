@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderStepper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
@@ -243,6 +244,29 @@ class CheckoutShippingQuoteTest extends TestCase
         Http::assertSent(fn (HttpRequest $request) => str_starts_with($request->header('User-Agent')[0] ?? '', 'QammarisPerfumes/'));
         // Outside Palu and its surroundings nothing is asked.
         $this->getJson(route('cart.checkout.pin', ['latitude' => -5.14, 'longitude' => 119.42]))->assertUnprocessable();
+    }
+
+    public function test_an_area_from_an_earlier_search_still_prices_and_a_dropped_connection_is_retried(): void
+    {
+        $calls = 0;
+        Http::fake(function (HttpRequest $request) use (&$calls) {
+            if (str_contains($request->url(), '/v1/maps/areas')) {
+                return Http::response(['success' => true, 'areas' => [['id' => 'IDNP28IDNC248IDND2564IDZ90141', 'name' => 'Makassar, Makassar, Sulawesi Selatan. 90141']]]);
+            }
+            // ORD-18: the first price request loses its connection; the retry answers.
+            if (++$calls === 1) {
+                throw new ConnectionException('reset');
+            }
+
+            return Http::response($this->pricing([['jnt', 'ez', 69000, '2 - 3', 'days']]));
+        });
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        $this->getJson(route('cart.checkout.areas', ['q' => 'Makassar']))->assertOk();
+        // The session forgot it (many searches, or another tab): the site-wide memory of Biteship's label still prices it.
+        session()->forget('shipping_areas');
+        $this->postJson(route('cart.checkout.shipping'), ['mode' => 'jnt', 'area_id' => 'IDNP28IDNC248IDND2564IDZ90141'])
+            ->assertOk()->assertJsonPath('options.0.area_label', 'Makassar, Makassar, Sulawesi Selatan. 90141')->assertJsonPath('options.0.charged', 48000);
+        $this->assertSame(2, $calls);
     }
 
     public function test_discount_rules_round_down_and_respect_the_threshold_and_cap(): void

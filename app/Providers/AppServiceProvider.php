@@ -27,8 +27,8 @@ class AppServiceProvider extends ServiceProvider
         ]);
         // ORD-13: each price check and area search is a paid Biteship request; a customer needs a handful.
         RateLimiter::for('shipping-quote', fn (Request $request) => [
-            Limit::perMinute(12)->by('shipping-quote-min|'.$request->ip()),
-            Limit::perHour(120)->by('shipping-quote-hour|'.$request->ip()),
+            Limit::perMinute(30)->by('shipping-quote-min|'.$request->ip()),
+            Limit::perHour(300)->by('shipping-quote-hour|'.$request->ip()),
         ]);
         RateLimiter::for('shipping-area', fn (Request $request) => [
             Limit::perMinute(30)->by('shipping-area-min|'.$request->ip()),

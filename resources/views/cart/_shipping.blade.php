@@ -36,7 +36,7 @@
                 <input type="radio" name="receive" value="delivery" @checked($receive === 'delivery') required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-receive>
                 <span class="min-w-0 flex-1">
                     <span class="block text-base font-medium text-brand-black">Dikirim ke alamat</span>
-                    <span class="mt-0.5 block text-sm leading-5 text-gray-600">Instan di Palu, atau reguler ke seluruh Indonesia.</span>
+                    <span class="mt-0.5 block text-sm leading-5 text-gray-600">Diantar langsung oleh kurir.</span>
                     <span class="mt-2 flex flex-wrap items-center gap-3"><x-partner-logo name="gosend" class="h-4" /><x-partner-logo name="grab" class="h-4" /><x-partner-logo name="jnt" class="h-4" /></span>
                 </span>
             </label>
@@ -44,8 +44,10 @@
                 <input type="radio" name="receive" value="pickup" @checked($receive === 'pickup') required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-receive>
                 <span class="min-w-0 flex-1">
                     <span class="block text-base font-medium text-brand-black">Ambil di toko</span>
-                    <span class="mt-0.5 block text-sm leading-5 text-gray-600">Ambil sendiri di toko Qammaris setelah pesanan dikonfirmasi. Tanpa ongkir.</span>
+                    <span class="mt-0.5 block text-sm leading-5 text-gray-600">Datang setelah pesanan dikonfirmasi. Tanpa ongkir.</span>
                 </span>
+                {{-- ORD-18: a storefront mark, as the delivery choice shows the courier logos. --}}
+                <svg aria-hidden="true" class="mt-0.5 h-7 w-7 shrink-0 text-brand-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9 5 4h14l1.5 5"/><path d="M3.5 9a2.83 2.83 0 0 0 5.67 0 2.83 2.83 0 0 0 5.66 0 2.83 2.83 0 0 0 5.67 0"/><path d="M5 11.5V20h14v-8.5"/><path d="M10 20v-5h4v5"/></svg>
             </label>
         </div>
         @error('delivery') <p id="delivery-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
@@ -126,25 +128,27 @@
     <template data-option-template>@include('cart._shipping_option', ['option' => null, 'checked' => false])</template>
 </div>
 
-{{-- ORD-17: kecamatan/kota search. Full screen on phones (keyboard and list never fight), a centred panel on wider screens. --}}
-<dialog data-area-dialog aria-labelledby="area-dialog-title" class="m-0 h-dvh max-h-none w-full max-w-none bg-white p-0 text-brand-black sm:m-auto sm:h-[36rem] sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:shadow-2xl">
-    <div class="flex h-full flex-col">
-        <div class="flex items-center gap-1 border-b border-gray-200 py-1 pl-1 pr-4">
-            <button type="button" data-dialog-close aria-label="Kembali" class="flex h-11 w-11 shrink-0 items-center justify-center text-brand-black active:bg-gray-100">
-                <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+{{-- ORD-18: kecamatan/kota search as a card: near the top and sized to the space above the phone keyboard
+     (visualViewport) while typing, centred otherwise; the results scroll inside the card. --}}
+<dialog data-area-dialog aria-labelledby="area-dialog-title" class="mx-auto mb-auto mt-3 w-[calc(100%-1.5rem)] max-w-lg overflow-hidden bg-white p-0 text-brand-black shadow-2xl data-[keyboard=closed]:my-auto sm:my-auto" style="max-height: var(--area-max, calc(100dvh - 1.5rem))">
+    <div class="flex max-h-[inherit] flex-col">
+        <div class="flex items-center justify-between gap-2 border-b border-gray-200 py-1 pl-4 pr-1">
             <h2 id="area-dialog-title" class="font-mayluxa text-xl">Kecamatan atau kota</h2>
+            <button type="button" data-dialog-close aria-label="Tutup" class="flex h-11 w-11 shrink-0 items-center justify-center text-gray-500 active:bg-gray-100">
+                <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
         </div>
         <div class="px-4 pt-3">
             <div class="relative">
                 <label for="area-search" class="sr-only">Cari kecamatan, kota, atau kode pos</label>
                 <svg aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                 <input id="area-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="area-results" autocomplete="off" autocapitalize="words" enterkeyhint="search"
-                    placeholder="Ketik kecamatan, kota, atau kode pos" class="min-h-12 w-full border border-gray-300 bg-white pl-10 pr-3 text-base text-brand-black focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">
+                    placeholder="Contoh: Palu Barat, Menteng, 94111" class="min-h-12 w-full border border-gray-300 bg-white pl-10 pr-3 text-base text-brand-black focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">
             </div>
-            <p data-area-state role="status" aria-live="polite" class="mt-2 min-h-5 text-sm text-gray-600"></p>
+            <p data-area-state role="status" aria-live="polite" class="mt-2 min-h-5 text-sm leading-5 text-gray-600"></p>
         </div>
-        <ul id="area-results" role="listbox" aria-label="Hasil pencarian" class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[max(1rem,env(safe-area-inset-bottom))]"></ul>
+        <ul id="area-results" role="listbox" aria-label="Hasil pencarian" class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 [-webkit-overflow-scrolling:touch]"></ul>
+        <p data-area-more hidden class="border-t border-gray-100 px-4 py-2 text-xs leading-5 text-gray-500">Belum ketemu? Ketik lebih lengkap, misalnya nama kecamatan lalu kota (contoh: "Menteng Jakarta").</p>
     </div>
 </dialog>
 

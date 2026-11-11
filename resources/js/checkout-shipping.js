@@ -59,11 +59,17 @@ function setup(root) {
         announce();
     };
 
-    const status = (group, text, error = false) => {
+    const status = (group, text, error = false, retry = null) => {
         const line = group.querySelector('[data-shipping-status]');
         line.textContent = text;
         line.classList.toggle('text-red-700', error);
         line.classList.toggle('text-gray-600', !error);
+        if (retry) {
+            const again = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Hitung ulang ongkir' });
+            again.className = 'ml-1 min-h-11 font-semibold text-brand-black underline underline-offset-4';
+            again.addEventListener('click', retry);
+            line.append(' ', again);
+        }
     };
 
     const offerManual = (show) => {
@@ -138,7 +144,8 @@ function setup(root) {
         } finally {
             if (run === runs[kind]) group.removeAttribute('aria-busy');
         }
-        status(group, reasonText(reason, kind), reason === 'cart' || reason === 'session');
+        status(group, reasonText(reason, kind), reason === 'cart' || reason === 'session',
+            ['unavailable', 'busy'].includes(reason) ? () => quote(kind, body) : null);
         if (!['cart', 'session', 'busy'].includes(reason)) offerManual(true);
         sync();
     };
@@ -307,15 +314,15 @@ function setup(root) {
         quote('instant', { mode: 'instant', latitude: pin[0], longitude: pin[1] });
     });
 
-    // ORD-17: kecamatan/kota search screen. Palu kecamatan as quick picks before typing; "Mencari…" at once; results
-    // kept per query in the page (and cached on the server); the keyboard's Search key picks the first result and
-    // never sends the checkout form.
+    // ORD-17/18: kecamatan/kota search card. Typing searches after a short pause ("Mencari…" at once); the keyboard's
+    // Search key searches straight away and closes the keyboard so the results can be read and scrolled; the customer
+    // always taps the result. Results are kept per query in the page and cached on the server.
     const areaCache = new Map();
+    const areaMore = areaDialog.querySelector('[data-area-more]');
     let areaItems = [];
     let areaActive = -1;
     let areaTimer;
     let areaController;
-    let enterWhenReady = false;
     const fetchAreas = async (query) => {
         const key = query.toLowerCase();
         if (areaCache.has(key)) return areaCache.get(key);
@@ -355,47 +362,55 @@ function setup(root) {
         row.className = 'flex min-h-14 cursor-pointer flex-col justify-center gap-0.5 border-b border-gray-100 px-3 py-2 [touch-action:manipulation] last:border-b-0 aria-selected:bg-[#FAF8F3] active:bg-[#FAF8F3]';
         row.append(Object.assign(document.createElement('span'), { className: 'text-base font-medium leading-6 text-brand-black', textContent: title }));
         if (detail) row.append(Object.assign(document.createElement('span'), { className: 'text-sm leading-5 text-gray-600', textContent: detail }));
-        // Keep the keyboard open until the tap lands on the row.
-        row.addEventListener('pointerdown', (event) => event.preventDefault());
         row.addEventListener('click', onPick);
 
         return row;
     };
-    const showQuickPicks = () => {
+    const showIntro = () => {
         areaItems = [];
-        areaState.textContent = 'Kecamatan di Kota Palu, atau ketik kecamatan/kota lain.';
-        areaResults.replaceChildren(...Object.keys(config.kecamatan).map((name, index) => optionRow(`area-quick-${index}`, name, 'Palu, Sulawesi Tengah', () => pickKecamatan(name))));
+        areaResults.replaceChildren();
+        areaMore.hidden = true;
+        areaState.textContent = 'Ketik nama kecamatan, kota, atau kode pos tujuan.';
         highlightArea(-1);
     };
     const showAreas = (found, query) => {
         areaItems = found;
-        areaState.textContent = found.length ? `${found.length} hasil` : `Belum ada hasil untuk "${query}". Coba nama kecamatan, kota, atau kode pos lain.`;
+        areaState.textContent = found.length ? `${found.length} hasil untuk "${query}". Ketuk yang sesuai.` : `Belum ada hasil untuk "${query}". Coba nama kecamatan, kota, atau kode pos lain.`;
         areaResults.replaceChildren(...found.map((entry, index) => {
             const { title, detail } = areaParts(entry.label);
 
             return optionRow(`area-${index}`, title, detail, () => chooseArea(entry));
         }));
-        highlightArea(found.length ? 0 : -1);
-        if (enterWhenReady && found.length) chooseArea(found[0]);
-        enterWhenReady = false;
+        areaResults.scrollTop = 0;
+        // Biteship sends at most 10 places; a full list means a more precise search may find the right one.
+        areaMore.hidden = found.length < 10;
+        highlightArea(-1);
     };
     const failedAreas = (error) => {
         areaItems = [];
-        enterWhenReady = false;
         areaResults.replaceChildren();
+        areaMore.hidden = true;
         areaState.textContent = error?.reason === 'busy' ? reasonText('busy') : 'Pencarian sedang tidak bisa dipakai. Coba lagi sebentar.';
     };
-    const searchAreas = (query) => {
+    const runAreaSearch = async (query) => {
+        try {
+            const found = await fetchAreas(query);
+            if (areaSearch.value.trim() === query) showAreas(found, query);
+        } catch (error) {
+            if (error.name !== 'AbortError') failedAreas(error);
+        }
+    };
+    const searchAreas = (query, now = false) => {
         clearTimeout(areaTimer);
-        enterWhenReady = false;
         if (!query) {
-            showQuickPicks();
+            showIntro();
 
             return;
         }
         if (query.length < 3) {
             areaItems = [];
             areaResults.replaceChildren();
+            areaMore.hidden = true;
             areaState.textContent = 'Ketik minimal 3 huruf.';
 
             return;
@@ -407,33 +422,27 @@ function setup(root) {
             return;
         }
         areaState.textContent = 'Mencari…';
-        areaTimer = setTimeout(async () => {
-            try {
-                const found = await fetchAreas(query);
-                if (areaSearch.value.trim() === query) showAreas(found, query);
-            } catch (error) {
-                if (error.name !== 'AbortError') failedAreas(error);
-            }
-        }, 200);
+        if (now) runAreaSearch(query);
+        else areaTimer = setTimeout(() => runAreaSearch(query), 250);
     };
-    // A Palu kecamatan from the quick list: its Biteship area is taken directly.
-    const pickKecamatan = async (name) => {
-        areaSearch.value = name;
-        areaState.textContent = 'Mencari…';
-        try {
-            const found = await fetchAreas(name);
-            const exact = exactArea(found, name);
-            if (exact) chooseArea(exact); else showAreas(found, name);
-        } catch (error) {
-            if (error.name !== 'AbortError') failedAreas(error);
-        }
+    // The card always fits the space above the keyboard (the results scroll inside it) and never covers more than
+    // about 70% of the screen; with the keyboard closed it sits in the middle.
+    const fitAreaCard = () => {
+        const viewport = window.visualViewport;
+        const visible = viewport ? viewport.height : window.innerHeight;
+        const keyboard = visible < window.innerHeight * 0.8;
+        areaDialog.dataset.keyboard = keyboard ? 'open' : 'closed';
+        areaDialog.style.setProperty('--area-max', `${Math.max(240, Math.floor(Math.min(visible - 24, window.innerHeight * 0.72)))}px`);
     };
     const openAreaSearch = () => {
         openDialog(areaDialog);
+        fitAreaCard();
+        window.visualViewport?.addEventListener('resize', fitAreaCard);
         areaSearch.value = '';
-        showQuickPicks();
-        areaSearch.focus();
+        showIntro();
+        areaSearch.focus({ preventScroll: true });
     };
+    areaDialog.addEventListener('close', () => window.visualViewport?.removeEventListener('resize', fitAreaCard));
     areaButton.addEventListener('click', openAreaSearch);
     areaSearch.addEventListener('input', () => searchAreas(areaSearch.value.trim()));
     areaSearch.addEventListener('keydown', (event) => {
@@ -443,9 +452,16 @@ function setup(root) {
             event.preventDefault();
             highlightArea((areaActive + (event.key === 'ArrowDown' ? 1 : rows.length - 1) + (areaActive < 0 && event.key === 'ArrowUp' ? 1 : 0)) % rows.length);
         } else if (event.key === 'Enter') {
+            // Never the checkout form. A result highlighted with the arrow keys is taken; otherwise Enter / the
+            // keyboard's Search key searches now and closes the keyboard so the customer can read and tap a result.
             event.preventDefault();
-            if (areaItems.length) rows[Math.max(areaActive, 0)]?.click();
-            else if (areaState.textContent === 'Mencari…') enterWhenReady = true;
+            if (areaActive >= 0 && rows[areaActive]) {
+                rows[areaActive].click();
+
+                return;
+            }
+            searchAreas(areaSearch.value.trim(), true);
+            if (window.matchMedia('(pointer: coarse)').matches) areaSearch.blur();
         }
     });
 
