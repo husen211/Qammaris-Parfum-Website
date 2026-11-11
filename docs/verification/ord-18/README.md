@@ -88,3 +88,17 @@ The keyboard itself cannot be shown in headless Chrome. The Owner should check o
 - In the search card, "Jakarta" + Enter kept the card open and picked nothing ([card](live-390-area-card.jpg)). Tapping Menteng priced J&T from Biteship live at Rp26.500, struck Rp38.000 ([J&T](live-390-jnt.jpg)).
 - No order was placed.
 - Found: "Jakarta" still listed 8 places. That search was cached before ORD-18, when results were cut to 8. The forward fix gives the area-search cache a new key (`biteship-areas-v2`), so every search is fetched once more with all results.
+- After PR #172, live "Jakarta" lists 10 places ([live](live-390-jakarta-after-172.jpg)).
+
+## Owner: back to full screen (same day)
+
+- The Owner tried the card on a phone and preferred the full-screen ORD-17 screen, so it is back on phones (still a centred panel on desktop).
+- What stays from ORD-18:
+  - no Palu list first;
+  - all 10 results, scrolling;
+  - Enter/Search never picks a result;
+  - the "type more precisely" hint;
+  - the retry button.
+- To stop the keyboard glitch, the screen's height on phones follows the visible area above the keyboard, and the screen follows that area if the browser shifts it (`visualViewport` resize and scroll).
+- Checks: [390](after-390-full-screen.jpg) is full screen 390×844 with 10 results and nothing picked after Enter; [1440](after-1440-full-screen.jpg) is a 512 px panel. JS 109 passed; checkout and polish tests 23 passed; build OK.
+

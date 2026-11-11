@@ -128,15 +128,16 @@
     <template data-option-template>@include('cart._shipping_option', ['option' => null, 'checked' => false])</template>
 </div>
 
-{{-- ORD-18: kecamatan/kota search as a card: near the top and sized to the space above the phone keyboard
-     (visualViewport) while typing, centred otherwise; the results scroll inside the card. --}}
-<dialog data-area-dialog aria-labelledby="area-dialog-title" class="mx-auto mb-auto mt-3 w-[calc(100%-1.5rem)] max-w-lg overflow-hidden bg-white p-0 text-brand-black shadow-2xl data-[keyboard=closed]:my-auto sm:my-auto" style="max-height: var(--area-max, calc(100dvh - 1.5rem))">
-    <div class="flex max-h-[inherit] flex-col">
-        <div class="flex items-center justify-between gap-2 border-b border-gray-200 py-1 pl-4 pr-1">
-            <h2 id="area-dialog-title" class="font-mayluxa text-xl">Kecamatan atau kota</h2>
-            <button type="button" data-dialog-close aria-label="Tutup" class="flex h-11 w-11 shrink-0 items-center justify-center text-gray-500 active:bg-gray-100">
-                <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+{{-- ORD-17/18: kecamatan/kota search, full screen on phones (Owner preferred it over a card), a centred panel on
+     wider screens. On phones its height follows the space above the keyboard (visualViewport), so the results
+     scroll inside it and the page behind never jumps. --}}
+<dialog data-area-dialog aria-labelledby="area-dialog-title" class="m-0 h-[var(--area-h,100dvh)] max-h-none w-full max-w-none bg-white p-0 text-brand-black sm:m-auto sm:h-[36rem] sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:shadow-2xl">
+    <div class="flex h-full flex-col">
+        <div class="flex items-center gap-1 border-b border-gray-200 py-1 pl-1 pr-4">
+            <button type="button" data-dialog-close aria-label="Kembali" class="flex h-11 w-11 shrink-0 items-center justify-center text-brand-black active:bg-gray-100">
+                <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
+            <h2 id="area-dialog-title" class="font-mayluxa text-xl">Kecamatan atau kota</h2>
         </div>
         <div class="px-4 pt-3">
             <div class="relative">
