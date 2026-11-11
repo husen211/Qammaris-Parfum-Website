@@ -95,6 +95,12 @@ Pesanan website dengan kurir instan:
 - **Webhook only:** remove the Webhook URL in Biteship; staff use "Perbarui status".
 - **Code:** agent reverts the merge commit on `main`; CI deploys the previous code. The three columns stay; the old code ignores them. Never `migrate:rollback` on production.
 
-## 8. Release record
+## 8. Release record (2026-11-11)
 
-Not released yet.
+- PR #161 squash-merged as `99d1dbc` (Owner: "rilis otomatis aja"). CI on `main` green; Production release run `43035914664` (build + deploy) green.
+- The deploy ran the three listed migrations itself (OPS-DEPLOY-02): `add_shipping_quote` 15 ms, `add_qris_image` 4 ms, `add_courier_booking` 5 ms. No manual dump (Owner decision); the build-package/SSH fallback was not used.
+- Live checks:
+  - `/up` 200, home 200, cart 200;
+  - `/cart/checkout/wilayah` 404, as expected with the switch off;
+  - the admin "Rekening pembayaran" shows the verified BRI account and the new "QRIS statis" card ("Belum ada QRIS").
+- **Not done yet (Owner):** Biteship balance and live key, `BITESHIP_WEBHOOK_SECRET`, the webhook URL in Biteship, the QRIS upload, then §5 (switch on, price check on the phone, first customer order as the courier test).
