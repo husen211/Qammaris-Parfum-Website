@@ -332,11 +332,13 @@ class CartController extends Controller
         $data = $request->validate(['q' => ['required', 'string', 'min:3', 'max:60']]);
         // ORD-17: the same search answers at once the next time, for every customer, without a paid Biteship call.
         $query = mb_strtolower(preg_replace('/\s+/u', ' ', trim($data['q'])));
+        // ORD-18: "v2" because searches cached before ORD-18 hold at most 8 of Biteship's 10 results.
+        $cacheKey = 'biteship-areas-v2:'.md5($query);
         try {
-            $areas = Cache::get('biteship-areas:'.md5($query));
+            $areas = Cache::get($cacheKey);
             if ($areas === null) {
                 $areas = $biteship->areas($query);
-                Cache::put('biteship-areas:'.md5($query), $areas, now()->addDays(30));
+                Cache::put($cacheKey, $areas, now()->addDays(30));
             }
         } catch (RuntimeException) {
             return response()->json(['areas' => [], 'reason' => 'unavailable']);

@@ -80,3 +80,11 @@ The "before" state is in [ORD-17 verification](../ord-17/README.md):
 - Enter picked the first result.
 
 The keyboard itself cannot be shown in headless Chrome. The Owner should check on a phone: open the card, type, then press Search.
+
+## Live (qammarisparfum.id, after PR #171)
+
+- The cart has none of the removed texts.
+- Checkout shows "Diantar langsung oleh kurir.", "Datang setelah pesanan dikonfirmasi." and no "Total sementara".
+- In the search card, "Jakarta" + Enter kept the card open and picked nothing ([card](live-390-area-card.jpg)). Tapping Menteng priced J&T from Biteship live at Rp26.500, struck Rp38.000 ([J&T](live-390-jnt.jpg)).
+- No order was placed.
+- Found: "Jakarta" still listed 8 places. That search was cached before ORD-18, when results were cut to 8. The forward fix gives the area-search cache a new key (`biteship-areas-v2`), so every search is fetched once more with all results.
