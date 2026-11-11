@@ -103,4 +103,8 @@ Pesanan website dengan kurir instan:
   - `/up` 200, home 200, cart 200;
   - `/cart/checkout/wilayah` 404, as expected with the switch off;
   - the admin "Rekening pembayaran" shows the verified BRI account and the new "QRIS statis" card ("Belum ada QRIS").
-- **Not done yet (Owner):** Biteship balance and live key, `BITESHIP_WEBHOOK_SECRET`, the webhook URL in Biteship, the QRIS upload, then §5 (switch on, price check on the phone, first customer order as the courier test).
+- Activation, same evening:
+  - Biteship balance Rp10.000 topped up; Mode Testing off; the live key was created by the Owner;
+  - the Owner added `BITESHIP_API_KEY`, `BITESHIP_WEBHOOK_SECRET` and `ORDERS_SHIPPING_QUOTES=true` to the shared `.env` through the hPanel File Manager (no SSH);
+  - this docs merge redeploys so `config:cache` reads them.
+- **Was not done yet before activation (Owner):** Biteship balance and live key, `BITESHIP_WEBHOOK_SECRET`, the webhook URL in Biteship, the QRIS upload, then §5 (switch on, price check on the phone, first customer order as the courier test).
