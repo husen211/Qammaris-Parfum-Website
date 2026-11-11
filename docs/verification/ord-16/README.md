@@ -33,3 +33,9 @@ The old flow (switch off) is unchanged.
 | ![Before couriers 390](../ord-15/after-390-couriers.jpg) | ![Area and J&T 390](after-390-area-jnt.jpg) ![Options 390](after-390-options.jpg) |
 | — | ![Summary 390](after-390-summary.jpg) |
 | ![Before 1440](../ord-15/after-1440-couriers.jpg) | ![Options 1440](after-1440-options.jpg) |
+
+## Live (qammarisparfum.id, after PR #167)
+
+One available product in the cart, "Dikirim ke alamat", "Palu Barat": the J&T option came back at Rp5.500 (struck Rp8.000) from Biteship live, and the instant group asked for the map pin. The cart was cleared and no order was placed.
+
+![Live 390](live-390-area-jnt.jpg)
