@@ -6,6 +6,7 @@ use App\Actions\Orders\OnlineOrderChangeRequests;
 use App\Actions\Orders\OnlineOrderDetails;
 use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\OnlineOrderWorkflow;
+use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OnlineOrderRejected;
 use App\Http\Requests\Orders\CustomerOrderDetailsRequest;
 use App\Models\OnlineOrder;
@@ -19,7 +20,6 @@ use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderStepper;
 use App\Support\OnlineOrderTimeline;
 use App\Support\OrderActor;
-use App\Support\Rupiah;
 use Illuminate\Http\Request;
 
 /** Customer link: complete or correct recipient details, then follow the order status. */
@@ -33,16 +33,23 @@ class OnlineOrderController extends Controller
         }
         $order->load(['items', 'events']);
         CustomerOrderHistory::remember($order);
-        // ORD-04: once the total is final, the official (verified) accounts and the way to send the proof.
-        $showPayment = $order->isV2() && $order->lifecycle === 'active' && $order->payment_status !== 'paid' && OnlineOrderStepper::totalIsFinal($order);
-        $proofMessage = 'Halo Qammaris, saya sudah membayar pesanan '.$order->code.' sebesar '.Rupiah::format($order->customerTotal()).'. Berikut bukti pembayarannya.';
+        // ORD-04/ORD-13: once the total is final (and, for a website draft, nothing needs a stock check), the verified
+        // accounts, the store QRIS and the way to send the proof.
+        $showPayment = $order->customerCanPay();
+        $qrisUrl = $showPayment ? StoreInfo::qrisImageUrl() : null;
+        $proofMessage = $whatsApp->paymentProofMessage($order, $order->payment_preference ?? 'transfer');
+        // ORD-13: why a website order waits for staff before it can be paid (shown with a clock on the page).
+        $waitingFor = $order->lifecycle === 'draft' && config('orders.shipping_quotes.enabled') && ! $showPayment
+            ? ['stock' => $order->items->where('quantity', '>', 1)->values(), 'ongkir' => ! OnlineOrderStepper::totalIsFinal($order)]
+            : null;
         // V2: after payment or once packing started, the same form sends a change request for review.
         $requestsChange = $order->isV2() && $order->lifecycle === 'active' && $order->handover_status === 'pending'
             && OnlineOrderChangeRequests::customerMustRequest($order);
         $canEdit = $order->customerCanEdit() || $requestsChange;
         $editing = $canEdit && ($order->stage === OnlineOrder::STAGE_AWAITING_CUSTOMER
             || $request->boolean('ubah') || session()->has('errors'));
-        $locationUrl = $order->fulfillment === 'local_delivery'
+        // ORD-13: a delivery pin from checkout (or one staff saved) is already the location; no Sharelok is asked again.
+        $locationUrl = $order->fulfillment === 'local_delivery' && ! $order->location_url
             ? $whatsApp->textUrl($this->storeNumber(), $messages->customerLocation($order))
             : null;
 
@@ -64,10 +71,38 @@ class OnlineOrderController extends Controller
             'checkoutMessage' => $order->lifecycle === 'draft' ? $whatsApp->websiteOrderMessage($order) : null,
             'showPayment' => $showPayment,
             'paymentAccounts' => $showPayment ? StorePaymentAccount::query()->usable()->get() : collect(),
+            'qrisUrl' => $qrisUrl,
             'receivedCents' => $showPayment ? OnlineOrderMoney::totals($order)['received'] : 0,
             'proofWhatsappUrl' => $showPayment ? $whatsApp->textUrl($this->storeNumber(), $proofMessage) : null,
             'proofMessage' => $proofMessage,
+            'waitingFor' => $waitingFor,
         ]));
+    }
+
+    /**
+     * ORD-13: the customer chose transfer or QRIS and paid; the choice is kept on the order and WhatsApp opens with
+     * the proof message. Nothing is marked paid here: staff check the proof and record the payment.
+     */
+    public function pay(Request $request, string $token, OnlineOrderDetails $details, InquiryWhatsApp $whatsApp)
+    {
+        $order = $this->usableOrder($token);
+        abort_unless($order, 404);
+        $methods = array_keys(config('orders.payment_preferences'));
+        if (! StoreInfo::qrisImageUrl()) {
+            $methods = array_values(array_diff($methods, ['qris']));
+        }
+        $method = $request->validate(['payment_preference' => ['required', 'in:'.implode(',', $methods)]],
+            ['payment_preference.required' => 'Pilih cara bayar dulu.', 'payment_preference.in' => 'Pilih cara bayar yang tersedia.'])['payment_preference'];
+
+        try {
+            $order = $details->choosePaymentByCustomer($order, $method);
+        } catch (InvalidOrderTransition $error) {
+            return $this->private(redirect()->route('orders.customer.show', $token)->with('error', $error->getMessage()));
+        }
+        $url = $whatsApp->textUrl($this->storeNumber(), $whatsApp->paymentProofMessage($order, $method));
+
+        // ORD-07: without a store number (test environments) the message is shown for copying instead.
+        return $this->private($url ? redirect()->away($url) : redirect()->route('orders.customer.show', $token)->with('proof_copy', true));
     }
 
     /** ORD-04 "Pesanan Saya": orders this browser session opened; no login, details still behind their tokens. */

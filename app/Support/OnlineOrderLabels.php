@@ -51,6 +51,24 @@ final class OnlineOrderLabels
 
     public const PROVIDERS = ['maxim' => 'Maxim', 'gosend' => 'GoSend', 'grab' => 'GrabExpress', 'other' => 'Kurir lain'];
 
+    /** ORD-14: Biteship courier statuses, as staff and the customer read them. */
+    public const BITESHIP = [
+        'confirmed' => 'Mencari driver',
+        'allocated' => 'Driver ditemukan',
+        'picking_up' => 'Driver menuju toko',
+        'picked' => 'Paket diambil driver',
+        'in_transit' => 'Dalam perjalanan',
+        'dropping_off' => 'Driver hampir sampai',
+        'delivered' => 'Sudah diterima',
+        'on_hold' => 'Ditahan sementara',
+        'courier_not_found' => 'Driver tidak ditemukan',
+        'rejected' => 'Ditolak kurir',
+        'cancelled' => 'Dibatalkan',
+        'disposed' => 'Dibatalkan kurir',
+        'return_in_transit' => 'Dikembalikan ke toko',
+        'returned' => 'Sudah kembali ke toko',
+    ];
+
     public const CONFIRMATION_SOURCES = ['proof_in_chat' => 'Bukti di chat', 'proof_uploaded' => 'Bukti diunggah', 'majoo' => 'Majoo', 'admin_recorded' => 'Dicatat admin'];
 
     private const EVENTS = [
@@ -73,6 +91,10 @@ final class OnlineOrderLabels
         'courier_requested' => 'memesan kurir',
         'courier_arrived' => 'menandai kurir tiba',
         'courier_cost' => 'mencatat ongkir kurir',
+        'courier_booking_failed' => 'gagal memesan kurir lewat Biteship',
+        'courier_failed' => 'melaporkan kurir batal',
+        'courier_cancelled' => 'membatalkan kurir Biteship',
+        'courier_update' => 'memperbarui status kurir',
         'cost_recorded' => 'mencatat biaya dari App',
         'cost_updated' => 'memperbarui biaya dari App',
         'cost_reimbursement' => 'memperbarui reimburse ongkir',

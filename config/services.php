@@ -28,6 +28,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // ORD-13: shipping rates (GoSend, GrabExpress, J&T) through the Biteship aggregator. The key lives in .env only.
+    'biteship' => [
+        'key' => env('BITESHIP_API_KEY'),
+        'base_url' => env('BITESHIP_BASE_URL', 'https://api.biteship.com'),
+        'timeout' => 8,
+        // ORD-14: secret part of the webhook URL registered in the Biteship dashboard (at least 32 characters).
+        'webhook_secret' => env('BITESHIP_WEBHOOK_SECRET'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

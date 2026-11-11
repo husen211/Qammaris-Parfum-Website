@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Cart;
 
+use App\Actions\Orders\ShippingQuotes;
 use App\Models\OnlineOrder;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -32,6 +33,9 @@ class CheckoutRequest extends FormRequest
             return $rules;
         }
 
+        // ORD-13: with checkout pricing on, delivery needs a priced option, or "manual" when staff confirm ongkir.
+        $priced = ShippingQuotes::enabled();
+
         return array_replace($rules, [
             'delivery' => ['required', 'string', 'in:'.implode(',', array_keys(config('orders.checkout_deliveries')))],
             // Pickup needs no address; delivery addresses are checked like before.
@@ -40,9 +44,11 @@ class CheckoutRequest extends FormRequest
             'district' => ['exclude_if:delivery,pickup', 'nullable', 'string', 'max:80'],
             'subdistrict' => ['exclude_if:delivery,pickup', 'nullable', 'string', 'max:80'],
             'packaging' => ['required', 'string', 'in:paperbag,no_paperbag'],
-            'payment_preference' => ['required', 'string', 'in:'.implode(',', array_keys(config('orders.payment_preferences')))],
+            // ORD-13: with checkout pricing the customer picks transfer or QRIS on the payment page instead.
+            'payment_preference' => $priced ? ['exclude'] : ['required', 'string', 'in:'.implode(',', array_keys(config('orders.payment_preferences')))],
             // ORD-10: only a local courier is paid either way; J&T ongkir is always part of the transfer.
-            'shipping_payment' => ['exclude_unless:delivery,local_delivery', 'required', 'string', 'in:'.implode(',', array_keys(OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS))],
+            'shipping_payment' => ['exclude_unless:delivery,local_delivery', ...($priced ? ['exclude_unless:shipping_option,manual'] : []), 'required', 'string', 'in:'.implode(',', array_keys(OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS))],
+            'shipping_option' => $priced ? ['exclude_if:delivery,pickup', 'required', 'string', 'regex:/^(manual|[A-Za-z0-9]{20})$/'] : ['exclude'],
             'checkout_key' => ['required', 'uuid'],
         ]);
     }
@@ -62,8 +68,10 @@ class CheckoutRequest extends FormRequest
             'subdistrict' => $data['subdistrict'] ?? null,
             'packaging' => $data['packaging'],
             'customer_note' => $data['customer_note'] ?? null,
-            'payment_preference' => $data['payment_preference'],
-            'shipping_payer' => OnlineOrder::customerShippingPayer($data['delivery'], $data['shipping_payment'] ?? null),
+            'payment_preference' => $data['payment_preference'] ?? null,
+            'shipping_payer' => isset($data['shipping_option']) && $data['shipping_option'] !== 'manual'
+                ? 'added_to_transfer'
+                : OnlineOrder::customerShippingPayer($data['delivery'], $data['shipping_payment'] ?? null),
         ];
     }
 
@@ -95,6 +103,7 @@ class CheckoutRequest extends FormRequest
             'packaging' => 'pilihan paperbag',
             'payment_preference' => 'metode pembayaran',
             'shipping_payment' => 'metode pembayaran ongkir',
+            'shipping_option' => 'ongkir',
             'checkout_key' => 'sesi checkout',
         ];
     }
@@ -113,6 +122,8 @@ class CheckoutRequest extends FormRequest
             'packaging.required' => 'Pilih pakai paperbag atau tidak.',
             'payment_preference.required' => 'Pilih metode pembayaran.',
             'shipping_payment.required' => 'Pilih metode pembayaran ongkir.',
+            'shipping_option.required' => 'Tentukan titik antar atau tujuan, lalu pilih kurir.',
+            'shipping_option.regex' => 'Pilih kurir lagi; ongkir perlu dihitung ulang.',
             'in' => 'Pilih :attribute dari pilihan yang tersedia.',
             'checkout_key.uuid' => 'Buka kembali checkout untuk meninjau ringkasan terbaru.',
         ];

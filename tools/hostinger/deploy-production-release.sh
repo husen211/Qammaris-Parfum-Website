@@ -40,11 +40,25 @@ mkdir -p "$release/bootstrap/cache"
 ln -s "$shared/storage/app/public" "$release/public/storage"
 cd "$release"
 php artisan package:discover --no-interaction
-# Future schema changes require a separately reviewed migration runbook; do not migrate blindly.
+# OPS-DEPLOY-02 (Owner 2026-11-11): migrations reviewed in their PR and listed in tools/hostinger/auto-migrations.txt
+# run here, from the candidate release and before the switch, while the old code stays live. Any other pending
+# migration still refuses the deploy; a migration never runs blindly.
 php artisan migrate:status --no-interaction > "$shared/migration-status.candidate"
-if grep -q 'Pending' "$shared/migration-status.candidate"; then
-    printf '%s\n' 'Deployment refused: pending migrations require Owner-reviewed execution.' >&2
-    exit 1
+pending="$( { grep 'Pending' "$shared/migration-status.candidate" || true; } | awk '{print $1}')"
+if [ -n "$pending" ]; then
+    while IFS= read -r name; do
+        if ! grep -qxF "$name" "$release/tools/hostinger/auto-migrations.txt"; then
+            printf 'Deployment refused: pending migration %s is not listed in auto-migrations.txt.\n' "$name" >&2
+            exit 1
+        fi
+    done <<< "$pending"
+    php artisan migrate --force --no-interaction
+    php artisan migrate:status --no-interaction > "$shared/migration-status.candidate"
+    if grep -q 'Pending' "$shared/migration-status.candidate"; then
+        printf '%s\n' 'Deployment refused: migrations still pending after migrate.' >&2
+        exit 1
+    fi
+    printf '%s %s migrated %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$revision" "$(tr '\n' ' ' <<< "$pending")" >> "$shared/deployments.log"
 fi
 php artisan config:cache --no-interaction
 php artisan route:cache --no-interaction

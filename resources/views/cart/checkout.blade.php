@@ -11,7 +11,16 @@
     $delivery = old('delivery');
     $isDelivery = in_array($delivery, ['local_delivery', 'intercity'], true);
     $canSubmit = $whatsappAvailable || $savesOrder;
+    // ORD-13: with checkout pricing the courier options describe what the customer now gets.
+    $deliveries = config('orders.checkout_deliveries');
+    if ($autoShipping) {
+        $deliveries['local_delivery'] = ['label' => 'Kurir instan', 'help' => 'GoSend atau GrabExpress, Kota Palu. Ongkir langsung dihitung dari titik lokasimu.'];
+        $deliveries['intercity'] = ['label' => 'J&T', 'help' => 'Dalam dan luar kota, tiba 2–3 hari. Ongkir langsung dihitung.'];
+    }
+    // ORD-13: more than one piece of a product needs a stock check before paying (Owner 2026-11-11).
+    $needsStockCheck = collect($items)->contains(fn ($item) => $item['quantity'] > 1);
     $submitLabel = match (true) {
+        $autoShipping => $needsStockCheck ? 'Pesan & minta cek stok' : 'Lanjut ke pembayaran',
         $savesOrder && $whatsappAvailable => 'Pesan & lanjut ke WhatsApp',
         $savesOrder => 'Pesan sekarang',
         $whatsappAvailable => 'Lanjut ke WhatsApp',
@@ -26,7 +35,7 @@
         <h1 id="checkout-title" class="mt-4 font-mayluxa text-3xl text-brand-black md:text-4xl">Checkout</h1>
         <p class="mt-3 max-w-xl text-sm leading-6 text-gray-600">
             {{ $savesOrder
-                ? 'Lengkapi data penerima. Pesanan disimpan dengan nomor pesanan, lalu WhatsApp terbuka untuk konfirmasi stok, ongkir, dan pembayaran.'
+                ? 'Lengkapi data penerima. Pesanan disimpan dengan nomor pesanan, lalu WhatsApp terbuka untuk konfirmasi stok'.($autoShipping ? ' dan pembayaran.' : ', ongkir, dan pembayaran.')
                 : 'Lengkapi data penerima. Rincian produk dan alamat akan disiapkan untuk dikirim ke WhatsApp Qammaris.' }}
         </p>
         @if (session('error') || $errors->any())
@@ -34,7 +43,7 @@
                 {{ session('error') ?? 'Periksa data penerima yang ditandai di bawah.' }}
             </div>
         @endif
-        <form action="{{ route('cart.checkout') }}" method="POST" data-order-checkout class="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+        <form action="{{ route('cart.checkout') }}" method="POST" data-order-checkout @if ($autoShipping) data-auto-shipping @endif class="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
             @csrf
             <input type="hidden" name="checkout_quote" value="{{ $checkoutQuote }}">
             @if ($savesOrder)
@@ -57,7 +66,7 @@
                         <fieldset @if ($errors->has('delivery')) aria-describedby="delivery-error" @endif>
                             <legend class="text-sm font-medium text-brand-black">Cara pengiriman <span aria-hidden="true">*</span></legend>
                             <div class="mt-3 space-y-3">
-                                @foreach (config('orders.checkout_deliveries') as $value => $option)
+                                @foreach ($deliveries as $value => $option)
                                     <label class="{{ $choiceClass }}">
                                         <input type="radio" name="delivery" value="{{ $value }}" @checked($delivery === $value) required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-delivery>
                                         <span><span class="block text-base font-medium text-brand-black">{{ $option['label'] }}</span><span class="mt-0.5 block text-sm leading-5 text-gray-600">{{ $option['help'] }}</span></span>
@@ -66,16 +75,20 @@
                             </div>
                             @error('delivery') <p id="delivery-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
+                        @if ($autoShipping)
+                            @include('cart._shipping')
+                            @error('shipping_option') <p id="shipping_option-error" class="text-sm text-red-700">{{ $message }}</p> @enderror
+                        @endif
                     @endif
 
                     <div @if ($savesOrder) data-delivery-only @if (! $isDelivery) hidden @endif @endif class="space-y-5">
                         <div>
                             <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
                             <textarea id="customer_address" name="customer_address" rows="4" @if (! $savesOrder || $isDelivery) required @endif minlength="{{ $savesOrder ? 10 : 15 }}" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address') }}</textarea>
-                            <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">{{ $savesOrder ? 'Isi jalan, nomor rumah, dan patokan. Untuk pengiriman dalam kota, kirim juga Sharelok di WhatsApp.' : 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.' }}</p>
+                            <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">{{ match (true) { $autoShipping => 'Isi jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.', $savesOrder => 'Isi jalan, nomor rumah, dan patokan. Untuk pengiriman dalam kota, kirim juga Sharelok di WhatsApp.', default => 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.' } }}</p>
                             @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </div>
-                        @if ($savesOrder)
+                        @if ($savesOrder && ! $autoShipping)
                             <div class="grid gap-5 sm:grid-cols-2">
                                 @foreach (['subdistrict' => ['Kelurahan', 'address-level4'], 'district' => ['Kecamatan', 'address-level3']] as $field => [$label, $autocomplete])
                                     <div>
@@ -86,7 +99,8 @@
                                 @endforeach
                             </div>
                         @endif
-                        <div>
+                        {{-- ORD-13: the pin or the J&T destination already says where; no second kecamatan/postcode question. --}}
+                        <div @if ($autoShipping) hidden @endif>
                             <label for="customer_postcode" class="block text-sm font-medium text-brand-black">Kode pos <span class="font-normal text-gray-500">(opsional)</span></label>
                             <input id="customer_postcode" name="customer_postcode" value="{{ old('customer_postcode') }}" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" aria-invalid="{{ $errors->has('customer_postcode') ? 'true' : 'false' }}" @error('customer_postcode') aria-describedby="customer_postcode-error" @enderror class="mt-2 min-h-12 w-full border border-gray-300 px-3 py-3 text-base focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black sm:max-w-40">
                             @error('customer_postcode') <p id="customer_postcode-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
@@ -106,6 +120,8 @@
                             </div>
                             @error('packaging') <p id="packaging-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
+{{-- ORD-13: with checkout pricing, transfer or QRIS is chosen on the payment page after ordering. --}}
+                        @unless ($autoShipping)
                         <fieldset aria-describedby="payment-help{{ $errors->has('payment_preference') ? ' payment_preference-error' : '' }}">
                             <legend class="text-sm font-medium text-brand-black">Pembayaran <span aria-hidden="true">*</span></legend>
                             <div class="mt-3 grid grid-cols-2 gap-3">
@@ -116,16 +132,17 @@
                                     </label>
                                 @endforeach
                             </div>
-                            <p id="payment-help" class="mt-2 text-xs leading-5 text-gray-500">Bayar setelah admin mengonfirmasi total dan ongkir di WhatsApp.</p>
+                            <p id="payment-help" class="mt-2 text-xs leading-5 text-gray-500">{{ $autoShipping ? 'Bayar setelah admin mengonfirmasi stok di WhatsApp.' : 'Bayar setelah admin mengonfirmasi total dan ongkir di WhatsApp.' }}</p>
                             @error('payment_preference') <p id="payment_preference-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
+                        @endunless
                         {{-- ORD-10: only a local courier can be paid on arrival; J&T ongkir is always part of the payment. --}}
-                        <fieldset data-local-only @if ($delivery !== 'local_delivery') hidden @endif aria-describedby="shipping-payment-help{{ $errors->has('shipping_payment') ? ' shipping_payment-error' : '' }}">
+                        <fieldset data-local-only @if ($delivery !== 'local_delivery' || ($autoShipping && old('shipping_option') !== 'manual')) hidden @endif aria-describedby="shipping-payment-help{{ $errors->has('shipping_payment') ? ' shipping_payment-error' : '' }}">
                             <legend class="text-sm font-medium text-brand-black">Metode pembayaran ongkir <span aria-hidden="true">*</span></legend>
                             <div class="mt-3 grid grid-cols-2 gap-3">
                                 @foreach (\App\Models\OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS as $value => $title)
                                     <label class="{{ $choiceClass }} items-center">
-                                        <input type="radio" name="shipping_payment" value="{{ $value }}" @checked(old('shipping_payment') === $value) @if ($delivery === 'local_delivery') required @endif class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-payment>
+                                        <input type="radio" name="shipping_payment" value="{{ $value }}" @checked(old('shipping_payment') === $value) @if ($delivery === 'local_delivery' && (! $autoShipping || old('shipping_option') === 'manual')) required @endif class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-payment>
                                         <span class="text-base text-brand-black">{{ $title }}</span>
                                     </label>
                                 @endforeach
@@ -165,17 +182,21 @@
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700" data-paperbag-summary data-fee="{{ (int) $paperbagFee }}" data-subtotal="{{ (int) \App\Support\Rupiah::minorUnits($subtotal) / 100 }}">
                         <span>Paperbag</span><span class="tabular-nums" data-paperbag-amount>{{ old('packaging') === 'paperbag' ? format_rupiah($paperbagFee) : 'Pilih di atas' }}</span>
                     </div>
-                    <div class="mt-2 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700">
-                        <span>Ongkir</span><span data-ongkir-summary>{{ $delivery === 'local_delivery' && old('shipping_payment') === 'cash_to_driver' ? 'Dibayar langsung ke driver' : 'Menunggu konfirmasi staf' }}</span>
+                    <div class="mt-2 flex items-start justify-between gap-3 text-sm text-gray-700">
+                        <span class="min-w-0">Ongkir<span class="block text-xs font-semibold text-[#8A6A2E]" data-ongkir-discount hidden></span></span><span class="shrink-0 text-right tabular-nums"><s class="mr-1 text-xs text-gray-400" data-ongkir-price hidden></s><span data-ongkir-summary>{{ $delivery === 'local_delivery' && old('shipping_payment') === 'cash_to_driver' ? 'Dibayar langsung ke driver' : 'Menunggu konfirmasi staf' }}</span></span>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-3">
-                        <span class="text-sm text-gray-600">Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span></span><strong class="text-lg tabular-nums" data-running-total>{{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($subtotal) + (old('packaging') === 'paperbag' ? $paperbagFee * 100 : 0))) }}</strong>
+                        <span class="text-sm text-gray-600" data-total-label>Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span></span><strong class="text-lg tabular-nums" data-running-total>{{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($subtotal) + (old('packaging') === 'paperbag' ? $paperbagFee * 100 : 0))) }}</strong>
                     </div>
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
                 @endif
-                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 gap-3">@if ($whatsappAvailable)<x-icon name="whatsapp" class="text-[1.2rem]" />@endif<span data-submit-label>{{ $submitLabel }}</span></button>
-                @if ($savesOrder)
+                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 gap-3" @if ($autoShipping) data-label-check="{{ $needsStockCheck ? 'Pesan & minta cek stok' : 'Pesan & minta cek ongkir' }}" data-label-pay="{{ $submitLabel }}" @endif>@if ($whatsappAvailable && ! $autoShipping)<x-icon name="whatsapp" class="text-[1.2rem]" />@endif<span data-submit-label>{{ $submitLabel }}</span></button>
+                @if ($autoShipping)
+                    <p class="mt-3 text-xs leading-5 text-gray-600" data-next-hint>{{ $needsStockCheck
+                        ? 'Ada produk lebih dari 1 pcs: admin mengecek stoknya dulu lewat WhatsApp, lalu cara bayar muncul di halaman pesanan.'
+                        : 'Setelah ini pilih transfer atau QRIS, lalu kirim bukti bayar lewat WhatsApp. Data penerima hanya dipakai untuk pesanan ini.' }}</p>
+                @elseif ($savesOrder)
                     <p class="mt-3 text-xs leading-5 text-gray-600">Pesanan diproses setelah admin mengonfirmasi lewat WhatsApp. Data penerima disimpan hanya untuk mengurus pesanan ini dan hanya dapat dilihat tim Qammaris.</p>
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Data penerima diteruskan ke WhatsApp. Setelah terbuka, tekan Kirim untuk mengirim pesanan.</p>
@@ -196,41 +217,73 @@ const initialOrderLabel = orderLabel?.textContent;
 let orderRetryTimer;
 // ORD-04: the address block belongs to delivery only; pickup sends no address.
 const deliveryOnly = orderForm?.querySelector('[data-delivery-only]');
+const autoShipping = orderForm?.hasAttribute('data-auto-shipping');
+const rupiah = (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+const deliveryChoice = () => orderForm.querySelector('[data-delivery]:checked')?.value ?? '';
+// ORD-13: the courier option the customer picked (radios of hidden panels are disabled by the shipping script).
+const shippingChoice = () => orderForm.querySelector('[data-shipping-choice]:checked:not(:disabled)');
 const syncDelivery = () => {
     if (!deliveryOnly) return;
-    const choice = orderForm.querySelector('[data-delivery]:checked')?.value ?? '';
+    const choice = deliveryChoice();
     const delivers = choice === 'local_delivery' || choice === 'intercity';
     deliveryOnly.hidden = !delivers;
     orderForm.querySelector('#customer_address').required = delivers;
-    // ORD-10: "Metode pembayaran ongkir" is asked for the local courier only.
-    const local = choice === 'local_delivery';
-    orderForm.querySelector('[data-local-only]').hidden = !local;
-    orderForm.querySelectorAll('[data-shipping-payment]').forEach((input) => { input.required = local; });
+    // ORD-10: "Metode pembayaran ongkir" is asked for the local courier only, and with ORD-13 only when staff price it.
+    const asks = choice === 'local_delivery' && (!autoShipping || shippingChoice()?.value === 'manual');
+    orderForm.querySelector('[data-local-only]').hidden = !asks;
+    orderForm.querySelectorAll('[data-shipping-payment]').forEach((input) => { input.required = asks; });
     syncOngkir();
 };
 const syncOngkir = () => {
     const summary = document.querySelector('[data-ongkir-summary]');
     if (!summary) return;
-    const local = orderForm.querySelector('[data-delivery]:checked')?.value === 'local_delivery';
-    const toDriver = orderForm.querySelector('[data-shipping-payment]:checked')?.value === 'cash_to_driver';
-    summary.textContent = local && toDriver ? 'Dibayar langsung ke driver' : 'Menunggu konfirmasi staf';
+    const choice = deliveryChoice();
+    const toDriver = choice === 'local_delivery' && orderForm.querySelector('[data-shipping-payment]:checked')?.value === 'cash_to_driver'
+        && !orderForm.querySelector('[data-local-only]').hidden;
+    const option = autoShipping && choice !== 'pickup' ? shippingChoice() : null;
+    const charged = option?.dataset.charged ? Number(option.dataset.charged) : null;
+    const price = option?.dataset.price ? Number(option.dataset.price) : null;
+    const discount = option?.closest('[data-option]')?.querySelector('[data-option-discount]');
+    summary.textContent = choice === 'pickup' ? 'Tidak ada' : toDriver ? 'Dibayar langsung ke driver'
+        : charged !== null ? rupiah(charged) : autoShipping && !option ? 'Pilih kurir dulu' : 'Menunggu konfirmasi staf';
+    const struck = document.querySelector('[data-ongkir-price]');
+    const note = document.querySelector('[data-ongkir-discount]');
+    struck.hidden = !(charged !== null && price > charged);
+    struck.textContent = struck.hidden ? '' : rupiah(price);
+    note.hidden = !(charged !== null && discount && !discount.hidden);
+    note.textContent = note.hidden ? '' : discount.textContent;
+    syncTotal(choice === 'pickup' ? 0 : charged);
+    // ORD-13: ongkir confirmed by staff means the order waits for them before paying; the button says so.
+    if (autoShipping && orderSubmit?.dataset.labelPay) {
+        const waits = orderSubmit.dataset.labelPay !== 'Lanjut ke pembayaran' || (choice !== 'pickup' && option?.value === 'manual');
+        orderLabel.textContent = waits ? orderSubmit.dataset.labelCheck : orderSubmit.dataset.labelPay;
+    }
 };
-orderForm?.querySelectorAll('[data-shipping-payment]').forEach((input) => input.addEventListener('change', syncOngkir));
-orderForm?.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncDelivery));
-syncDelivery();
 // ORD-04: show the paperbag charge and running total for the chosen option (display only; the server computes).
 const paperbagSummary = document.querySelector('[data-paperbag-summary]');
-const rupiah = (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-const syncPaperbag = () => {
+const syncTotal = (ongkir = undefined) => {
     if (!paperbagSummary) return;
     const choice = orderForm.querySelector('[data-packaging]:checked')?.value;
     const fee = choice === 'paperbag' ? Number(paperbagSummary.dataset.fee) : 0;
     paperbagSummary.querySelector('[data-paperbag-amount]').textContent = choice ? rupiah(fee) : 'Pilih di atas';
-    document.querySelector('[data-running-total]').textContent = rupiah(Number(paperbagSummary.dataset.subtotal) + fee);
+    const known = ongkir !== null && ongkir !== undefined;
+    document.querySelector('[data-running-total]').textContent = rupiah(Number(paperbagSummary.dataset.subtotal) + fee + (known ? ongkir : 0));
+    document.querySelector('[data-total-label]').innerHTML = known ? 'Total' : 'Total sementara <span class="block text-xs text-gray-500">belum termasuk ongkir</span>';
 };
-orderForm?.querySelectorAll('[data-packaging]').forEach((input) => input.addEventListener('change', syncPaperbag));
-syncPaperbag();
+orderForm?.querySelectorAll('[data-shipping-payment]').forEach((input) => input.addEventListener('change', syncOngkir));
+orderForm?.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncDelivery));
+orderForm?.querySelectorAll('[data-packaging]').forEach((input) => input.addEventListener('change', syncOngkir));
+// Courier options are added by the shipping script; it announces each change on the form.
+orderForm?.addEventListener('change', (event) => { if (event.target.matches?.('[data-shipping-choice]')) syncDelivery(); });
+orderForm?.addEventListener('shipping-options', syncDelivery);
+syncDelivery();
 orderForm?.addEventListener('submit', (event) => {
+    // ORD-13: a delivery needs a priced courier (or "dikonfirmasi admin") before anything is sent.
+    if (autoShipping && ['local_delivery', 'intercity'].includes(deliveryChoice()) && !shippingChoice()) {
+        event.preventDefault();
+        orderForm.dispatchEvent(new CustomEvent('shipping-missing'));
+        return;
+    }
     // PWA-01: offline, nothing is sent or queued; the customer presses the button again once online.
     if (navigator.onLine === false) {
         event.preventDefault();
@@ -253,6 +306,7 @@ window.addEventListener('pageshow', () => {
         orderSubmit.disabled = {{ $canSubmit ? 'false' : 'true' }};
         orderLabel.textContent = initialOrderLabel;
         orderFeedback.textContent = '';
+        syncDelivery();
     }
 });
 </script>

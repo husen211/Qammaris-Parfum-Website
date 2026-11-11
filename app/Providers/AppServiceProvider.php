@@ -25,6 +25,15 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(6)->by('checkout-min|'.$request->ip()),
             Limit::perHour(30)->by('checkout-hour|'.$request->ip()),
         ]);
+        // ORD-13: each price check and area search is a paid Biteship request; a customer needs a handful.
+        RateLimiter::for('shipping-quote', fn (Request $request) => [
+            Limit::perMinute(12)->by('shipping-quote-min|'.$request->ip()),
+            Limit::perHour(120)->by('shipping-quote-hour|'.$request->ip()),
+        ]);
+        RateLimiter::for('shipping-area', fn (Request $request) => [
+            Limit::perMinute(30)->by('shipping-area-min|'.$request->ip()),
+            Limit::perHour(300)->by('shipping-area-hour|'.$request->ip()),
+        ]);
         // WAIT-01: a customer asks for a few products at most; each request becomes an App waitlist entry.
         RateLimiter::for('restock-request', fn (Request $request) => [
             Limit::perMinute(5)->by('restock-min|'.$request->ip()),

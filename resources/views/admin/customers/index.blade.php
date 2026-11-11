@@ -24,7 +24,7 @@
             @forelse ($customers as $customer)
                 <a href="{{ route('admin.customers.show', $customer) }}" class="grid gap-1 p-5 hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_7rem_10rem] lg:items-center lg:gap-4" data-customer-row>
                     <span class="truncate font-semibold text-gray-900">{{ $customer->name }}</span>
-                    <span class="text-sm tabular-nums text-gray-700">{{ '0'.substr($customer->phone, 2) }}</span>
+                    <span class="text-sm tabular-nums text-gray-700">{{ \App\Support\PhoneNumber::local($customer->phone) }}</span>
                     <span class="text-sm text-gray-600 lg:text-right">{{ $customer->orders_count }} pesanan</span>
                     <span class="text-xs text-gray-500 lg:text-right">{{ $customer->orders_max_created_at ? \Illuminate\Support\Carbon::parse($customer->orders_max_created_at)->timezone('Asia/Makassar')->locale('id')->translatedFormat('j M Y') : 'Belum ada' }}</span>
                 </a>

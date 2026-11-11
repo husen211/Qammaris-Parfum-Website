@@ -13,10 +13,8 @@
         </ul>
     @elseif (! $active)
         <p class="mt-3 text-sm text-gray-600">{{ match ($order->lifecycle) { 'draft' => 'Bisa dikerjakan setelah pesanan website dikonfirmasi.', 'awaiting_customer' => 'Bisa dikerjakan setelah data customer lengkap.', default => 'Pesanan sudah ditutup.' } }}</p>
-    @elseif (auth()->user()->can('orders.refund'))
-        {{-- ORD-08 (Owner 2026-10-17): the Owner is not at the store; packing is done by Staff Order. --}}
-        <p class="mt-3 text-sm text-gray-700" data-packing-by-staff>Menunggu packing oleh staf toko (akun Staff Order).</p>
     @else
+        {{-- ORD-14 (Owner 2026-11-11): Super Admin may pack too; the server already allowed it. --}}
         <form method="POST" action="{{ route('admin.orders.v2.pack', $order) }}" class="mt-3 space-y-2" data-pack-form>
             @csrf {!! $hidden('packing') !!}
             <fieldset>

@@ -21,6 +21,48 @@
             {{ $editing ? ($order->stage === 'awaiting_customer' ? 'Lengkapi data pesanan' : 'Ubah data pesanan') : ($order->lifecycle === 'draft' ? 'Pesanan tersimpan' : 'Status pesanan') }}
         </h1>
 
+        {{-- ORD-13: the customer keeps their own link (also in the WhatsApp chat and "Pesanan Saya"). --}}
+        @unless ($editing)
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border border-gray-200 bg-white px-3 py-3" data-copy-box data-order-link>
+                <p class="min-w-0 flex-1 text-sm leading-5 text-gray-700"><span class="block font-semibold text-brand-black">Link pesanan Anda</span>Buka lagi kapan saja untuk cek status. Link ini juga ada di chat WhatsApp dan menu Pesanan Saya.</p>
+                <button type="button" data-copy-account="{{ route('orders.customer.show', $token) }}" data-copy-done="Link pesanan disalin." class="inline-flex min-h-11 shrink-0 items-center gap-2 border border-brand-black bg-white px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">
+                    <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Salin link
+                </button>
+                <p data-copy-status role="status" aria-live="polite" class="w-full text-sm text-gray-600 empty:hidden"></p>
+            </div>
+        @endunless
+
+        {{-- ORD-14: the driver booked through Biteship, from booking until the parcel is received. --}}
+        @php($courierTrip = $order->isV2() && ($order->courier_booking['state'] ?? null) === 'active' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled' ? $order->courier_booking : null)
+        @if ($courierTrip)
+            <section class="mt-6 border border-gray-200 bg-white p-4" aria-labelledby="courier-title" data-customer-courier="{{ $courierTrip['status'] ?? '' }}">
+                <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">{{ \App\Actions\Orders\OnlineOrderFulfillment::biteshipLabel($courierTrip['courier'] ?? null) }}</p>
+                <h2 id="courier-title" class="mt-1 text-base font-semibold text-brand-black">{{ match ($courierTrip['status'] ?? null) {
+                    'allocated', 'picking_up' => 'Driver menuju toko untuk mengambil pesanan',
+                    'picked', 'in_transit' => 'Pesanan dalam perjalanan ke alamat Anda',
+                    'dropping_off' => 'Driver hampir sampai',
+                    'on_hold' => 'Pengiriman ditahan sementara. Admin akan menghubungi Anda.',
+                    'return_in_transit', 'returned' => 'Pesanan dikembalikan ke toko. Admin akan menghubungi Anda.',
+                    default => 'Mencari driver untuk pesanan Anda',
+                } }}</h2>
+                @if (! empty($courierTrip['driver_name']))
+                    <p class="mt-1 text-sm text-gray-700" data-customer-driver>Driver {{ $courierTrip['driver_name'] }}@if (! empty($courierTrip['driver_plate'])) · <span class="font-mono">{{ $courierTrip['driver_plate'] }}</span>@endif</p>
+                @endif
+                @if (! empty($courierTrip['link']))
+                    <a href="{{ $courierTrip['link'] }}" target="_blank" rel="noopener noreferrer" class="mt-3 flex min-h-12 w-full items-center justify-center gap-2 border border-brand-black bg-white px-4 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black" data-customer-track>
+                        {{-- Lucide "map-pin"; docs/licenses/lucide.txt --}}
+                        <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                        Lacak driver
+                    </a>
+                @endif
+                @if ($order->customer_phone)
+                    <p class="mt-3 text-sm leading-6 text-gray-700" data-customer-driver-contact>Driver akan menghubungi nomor Anda, <span class="tabular-nums">{{ \App\Support\PhoneNumber::local($order->customer_phone) }}</span>. Pastikan HP aktif.@if ($whatsappUrl) Belum bisa terhubung dengan driver? <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-black underline underline-offset-2" data-customer-courier-help>Chat admin toko</a>.@endif</p>
+                @endif
+                <p class="mt-2 text-xs text-gray-500">Status diperbarui otomatis dari kurir. Muat ulang halaman untuk melihat yang terbaru.</p>
+            </section>
+        @endif
+
         {{-- ORD-04: receipt confirmation stays at the top while the parcel is on its way. --}}
         @if ($order->isV2() ? ($order->handover_status === 'handed_over' && $order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled') : ($order->stage === 'shipped' && $order->fulfillment !== 'pickup'))
             @php($jnt = $order->fulfillment === 'intercity')
@@ -43,12 +85,32 @@
         @endif
 
         {{-- ORD-04: the order exists before WhatsApp opens. Opening WhatsApp is not a confirmation; the store confirms. --}}
-        @if ($order->lifecycle === 'draft')
+        @if ($order->lifecycle === 'draft' && ! $showPayment)
             <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="next-title" data-checkout-next>
-                <h2 id="next-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim pesan WhatsApp</h2>
-                <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok, ongkir, dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
+                @if ($waitingFor)
+                    {{-- ORD-13: nothing to pay yet; staff check what "Tersedia" cannot promise (quantity) or price the ongkir. --}}
+                    <div class="flex items-start gap-3" data-waiting>
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#8A6A2E]" aria-hidden="true">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        </span>
+                        <div class="min-w-0">
+                            <h2 id="next-title" class="text-base font-semibold text-brand-black">{{ $waitingFor['stock']->isNotEmpty() ? 'Menunggu admin cek stok' : 'Menunggu admin menghitung ongkir' }}</h2>
+                            <p class="mt-1 text-sm leading-6 text-gray-700">
+                                @if ($waitingFor['stock']->isNotEmpty())
+                                    {{ $waitingFor['stock']->map(fn ($item) => $item->product_name.' × '.$item->quantity)->join(', ') }} perlu dicek jumlah stoknya.
+                                @else
+                                    Ongkir pengiriman dihitung admin.
+                                @endif
+                                Kirim pesanan ke WhatsApp supaya admin segera mengecek. Cara bayar muncul di halaman ini setelah dikonfirmasi.
+                            </p>
+                        </div>
+                    </div>
+                @else
+                    <h2 id="next-title" class="text-base font-semibold text-brand-black">Langkah berikutnya: kirim pesan WhatsApp</h2>
+                    <p class="mt-1 text-sm leading-6 text-gray-700">Nomor pesanan Anda <strong class="text-brand-black">{{ $order->code }}</strong>. Kirim pesan ini supaya admin mengonfirmasi stok{{ $order->shipping_quote ? '' : ', ongkir,' }} dan pembayaran. Pesanan belum diproses sebelum dikonfirmasi admin.</p>
+                @endif
                 @if ($checkoutWhatsappUrl)
-                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Kirim ke WhatsApp</a>
+                    <a href="{{ $checkoutWhatsappUrl }}" rel="noopener noreferrer" data-checkout-whatsapp @if (session('checkout_placed')) data-auto-open="1" @endif class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> {{ $waitingFor ? 'Kirim pesanan ke WhatsApp' : 'Kirim ke WhatsApp' }}</a>
                     <p class="mt-2 text-sm leading-6 text-gray-600">WhatsApp tidak terbuka atau pesan belum terkirim? Tekan Kirim ke WhatsApp lagi. Pesanan Anda tetap tersimpan.</p>
                 @else
                     {{-- ORD-07: no store number here (test environment): never fall back to the real store chat. --}}
@@ -58,7 +120,7 @@
                     <button type="button" data-copy-checkout class="mt-2 flex min-h-12 w-full items-center justify-center border border-brand-black bg-white px-4 text-sm font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">Salin pesan</button>
                     <p data-copy-feedback role="status" aria-live="polite" class="mt-1 min-h-5 text-sm text-gray-600"></p>
                 @endif
-                @if ($order->fulfillment === 'local_delivery')
+                @if ($order->fulfillment === 'local_delivery' && ! $order->location_url)
                     <p class="mt-3 text-sm leading-6 text-gray-600">Pengiriman Dalam Kota: kirim juga Sharelok di chat yang sama supaya kurir tepat sampai.</p>
                 @endif
                 <p class="mt-3 text-sm leading-6 text-gray-600">Simpan halaman ini untuk melihat status pesanan.</p>
@@ -66,30 +128,74 @@
         @endif
 
         @if ($showPayment)
-            {{-- ORD-04: final total and only verified official accounts; paying is confirmed by the store, never here. --}}
+            {{-- ORD-04/ORD-13: final total, verified accounts or the store QRIS; paying is confirmed by the store, never here. --}}
+            @php($payChoice = old('payment_preference', $order->payment_preference === 'qris' && $qrisUrl ? 'qris' : 'transfer'))
             <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="pay-title" data-customer-payment>
-                <h2 id="pay-title" class="text-base font-semibold text-brand-black">Pembayaran</h2>
-                <p class="mt-1 flex flex-wrap items-baseline justify-between gap-2"><span class="text-sm text-gray-700">Total pembayaran</span><strong class="text-xl tabular-nums text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong></p>
-                @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.</p>@endif
-                @if ($paymentAccounts->isNotEmpty())
-                    <p class="mt-3 text-sm text-gray-700">Transfer ke rekening resmi Qammaris:</p>
-                    <ul class="mt-2 space-y-2">
-                        @foreach ($paymentAccounts as $account)
-                            <li class="flex flex-wrap items-center justify-between gap-2 border border-gray-200 bg-white px-3 py-2">
-                                <span class="min-w-0"><span class="block text-sm font-semibold text-brand-black">{{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></span><span class="block text-sm text-gray-600">a.n. {{ $account->account_holder }}</span></span>
-                                <button type="button" data-copy-account="{{ $account->account_number }}" class="inline-flex min-h-11 items-center border border-brand-black px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin nomor</button>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="mt-3 text-sm text-gray-700">Nomor rekening resmi dikirim admin lewat WhatsApp.</p>
+                <h2 id="pay-title" class="text-base font-semibold text-brand-black">{{ $order->lifecycle === 'draft' ? 'Langkah berikutnya: pembayaran' : 'Pembayaran' }}</h2>
+                @if ($order->lifecycle === 'draft')
+                    <p class="mt-1 text-sm leading-6 text-gray-700">Pesanan <strong class="text-brand-black">{{ $order->code }}</strong> sudah tersimpan dan produknya tersedia. Bayar sekarang, lalu kirim buktinya lewat WhatsApp; admin mengecek dan memproses pesanan.</p>
                 @endif
-                <p class="mt-2 text-sm text-gray-700">Untuk QRIS, minta kode QRIS ke admin lewat WhatsApp.</p>
-                <p class="mt-2 text-sm text-gray-700">Setelah membayar, kirim bukti pembayaran. Pesanan disiapkan setelah pembayaran dikonfirmasi admin.</p>
-                @if ($proofWhatsappUrl)
-                    <a href="{{ $proofWhatsappUrl }}" target="_blank" rel="noopener noreferrer" data-proof-whatsapp class="mt-3 flex min-h-14 w-full items-center justify-center bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black gap-3" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Kirim bukti lewat WhatsApp</a>
-                @else
-                    <p class="mt-2 text-xs text-gray-500">Lingkungan uji: WhatsApp toko tidak tersedia. Kirim bukti ke admin dengan pesan: “{{ $proofMessage }}”</p>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-sm text-gray-700">Total pembayaran</span>
+                    <span class="flex items-center gap-2"><strong class="text-xl tabular-nums text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong>
+                        <button type="button" data-copy-account="{{ (int) \App\Support\Rupiah::minorUnits($order->customerTotal()) / 100 }}" data-copy-done="Total disalin." class="inline-flex min-h-10 items-center border border-brand-black bg-white px-2.5 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin</button></span>
+                </div>
+                @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.</p>@endif
+                <form method="POST" action="{{ route('orders.customer.pay', $token) }}" class="mt-4" data-pay-form>
+                    @csrf
+                    <fieldset>
+                        <legend class="text-sm font-medium text-brand-black">Pilih cara bayar</legend>
+                        <div class="mt-2 grid grid-cols-2 gap-3">
+                            <label class="{{ $choiceClass }} items-center">
+                                <input type="radio" name="payment_preference" value="transfer" @checked($payChoice === 'transfer') class="h-5 w-5 shrink-0 accent-brand-black" data-pay-choice>
+                                <span class="text-base font-medium text-brand-black">Transfer bank</span>
+                            </label>
+                            <label class="{{ $choiceClass }} items-center {{ $qrisUrl ? '' : 'cursor-not-allowed opacity-60' }}">
+                                <input type="radio" name="payment_preference" value="qris" @checked($payChoice === 'qris') @disabled(! $qrisUrl) class="h-5 w-5 shrink-0 accent-brand-black" data-pay-choice>
+                                <span class="text-base font-medium text-brand-black">QRIS @unless ($qrisUrl)<span class="block text-xs font-normal text-gray-600">Segera tersedia</span>@endunless</span>
+                            </label>
+                        </div>
+                        @error('payment_preference') <p class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                    </fieldset>
+                    <div class="mt-3" data-pay-panel="transfer">
+                        @if ($paymentAccounts->isNotEmpty())
+                            <p class="text-sm text-gray-700">Transfer ke rekening resmi Qammaris:</p>
+                            <ul class="mt-2 space-y-2">
+                                @foreach ($paymentAccounts as $account)
+                                    <li class="border border-gray-200 bg-white p-3" data-payment-account>
+                                        <div class="flex items-center gap-3">
+                                            <x-bank-mark :bank="$account->bank_name" />
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-sm text-gray-600">{{ $account->bank_name }}</p>
+                                                <p class="break-all font-mono text-lg font-semibold tracking-wide text-brand-black">{{ $account->account_number }}</p>
+                                                <p class="text-sm text-gray-600">a.n. {{ $account->account_holder }}</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" data-copy-account="{{ preg_replace('/\D/', '', $account->account_number) }}" data-copy-done="Nomor rekening {{ $account->bank_name }} disalin." class="mt-3 flex min-h-11 w-full items-center justify-center gap-2 border border-brand-black bg-white px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">
+                                            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                            Salin nomor rekening
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p class="text-sm text-gray-700">Nomor rekening resmi dikirim admin lewat WhatsApp.</p>
+                        @endif
+                    </div>
+                    @if ($qrisUrl)
+                        <div class="mt-3" data-pay-panel="qris">
+                            <p class="text-sm text-gray-700">Scan QRIS ini dengan aplikasi bank atau e-wallet, lalu masukkan total <strong class="text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong>.</p>
+                            <img src="{{ $qrisUrl }}" alt="QRIS Qammaris Perfumes" class="mx-auto mt-3 w-full max-w-xs border border-gray-200 bg-white p-2" loading="lazy" decoding="async">
+                            <a href="{{ $qrisUrl }}" target="_blank" rel="noopener" download class="mx-auto mt-2 flex min-h-11 max-w-xs items-center justify-center border border-brand-black bg-white px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Simpan gambar QRIS</a>
+                        </div>
+                    @endif
+                    <p class="mt-3 text-sm leading-6 text-gray-700">Sudah bayar? Tekan tombol di bawah, lalu kirim foto atau screenshot bukti bayar di chat WhatsApp. Pesanan disiapkan setelah admin mengecek pembayaran.</p>
+                    <button type="submit" class="mt-3 flex min-h-14 w-full items-center justify-center gap-3 bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black" data-proof-whatsapp data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem]" /> Kirim bukti bayar ke WhatsApp</button>
+                </form>
+                @if (session('proof_copy') || ! $proofWhatsappUrl)
+                    {{-- ORD-07: no store number in test environments: the proof message is shown for copying. --}}
+                    <p class="mt-3 text-xs leading-5 text-gray-600">WhatsApp toko tidak tersedia di sini. Kirim pesan ini beserta bukti bayar ke admin:</p>
+                    <textarea readonly rows="7" class="mt-1 w-full resize-none border border-gray-300 bg-white px-3 py-2 text-sm leading-6 text-brand-black" data-proof-message>{{ $proofMessage }}</textarea>
                 @endif
                 <p data-copy-account-feedback role="status" aria-live="polite" class="mt-1 min-h-5 text-sm text-gray-600"></p>
             </section>
@@ -126,7 +232,13 @@
                     <span>Paperbag</span><span class="tabular-nums">{{ format_rupiah($order->packagingFee()) }}</span>
                 </div>
             @endif
-            @if ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
+            @if ($order->shipping_quote && $order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
+                @php($quote = $order->shipping_quote)
+                <div class="mt-1 flex flex-wrap items-start justify-between gap-2 text-sm text-gray-700" data-ongkir-quote>
+                    <span>Ongkir {{ $quote['label'] }}@if ($quote['discount'] > 0 && \App\Support\Rupiah::minorUnits((string) $order->shipping_fee) === $quote['charged'] * 100)<span class="block text-xs text-[#8A6A2E]">Potongan ongkir {{ $quote['percent'] }}% dari Qammaris</span>@endif</span>
+                    <span class="text-right tabular-nums">@if ($quote['discount'] > 0)<s class="mr-1 text-xs text-gray-400">{{ format_rupiah($quote['price']) }}</s>@endif{{ format_rupiah($order->shipping_fee) }}</span>
+                </div>
+            @elseif ($order->shipping_payer === 'added_to_transfer' && $order->shipping_fee !== null)
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
                     <span>Ongkir</span><span class="tabular-nums">{{ format_rupiah($order->shipping_fee) }}</span>
                 </div>
@@ -279,7 +391,7 @@
         @else
 
             {{-- ADM-01: also right after a website checkout (draft), when the customer is already in the WhatsApp chat. --}}
-            @if ($order->fulfillment === 'local_delivery' && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled' && ! $locationUrl && \App\Models\StoreInfo::usesTestWhatsapp())
+            @if ($order->fulfillment === 'local_delivery' && ! $order->location_url && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled' && ! $locationUrl && \App\Models\StoreInfo::usesTestWhatsapp())
                 <p class="mt-6 border border-dashed border-gray-300 p-3 text-xs leading-5 text-gray-600" data-location-test-note>Mode uji: tombol Kirim Sharelok tampil di website live. Di sini WhatsApp toko sengaja tidak aktif.</p>
             @endif
             @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
@@ -342,14 +454,25 @@
     const link = document.querySelector('[data-checkout-whatsapp][data-auto-open]');
     if (link) window.setTimeout(() => window.location.assign(link.href), 600);
 })();
+// ORD-13: show the chosen payment way only.
+(() => {
+    const form = document.querySelector('[data-pay-form]');
+    if (!form) return;
+    const sync = () => {
+        const choice = form.querySelector('[data-pay-choice]:checked')?.value;
+        form.querySelectorAll('[data-pay-panel]').forEach((panel) => { panel.hidden = panel.dataset.payPanel !== choice; });
+    };
+    form.querySelectorAll('[data-pay-choice]').forEach((input) => input.addEventListener('change', sync));
+    sync();
+})();
 // ORD-04: copy an official account number.
 document.querySelectorAll('[data-copy-account]').forEach((button) => button.addEventListener('click', async () => {
-    const feedback = document.querySelector('[data-copy-account-feedback]');
+    const feedback = button.closest('[data-copy-box]')?.querySelector('[data-copy-status]') ?? document.querySelector('[data-copy-account-feedback]');
     try {
         await navigator.clipboard.writeText(button.dataset.copyAccount);
-        feedback.textContent = 'Nomor rekening disalin.';
+        feedback.textContent = button.dataset.copyDone ?? 'Nomor rekening disalin.';
     } catch {
-        feedback.textContent = 'Salin otomatis tidak tersedia. Nomor: ' + button.dataset.copyAccount;
+        feedback.textContent = 'Salin otomatis tidak tersedia. Salin manual: ' + button.dataset.copyAccount;
     }
 }));
 // ORD-07: copy the order message where no store chat is available; the selected text is the fallback.

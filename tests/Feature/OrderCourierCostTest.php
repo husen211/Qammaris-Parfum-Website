@@ -191,13 +191,13 @@ class OrderCourierCostTest extends TestCase
             'actor' => $this->actor()]), 403, 'action_not_allowed');
     }
 
-    public function test_the_owner_books_with_own_money_and_never_sees_packing_or_employee_names(): void
+    public function test_the_owner_books_with_own_money_and_never_sees_employee_names(): void
     {
-        // Owner 2026-10-17: the Owner books the courier from Jakarta (GoPay) and does not pack at the store.
+        // Owner 2026-10-17: the Owner books the courier from Jakarta (GoPay). Owner 2026-11-11: Super Admin may pack too.
         $owner = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh();
         $unpacked = $this->paidV2Order('local_delivery');
         $this->actingAs($owner)->get(route('admin.orders.show', $unpacked))->assertOk()
-            ->assertSee('data-packing-by-staff', false)->assertDontSee('Konfirmasi packing');
+            ->assertSee('Konfirmasi packing')->assertDontSee('data-packing-by-staff', false);
         $this->actingAs($this->staff)->get(route('admin.orders.show', $unpacked))->assertSee('Konfirmasi packing');
 
         $order = $this->packed($this->paidV2Order('local_delivery'));

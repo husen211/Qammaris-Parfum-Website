@@ -21,7 +21,7 @@
         <h2 id="accounts-title" class="text-base font-semibold text-gray-900">Daftar rekening</h2>
         @forelse ($accounts as $account)
             <div class="mt-3 rounded-lg border p-3 text-sm {{ $account->isUsable() ? 'border-green-200' : 'border-gray-200' }}" data-account="{{ $account->id }}">
-                <p class="font-semibold text-gray-900">{{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></p>
+                <p class="flex items-center gap-2 font-semibold text-gray-900"><x-bank-mark :bank="$account->bank_name" class="h-8 w-12" /> {{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></p>
                 <p class="text-gray-700">a.n. {{ $account->account_holder }}</p>
                 <p class="mt-1 text-xs text-gray-500">
                     Ditambahkan {{ $names[$account->created_by] ?? '-' }} · {{ $time($account->created_at) }}
@@ -53,6 +53,32 @@
         @empty
             <p class="mt-2 text-sm text-gray-600">Belum ada rekening. Instruksi pembayaran hanya berisi total, dan rekening dikirim admin di chat.</p>
         @endforelse
+    </section>
+
+    {{-- ORD-13: the static QRIS shown on the customer payment page next to the bank accounts. --}}
+    <section class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5" aria-labelledby="qris-title" data-qris-settings>
+        <h2 id="qris-title" class="text-base font-semibold text-gray-900">QRIS statis</h2>
+        @if ($qrisUrl)
+            <p class="mt-1 text-sm text-gray-600">Tampil di halaman pembayaran customer. Customer memasukkan total sendiri saat membayar.</p>
+            <img src="{{ $qrisUrl }}" alt="QRIS toko saat ini" class="mt-3 w-full max-w-[16rem] rounded-lg border border-gray-200 bg-white p-2">
+        @else
+            <p class="mt-1 text-sm text-gray-600">Belum ada QRIS. Customer melihat pilihan QRIS sebagai "Segera tersedia" dan hanya bisa transfer bank.</p>
+        @endif
+        <form method="POST" action="{{ route('admin.orders.payment-accounts.qris') }}" enctype="multipart/form-data" class="mt-3 space-y-2">
+            @csrf
+            <label class="block text-sm font-medium text-gray-700">{{ $qrisUrl ? 'Ganti gambar QRIS' : 'Upload gambar QRIS' }}
+                <input type="file" name="qris" accept="image/png,image/jpeg,image/webp" required class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:min-h-11 file:rounded-lg file:border-0 file:bg-gray-900 file:px-4 file:text-sm file:font-semibold file:text-white">
+            </label>
+            @error('qris')<p class="text-xs text-red-700">{{ $message }}</p>@enderror
+            <p class="text-xs text-gray-500">PNG, JPG, atau WebP, minimal 300 × 300 piksel, maksimal 4 MB. Pastikan QRIS atas nama toko.</p>
+            <button class="inline-flex min-h-11 items-center justify-center rounded-lg bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800">Simpan QRIS</button>
+        </form>
+        @if ($qrisUrl)
+            <form method="POST" action="{{ route('admin.orders.payment-accounts.qris.remove') }}" class="mt-2" onsubmit="return confirm('Hapus QRIS? Customer hanya bisa transfer bank.')">
+                @csrf
+                <button class="inline-flex min-h-11 items-center text-sm font-semibold text-red-700">Hapus QRIS</button>
+            </form>
+        @endif
     </section>
 
     @if (\App\Models\StoreInfo::usesTestWhatsapp())

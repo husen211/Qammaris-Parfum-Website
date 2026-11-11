@@ -70,6 +70,24 @@ class OnlineOrderDetails
         return false;
     }
 
+    /** ORD-13: the customer's choice of transfer or QRIS on the payment page; a preference, never a payment. */
+    public function choosePaymentByCustomer(OnlineOrder $order, string $method): OnlineOrder
+    {
+        if (! $order->customerCanPay()) {
+            throw new InvalidOrderTransition('Pembayaran untuk pesanan ini belum dibuka atau sudah selesai.');
+        }
+
+        return $this->mutateV2($order, null, null, function (OnlineOrder $order) use ($method): bool {
+            if ($order->payment_preference === $method) {
+                return false;
+            }
+            $order->payment_preference = $method;
+            $this->orderEvent($order, null, 'details_updated', 'Customer memilih bayar lewat '.(config('orders.payment_preferences')[$method] ?? $method));
+
+            return true;
+        });
+    }
+
     /** Owner D5: Staff Order corrects recipient details until handover; money fields are Super Admin only. */
     public function updateByAdmin(OnlineOrder $order, int $revision, User $actor, array $data): OnlineOrder
     {
@@ -90,6 +108,13 @@ class OnlineOrderDetails
                     && (in_array($order->lifecycle, ['completed', 'cancelled'], true) || $order->handover_status === 'handed_over')) {
                     throw new OrderActionNotAllowed('Data penerima tidak dapat diubah setelah pesanan diserahkan atau ditutup. Hubungi Super Admin.');
                 }
+            }
+            // ORD-13 (Owner 2026-11-11): ongkir priced at checkout never goes up for the customer; a costlier courier
+            // is the store's difference. Lowering it, or making it free, stays possible.
+            $locked = $order->shipping_quote['charged'] ?? null;
+            if ($locked !== null && ($order->isDirty('shipping_fee') && $order->shipping_fee !== null && Rupiah::minorUnits((string) $order->shipping_fee) > $locked * 100
+                || $order->isDirty('shipping_payer') && $order->shipping_payer === 'cash_to_driver')) {
+                throw new OrderActionNotAllowed('Ongkir dari checkout sudah dikunci untuk customer dan tidak bisa dinaikkan. Selisih biaya kurir ditanggung toko.');
             }
             // ORD-04: switching paperbag changes the total; after money came in that is a Super Admin correction.
             if ($order->isDirty('packaging') && ($order->getOriginal('packaging') === 'paperbag') !== ($order->packaging === 'paperbag')

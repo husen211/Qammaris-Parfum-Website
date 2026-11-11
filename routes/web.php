@@ -68,6 +68,9 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::post('/clear', [CartController::class, 'clear'])->name('clear');
     Route::get('/checkout', [CartController::class, 'showCheckout'])->name('checkout.show');
     Route::post('/checkout', [CartController::class, 'checkout'])->middleware('throttle:website-checkout')->name('checkout');
+    // ORD-13: courier prices for the checkout; JSON for the page's own script, bound to this session's cart.
+    Route::post('/checkout/ongkir', [CartController::class, 'shippingQuote'])->middleware('throttle:shipping-quote')->name('checkout.shipping');
+    Route::get('/checkout/wilayah', [CartController::class, 'shippingAreas'])->middleware('throttle:shipping-area')->name('checkout.areas');
     // cart data for drawer
     Route::get('/data', [CartController::class, 'getCartData'])->name('data');
 });
@@ -82,6 +85,8 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/pesanan-saya/lupakan', [OnlineOrderController::class, 'forgetMine'])->name('orders.customer.forget');
     Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
     Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
+    // ORD-13: the customer picks transfer or QRIS and opens WhatsApp to send the proof.
+    Route::post('/pesanan/{token}/bayar', [OnlineOrderController::class, 'pay'])->middleware('throttle:10,1')->name('orders.customer.pay');
     Route::post('/tugas-pesanan/{token}/langkah', [OnlineOrderStaffController::class, 'advance'])->name('orders.staff.advance');
     Route::post('/tugas-pesanan/{token}/talangan', [OnlineOrderStaffController::class, 'recordAdvance'])->name('orders.staff.advance-cost');
 });
@@ -194,6 +199,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
                 Route::post('/', 'store')->name('store');
                 Route::post('{account}/verify', 'verify')->name('verify');
                 Route::post('{account}/deactivate', 'deactivate')->name('deactivate');
+                Route::post('qris', 'qris')->name('qris');
+                Route::post('qris/hapus', 'removeQris')->name('qris.remove');
             });
         // ORD-04: UAT-only opt-in of this browser to the official store WhatsApp number (Super Admin).
         Route::post('orders/uat-whatsapp', [AdminStorePaymentAccountController::class, 'uatWhatsapp'])->middleware('can:orders.payment-accounts')->name('orders.uat-whatsapp');
@@ -220,6 +227,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('courier', 'courier')->name('courier');
             Route::post('jnt', 'jnt')->name('jnt');
             Route::post('courier-cost', 'updateCourierCost')->name('courier-cost');
+            // ORD-14: instant courier through Biteship (book, re-read status, cancel before pickup).
+            Route::post('biteship', 'bookBiteship')->middleware('throttle:10,1')->name('biteship.book');
+            Route::post('biteship/refresh', 'refreshBiteship')->middleware('throttle:20,1')->name('biteship.refresh');
+            Route::post('biteship/cancel', 'cancelBiteship')->middleware('throttle:10,1')->name('biteship.cancel');
             // ORD-03: optional J&T QR (private file) and the customer-charged shipping fee.
             Route::post('jnt/qr', 'jntQr')->name('jnt.qr');
             Route::get('jnt/qr', 'showJntQr')->name('jnt.qr.show');

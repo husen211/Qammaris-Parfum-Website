@@ -163,10 +163,7 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
 - **Batas kirim:** 6 checkout per menit dan 30 per jam per perangkat/IP.
 - **Pelanggan.** Pesanan checkout website tersimpan sebagai pelanggan saat Staff Order **mengonfirmasi** pesanannya (bukan saat masih draft), dengan aturan nomor WhatsApp yang sama = pelanggan yang sama (ORD-05).
 - **Privasi.** Data penerima checkout (nama, HP, alamat, kelurahan/kecamatan, catatan) disimpan seperti Pesanan Online lain: hanya untuk mengurus pesanan, terlihat oleh tim Qammaris dan detail tugas App setelah aktif. Tidak ada penghapusan otomatis; Super Admin bisa menghapus data pelanggan atas permintaan (ORD-05).
-- **Tahap 2 (belum dihitung):**
-  - Kolom estimasi ongkir dan sumbernya (manual/zona/jarak/API) serta berat produk/item tersedia tetapi kosong.
-  - Berat yang belum diketahui tetap kosong, tidak diisi 1 kg.
-  - Tidak ada panggilan Maxim, GoSend, atau RajaOngkir.
+- **Ongkir otomatis:** lihat "Ongkir otomatis di checkout (ORD-13)" di bawah. Tanpa saklarnya, ongkir tetap dikonfirmasi staf.
 
 Keputusan: [ADR-044](../architecture/decisions/ADR-044-website-checkout-orders.md).
 
@@ -248,7 +245,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 
 - Semua pekerjaan pesanan dilakukan di Website. Qammaris App hanya tampilan cadangan dan tempat reimburse masuk.
 - Peran:
-  - **Super Admin (Owner, dari Jakarta)** membuat pesanan dan mengirim link ke customer. Owner tidak perlu mengonfirmasi pembayaran, packing, atau uang siapa;
+  - **Super Admin (Owner, dari Jakarta)** membuat pesanan dan mengirim link ke customer. Owner tidak perlu mengonfirmasi pembayaran, packing, atau uang siapa, tetapi boleh mengerjakan packing bila perlu (ORD-14, Owner 2026-11-11);
   - **Staff Order** (Andi/Ikrar, satu akun bersama di laptop toko) mengerjakan pembayaran → packing → pesan kurir (ongkir + uang siapa) → serah terima.
 - Pesanan Online di App hanya untuk dilihat: tanpa "Dilakukan oleh", tombol langkah, atau "Catat ongkir", dengan tombol "Buka di Website". Link pesanan di grup WhatsApp membuka halaman pesanan Website ("Buka pesanan"), dan saklar `QAMMARIS_ORDER_APP_TASK_LINKS` dimatikan saat rilis.
 - Langkah kurir dalam kota: **Kurir sudah dipesan → Sudah diserahkan ke kurir** (tanpa langkah "Kurir tiba").
@@ -259,7 +256,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Uang Andi/Ikrar otomatis menjadi reimburse karyawan itu di Qammaris App, **langsung disetujui, bukti opsional** (keputusan Owner). Owner tinggal membayar.
   - Pilihan karyawan diambil langsung dari karyawan aktif di Qammaris App dan disambungkan lewat ID akun. Karyawan baru atau yang berhenti otomatis ikut berubah. Ganti nama akun di App langsung terlihat di halaman pesanan Website, reimburse, dan ongkir pesanan orang itu.
   - Nama yang tidak cocok tidak membuat reimburse dan memberi notifikasi ke Owner.
-- Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin tidak mengerjakan packing.
+- Super Admin (Owner) yang memesan kurir dari Jakarta memilih **Uang saya (GoPay Owner)** / Kasir / Customer bayar driver, tanpa nama karyawan. Super Admin boleh mengerjakan packing (ORD-14, Owner 2026-11-11).
 - Uang Owner, Kasir, dan Customer bayar driver tidak membuat reimburse.
 - Semua isian rupiah di admin memakai pemisah ribuan (15.000).
 - **Notifikasi pesanan (ORD-09):** Super Admin dan Staff Order bisa mengaktifkan push notification per perangkat. Setiap ada pesanan baru dari checkout website, muncul notifikasi berisi kode, jumlah barang, total, dan "menunggu konfirmasi", tanpa nomor HP atau alamat. Ketuk notifikasi untuk membuka pesanannya.
@@ -273,6 +270,51 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - **Kirim ke luar kota (J&T)** tidak ditanya: ongkirnya selalu sekalian dibayar. **Ambil di toko** tidak ditanya.
 - Staf tetap bisa mengganti pilihan bila customer minta lain lewat chat. **Gratis ongkir** tetap keputusan toko: setelah toko memilih gratis, customer tidak ditanya lagi.
 - Setelah ada uang masuk (termasuk pembayaran sebagian) atau packing dimulai, link customer tidak lagi menanyakan atau mengubah metode ini; perubahan total mengikuti aturan ongkir dan penyesuaian harga yang berlaku.
+
+### Ongkir otomatis di checkout (ORD-13, Owner 2026-11-11, saklar `ORDERS_SHIPPING_QUOTES`)
+
+- **Pilihan pengiriman di checkout:** Ambil di toko; **Kurir instan** (GoSend atau GrabExpress, customer memilih) dari titik pin peta; **J&T** (dalam dan luar kota) dari kecamatan/kota tujuan. Harga dari Biteship, dihitung di server.
+- **Diskon ongkir dari Qammaris (ditanggung toko):**
+  - Instan: ongkir mulai Rp20.000 dipotong 15%; di bawah Rp20.000 tanpa potongan.
+  - J&T: dipotong 30%, maksimal Rp30.000.
+  - Hasil dibulatkan ke bawah ke Rp500. Tampil sebagai harga coret dengan tulisan "Potongan ongkir N% dari Qammaris".
+- **Berat:** setiap produk dihitung 800 g (termasuk dus dan bubble wrap), dikali jumlah.
+- **Ongkir dikunci.** Ongkir yang ditagih saat checkout masuk total pembayaran dan tidak pernah dinaikkan ke customer. Bila biaya kurir sebenarnya lebih mahal, selisihnya ditanggung toko (J&T: karyawan bayar, lalu reimburse seperti biasa). Staf boleh menurunkan atau menggratiskan, tetapi tidak menaikkan atau mengubahnya menjadi "bayar ke driver".
+- **Harga berlaku 30 menit** untuk isi keranjang yang sama. Keranjang berubah atau lewat waktu: customer memilih kurir lagi.
+- **Tidak pernah buntu.** Kurir tidak menjangkau, titik di luar area Palu dan sekitarnya, atau Biteship tidak menjawab: customer tetap bisa memesan dengan **Ongkir dikonfirmasi admin** (alur ORD-04/ORD-10).
+- **Lokasi.** Sebelum HP meminta izin lokasi, checkout menampilkan pop-up Qammaris yang menjelaskan alasannya. Peta selalu bisa dipakai tanpa izin lokasi: customer mencari alamat (jalan, gedung, tempat), memilih kecamatan, atau menggeser peta; pin selalu diam di tengah. Titik antar disimpan di pesanan seperti alamat, dikirim ke Biteship untuk harga, dan menjadi link lokasi pesanan untuk staf dan Qammaris App (pengganti Sharelok). Teks pencarian alamat dikirim ke layanan pencarian OpenStreetMap (Photon).
+- **Pesan WhatsApp** checkout memuat ongkir dan total; admin cukup mengonfirmasi stok dan pembayaran.
+- **Form checkout satu kali tanya** (Owner 2026-11-11): kelurahan, kecamatan, dan kode pos tidak ditanya lagi (pin atau tujuan J&T sudah menentukan; tujuan J&T mengisi kecamatan dan kode pos pesanan). Cara bayar dipilih sesudah memesan.
+- **Langkah pembayaran** (Owner 2026-11-11). Pesanan dan pembayaran tetap manual lewat WhatsApp; bedanya data sudah lengkap.
+  - **Boleh langsung bayar** bila setiap produk hanya 1 pcs dan total sudah final (ongkir otomatis atau ambil di toko): halaman pesanan langsung menampilkan pilihan **Transfer bank** (rekening terverifikasi) atau **QRIS** (gambar QRIS statis toko), lalu tombol **Kirim bukti bayar ke WhatsApp**. Pilihan cara bayar disimpan di pesanan; tidak ada yang otomatis tercatat lunas.
+  - **Menunggu admin** bila ada produk 2 pcs atau lebih ("Tersedia" belum menjamin jumlah) atau ongkir dikonfirmasi admin: halaman menampilkan ikon jam "Menunggu admin cek stok"/"menghitung ongkir" dan tombol kirim pesanan ke WhatsApp; cara bayar muncul setelah admin mengonfirmasi.
+  - **Link pesanan customer** ikut di pesan WhatsApp ("Cek status pesanan saya") dan bisa disalin di atas halaman pesanan, selain menu Pesanan Saya.
+  - **WhatsApp tetap wajib** di kedua kasus. Di admin alurnya tetap Konfirmasi pesanan → Tandai Lunas; kartu konfirmasi menandai "Customer sudah bisa bayar langsung" atau "Perlu cek stok: produk × jumlah".
+  - **Rekening tampil langsung**: setiap rekening terverifikasi tampil dengan tanda bank, nomor, nama pemilik, dan tombol salin; total juga bisa disalin. Rekening dikelola Super Admin di halaman Rekening pembayaran.
+  - **QRIS statis** di-upload Super Admin di halaman Rekening pembayaran (PNG/JPG/WebP, minimal 300 × 300 piksel); sebelum ada, pilihan QRIS tampil "Segera tersedia".
+
+Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-biteship.md). Akun dan kunci: [runbook Biteship](../runbooks/BITESHIP.md).
+
+### Pesan kurir instan dari admin lewat Biteship (ORD-14, Owner 2026-11-11, saklar yang sama)
+
+- **Tombol "Pesan kurir sekarang"** muncul di Pengiriman untuk pesanan website dengan kurir instan dan titik antar dari checkout, setelah lunas dan dipacking, bila toko yang memesan kurir. Kurir pilihan customer sudah terpilih; staf boleh ganti ke GoSend/GrabExpress yang lain (misalnya driver tidak ditemukan). Ongkir customer tidak berubah.
+- **Dibayar dari saldo Biteship (dana Owner).** Saat driver mengambil paket, ongkir kurir tercatat otomatis sebagai "saldo Biteship (Owner)", tanpa memilih uang siapa dan tanpa reimburse.
+- **Status berubah sendiri** dari Biteship: Mencari driver → Driver ditemukan → Driver menuju toko → Paket diambil driver (= sudah diserahkan) → Dalam perjalanan → Sudah diterima (= diterima customer). Riwayat menulis "Biteship (otomatis)". Tombol **Perbarui status** membaca ulang dari Biteship kapan saja.
+- **Driver tidak ditemukan / dibatalkan kurir** sebelum paket diambil: langkah kurir kembali kosong dan staf bisa memesan ulang. Setelah paket diambil, status bermasalah (ditahan, dikembalikan) hanya dicatat di riwayat; staf mengecek dan mencatat kendala bila perlu.
+- **Batalkan kurir** bisa sebelum paket diambil, dengan alasan; saldo dikembalikan Biteship. Selama kurir Biteship masih dipesan, pesanan tidak bisa dibatalkan dan kurir manual tidak bisa dicatat: batalkan kurir Biteship dulu.
+- **Hasil pemesanan belum pasti** (Biteship tidak menjawab): staf mencari kode pesanan (misalnya `QAM-0023-1`) di dashboard Biteship dulu, lalu mencentang "Sudah saya cek" sebelum bisa memesan ulang, supaya driver tidak dobel.
+- **Customer** melihat kurir, status singkat, nama driver dan plat, serta tombol **Lacak driver** di halaman pesanannya, ditambah "Driver akan menghubungi nomor Anda, 08…" dan tautan **Chat admin toko** bila belum bisa terhubung. Nomor HP driver hanya untuk staf.
+- **Kontak tanpa chat aplikasi kurir** (Owner 2026-11-11). Customer tidak perlu aplikasi Gojek/Grab:
+  - driver menerima nomor HP customer (penerima), alamat, dan catatan pesanan, lalu menghubungi customer langsung;
+  - driver menerima nomor HP admin toko sebagai kontak jemput, dan catatan jemput "Ada kendala? WhatsApp admin toko 08…" (tetap bisa dihubungi walau nomor driver di aplikasi kurir disamarkan);
+  - di admin, setelah driver ditemukan: **Chat driver** (WhatsApp berisi kode pesanan, nama dan nomor customer, alamat, catatan, titik antar), **Telepon driver**, dan **Kabari customer + link lacak** (WhatsApp ke customer berisi driver, plat, link lacak, dan link status pesanan). Bila nomor driver ternyata samaran dan WhatsApp tidak tersambung, staf menelepon.
+  - Kabar otomatis lewat WhatsApp ("driver sudah dekat") belum dipakai (butuh layanan WhatsApp berbayar).
+- **Tidak ada tombol "Sudah diserahkan ke kurir" dan "Tandai diterima customer" untuk kurir Biteship** (Owner 2026-11-11): saat driver mengambil paket, pesanan otomatis tercatat diserahkan; saat paket sampai, tercatat diterima. Bila status terlambat, tekan Perbarui status. Customer tetap bisa menekan "Pesanan sudah saya terima" di halamannya.
+- **Jalur manual tetap ada:** "Pesan manual di aplikasi kurir"; setelah kurir manual dicatat, tombol "Sudah diserahkan ke kurir" muncul seperti biasa. Pesanan tanpa titik dari checkout (dibuat staf), J&T, dan ambil di toko tetap seperti sebelumnya.
+- **Kartu Pembayaran pesanan website** di admin hanya menampilkan total, cara bayar pilihan customer, dan Tandai Lunas; rekening dan QRIS sudah tampil di halaman pesanan customer. Pesanan buatan staf tetap punya "Salin Total & Instruksi Pembayaran".
+- **Halaman customer tidak meminta Sharelok** bila pesanan sudah punya titik lokasi (dari checkout atau diisi staf).
+
+Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-biteship.md).
 
 ### Status pesanan terpisah (ORD-02c, branch review)
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\OnlineOrderLegacyState;
 use App\Support\OnlineOrderMoney;
+use App\Support\OnlineOrderStepper;
 use App\Support\OnlineOrderV2State;
 use App\Support\OrderApi\OrderWebhookOutbox;
 use App\Support\Rupiah;
@@ -66,13 +67,16 @@ class OnlineOrder extends Model
         'driver_funding', 'payment_method', 'recorded_in_majoo', 'staff_note',
     ];
 
-    protected $hidden = ['customer_token_hash', 'customer_token_encrypted', 'staff_token_hash', 'staff_token_encrypted'];
+    protected $hidden = ['customer_token_hash', 'customer_token_encrypted', 'staff_token_hash', 'staff_token_encrypted', 'shipping_quote', 'courier_booking'];
 
     protected $casts = [
         'customer_token_encrypted' => 'encrypted',
         'staff_token_encrypted' => 'encrypted',
         'customer_link_expires_at' => 'datetime',
         'shipping_fee' => 'decimal:2',
+        'shipping_estimate' => 'decimal:2',
+        'shipping_quote' => 'array',
+        'courier_booking' => 'array',
         'packaging_fee' => 'decimal:2',
         'staff_advance_amount' => 'decimal:2',
         'staff_reimbursed_at' => 'datetime',
@@ -270,9 +274,47 @@ class OnlineOrder extends Model
      */
     public function customerSetsShippingPayment(): bool
     {
-        return $this->isV2() && $this->lifecycle !== 'draft' && $this->shipping_payer !== 'store_free'
+        // ORD-13: ongkir priced at checkout is part of the transfer; paying the driver would bypass the locked price.
+        return $this->isV2() && $this->lifecycle !== 'draft' && $this->shipping_payer !== 'store_free' && $this->shipping_quote === null
             && ($this->lifecycle === 'awaiting_customer' || ($this->customerCanEdit() && $this->preparation_status === 'not_started'))
             && OnlineOrderMoney::totals($this)['received'] === 0;
+    }
+
+    /**
+     * ORD-13 (Owner 2026-11-11): a website order may be paid before staff confirm it when nothing needs checking:
+     * the total is final and every product is a single unit ("Tersedia" says one exists, not how many).
+     */
+    public function payableBeforeConfirmation(): bool
+    {
+        return $this->isV2() && $this->source === 'website' && $this->lifecycle === 'draft'
+            && (bool) config('orders.shipping_quotes.enabled') && OnlineOrderStepper::totalIsFinal($this)
+            && $this->items->every(fn (OnlineOrderItem $item) => $item->quantity === 1);
+    }
+
+    /** ORD-14: a store-booked instant courier with the customer's checkout pin can be booked through Biteship. */
+    public function biteshipBookable(): bool
+    {
+        $quote = $this->shipping_quote;
+
+        return $this->isV2() && $this->fulfillment === 'local_delivery' && $this->courier_booking_responsibility === 'store'
+            && $this->handover_status === 'pending' && ($quote['kind'] ?? null) === 'instant'
+            && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null);
+    }
+
+    /** ORD-14: a Biteship driver is booked, or a booking started less than two minutes ago is still waiting for Biteship. */
+    public function biteshipBusy(): bool
+    {
+        $booking = $this->courier_booking ?? [];
+
+        return ($booking['state'] ?? null) === 'active'
+            || (($booking['state'] ?? null) === 'booking' && now()->getTimestamp() - (int) ($booking['started_at'] ?? 0) < 120);
+    }
+
+    /** ORD-04/ORD-13: the customer page shows how to pay: final total, unpaid, and confirmed or payable before confirmation. */
+    public function customerCanPay(): bool
+    {
+        return $this->isV2() && $this->payment_status !== 'paid' && OnlineOrderStepper::totalIsFinal($this)
+            && ($this->lifecycle === 'active' || $this->payableBeforeConfirmation());
     }
 
     /** ORD-10: shipping payer from the customer's form: their choice for a local courier, always the transfer for J&T. */

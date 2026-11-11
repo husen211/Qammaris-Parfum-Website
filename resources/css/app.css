@@ -431,3 +431,11 @@ a[data-catalog-return][data-catalog-pressed] {
 
 /* ADM-04: order page disclosures turn their chevron when open. */
 details[open] > summary [data-chevron] { rotate: 180deg; }
+
+/* ORD-13: checkout map. Calmer tiles so the gold pin and the buttons stand out; touch-sized zoom buttons. */
+.qm-map .leaflet-tile-pane { filter: grayscale(0.4) saturate(0.85) contrast(0.95) brightness(1.03); }
+.qm-map.leaflet-container { font-family: inherit; background: #eef0ea; }
+.qm-map .leaflet-control-zoom a { width: 40px; height: 40px; line-height: 40px; font-size: 20px; color: #1a1a1a; }
+.qm-map .leaflet-control-attribution { font-size: 10px; }
+/* ORD-13: the checkout pop-ups dim the page behind them (plain CSS: ::backdrop does not see Tailwind's variables everywhere). */
+[data-location-dialog]::backdrop, [data-map-dialog]::backdrop { background: rgba(0, 0, 0, 0.55); }

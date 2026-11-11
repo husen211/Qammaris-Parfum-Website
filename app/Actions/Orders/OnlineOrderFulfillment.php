@@ -15,6 +15,8 @@ use App\Models\OnlineOrderClaim;
 use App\Models\OnlineOrderCost;
 use App\Models\OnlineOrderEvent;
 use App\Models\OnlineOrderIssue;
+use App\Models\User;
+use App\Support\OnlineOrderLabels;
 use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderV2State;
 use App\Support\OrderActor;
@@ -48,6 +50,15 @@ class OnlineOrderFulfillment
     public ?OnlineOrderEvent $lastEvent = null;
 
     private ?array $pendingEvent = null;
+
+    /** Set by an operation that changes only stored detail (ORD-14 driver info): saved without a revision or event. */
+    private bool $saveQuietly = false;
+
+    /** ORD-14: Biteship statuses that end a booking before the parcel left the store. */
+    public const BITESHIP_ENDED = ['courier_not_found', 'rejected', 'cancelled', 'disposed'];
+
+    /** ORD-14: Biteship statuses that mean the driver has the parcel. */
+    public const BITESHIP_CARRYING = ['picked', 'in_transit', 'dropping_off', 'delivered'];
 
     public function startPreparation(OnlineOrder $order, int $revision, OrderActor $actor): OnlineOrder
     {
@@ -412,21 +423,26 @@ class OnlineOrderFulfillment
         if ($cost?->reimbursement_status === 'paid') {
             throw new InvalidOrderTransition('Reimburse ongkir ini sudah dibayar di Qammaris App. Minta Owner mengoreksinya di App.');
         }
+        $this->storeCourierCost($order, $cost, $amount, $source, $advancerId, $advancer, $actor->user->id, $actor->displayName);
+
+        return 'ongkir kurir Rp'.number_format($amount, 0, ',', '.').' · '.($advancer !== null ? 'ditalangi '.$advancer : ['owner' => 'dana Owner', 'cashier' => 'uang kasir', 'customer' => 'customer bayar driver'][$payer]);
+    }
+
+    private function storeCourierCost(OnlineOrder $order, ?OnlineOrderCost $cost, int $amount, string $source, ?string $advancerId, ?string $advancer, ?int $recordedBy, string $reporter): void
+    {
         $attributes = [
             'kind' => 'actual_shipping', 'status' => 'active', 'amount' => Rupiah::decimal($amount * 100),
             'funding' => [['source' => $source, 'amount' => $amount]], 'advanced_by_name' => $advancer, 'advanced_by_app_user_id' => $advancerId,
             'reimbursement_status' => $advancer !== null ? 'submitted' : 'not_applicable',
             'reimbursement_amount' => Rupiah::decimal($advancer !== null ? $amount * 100 : 0), 'proof' => 'pending', 'waiver' => null,
-            'reimbursement_updated_at' => now(), 'recorded_by_user_id' => $actor->user->id, 'reported_at' => now(),
+            'reimbursement_updated_at' => now(), 'recorded_by_user_id' => $recordedBy, 'reported_at' => now(),
         ];
         if ($cost) {
             $cost->update($attributes + ['source_version' => $cost->source_version + 1]);
         } else {
             $order->costs()->create($attributes + ['expense_ref' => 'exp_'.bin2hex(random_bytes(16)), 'origin' => 'website', 'source_version' => 1,
-                'reported_by_app_user_id' => '', 'reported_by_name' => Str::limit($actor->displayName, 57)]);
+                'reported_by_app_user_id' => '', 'reported_by_name' => Str::limit($reporter, 57)]);
         }
-
-        return 'ongkir kurir Rp'.number_format($amount, 0, ',', '.').' · '.($advancer !== null ? 'ditalangi '.$advancer : ['owner' => 'dana Owner', 'cashier' => 'uang kasir', 'customer' => 'customer bayar driver'][$payer]);
     }
 
     /**
@@ -498,6 +514,10 @@ class OnlineOrderFulfillment
             }
             $this->assertPaid($order);
             $this->assertClaim($order, $actor, 'courier_booking');
+            // ORD-14: never a second courier next to a Biteship booking in progress or active.
+            if ($order->biteshipBusy()) {
+                throw new InvalidOrderTransition('Kurir sedang atau sudah dipesan lewat Biteship. Batalkan kurir Biteship dulu bila ingin memesan manual.');
+            }
             if ($order->courier_status === 'arrived' && $status === 'requested') {
                 throw new InvalidOrderTransition('Kurir sudah tiba.');
             }
@@ -515,6 +535,137 @@ class OnlineOrderFulfillment
             $order->courier_requested_at ??= now();
             $this->record($status === 'arrived' ? 'courier_arrived' : 'courier_requested', ucfirst($provider).($reference ? ' · '.$reference : '').($costNote ? ' · '.$costNote : ''));
         });
+    }
+
+    /**
+     * ORD-14 step 1: reserve the Biteship booking under the order lock, so a double click or a second tab never books
+     * two drivers. The call to Biteship happens after this, outside the lock (BiteshipCourier).
+     */
+    public function startBiteshipBooking(OnlineOrder $order, int $revision, OrderActor $actor, string $courier, bool $checkedDashboard = false): OnlineOrder
+    {
+        return $this->run($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $courier, $checkedDashboard): void {
+            $this->assertActive($order);
+            if ($actor->user === null) {
+                throw new OrderActionNotAllowed('Kurir Biteship dipesan dari halaman pesanan Website.');
+            }
+            if (! $order->biteshipBookable()) {
+                throw new InvalidOrderTransition('Pesan lewat Biteship hanya untuk kurir instan dengan titik antar dari checkout, sebelum diserahkan.');
+            }
+            if (! in_array($courier, ['gojek', 'grab'], true)) {
+                throw new OrderValidationFailed('Pilih GoSend atau GrabExpress.', ['courier' => 'gojek atau grab']);
+            }
+            $this->assertPaid($order);
+            $this->assertPacked($order);
+            $booking = $order->courier_booking ?? [];
+            if (($booking['state'] ?? null) === 'booking' && now()->getTimestamp() - (int) ($booking['started_at'] ?? 0) < 120) {
+                throw new InvalidOrderTransition('Kurir sedang dipesan. Tunggu sebentar, lalu muat ulang halaman.');
+            }
+            // Biteship may have created the order although its answer never arrived: book again only after checking.
+            if (in_array($booking['state'] ?? null, ['booking', 'unsure'], true) && ! $checkedDashboard) {
+                throw new OrderValidationFailed('Cek dulu dashboard Biteship: pastikan belum ada pesanan '.$order->code.', lalu centang konfirmasinya.',
+                    ['checked_biteship' => 'Wajib dicentang']);
+            }
+            if (($booking['state'] ?? null) === 'active' || $order->courier_status !== 'unassigned') {
+                throw new InvalidOrderTransition('Kurir sudah dipesan. Batalkan dulu bila perlu memesan ulang.');
+            }
+            $order->courier_booking = [
+                'state' => 'booking', 'attempt' => (int) ($booking['attempt'] ?? 0) + 1, 'courier' => $courier,
+                'booked_by' => $actor->user->id, 'started_at' => now()->getTimestamp(),
+            ];
+            $this->saveQuietly = true;
+        });
+    }
+
+    /** ORD-14 step 2: what Biteship answered for that reservation; a late answer for an older attempt is ignored. */
+    public function finishBiteshipBooking(OnlineOrder $order, OrderActor $actor, int $attempt, ?array $result, ?string $error = null, bool $unsure = false): OnlineOrder
+    {
+        return $this->run($order, null, $actor, function (OnlineOrder $order) use ($attempt, $result, $error, $unsure): void {
+            $booking = $order->courier_booking ?? [];
+            if (($booking['state'] ?? null) !== 'booking' || ($booking['attempt'] ?? null) !== $attempt) {
+                return;
+            }
+            $label = self::biteshipLabel($booking['courier'] ?? null);
+            if ($result === null) {
+                $order->courier_booking = ['state' => $unsure ? 'unsure' : 'failed', 'error' => Str::limit((string) $error, 160), 'ended_at' => now()->getTimestamp()] + $booking;
+                $this->record('courier_booking_failed', $label.' · '.($error ?? 'Biteship tidak menjawab'));
+
+                return;
+            }
+            $order->courier_booking = ['state' => 'active', 'booked_at' => now()->getTimestamp(), 'updated_at' => now()->getTimestamp(), 'error' => null] + $result + $booking;
+            $order->courier_provider = ($booking['courier'] ?? null) === 'grab' ? 'grab' : 'gosend';
+            $order->courier_reference = $result['id'];
+            $order->courier_status = 'requested';
+            $order->courier_requested_at ??= now();
+            $this->record('courier_requested', $label.' lewat Biteship'.($result['price'] ? ' · ongkir Rp'.number_format($result['price'], 0, ',', '.') : ''));
+        });
+    }
+
+    /**
+     * ORD-14: Biteship's current state of the booked order (always fetched from Biteship, never taken from a webhook
+     * body). Driver details are saved quietly; pickup is the handover and records what the store paid (the Owner's
+     * Biteship balance, no reimbursement); delivered marks the parcel received; a failed booking frees the courier step.
+     */
+    public function applyBiteshipStatus(OnlineOrder $order, array $result, ?OrderActor $actor = null): OnlineOrder
+    {
+        $actor ??= OrderActor::biteship();
+
+        return $this->run($order, null, $actor, function (OnlineOrder $order) use ($result, $actor): void {
+            $booking = $order->courier_booking ?? [];
+            if (($booking['state'] ?? null) !== 'active' || ($booking['id'] ?? null) !== $result['id']) {
+                return;
+            }
+            $previous = $booking['status'] ?? null;
+            $status = $result['status'];
+            $order->courier_booking = ['updated_at' => now()->getTimestamp()] + array_filter($result, fn ($value) => $value !== null) + $booking;
+            $label = self::biteshipLabel($booking['courier'] ?? null);
+            $statusLabel = OnlineOrderLabels::BITESHIP[$status] ?? $status;
+            $notes = [];
+            $kind = null;
+
+            if (in_array($status, self::BITESHIP_CARRYING, true)) {
+                if ($order->handover_status === 'pending') {
+                    $this->markHandedOver($order, 'courier', now());
+                    $kind = 'handed_over';
+                    $notes[] = 'Diambil driver '.$label;
+                }
+                $price = (int) ($order->courier_booking['price'] ?? 0);
+                if ($price > 0 && ! $order->costs()->where('origin', 'website')->lockForUpdate()->exists()) {
+                    // The booking admin may have been removed since; the cost then has no recorder rather than failing.
+                    $recordedBy = User::query()->whereKey($booking['booked_by'] ?? 0)->value('id');
+                    $this->storeCourierCost($order, null, $price, 'owner_fund', null, null, $recordedBy, 'Biteship');
+                    $kind ??= 'courier_cost';
+                    $notes[] = 'ongkir kurir Rp'.number_format($price, 0, ',', '.').' · saldo Biteship';
+                }
+                if ($status === 'delivered' && $order->delivery_status !== 'delivered') {
+                    $order->delivery_status = 'delivered';
+                    $order->delivered_at = now();
+                    $order->delivery_confirmed_by = 'website';
+                    $kind = 'delivered';
+                    $notes[] = 'Diterima customer';
+                }
+            } elseif (in_array($status, self::BITESHIP_ENDED, true) && $order->handover_status === 'pending') {
+                $order->courier_booking = ['state' => 'ended', 'ended_at' => now()->getTimestamp()] + $order->courier_booking;
+                $order->courier_status = 'unassigned';
+                $order->courier_provider = null;
+                $order->courier_reference = null;
+                $kind = $actor->isSystem() ? 'courier_failed' : 'courier_cancelled';
+                $notes[] = $label.' · '.$statusLabel;
+            } elseif ($status !== $previous && $order->handover_status === 'handed_over' && in_array($status, ['on_hold', 'return_in_transit', 'returned', ...self::BITESHIP_ENDED], true)) {
+                $kind = 'courier_update';
+                $notes[] = $label.' · '.$statusLabel.'. Cek dengan customer; catat kendala bila perlu.';
+            }
+
+            if ($kind !== null) {
+                $this->record($kind, implode(' · ', $notes).($actor->isSystem() ? ' (otomatis)' : ''));
+            } elseif ($order->courier_booking != $booking) {
+                $this->saveQuietly = true;
+            }
+        }, allowSystem: true);
+    }
+
+    public static function biteshipLabel(?string $courier): string
+    {
+        return config('orders.shipping_quotes.instant.couriers')[$courier] ?? 'Kurir instan';
     }
 
     /**
@@ -726,6 +877,10 @@ class OnlineOrderFulfillment
             if ($order->lifecycle === 'completed') {
                 throw new InvalidOrderTransition('Pesanan yang sudah selesai tidak dapat dibatalkan.');
             }
+            // ORD-14: a booked Biteship driver would still come (and be paid); cancel the courier first.
+            if ($order->handover_status === 'pending' && $order->biteshipBusy()) {
+                throw new InvalidOrderTransition('Kurir Biteship masih dipesan. Batalkan kurir dulu di bagian Pengiriman, lalu batalkan pesanan.');
+            }
             if (! Gate::forUser($actor->user)->allows('orders.cancel', $order)) {
                 throw new OrderActionNotAllowed('Pesanan yang sudah ada pembayaran atau sudah diserahkan hanya dapat dibatalkan Super Admin.');
             }
@@ -756,13 +911,14 @@ class OnlineOrderFulfillment
         });
     }
 
-    private function run(OnlineOrder $order, ?int $revision, OrderActor $actor, Closure $change, bool $allowCustomer = false): OnlineOrder
+    private function run(OnlineOrder $order, ?int $revision, OrderActor $actor, Closure $change, bool $allowCustomer = false, bool $allowSystem = false): OnlineOrder
     {
-        if (! $actor->canManageOrders() && ! ($allowCustomer && $actor->isCustomer())) {
+        if (! $actor->canManageOrders() && ! ($allowCustomer && $actor->isCustomer()) && ! ($allowSystem && $actor->isSystem())) {
             throw new OrderActionNotAllowed('Akun ini tidak dapat menangani pesanan.');
         }
         $this->lastEvent = null;
         $this->pendingEvent = null;
+        $this->saveQuietly = false;
 
         return DB::transaction(function () use ($order, $revision, $actor, $change): OnlineOrder {
             $locked = OnlineOrder::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
@@ -774,6 +930,10 @@ class OnlineOrderFulfillment
             }
             $change($locked);
             if ($this->pendingEvent === null) {
+                if ($this->saveQuietly) {
+                    $locked->save();
+                }
+
                 return $locked;
             }
             if ($locked->lifecycle === 'active' && OnlineOrderV2State::settle($locked)) {

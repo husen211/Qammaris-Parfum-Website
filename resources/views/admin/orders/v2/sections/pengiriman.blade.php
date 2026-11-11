@@ -15,6 +15,9 @@
     $notPacked = $order->preparation_status !== 'packed';
     // ORD-08: once the store has booked a courier (or one is recorded), the fee is shown and can be corrected.
     // Includes a store courier handed over without "Kurir sudah dipesan": the fee is still asked for afterwards.
+    // ORD-14: an instant courier with the checkout pin is booked through Biteship; the manual form stays as a fallback.
+    $biteshipActive = ($order->courier_booking['state'] ?? null) === 'active';
+    $biteshipReady = $biteshipEnabled && $order->biteshipBookable();
     $storeBooked = ($order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store' && (in_array($order->courier_status, ['requested', 'arrived'], true) || $order->handed_to === 'courier'))
         || ($order->fulfillment === 'intercity' && in_array($order->jnt_status, ['pickup_requested', 'qr_available', 'picked_up'], true));
 @endphp
@@ -29,6 +32,9 @@
         <p class="mt-3 text-sm text-gray-600">Isi cara menerima di Data penerima.</p>
     @elseif (! $pending)
         <p class="mt-3 text-sm text-gray-700">Diserahkan {{ $time($order->handed_over_at) }}.@if ($order->tracking_number) Resi <span class="font-mono">{{ $order->tracking_number }}</span>.@endif</p>
+        @if ($biteshipActive && $order->delivery_status !== 'delivered')
+            @include('admin.orders.v2._biteship')
+        @endif
         @if ($order->fulfillment === 'intercity' && ! $order->tracking_number && $order->lifecycle !== 'cancelled')
             <form method="POST" action="{{ route('admin.orders.v2.jnt', $order) }}" class="mt-2 flex flex-wrap items-end gap-2">
                 @csrf {!! $hidden('pengiriman') !!}
@@ -38,8 +44,9 @@
                 <button class="{{ $secondary }}" data-busy-label="Menyimpan…">Simpan resi</button>
             </form>
         @endif
-        @if ($order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled')
-            <form method="POST" action="{{ route('admin.orders.v2.delivery', $order) }}" class="mt-3">
+        {{-- ORD-14: a Biteship delivery is marked received by Biteship's own status. --}}
+        @if ($order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled' && ! $biteshipActive)
+            <form method="POST" action="{{ route('admin.orders.v2.delivery', $order) }}" class="mt-3" data-delivery-form>
                 @csrf {!! $hidden('pengiriman') !!}
                 <button class="{{ $secondary }} w-full sm:w-auto" data-busy-label="Menyimpan…">Tandai diterima customer</button>
             </form>
@@ -54,6 +61,8 @@
         @endif
     @elseif ($order->fulfillment === 'local_delivery')
         @if ($active)
+            {{-- ORD-14: while a Biteship driver is booked, who books stays the store (cancel the driver first). --}}
+            @unless ($biteshipActive)
             <form method="POST" action="{{ route('admin.orders.v2.courier-responsibility', $order) }}" class="mt-3">
                 @csrf {!! $hidden('pengiriman') !!}
                 <fieldset>
@@ -70,8 +79,13 @@
                     </div>
                 </fieldset>
             </form>
+            @endunless
+            @if ($order->courier_booking_responsibility === 'store' && ($biteshipActive || ($biteshipReady && $order->courier_status === 'unassigned')))
+                @include('admin.orders.v2._biteship')
+            @endif
             @if ($order->courier_booking_responsibility === 'store' && $order->courier_status === 'unassigned')
                 {{-- ORD-08: one step — booking the courier records the fee and whose money pays it. --}}
+                @if ($biteshipReady)<details class="mt-2" @if (old('_section') === 'pengiriman' && old('provider') !== null) open @endif><summary class="{{ $quiet }} -ml-3 cursor-pointer">Pesan manual di aplikasi kurir</summary>@endif
                 <form method="POST" action="{{ route('admin.orders.v2.courier', $order) }}" class="mt-3 rounded-lg border border-gray-200 p-3" data-courier-booking>
                     @csrf {!! $hidden('pengiriman') !!}
                     <label class="block text-sm font-medium text-gray-700">Kurir
@@ -80,16 +94,21 @@
                     <div class="mt-3">@include('admin.orders.v2._courier-cost-fields')</div>
                     <button name="status" value="requested" class="{{ $secondary }} mt-3 w-full sm:w-auto" data-busy-label="Menyimpan…">Kurir sudah dipesan</button>
                 </form>
-            @elseif ($order->courier_booking_responsibility === 'store')
+                @if ($biteshipReady)</details>@endif
+            @elseif ($order->courier_booking_responsibility === 'store' && ! $biteshipActive)
                 {{-- ORD-08 (Owner 2026-10-17): no "Kurir tiba" step; booked → handed over. --}}
                 <p class="mt-3 text-sm text-gray-700" data-courier-booked>Kurir {{ OnlineOrderLabels::PROVIDERS[$order->courier_provider] ?? '' }} sudah dipesan.</p>
             @endif
-            <form method="POST" action="{{ route('admin.orders.v2.handover', $order) }}" class="mt-4" data-confirm="Pesanan sudah diserahkan ke kurir?">
-                @csrf {!! $hidden('pengiriman') !!}
-                <input type="hidden" name="handed_to" value="{{ $order->courier_booking_responsibility === 'customer' ? 'customer_courier' : 'courier' }}">
-                <button class="{{ $primary }}" @disabled($notPacked) data-busy-label="Menyimpan…">Sudah diserahkan ke kurir</button>
-                @if ($notPacked)<p class="mt-1 text-xs text-gray-500">Konfirmasi packing dulu.</p>@endif
-            </form>
+            {{-- ORD-14 (Owner 2026-11-11): a Biteship driver's pickup is the handover, recorded by itself; the button is only
+                 for a courier booked by hand, so it waits until staff choose that path. --}}
+            @unless ($biteshipActive || ($biteshipReady && $order->courier_status === 'unassigned'))
+                <form method="POST" action="{{ route('admin.orders.v2.handover', $order) }}" class="mt-4" data-confirm="Pesanan sudah diserahkan ke kurir?" data-handover-form>
+                    @csrf {!! $hidden('pengiriman') !!}
+                    <input type="hidden" name="handed_to" value="{{ $order->courier_booking_responsibility === 'customer' ? 'customer_courier' : 'courier' }}">
+                    <button class="{{ $primary }}" @disabled($notPacked) data-busy-label="Menyimpan…">Sudah diserahkan ke kurir</button>
+                    @if ($notPacked)<p class="mt-1 text-xs text-gray-500">Konfirmasi packing dulu.</p>@endif
+                </form>
+            @endunless
         @endif
     @elseif ($order->fulfillment === 'intercity' && $active)
         <form method="POST" action="{{ route('admin.orders.v2.jnt', $order) }}" class="mt-3" @if ($jntWaiting) data-confirm="Paket sudah diambil J&T? Ini sekaligus mencatat penyerahan." @endif>
@@ -123,7 +142,8 @@
             </form>
         </details>
     @endif
-    @if (in_array($order->fulfillment, ['local_delivery', 'intercity'], true) && ($courierCost || ($storeBooked && $order->lifecycle !== 'cancelled')))
+    {{-- ORD-14: a Biteship courier's fee is recorded by itself at pickup, so no "Catat ongkir kurir" before that. --}}
+    @if (in_array($order->fulfillment, ['local_delivery', 'intercity'], true) && ($courierCost || ($storeBooked && $order->lifecycle !== 'cancelled' && ! $biteshipActive)))
         @include('admin.orders.v2._courier-cost')
     @endif
 </details>

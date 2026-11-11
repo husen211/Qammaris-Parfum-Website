@@ -1,0 +1,6 @@
+# OPS-DEPLOY-02: migrations the production deploy may run by itself (one exact name per line).
+# Add a name only for an additive migration reviewed in its PR: new tables or nullable/defaulted columns,
+# no data rewrite, no drop. Anything not listed keeps refusing the deploy.
+2026_11_11_100001_add_shipping_quote_to_online_orders
+2026_11_12_100001_add_qris_image_to_store_info
+2026_11_12_100002_add_courier_booking_to_online_orders

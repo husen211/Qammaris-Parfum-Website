@@ -189,6 +189,23 @@ class CreateOnlineOrder
                 $order->subdistrict = $details['subdistrict'] ?? null;
                 $order->payment_preference = $details['payment_preference'] ?? null;
                 $order->shipping_payer = $details['shipping_payer'] ?? null;
+                // ORD-13: a courier option priced at checkout becomes the locked ongkir, part of the transfer.
+                if ($shipping = $details['shipping'] ?? null) {
+                    $order->shipping_fee = Rupiah::decimal($shipping['charged'] * 100);
+                    $order->shipping_payer = 'added_to_transfer';
+                    $order->shipping_estimate = Rupiah::decimal($shipping['price'] * 100);
+                    $order->shipping_estimate_source = 'api';
+                    $order->shipping_quote = array_intersect_key($shipping, array_flip(['kind', 'provider', 'label', 'service', 'eta', 'price', 'charged', 'discount', 'percent', 'destination', 'weight_grams', 'quoted_at']));
+                    // "Makassar, Makassar, Sulawesi Selatan. 90141": kecamatan first, postcode last.
+                    if (preg_match('/^([^,]+),.*?(\d{5})$/u', (string) ($shipping['destination']['area_label'] ?? ''), $area)) {
+                        $order->district ??= mb_substr(trim($area[1]), 0, 80);
+                        $order->postcode ??= $area[2];
+                    }
+                    // The pin replaces the Sharelok: staff group message, App and recipient details all use location_url.
+                    if (isset($shipping['destination']['latitude'], $shipping['destination']['longitude'])) {
+                        $order->location_url = 'https://www.google.com/maps?q='.$shipping['destination']['latitude'].','.$shipping['destination']['longitude'];
+                    }
+                }
                 $order->save();
                 $order->code = 'QAM-'.str_pad((string) $order->id, 4, '0', STR_PAD_LEFT);
                 $order->save();

@@ -25,6 +25,48 @@ return [
         'intercity' => ['label' => 'Pengiriman Luar Kota — J&T', 'help' => 'Dikirim lewat J&T. Ongkir dihitung staf sesuai alamat.'],
     ],
 
-    // Phase-2 extension point (no calculator yet): where a shipping estimate came from. The final charge is shipping_fee.
+    // Where a shipping estimate came from. The final charge is shipping_fee.
     'shipping_estimate_sources' => ['manual' => 'Diisi staf', 'zone' => 'Zona', 'distance' => 'Jarak', 'api' => 'API kurir'],
+
+    /*
+     * ORD-13 (flag, needs website_checkout and a Biteship key): checkout prices the courier itself. Instant couriers
+     * are priced from the customer's map pin, J&T from the destination area; the store's discount is applied here and
+     * the charged amount is locked on the order. Off, or when Biteship cannot answer: ongkir is confirmed by staff.
+     */
+    'shipping_quotes' => [
+        'enabled' => (bool) env('ORDERS_SHIPPING_QUOTES', false),
+        // Pickup point (store pin in Biteship) and its Biteship postal area for J&T.
+        'origin' => ['latitude' => -0.8981125, 'longitude' => 119.8594844, 'postal_code' => 94221,
+            // ORD-14: pickup contact for Biteship drivers; empty uses the store name, phone and address in Info Toko.
+            'contact_name' => env('BITESHIP_ORIGIN_NAME', ''), 'contact_phone' => env('BITESHIP_ORIGIN_PHONE', ''), 'address' => env('BITESHIP_ORIGIN_ADDRESS', '')],
+        // Owner 2026-11-11: every product counts as 800 g including box and bubble wrap.
+        'item_weight_grams' => 800,
+        'quote_minutes' => 30,
+        // Charged ongkir is rounded down to this step, so a discount never shrinks through rounding.
+        'round_down_to' => 500,
+        'instant' => [
+            'couriers' => ['grab' => 'GrabExpress', 'gojek' => 'GoSend'],
+            'discount_percent' => 15,
+            'discount_from' => 20000,
+            'discount_max' => null,
+        ],
+        'jnt' => [
+            'discount_percent' => 30,
+            'discount_from' => 0,
+            'discount_max' => 30000,
+        ],
+        // Pins outside this box are refused before Biteship is asked (Palu and its surroundings).
+        'service_area' => ['south' => -1.2, 'north' => -0.6, 'west' => 119.6, 'east' => 120.1],
+        // Starting views for the map; approximate centres, the customer still places the pin.
+        'kecamatan' => [
+            'Palu Barat' => [-0.8950, 119.8560],
+            'Palu Timur' => [-0.8850, 119.8760],
+            'Palu Selatan' => [-0.9160, 119.8860],
+            'Tatanga' => [-0.9230, 119.8500],
+            'Ulujadi' => [-0.8650, 119.8300],
+            'Mantikulore' => [-0.8650, 119.9050],
+            'Palu Utara' => [-0.7950, 119.8780],
+            'Tawaeli' => [-0.7300, 119.8600],
+        ],
+    ],
 ];
