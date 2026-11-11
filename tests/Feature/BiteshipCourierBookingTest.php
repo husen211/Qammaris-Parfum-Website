@@ -50,7 +50,9 @@ class BiteshipCourierBookingTest extends TestCase
         $order = $this->packed($this->instantOrder());
         $page = $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertOk();
         $page->assertSee('data-biteship-book', false)->assertSee('Pesan kurir sekarang')->assertSee('Customer memilih GoSend')
-            ->assertSee('Pesan manual di aplikasi kurir')->assertSee('value="gojek" checked', false);
+            ->assertSee('Pesan manual di aplikasi kurir')->assertSee('value="gojek" checked', false)
+            // Owner 2026-11-11: no manual handover while staff have not chosen the manual path.
+            ->assertDontSee('data-handover-form', false);
 
         $this->answer('POST /v1/orders', $this->biteshipOrder('confirmed'));
         $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'success');
@@ -76,7 +78,9 @@ class BiteshipCourierBookingTest extends TestCase
         $order->refresh();
         $this->assertSame([$revision, 'allocated', 'Budi Kurir'], [$order->revision, $order->courier_booking['status'], $order->courier_booking['driver_name']]);
         $this->get(route('admin.orders.show', $order))->assertSee('Driver ditemukan')->assertSee('Budi Kurir')->assertSee('DN 1234 AB')
-            ->assertSee('data-biteship-track', false)->assertSee('Batalkan kurir')->assertDontSee('data-biteship-book', false);
+            ->assertSee('data-biteship-track', false)->assertSee('Batalkan kurir')->assertDontSee('data-biteship-book', false)
+            // The driver's pickup is the handover: no manual button, only the note.
+            ->assertDontSee('data-handover-form', false)->assertSee('Saat driver mengambil paket, pesanan otomatis tercatat sudah diserahkan.');
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertOk()
             ->assertSee('data-customer-courier="allocated"', false)->assertSee('Driver menuju toko untuk mengambil pesanan')->assertSee('Budi Kurir')
             ->assertSee('https://track.example.test/bs_order_1', false)->assertDontSee('081200000000')
@@ -93,7 +97,9 @@ class BiteshipCourierBookingTest extends TestCase
         $event = $order->events()->reorder('id', 'desc')->first();
         $this->assertSame(['handed_over', 'system', 'Biteship (otomatis)'], [$event->kind, $event->actor_type, $event->actorLabel()]);
         $this->assertStringContainsString('Diambil driver GoSend · ongkir kurir Rp21.000 · saldo Biteship (otomatis)', $event->note);
-        $this->get(route('admin.orders.show', $order))->assertSee('saldo Biteship (Owner)')->assertSee('Paket diambil driver')->assertDontSee('Batalkan kurir');
+        $this->get(route('admin.orders.show', $order))->assertSee('saldo Biteship (Owner)')->assertSee('Paket diambil driver')->assertDontSee('Batalkan kurir')
+            // Received also comes from Biteship: no manual "Tandai diterima customer" for this courier.
+            ->assertDontSee('data-delivery-form', false)->assertSee('Saat paket sampai, pesanan otomatis tercatat diterima customer.');
 
         $this->answer('GET /v1/orders/bs_order_1', $this->biteshipOrder('delivered'));
         $this->webhook(['order_id' => 'bs_order_1', 'status' => 'delivered'])->assertOk();
@@ -171,8 +177,14 @@ class BiteshipCourierBookingTest extends TestCase
         // An order made by staff has no pin: only the manual booking.
         $manual = $this->packed($this->paidV2Order('local_delivery'));
         $this->get(route('admin.orders.show', $manual))->assertDontSee('data-biteship-book', false)->assertSee('data-courier-booking', false)
-            ->assertDontSee('Pesan manual di aplikasi kurir');
+            ->assertDontSee('Pesan manual di aplikasi kurir')->assertSee('data-handover-form', false);
         $this->bookCourier($manual, 'gojek')->assertSessionHas('order_notice.type', 'error');
+
+        // Booked by hand instead (the "Pesan manual" path): the handover button is back for that courier.
+        $byHand = $this->packed($this->instantOrder());
+        $this->post(route('admin.orders.v2.courier', $byHand), ['revision' => $byHand->fresh()->revision, 'provider' => 'gosend', 'status' => 'requested',
+            'cost_amount' => '15000', 'cost_payer' => 'cashier'])->assertSessionHas('order_notice.type', 'success');
+        $this->get(route('admin.orders.show', $byHand))->assertSee('data-handover-form', false)->assertDontSee('data-biteship-book', false);
 
         // Switched off: the manual form only, and nothing is sent to Biteship.
         config(['orders.shipping_quotes.enabled' => false]);

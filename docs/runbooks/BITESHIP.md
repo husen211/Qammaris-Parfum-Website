@@ -32,7 +32,7 @@ Matikan kapan saja dengan `ORDERS_SHIPPING_QUOTES=false`: checkout kembali ke "o
 3. Cek: pesanan website kurir instan yang lunas dan dipacking menampilkan **Pesan kurir sekarang**. Setelah memesan, status "Mencari driver" dan tombol **Lacak driver** muncul; halaman customer menampilkan kurir yang sama.
 4. Saldo Biteship harus cukup untuk ongkir kurir; bila kurang, admin menampilkan alasan dari Biteship dan pesanan tidak berubah.
 
-Mode tes: kunci `biteship_test.…` membuat pesanan tes tanpa memotong saldo. Status pesanan tes bisa dimajukan dari dashboard Biteship (tombol Update Status pada pesanan bertanda WEBHOOK), yang butuh **Webhook URL (Test)** terisi; dari localhost, tombol **Perbarui status** di admin membaca status itu.
+Mode tes: kunci `biteship_test.…` membuat pesanan tes tanpa memotong saldo dan tanpa driver sungguhan (driver tes "John Doe"). Status pesanan tes dimajukan dari dashboard Biteship (Mode Testing aktif): **Shipping → Pesanan**, kolom Aksi, tombol kuning **Update Status** pada baris pesanan (misalnya `QAM-0022-1`), lalu pilih status berikutnya (Start picking up, lalu seterusnya, atau Cancel). Biteship tidak bisa mengirim webhook ke localhost, jadi setelah itu tekan **Perbarui status** di halaman pesanan admin. Dicek 2026-11-11: Teralokasi di dashboard terbaca di admin sebagai "Driver ditemukan".
 
 ## Kalau ada masalah
 
@@ -41,4 +41,4 @@ Mode tes: kunci `biteship_test.…` membuat pesanan tes tanpa memotong saldo. St
 - Pengaturan diskon, berat per produk, titik toko, dan area layanan ada di `config/orders.php` → `shipping_quotes`.
 - "Kurir belum terpesan: …": alasan dari Biteship (saldo, akun belum terverifikasi, kurir menolak). Perbaiki di dashboard, lalu tekan Pesan kurir sekarang lagi.
 - "Biteship tidak menjawab. Cek dashboard Biteship sebelum memesan ulang": jawaban tidak sampai, padahal pesanan mungkin sudah dibuat. Cari kode pesanan (misalnya `QAM-0023-1`) di dashboard Biteship sebelum memesan ulang supaya tidak dobel.
-- Status tidak berubah: webhook tidak sampai (URL/rahasia salah, server mati). Tekan **Perbarui status**; bila driver sudah membawa paket tetapi status tetap, tekan **Sudah diserahkan ke kurir**.
+- Status tidak berubah: webhook tidak sampai (URL/rahasia salah, server mati). Tekan **Perbarui status**: admin membaca status terbaru langsung dari Biteship. Untuk kurir Biteship tidak ada tombol "Sudah diserahkan ke kurir"; penyerahan tercatat dari status Biteship.

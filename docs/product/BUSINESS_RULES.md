@@ -303,7 +303,8 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 - **Driver tidak ditemukan / dibatalkan kurir** sebelum paket diambil: langkah kurir kembali kosong dan staf bisa memesan ulang. Setelah paket diambil, status bermasalah (ditahan, dikembalikan) hanya dicatat di riwayat; staf mengecek dan mencatat kendala bila perlu.
 - **Batalkan kurir** bisa sebelum paket diambil, dengan alasan; saldo dikembalikan Biteship.
 - **Customer** melihat kurir, status singkat, nama driver dan plat, serta tombol **Lacak driver** di halaman pesanannya. Nomor HP driver hanya untuk staf.
-- **Jalur manual tetap ada:** "Pesan manual di aplikasi kurir" dan "Sudah diserahkan ke kurir". Pesanan tanpa titik dari checkout (dibuat staf), J&T, dan ambil di toko tetap seperti sebelumnya.
+- **Tidak ada tombol "Sudah diserahkan ke kurir" dan "Tandai diterima customer" untuk kurir Biteship** (Owner 2026-11-11): saat driver mengambil paket, pesanan otomatis tercatat diserahkan; saat paket sampai, tercatat diterima. Bila status terlambat, tekan Perbarui status. Customer tetap bisa menekan "Pesanan sudah saya terima" di halamannya.
+- **Jalur manual tetap ada:** "Pesan manual di aplikasi kurir"; setelah kurir manual dicatat, tombol "Sudah diserahkan ke kurir" muncul seperti biasa. Pesanan tanpa titik dari checkout (dibuat staf), J&T, dan ambil di toko tetap seperti sebelumnya.
 - **Kartu Pembayaran pesanan website** di admin hanya menampilkan total, cara bayar pilihan customer, dan Tandai Lunas; rekening dan QRIS sudah tampil di halaman pesanan customer. Pesanan buatan staf tetap punya "Salin Total & Instruksi Pembayaran".
 - **Halaman customer tidak meminta Sharelok** bila pesanan sudah punya titik lokasi (dari checkout atau diisi staf).
 

@@ -28,6 +28,7 @@
         @else
             <p class="mt-2 text-sm text-gray-600">Driver belum ditemukan. Status berubah sendiri saat Biteship mengabari.</p>
         @endif
+        <p class="mt-1 text-xs text-gray-500" data-biteship-handover-note>{{ $pending ? 'Saat driver mengambil paket, pesanan otomatis tercatat sudah diserahkan.' : 'Saat paket sampai, pesanan otomatis tercatat diterima customer.' }}</p>
         <div class="mt-3 flex flex-wrap gap-2">
             @if (! empty($booking['link']))<a href="{{ $booking['link'] }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }}" data-biteship-track>Lacak driver</a>@endif
             <form method="POST" action="{{ route('admin.orders.v2.biteship.refresh', $order) }}">
