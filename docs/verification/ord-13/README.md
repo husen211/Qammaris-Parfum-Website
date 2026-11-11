@@ -75,7 +75,13 @@ Synthetic products and orders again (QAM-0020: 1 pcs J&T to Palu Barat; QAM-0021
 | Admin confirmation | "Customer sudah bisa bayar langsung …" / "Perlu cek stok: Uji Ongkir Musk 50 ml × 2 …" | [pay-390-admin-pay-now](pay-390-admin-pay-now.jpg), [pay-390-admin-stock-check](pay-390-admin-stock-check.jpg) |
 | Admin QRIS card 1440 | Empty state with upload (PNG/JPG/WebP, min 300 × 300, max 4 MB) | [pay-1440-admin-qris](pay-1440-admin-qris.jpg) |
 
-Local has no verified bank account and no store WhatsApp number (ORD-07), so the page says the account is sent on WhatsApp and shows the proof text for copying; with accounts and a store number it lists them and the button opens WhatsApp (covered by tests).
+Local had no verified bank account, so the first run said the account is sent on WhatsApp. Owner review: show the account at once with the bank's mark and a copy button, and use placeholders locally until the real ones are set in the admin. Now each verified account is a card with a bank mark (BRI blue "BRI"; BCA, Mandiri, BNI, BSI by name; others by initials, not the banks' logo files), the number in large monospace, the holder, and "Salin nomor rekening" (copies digits only); the total has its own "Salin". Local only, not in Git: a sample account "BRI 0123-01-000000-50-1 a.n. Qammaris Perfumes (contoh lokal)" and a sample image "CONTOH QRIS · BUKAN UNTUK PEMBAYARAN" (`storage/app/public/products/qris-contoh-lokal.png`); the local `APP_URL` was corrected from the unused port 8011 to 8010 so stored images load. No store WhatsApp number locally (ORD-07), so the proof text is shown for copying; with a number the button opens WhatsApp (covered by tests).
+
+| View | Screenshot |
+|---|---|
+| 390 transfer with BRI card | [pay-390-transfer-bri](pay-390-transfer-bri.jpg) |
+| 390 QRIS chosen | [pay-390-qris](pay-390-qris.jpg) |
+| 1440 payment step | [pay-1440-transfer-bri](pay-1440-transfer-bri.jpg) |
 
 ## Tests
 

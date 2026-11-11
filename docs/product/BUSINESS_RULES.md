@@ -289,6 +289,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
   - **Boleh langsung bayar** bila setiap produk hanya 1 pcs dan total sudah final (ongkir otomatis atau ambil di toko): halaman pesanan langsung menampilkan pilihan **Transfer bank** (rekening terverifikasi) atau **QRIS** (gambar QRIS statis toko), lalu tombol **Kirim bukti bayar ke WhatsApp**. Pilihan cara bayar disimpan di pesanan; tidak ada yang otomatis tercatat lunas.
   - **Menunggu admin** bila ada produk 2 pcs atau lebih ("Tersedia" belum menjamin jumlah) atau ongkir dikonfirmasi admin: halaman menampilkan ikon jam "Menunggu admin cek stok"/"menghitung ongkir" dan tombol kirim pesanan ke WhatsApp; cara bayar muncul setelah admin mengonfirmasi.
   - **WhatsApp tetap wajib** di kedua kasus. Di admin alurnya tetap Konfirmasi pesanan → Tandai Lunas; kartu konfirmasi menandai "Customer sudah bisa bayar langsung" atau "Perlu cek stok: produk × jumlah".
+  - **Rekening tampil langsung**: setiap rekening terverifikasi tampil dengan tanda bank, nomor, nama pemilik, dan tombol salin; total juga bisa disalin. Rekening dikelola Super Admin di halaman Rekening pembayaran.
   - **QRIS statis** di-upload Super Admin di halaman Rekening pembayaran (PNG/JPG/WebP, minimal 300 × 300 piksel); sebelum ada, pilihan QRIS tampil "Segera tersedia".
 
 Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-biteship.md). Akun dan kunci: [runbook Biteship](../runbooks/BITESHIP.md).

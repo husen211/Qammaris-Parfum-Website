@@ -93,7 +93,11 @@
                 @if ($order->lifecycle === 'draft')
                     <p class="mt-1 text-sm leading-6 text-gray-700">Pesanan <strong class="text-brand-black">{{ $order->code }}</strong> sudah tersimpan dan produknya tersedia. Bayar sekarang, lalu kirim buktinya lewat WhatsApp; admin mengecek dan memproses pesanan.</p>
                 @endif
-                <p class="mt-3 flex flex-wrap items-baseline justify-between gap-2"><span class="text-sm text-gray-700">Total pembayaran</span><strong class="text-xl tabular-nums text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong></p>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-sm text-gray-700">Total pembayaran</span>
+                    <span class="flex items-center gap-2"><strong class="text-xl tabular-nums text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong>
+                        <button type="button" data-copy-account="{{ (int) \App\Support\Rupiah::minorUnits($order->customerTotal()) / 100 }}" data-copy-done="Total disalin." class="inline-flex min-h-10 items-center border border-brand-black bg-white px-2.5 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin</button></span>
+                </div>
                 @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.</p>@endif
                 <form method="POST" action="{{ route('orders.customer.pay', $token) }}" class="mt-4" data-pay-form>
                     @csrf
@@ -116,9 +120,19 @@
                             <p class="text-sm text-gray-700">Transfer ke rekening resmi Qammaris:</p>
                             <ul class="mt-2 space-y-2">
                                 @foreach ($paymentAccounts as $account)
-                                    <li class="flex flex-wrap items-center justify-between gap-2 border border-gray-200 bg-white px-3 py-2">
-                                        <span class="min-w-0"><span class="block text-sm font-semibold text-brand-black">{{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></span><span class="block text-sm text-gray-600">a.n. {{ $account->account_holder }}</span></span>
-                                        <button type="button" data-copy-account="{{ $account->account_number }}" class="inline-flex min-h-11 items-center border border-brand-black px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin nomor</button>
+                                    <li class="border border-gray-200 bg-white p-3" data-payment-account>
+                                        <div class="flex items-center gap-3">
+                                            <x-bank-mark :bank="$account->bank_name" />
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-sm text-gray-600">{{ $account->bank_name }}</p>
+                                                <p class="break-all font-mono text-lg font-semibold tracking-wide text-brand-black">{{ $account->account_number }}</p>
+                                                <p class="text-sm text-gray-600">a.n. {{ $account->account_holder }}</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" data-copy-account="{{ preg_replace('/\D/', '', $account->account_number) }}" data-copy-done="Nomor rekening {{ $account->bank_name }} disalin." class="mt-3 flex min-h-11 w-full items-center justify-center gap-2 border border-brand-black bg-white px-3 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">
+                                            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                            Salin nomor rekening
+                                        </button>
                                     </li>
                                 @endforeach
                             </ul>
@@ -414,7 +428,7 @@ document.querySelectorAll('[data-copy-account]').forEach((button) => button.addE
     const feedback = document.querySelector('[data-copy-account-feedback]');
     try {
         await navigator.clipboard.writeText(button.dataset.copyAccount);
-        feedback.textContent = 'Nomor rekening disalin.';
+        feedback.textContent = button.dataset.copyDone ?? 'Nomor rekening disalin.';
     } catch {
         feedback.textContent = 'Salin otomatis tidak tersedia. Nomor: ' + button.dataset.copyAccount;
     }

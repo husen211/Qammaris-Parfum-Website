@@ -21,7 +21,7 @@
         <h2 id="accounts-title" class="text-base font-semibold text-gray-900">Daftar rekening</h2>
         @forelse ($accounts as $account)
             <div class="mt-3 rounded-lg border p-3 text-sm {{ $account->isUsable() ? 'border-green-200' : 'border-gray-200' }}" data-account="{{ $account->id }}">
-                <p class="font-semibold text-gray-900">{{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></p>
+                <p class="flex items-center gap-2 font-semibold text-gray-900"><x-bank-mark :bank="$account->bank_name" class="h-8 w-12" /> {{ $account->bank_name }} · <span class="font-mono">{{ $account->account_number }}</span></p>
                 <p class="text-gray-700">a.n. {{ $account->account_holder }}</p>
                 <p class="mt-1 text-xs text-gray-500">
                     Ditambahkan {{ $names[$account->created_by] ?? '-' }} · {{ $time($account->created_at) }}

@@ -9,6 +9,7 @@ use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StoreInfo;
+use App\Models\StorePaymentAccount;
 use App\Models\User;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderStepper;
@@ -127,7 +128,14 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->assertTrue($order->payableBeforeConfirmation());
 
         $page = $this->followRedirects($placed)->assertOk()->assertSee('Langkah berikutnya: pembayaran')->assertSee('Transfer bank')
-            ->assertSee('Segera tersedia')->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok');
+            ->assertSee('Segera tersedia')->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok')
+            ->assertSee('Nomor rekening resmi dikirim admin lewat WhatsApp');
+        // A verified account is shown at once with its bank mark and a copy button (digits only).
+        StorePaymentAccount::create(['bank_name' => 'BRI', 'account_number' => '0123-01-000000-50-1', 'account_holder' => 'Qammaris Perfumes', 'created_by' => User::factory()->create()->id])
+            ->forceFill(['verified_at' => now()])->save();
+        $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('data-bank-mark="bri"', false)
+            ->assertSee('0123-01-000000-50-1')->assertSee('data-copy-account="012301000000501"', false)->assertSee('Salin nomor rekening')
+            ->assertDontSee('Nomor rekening resmi dikirim admin lewat WhatsApp');
         $this->assertStringNotContainsString('data-auto-open="1"', $page->getContent(), 'WhatsApp opens with the proof, not before paying');
 
         $token = $order->customer_token_encrypted;
