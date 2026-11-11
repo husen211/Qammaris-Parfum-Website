@@ -42,14 +42,35 @@ Two synthetic products ("Uji Ongkir Oud" 100 ml Rp425.000, "Uji Ongkir Musk" 50 
 | 1440 pop-up / map / couriers | — | [after-1440-location-popup](after-1440-location-popup.jpg), [after-1440-map](after-1440-map.jpg), [after-1440-couriers](after-1440-couriers.jpg) |
 | Admin ongkir block 390 / 1440 | — | [after-390-admin-ongkir](after-390-admin-ongkir.jpg), [after-1440-admin-ongkir](after-1440-admin-ongkir.jpg) |
 
+## Owner review on localhost (2026-11-11) and fixes
+
+The Owner found, in their Chrome:
+
+1. **Map tiles "Access blocked" (OpenStreetMap 403).** Cause: the checkout's `Referrer-Policy: no-referrer`; a tile fetched without a Referer returns the 6,7 kB "Access blocked" image, with a Referer the real 38 kB tile (checked with curl on tile 15/27294/16466). Fix: the tile layer sends `referrerPolicy: strict-origin` (origin only). Not related to location permission.
+2. **No usable map without location permission / after "allow once" and a refresh.** The map now opens in every case with its own hint (allowed, refused, refused earlier, no GPS, unsupported) and a **place search** (Photon) above the kecamatan shortcuts.
+3. **Pin jumped down-right while dragging.** Cause: the lift effect set the CSS `translate` property, which replaced Tailwind's centring translate. The lift was removed; the pin is static.
+4. **Round locate icon unclear.** Now a labelled pill "Temukan lokasi saya".
+
+Re-checked in headless Chrome through the DevTools protocol (permission set per case):
+
+| Case | Result | Screenshot |
+|---|---|---|
+| Location refused | No pop-up, map opens with the refused hint, real tiles load, search "Basuki Rahmat" lists 4 streets (RT/RW removed from the detail), choosing one moves the map, "Pakai titik ini" prices GrabExpress Rp19.000 / GoSend Rp18.000 | [cond-denied-map-390](cond-denied-map-390.jpg), [cond-search-390](cond-search-390.jpg), [cond-search-chosen-390](cond-search-chosen-390.jpg) |
+| Mouse drag of the map | During the drag the pin centre (195, bottom 419) equals the map centre (195, 419) | [cond-dragging-390](cond-dragging-390.jpg) |
+| Location allowed (position emulated at −0,9045, 119,8721) | No pop-up, map jumps to the position, "Lokasimu ditemukan", pin ±1,6 km from the store | [cond-granted-map-390](cond-granted-map-390.jpg) |
+| Never asked | Our pop-up first; "Izinkan lokasi" then the browser refuses (headless) and the map still opens with the hint | [cond-prompt-popup-390](cond-prompt-popup-390.jpg), [cond-after-allow-390](cond-after-allow-390.jpg) |
+| Desktop 1440 | Search, shortcuts, labelled locate button, full tiles | [cond-map-1440](cond-map-1440.jpg) |
+
+Chrome's real "Allow this time" prompt and a phone's GPS cannot be driven headless; every outcome they can produce (granted, refused, unavailable) is covered above.
+
 ## Tests
 
 - `CheckoutShippingQuoteTest` (7): instant pricing and discount, the request sent to Biteship (key header, couriers, 800 g × quantity, store origin), order locking and display, WhatsApp text; J&T area search and pricing; discount rules; forged / other delivery / expired / other cart options refused; no courier, Biteship down and outside the area fall back to "dikonfirmasi admin"; staff may lower but not raise or send to the driver; flag off or no key leaves the checkout as before. The pin becomes `location_url`.
-- `tests/js/checkout-shipping.test.mjs` (5): preselecting the cheapest charged option, discount text, distance text, when our pop-up shows, every failure keeps a way to order.
+- `tests/js/checkout-shipping.test.mjs` (7): preselecting the cheapest charged option, discount text, distance text, when our pop-up shows, every failure keeps a way to order, a hint for every location outcome, place search results (labels, no duplicates, no RT/RW).
 - Full suite: 844 passed, 10 skipped, 3 known local-only failures (J&T QR without GD ×2, ReleaseCheck VAPID). JS 101 passed. Pint on the changed files passed. `npm run build`: `checkout-shipping` 10 kB (4,2 kB gzip), lazy `map` 150 kB (43,6 kB gzip).
 
 ## Open limits
 
 - Physical iPhone/Android not tested: the native location prompt and GPS accuracy were not exercised (headless and pane only).
 - Live-mode prices not checked yet (test key); stage B (booking from the admin, webhook, driver tracking) not started and needs the Biteship verification approved.
-- OpenStreetMap standard tiles are used under their fair-use policy (low volume, attribution shown).
+- OpenStreetMap standard tiles and Photon search are used under their fair-use policies (low volume, attribution, identifying referrer).

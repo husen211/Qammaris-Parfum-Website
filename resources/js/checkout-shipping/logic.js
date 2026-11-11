@@ -51,3 +51,35 @@ export function reasonText(reason, mode) {
 export function locationStep(permission) {
     return { granted: 'locate', prompt: 'ask', denied: 'map-blocked' }[permission] ?? 'map';
 }
+
+/** What the map tells the customer after each location outcome; the map stays usable in every case. */
+export function locationText(outcome) {
+    return {
+        found: 'Lokasimu ditemukan. Geser peta bila pin belum tepat di titik antar.',
+        denied: 'Izin lokasi untuk situs ini sedang ditolak browser. Cari alamat di atas atau geser peta. Untuk mengizinkan lagi: ketuk ikon di samping alamat situs, lalu izinkan Lokasi.',
+        unavailable: 'Lokasi HP belum terbaca. Pastikan lokasi/GPS HP menyala, atau cari alamat di atas dan geser peta.',
+        unsupported: 'Browser ini tidak bisa membaca lokasi. Cari alamat di atas atau geser peta ke titik antar.',
+    }[outcome] ?? 'Cari alamat, pilih kecamatan, atau geser peta sampai pin tepat di titik antar.';
+}
+
+/** Photon (OpenStreetMap) search results as list items with a point to move the map to. */
+export function placeResults(geojson) {
+    const seen = new Set();
+
+    return (geojson?.features ?? []).flatMap((feature) => {
+        const [lon, lat] = feature?.geometry?.coordinates ?? [];
+        const place = feature?.properties ?? {};
+        if (typeof lat !== 'number' || typeof lon !== 'number') return [];
+        const street = [place.street, place.housenumber].filter(Boolean).join(' ');
+        const label = place.name || street;
+        if (!label) return [];
+        // Photon sometimes puts the RT/RW in the district; the kelurahan or city says more to a customer.
+        const area = [place.district, place.locality].find((part) => part && !/^R[TW]\s*\d/i.test(part));
+        const detail = [place.name && street !== label ? street : null, area, place.city].filter(Boolean).join(', ');
+        const key = `${label}|${detail}`;
+        if (seen.has(key)) return [];
+        seen.add(key);
+
+        return [{ label, detail, point: [lat, lon] }];
+    });
+}

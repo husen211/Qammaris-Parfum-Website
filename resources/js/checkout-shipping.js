@@ -1,6 +1,6 @@
 // ORD-13: checkout courier picker. Instant couriers are priced from a map pin, J&T from a destination area; the
 // server prices and keeps every option, the page only shows them and submits the chosen option id.
-import { cheapest, discountText, distanceKm, formatRupiah, locationStep, pinSummary, reasonText } from './checkout-shipping/logic.js';
+import { cheapest, discountText, distanceKm, formatRupiah, locationStep, locationText, pinSummary, placeResults, reasonText } from './checkout-shipping/logic.js';
 
 const root = document.querySelector('[data-shipping-quotes]');
 if (root) setup(root);
@@ -133,34 +133,38 @@ function setup(root) {
         }
     };
     const locate = () => new Promise((resolve) => {
+        if (!('geolocation' in navigator) || !window.isSecureContext) {
+            resolve({ error: 'unsupported' });
+
+            return;
+        }
         navigator.geolocation.getCurrentPosition(
             (position) => resolve({ point: [position.coords.latitude, position.coords.longitude] }),
-            (error) => resolve({ denied: error.code === error.PERMISSION_DENIED }),
+            (error) => resolve({ error: error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable' }),
             { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
         );
     });
 
     const openMap = async (message) => {
         openDialog(mapDialog);
-        mapMessage.textContent = message ?? 'Geser peta sampai pin tepat di rumah atau kantor tujuan.';
+        mapMessage.textContent = message ?? locationText('manual');
         if (!map) {
             const { createPinMap } = await import('./checkout-shipping/map.js');
-            map = createPinMap(mapDialog.querySelector('[data-map]'), { center: pin ?? config.origin, zoom: pin ? 17 : 14, pin: mapDialog.querySelector('[data-map-pin]') });
+            map = createPinMap(mapDialog.querySelector('[data-map]'), { center: pin ?? config.origin, zoom: pin ? 17 : 14 });
             mapDialog.querySelector('[data-map-loading]')?.remove();
         }
         requestAnimationFrame(() => map.refresh());
     };
 
+    // Every outcome leaves the map usable: found, refused (now or earlier, "allow once" included), or no GPS.
     const goToMyLocation = async () => {
         mapMessage.textContent = 'Mencari lokasimu…';
         const found = await locate();
         if (found.point) {
             map?.setView(found.point, 17);
-            mapMessage.textContent = 'Lokasimu ditemukan. Geser peta bila pin kurang pas.';
+            mapMessage.textContent = locationText('found');
         } else {
-            mapMessage.textContent = found.denied
-                ? 'Izin lokasi diblokir. Aktifkan lokasi untuk situs ini di pengaturan browser, atau geser peta ke titik antar.'
-                : 'Lokasi belum didapat. Geser peta ke titik antar, atau pilih kecamatan di atas.';
+            mapMessage.textContent = locationText(found.error);
         }
     };
 
@@ -172,7 +176,7 @@ function setup(root) {
 
             return;
         }
-        await openMap(step === 'map-blocked' ? 'Izin lokasi diblokir di browser. Geser peta ke titik antar, atau pilih kecamatan di atas.' : null);
+        await openMap(step === 'map-blocked' ? locationText('denied') : null);
         if (step === 'locate') await goToMyLocation();
     };
 
@@ -184,6 +188,7 @@ function setup(root) {
     locationDialog.querySelector('[data-pick-manually]').addEventListener('click', async () => {
         closeDialog(locationDialog);
         await openMap(null);
+        placeInput.focus({ preventScroll: true });
     });
     instant.querySelector('[data-open-location]').addEventListener('click', startLocation);
     instant.querySelector('[data-change-pin]').addEventListener('click', () => openMap(null));
@@ -203,6 +208,29 @@ function setup(root) {
         chips.append(chip);
     });
 
+    // Place search (streets, buildings, landmarks) inside the service area, then fine-tune by moving the map.
+    const placeInput = mapDialog.querySelector('#place-search');
+    const area = config.serviceArea;
+    combobox({
+        input: placeInput,
+        list: mapDialog.querySelector('#place-search-list'),
+        idPrefix: 'place',
+        search: async (query, signal) => {
+            const params = new URLSearchParams({ q: query, limit: '6', lat: String(config.origin[0]), lon: String(config.origin[1]),
+                bbox: [area.west, area.south, area.east, area.north].join(',') });
+            const response = await fetch(`${config.placeSearchUrl}?${params}`, { signal });
+            if (!response.ok) throw new Error('search');
+
+            return { items: placeResults(await response.json()), note: 'Belum ketemu. Coba nama jalan atau tempat lain, atau geser peta.' };
+        },
+        failed: () => { mapMessage.textContent = 'Pencarian sedang tidak bisa dipakai. Pilih kecamatan atau geser peta ke titik antar.'; },
+        onChoose: (place) => {
+            map?.setView(place.point, 17);
+            mapMessage.textContent = `Peta di ${place.label}. Geser sedikit bila pin belum tepat di titik antar.`;
+            placeInput.blur();
+        },
+    });
+
     mapDialog.querySelector('[data-use-pin]').addEventListener('click', () => {
         if (!map) return;
         pin = map.center();
@@ -213,100 +241,31 @@ function setup(root) {
         quote(instant, { mode: 'instant', latitude: pin[0], longitude: pin[1] });
     });
 
-    // J&T destination: an accessible combobox over the server's area search.
+    // J&T destination: the same combobox over the server's area search.
     const areaInput = jnt.querySelector('#jnt-area');
-    const areaList = jnt.querySelector('#jnt-area-list');
-    let areas = [];
-    let active = -1;
-    let timer;
-    let controller;
-    const closeList = () => {
-        areaList.hidden = true;
-        areaInput.setAttribute('aria-expanded', 'false');
-        areaInput.removeAttribute('aria-activedescendant');
-        active = -1;
-    };
-    const highlight = (index) => {
-        active = index;
-        [...areaList.children].forEach((item, position) => item.setAttribute('aria-selected', String(position === index)));
-        if (index >= 0) {
-            areaInput.setAttribute('aria-activedescendant', `jnt-area-${index}`);
-            areaList.children[index]?.scrollIntoView({ block: 'nearest' });
-        }
-    };
-    const showAreas = (found, note) => {
-        areas = found;
-        areaList.replaceChildren(...(found.length ? found.map((area, index) => {
-            const item = document.createElement('li');
-            item.id = `jnt-area-${index}`;
-            item.setAttribute('role', 'option');
-            item.className = 'min-h-12 cursor-pointer border-b border-gray-100 px-3 py-3 text-base leading-6 text-brand-black last:border-b-0 aria-selected:bg-[#FAF8F3]';
-            item.textContent = area.label;
-            item.addEventListener('pointerdown', (event) => event.preventDefault());
-            item.addEventListener('click', () => choose(index));
-
-            return item;
-        }) : [Object.assign(document.createElement('li'), { className: 'px-3 py-3 text-sm leading-6 text-gray-600', textContent: note })]));
-        areaList.hidden = false;
-        areaInput.setAttribute('aria-expanded', 'true');
-        highlight(-1);
-    };
-    const choose = (index) => {
-        const area = areas[index];
-        if (!area) return;
-        areaInput.value = area.label;
-        closeList();
-        quote(jnt, { mode: 'jnt', area_id: area.id, area_label: area.label });
-    };
-    const search = async (query) => {
-        controller?.abort();
-        controller = new AbortController();
-        try {
-            const response = await fetch(`${config.areaUrl}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal: controller.signal });
+    combobox({
+        input: areaInput,
+        list: jnt.querySelector('#jnt-area-list'),
+        idPrefix: 'jnt-area',
+        onInput: () => {
+            jnt.querySelector('[data-shipping-options]').replaceChildren();
+            status(jnt, '');
+            offerManual(false);
+        },
+        search: async (query, signal) => {
+            const response = await fetch(`${config.areaUrl}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal });
             const data = await response.json().catch(() => ({}));
-            if (response.status === 429) return showAreas([], reasonText('busy'));
-            if (!response.ok || data.reason) {
-                closeList();
-                status(jnt, reasonText('unavailable', 'jnt'));
-                offerManual(true);
+            if (response.status === 429) return { items: [], note: reasonText('busy') };
+            if (!response.ok || data.reason) throw new Error('areas');
 
-                return;
-            }
-            showAreas(data.areas ?? [], 'Belum ada hasil. Coba nama kecamatan, kota, atau kode pos lain.');
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                closeList();
-                status(jnt, reasonText('unavailable', 'jnt'));
-                offerManual(true);
-            }
-        }
-    };
-    areaInput.addEventListener('input', () => {
-        clearTimeout(timer);
-        jnt.querySelector('[data-shipping-options]').replaceChildren();
-        status(jnt, '');
-        offerManual(false);
-        const query = areaInput.value.trim();
-        if (query.length < 3) {
-            closeList();
-
-            return;
-        }
-        timer = setTimeout(() => search(query), 350);
+            return { items: data.areas ?? [], note: 'Belum ada hasil. Coba nama kecamatan, kota, atau kode pos lain.' };
+        },
+        failed: () => {
+            status(jnt, reasonText('unavailable', 'jnt'));
+            offerManual(true);
+        },
+        onChoose: (choice) => quote(jnt, { mode: 'jnt', area_id: choice.id, area_label: choice.label }),
     });
-    areaInput.addEventListener('keydown', (event) => {
-        if (areaList.hidden || !areas.length) return;
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-            event.preventDefault();
-            highlight((active + (event.key === 'ArrowDown' ? 1 : areas.length - 1) + (active < 0 && event.key === 'ArrowUp' ? 1 : 0)) % areas.length);
-        } else if (event.key === 'Enter' && active >= 0) {
-            event.preventDefault();
-            choose(active);
-        } else if (event.key === 'Escape') {
-            closeList();
-        }
-    });
-    areaInput.addEventListener('blur', () => setTimeout(closeList, 120));
 
     // The form refused to send without a courier: point at what is missing.
     form.addEventListener('shipping-missing', () => {
@@ -318,4 +277,88 @@ function setup(root) {
 
     form.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncPanels));
     syncPanels();
+}
+
+/** Accessible search-as-you-type list (ARIA combobox): arrow keys, Enter, Escape, tap; results are text only. */
+function combobox({ input, list, idPrefix, search, onChoose, onInput, failed }) {
+    let items = [];
+    let active = -1;
+    let timer;
+    let controller;
+    const close = () => {
+        list.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+        active = -1;
+    };
+    const highlight = (index) => {
+        active = index;
+        [...list.children].forEach((item, position) => item.setAttribute('aria-selected', String(position === index)));
+        if (index >= 0) {
+            input.setAttribute('aria-activedescendant', `${idPrefix}-${index}`);
+            list.children[index]?.scrollIntoView({ block: 'nearest' });
+        }
+    };
+    const choose = (index) => {
+        const item = items[index];
+        if (!item) return;
+        input.value = item.label;
+        close();
+        onChoose(item);
+    };
+    const show = (found, note) => {
+        items = found;
+        list.replaceChildren(...(found.length ? found.map((entry, index) => {
+            const item = document.createElement('li');
+            item.id = `${idPrefix}-${index}`;
+            item.setAttribute('role', 'option');
+            item.className = 'min-h-12 cursor-pointer border-b border-gray-100 px-3 py-2.5 text-base leading-6 text-brand-black last:border-b-0 aria-selected:bg-[#FAF8F3]';
+            item.append(Object.assign(document.createElement('span'), { className: 'block', textContent: entry.label }));
+            if (entry.detail) item.append(Object.assign(document.createElement('span'), { className: 'block text-sm leading-5 text-gray-600', textContent: entry.detail }));
+            item.addEventListener('pointerdown', (event) => event.preventDefault());
+            item.addEventListener('click', () => choose(index));
+
+            return item;
+        }) : [Object.assign(document.createElement('li'), { className: 'px-3 py-3 text-sm leading-6 text-gray-600', textContent: note })]));
+        list.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        highlight(-1);
+    };
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        onInput?.();
+        const query = input.value.trim();
+        if (query.length < 3) {
+            close();
+
+            return;
+        }
+        timer = setTimeout(async () => {
+            controller?.abort();
+            controller = new AbortController();
+            try {
+                const result = await search(query, controller.signal);
+                show(result.items, result.note);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    close();
+                    failed?.();
+                }
+            }
+        }, 350);
+    });
+    input.addEventListener('keydown', (event) => {
+        if (list.hidden || !items.length) return;
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            highlight((active + (event.key === 'ArrowDown' ? 1 : items.length - 1) + (active < 0 && event.key === 'ArrowUp' ? 1 : 0)) % items.length);
+        } else if (event.key === 'Enter' && active >= 0) {
+            event.preventDefault();
+            choose(active);
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            close();
+        }
+    });
+    input.addEventListener('blur', () => setTimeout(close, 150));
 }
