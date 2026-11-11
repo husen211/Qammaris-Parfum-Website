@@ -83,3 +83,23 @@ export function placeResults(geojson) {
         return [{ label, detail, point: [lat, lon] }];
     });
 }
+
+/** ORD-16: destinations GoSend/GrabExpress reach from the store (Palu and the neighbouring regencies). */
+export function instantArea(label) {
+    return /\b(palu|sigi|donggala)\b/i.test(label ?? '');
+}
+
+/** ORD-16: the order's delivery type follows the chosen option; "manual" follows the destination. */
+export function deliveryFor(receive, kind, areaLabel) {
+    if (receive === 'pickup') return 'pickup';
+    if (receive !== 'delivery') return '';
+
+    return { instant: 'local_delivery', jnt: 'intercity', manual: instantArea(areaLabel) ? 'local_delivery' : 'intercity' }[kind] ?? '';
+}
+
+/** ORD-16: the Palu kecamatan whose name starts the area label, to open the map there. */
+export function kecamatanCenter(label, kecamatan) {
+    const name = Object.keys(kecamatan ?? {}).find((entry) => (label ?? '').toLowerCase().startsWith(entry.toLowerCase()));
+
+    return name ? kecamatan[name] : null;
+}

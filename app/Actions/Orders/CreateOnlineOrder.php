@@ -197,7 +197,7 @@ class CreateOnlineOrder
                     $order->shipping_estimate_source = 'api';
                     $order->shipping_quote = array_intersect_key($shipping, array_flip(['kind', 'provider', 'label', 'service', 'eta', 'price', 'charged', 'discount', 'percent', 'destination', 'weight_grams', 'quoted_at']));
                     // "Makassar, Makassar, Sulawesi Selatan. 90141": kecamatan first, postcode last.
-                    if (preg_match('/^([^,]+),.*?(\d{5})$/u', (string) ($shipping['destination']['area_label'] ?? ''), $area)) {
+                    if (preg_match('/^([^,]+),.*?(\d{5})$/u', (string) ($shipping['destination']['area_label'] ?? $details['area_label'] ?? ''), $area)) {
                         $order->district ??= mb_substr(trim($area[1]), 0, 80);
                         $order->postcode ??= $area[2];
                     }

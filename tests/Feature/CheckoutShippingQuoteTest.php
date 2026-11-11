@@ -54,7 +54,10 @@ class CheckoutShippingQuoteTest extends TestCase
             ->assertSee('Kurir instan')->assertSee('Pilih titik sendiri di peta')
             // ORD-15: courier logos beside the delivery names, and the logo map for the script's option cards.
             ->assertSee('data-partner-logo="gosend"', false)->assertSee('data-partner-logo="grab"', false)->assertSee('data-partner-logo="jnt"', false)
-            ->assertSee('images\/partners\/gojek.svg', false);
+            ->assertSee('images\/partners\/gojek.svg', false)
+            // ORD-16: marketplace order: how to receive, the address, then the options grouped Instan and Reguler.
+            ->assertSeeInOrder(['Cara menerima', 'Dikirim ke alamat', 'Ambil di toko', 'Alamat pengiriman', 'Kecamatan atau kota', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Paperbag'])
+            ->assertSee('data-delivery-value', false)->assertDontSee('name="delivery" value="local_delivery"', false);
         $response = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.916, 'longitude' => 119.886])->assertOk();
         $options = collect($response->json('options'))->keyBy('provider');
 
@@ -69,8 +72,11 @@ class CheckoutShippingQuoteTest extends TestCase
             && $request['origin_latitude'] === config('orders.shipping_quotes.origin.latitude')
             && array_column($request['items'], 'weight') === [800, 800] && array_column($request['items'], 'quantity') === [1, 2]);
 
-        $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $options['gosend']['id']]))->assertRedirect();
+        session(['shipping_areas' => ['IDNP28PALUBARAT94221' => 'Palu Barat, Palu, Sulawesi Tengah. 94221']]);
+        $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $options['gosend']['id'],
+            'delivery_area_id' => 'IDNP28PALUBARAT94221', 'delivery_area_label' => 'Kota palsu, 99999']))->assertRedirect();
         $order = OnlineOrder::sole();
+        $this->assertSame(['Palu Barat', '94221'], [$order->district, $order->postcode]);
         $this->assertSame(['17000.00', 'added_to_transfer', '20500.00', 'api'], [$order->shipping_fee, $order->shipping_payer, $order->shipping_estimate, $order->shipping_estimate_source]);
         $this->assertSame(['instant', 'gosend', 17000, 3500, 2400], [$order->shipping_quote['kind'], $order->shipping_quote['provider'], $order->shipping_quote['charged'], $order->shipping_quote['discount'], $order->shipping_quote['weight_grams']]);
         $this->assertSame(-0.916, $order->shipping_quote['destination']['latitude']);
