@@ -27,6 +27,8 @@ Matikan kapan saja dengan `ORDERS_SHIPPING_QUOTES=false`: checkout kembali ke "o
 
 ## Pesan kurir dari admin (ORD-14)
 
+Urutan rilis pertama (migrasi, saklar, kunci live, webhook, uji pesanan sungguhan, panduan staf): [RELEASE_ORD_13_14](RELEASE_ORD_13_14.md).
+
 1. `.env` server: `BITESHIP_WEBHOOK_SECRET=` teks acak minimal 32 karakter (huruf, angka, `-`, `_`), misalnya hasil `php -r "echo bin2hex(random_bytes(24));"`. Opsional: `BITESHIP_ORIGIN_NAME`, `BITESHIP_ORIGIN_PHONE`, `BITESHIP_ORIGIN_ADDRESS` (kontak jemput untuk driver; kosong = nama, telepon, dan alamat di Info Toko).
 2. Dashboard Biteship → **Pengaturan → API → Webhook URL**: isi `https://qammarisparfum.id/integrations/biteship/webhook/<rahasia>`. Biteship mengirim tes dengan isi kosong; situs menjawab 200. Jangan menyalin URL ini ke chat atau screenshot.
 3. Cek: pesanan website kurir instan yang lunas dan dipacking menampilkan **Pesan kurir sekarang**. Setelah memesan, status "Mencari driver" dan tombol **Lacak driver** muncul; halaman customer menampilkan kurir yang sama.
