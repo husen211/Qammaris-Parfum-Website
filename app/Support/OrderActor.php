@@ -55,6 +55,12 @@ final class OrderActor
         return new self(null, null, 'Biteship', 'system');
     }
 
+    /** ORD-15: the scheduler (automatic cancellation of unpaid orders). */
+    public static function system(): self
+    {
+        return new self(null, null, 'Sistem', 'system');
+    }
+
     public function isSystem(): bool
     {
         return $this->user === null && $this->appRole === 'system';
@@ -82,7 +88,7 @@ final class OrderActor
         return match (true) {
             $this->user !== null => ['actor_type' => 'admin', 'source' => 'website', 'actor_user_id' => $this->user->id],
             $this->isCustomer() => ['actor_type' => 'customer', 'source' => 'customer'],
-            $this->isSystem() => ['actor_type' => 'system', 'source' => 'biteship'],
+            $this->isSystem() => ['actor_type' => 'system', 'source' => $this->displayName === 'Biteship' ? 'biteship' : 'system'],
             default => ['actor_type' => 'app', 'source' => 'app', 'actor_app_user_id' => $this->appUserId, 'actor_display_name' => $this->displayName,
                 'idempotency_key' => $this->idempotencyKey, 'request_id' => $this->requestId, 'delivery' => $this->delivery],
         };

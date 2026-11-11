@@ -1,6 +1,11 @@
 {{-- ORD-13: one priced courier option. Also used as the template the checkout script fills (text only). --}}
 <label class="flex min-h-16 cursor-pointer items-center gap-3 border border-gray-300 bg-white p-4 [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] active:bg-gray-50 has-[:checked]:border-brand-black has-[:checked]:bg-[#FAF8F3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-black" data-option>
     <input type="radio" name="shipping_option" value="{{ $option['id'] ?? '' }}" @checked($checked) class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-choice data-charged="{{ $option['charged'] ?? '' }}" data-price="{{ $option['price'] ?? '' }}">
+    {{-- ORD-15: the courier's logo; the script sets it for options it adds. --}}
+    <span class="flex h-8 w-16 shrink-0 items-center justify-center" aria-hidden="true">
+        @php($file = \App\Support\PartnerLogos::file($option['provider'] ?? null))
+        <img @if ($file) src="{{ asset('images/partners/'.$file) }}" @else hidden @endif alt="" class="max-h-6 w-auto max-w-16 object-contain" decoding="async" data-option-logo>
+    </span>
     <span class="min-w-0 flex-1">
         <span class="block text-base font-medium text-brand-black" data-option-label>{{ $option['label'] ?? '' }}</span>
         <span class="block text-sm text-gray-600" data-option-eta>{{ $option['eta'] ?? '' }}</span>

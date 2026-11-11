@@ -51,7 +51,10 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->review([$this->variant('Oud Sintetis', 425000)->id => 1, $this->variant('Musk Sintetis', 189000)->id => 2]);
 
         $this->get(route('cart.checkout.show'))->assertOk()->assertSee('data-shipping-quotes', false)->assertSee('Antar ke lokasimu sekarang?')
-            ->assertSee('Kurir instan')->assertSee('Pilih titik sendiri di peta');
+            ->assertSee('Kurir instan')->assertSee('Pilih titik sendiri di peta')
+            // ORD-15: courier logos beside the delivery names, and the logo map for the script's option cards.
+            ->assertSee('data-partner-logo="gosend"', false)->assertSee('data-partner-logo="grab"', false)->assertSee('data-partner-logo="jnt"', false)
+            ->assertSee('images\/partners\/gojek.svg', false);
         $response = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.916, 'longitude' => 119.886])->assertOk();
         $options = collect($response->json('options'))->keyBy('provider');
 
@@ -141,7 +144,7 @@ class CheckoutShippingQuoteTest extends TestCase
         // A verified account is shown at once with its bank mark and a copy button (digits only).
         StorePaymentAccount::create(['bank_name' => 'BRI', 'account_number' => '0123-01-000000-50-1', 'account_holder' => 'Qammaris Perfumes', 'created_by' => User::factory()->create()->id])
             ->forceFill(['verified_at' => now()])->save();
-        $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('data-bank-mark="bri"', false)
+        $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('data-bank-mark="bri"', false)->assertSee('images/partners/bri.svg', false)
             ->assertSee('0123-01-000000-50-1')->assertSee('data-copy-account="012301000000501"', false)->assertSee('Salin nomor rekening')
             ->assertDontSee('Nomor rekening resmi dikirim admin lewat WhatsApp');
         $this->assertStringNotContainsString('data-auto-open="1"', $page->getContent(), 'WhatsApp opens with the proof, not before paying');

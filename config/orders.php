@@ -33,6 +33,9 @@ return [
      * are priced from the customer's map pin, J&T from the destination area; the store's discount is applied here and
      * the charged amount is locked on the order. Off, or when Biteship cannot answer: ongkir is confirmed by staff.
      */
+    // ORD-15 (Owner 2026-11-11): hours an order may stay unpaid once it can be paid; then it is cancelled. 0 = off.
+    'unpaid_cancel_hours' => (int) env('ORDERS_UNPAID_CANCEL_HOURS', 48),
+
     'shipping_quotes' => [
         'enabled' => (bool) env('ORDERS_SHIPPING_QUOTES', false),
         // Pickup point (store pin in Biteship) and its Biteship postal area for J&T.

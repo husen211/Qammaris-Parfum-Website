@@ -2,6 +2,7 @@
 
 namespace App\Actions\Orders;
 
+use App\Console\Commands\ExpireUnpaidOrders;
 use App\Exceptions\ExpenseAlreadyLinked;
 use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OrderActionNotAllowed;
@@ -660,6 +661,26 @@ class OnlineOrderFulfillment
             } elseif ($order->courier_booking != $booking) {
                 $this->saveQuietly = true;
             }
+        }, allowSystem: true);
+    }
+
+    /**
+     * ORD-15: cancel an order that stayed unpaid past its payment deadline. Every condition is checked again under the
+     * lock: a payment, a keep or a handover that arrived in the meantime keeps the order.
+     */
+    public function expireUnpaid(OnlineOrder $order, int $hours): OnlineOrder
+    {
+        return $this->run($order, null, OrderActor::system(), function (OnlineOrder $order) use ($hours): void {
+            $order->loadMissing('items');
+            if (! in_array($order->lifecycle, ['draft', 'active'], true) || $order->payment_status !== 'unpaid'
+                || $order->payment_due_at === null || $order->payment_due_at->isFuture()
+                || ! ExpireUnpaidOrders::expirable($order)) {
+                return;
+            }
+            $order->lifecycle = 'cancelled';
+            $order->cancel_reason = 'Belum dibayar dalam '.$hours.' jam';
+            $order->closed_at = now();
+            $this->record('cancelled', 'Dibatalkan otomatis: belum dibayar dalam '.$hours.' jam');
         }, allowSystem: true);
     }
 

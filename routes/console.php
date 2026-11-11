@@ -10,6 +10,8 @@ Schedule::command('qammaris:orders:deliver-webhooks')->everyMinute()->withoutOve
 Schedule::command('qammaris:orders:prune-api')->dailyAt('03:30');
 // WAIT-01: "Kabari saya saat ready" requests to the App Daftar Tunggu.
 Schedule::command('qammaris:restock-requests:deliver')->everyMinute()->withoutOverlapping();
+// ORD-15: payment deadlines (48 hours) and automatic cancellation of unpaid orders.
+Schedule::command('qammaris:orders:expire-unpaid')->everyFiveMinutes()->withoutOverlapping();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

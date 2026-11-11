@@ -34,7 +34,7 @@ class OnlineOrderEvent extends Model
             'customer' => 'Customer',
             'staff' => ($this->staff_name ?: 'Staf').' (staf)',
             'app' => ($this->actor_display_name ?: 'Karyawan').' (App)',
-            'system' => 'Biteship (otomatis)',
+            'system' => $this->source === 'biteship' ? 'Biteship (otomatis)' : 'Sistem (otomatis)',
             default => $this->actor?->name ?? 'Admin',
         };
     }

@@ -1,0 +1,11 @@
+Courier and bank logos in public/images/partners (ORD-15, 2026-11-11)
+
+Source: Wikimedia Commons. Every file is marked "Public domain" there (logo too simple for copyright). The marks remain
+trademarks of their owners; Qammaris shows them only to name the courier or bank the customer uses.
+
+- gojek.svg  File:Gojek_logo_2022.svg   https://commons.wikimedia.org/wiki/File:Gojek_logo_2022.svg  (shown for GoSend)
+- grab.svg   File:Grab_Logo.svg         https://commons.wikimedia.org/wiki/File:Grab_Logo.svg        (shown for GrabExpress)
+- jnt.svg    File:J&T_Express_logo.svg  https://commons.wikimedia.org/wiki/File:J%26T_Express_logo.svg
+- bri.svg    File:BRI_2025.svg          https://commons.wikimedia.org/wiki/File:BRI_2025.svg  (viewBox added so it scales)
+
+Checked before use: no script, event handler, external reference or embedded image in any file.

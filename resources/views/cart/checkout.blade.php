@@ -14,8 +14,10 @@
     // ORD-13: with checkout pricing the courier options describe what the customer now gets.
     $deliveries = config('orders.checkout_deliveries');
     if ($autoShipping) {
-        $deliveries['local_delivery'] = ['label' => 'Kurir instan', 'help' => 'GoSend atau GrabExpress, Kota Palu. Ongkir langsung dihitung dari titik lokasimu.'];
-        $deliveries['intercity'] = ['label' => 'J&T', 'help' => 'Dalam dan luar kota, tiba 2–3 hari. Ongkir langsung dihitung.'];
+        $deliveries['local_delivery'] = ['label' => 'Kurir instan', 'help' => 'GoSend atau GrabExpress, Kota Palu. Ongkir langsung dihitung dari titik lokasimu.', 'logos' => ['gosend', 'grab']];
+        $deliveries['intercity'] = ['label' => 'J&T', 'help' => 'Dalam dan luar kota, tiba 2–3 hari. Ongkir langsung dihitung.', 'logos' => ['jnt']];
+    } else {
+        $deliveries['intercity']['logos'] = ['jnt'];
     }
     // ORD-13: more than one piece of a product needs a stock check before paying (Owner 2026-11-11).
     $needsStockCheck = collect($items)->contains(fn ($item) => $item['quantity'] > 1);
@@ -69,7 +71,11 @@
                                 @foreach ($deliveries as $value => $option)
                                     <label class="{{ $choiceClass }}">
                                         <input type="radio" name="delivery" value="{{ $value }}" @checked($delivery === $value) required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-delivery>
-                                        <span><span class="block text-base font-medium text-brand-black">{{ $option['label'] }}</span><span class="mt-0.5 block text-sm leading-5 text-gray-600">{{ $option['help'] }}</span></span>
+                                        <span class="min-w-0 flex-1">
+                                            {{-- ORD-15: the courier logos next to the name (Owner 2026-11-11). --}}
+                                            <span class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="text-base font-medium text-brand-black">{{ $option['label'] }}</span>@foreach ($option['logos'] ?? [] as $logo)<x-partner-logo :name="$logo" class="h-4" />@endforeach</span>
+                                            <span class="mt-0.5 block text-sm leading-5 text-gray-600">{{ $option['help'] }}</span>
+                                        </span>
                                     </label>
                                 @endforeach
                             </div>

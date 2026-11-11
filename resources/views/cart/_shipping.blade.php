@@ -16,6 +16,7 @@
         // Place search over OpenStreetMap data (Photon), limited to the service area.
         'placeSearchUrl' => 'https://photon.komoot.io/api/',
         'serviceArea' => config('orders.shipping_quotes.service_area'),
+        'logos' => \App\Support\PartnerLogos::urls(),
     ];
 @endphp
 @vite('resources/js/checkout-shipping.js')
