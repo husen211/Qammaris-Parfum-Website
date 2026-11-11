@@ -16,23 +16,19 @@ Only the Website changes. The App and the Order API contract do not change.
 | Driver pickup contact | The phone in **Info Toko** = the store admin's phone held at the store (Owner 2026-11-11). Check it in production before step 5 |
 | Website DB backup | Owner 2026-11-11: no manual dump for this release. The three migrations only add empty nullable columns and change no existing row, and the code rollback leaves them in place. Hostinger's automatic backup (hPanel → Files → Backups) is the fallback; check its date before step 2 |
 
-## 2. Migrations first (build package, server)
+## 2. Migrations (automatic since OPS-DEPLOY-02)
 
-The deploy refuses pending migrations, so the three additive columns run first, while the old release stays live. Use the procedure in [RELEASE_ORD_PWA_RC §5a](RELEASE_ORD_PWA_RC.md).
+Owner 2026-11-11: no SSH step. The three migrations are listed in `tools/hostinger/auto-migrations.txt`, so the deploy runs them itself before the switch, while the old code stays live ([ADR-059](../architecture/decisions/ADR-059-deploy-runs-listed-migrations.md)):
+- `2026_11_11_100001_add_shipping_quote_to_online_orders`
+- `2026_11_12_100001_add_qris_image_to_store_info`
+- `2026_11_12_100002_add_courier_booking_to_online_orders`
 
-1. Agent: run the "Production release" workflow with `workflow_dispatch` on `ongkir-otomatis`, build only. The artifact is `production-<sha>`.
-2. **(server)** Unpack the package in a private directory, verify `sha256`, link `.env`, use a private `storage/`. `php artisan migrate:status` must show exactly these 3 as Pending:
-   - `2026_11_11_100001_add_shipping_quote_to_online_orders`
-   - `2026_11_12_100001_add_qris_image_to_store_info`
-   - `2026_11_12_100002_add_courier_booking_to_online_orders`
-
-   All three are nullable columns; the live code ignores them.
-3. **(server)** `php artisan migrate --force`, then `migrate:status` shows 0 pending. Check `/up` and the home page, then remove the private directory.
+The manual build-package procedure ([RELEASE_ORD_PWA_RC §5a](RELEASE_ORD_PWA_RC.md)) stays the fallback. It was prepared (package `c90e725`) but not run, because the SSH connection was refused.
 
 ## 3. Merge with the switch off
 
 1. **(server)** Confirm the switch is off without printing values: `grep -c '^ORDERS_SHIPPING_QUOTES=true' "$shared/.env"` must print `0`.
-2. Agent, on the Owner's go: mark PR #161 ready and merge. CI deploys with the health check and automatic rollback.
+2. Agent, on the Owner's go: mark PR #161 ready and merge. CI deploys: listed migrations, then the switch, the health check with automatic rollback, and a worker restart.
 
 What customers and staff see at once, even with the switch off:
 - the order page shows the payment choice (transfer, QRIS "Segera tersedia") and no Sharelok request when the order already has a location;
