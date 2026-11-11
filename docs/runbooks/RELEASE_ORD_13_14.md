@@ -107,4 +107,12 @@ Pesanan website dengan kurir instan:
   - Biteship balance Rp10.000 topped up; Mode Testing off; the live key was created by the Owner;
   - the Owner added `BITESHIP_API_KEY`, `BITESHIP_WEBHOOK_SECRET` and `ORDERS_SHIPPING_QUOTES=true` to the shared `.env` through the hPanel File Manager (no SSH);
   - this docs merge redeploys so `config:cache` reads them.
+- Live 2026-11-11 evening:
+  - the redeploy cached the new values; `/cart/checkout/wilayah` answers with Biteship's live areas;
+  - the Owner registered the webhook in Biteship (order.status, order.price, order.waybill_id) and checked prices on the phone ("Sudah, aman").
+- Still open:
+  - the first customer order with an instant courier is the booking and webhook test (§5);
+  - top up the Biteship balance above one courier fee (Rp10.000 covers only price checks);
+  - upload the QRIS;
+  - check whether the driver's number accepts WhatsApp.
 - **Was not done yet before activation (Owner):** Biteship balance and live key, `BITESHIP_WEBHOOK_SECRET`, the webhook URL in Biteship, the QRIS upload, then §5 (switch on, price check on the phone, first customer order as the courier test).
