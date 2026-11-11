@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StoreInfo;
 use App\Models\StorePaymentAccount;
 use App\Models\User;
+use App\Services\ProductMediaStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -22,7 +23,34 @@ class AdminStorePaymentAccountController extends Controller
         $accounts = StorePaymentAccount::query()->orderByRaw('deactivated_at IS NOT NULL')->orderBy('id')->get();
         $names = User::query()->whereIn('id', $accounts->flatMap(fn ($a) => [$a->created_by, $a->verified_by, $a->deactivated_by])->filter()->unique())->pluck('name', 'id');
 
-        return view('admin.orders.payment-accounts', ['accounts' => $accounts, 'names' => $names]);
+        return view('admin.orders.payment-accounts', ['accounts' => $accounts, 'names' => $names, 'qrisUrl' => StoreInfo::qrisImageUrl()]);
+    }
+
+    /** ORD-13: the store's static QRIS, stored on the persistent product media disk; the old file is removed after the switch. */
+    public function qris(Request $request, ProductMediaStorage $media): RedirectResponse
+    {
+        $request->validate(['qris' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096', 'dimensions:min_width=300,min_height=300']],
+            ['qris.dimensions' => 'Gambar QRIS minimal 300 × 300 piksel supaya bisa dipindai.'], ['qris' => 'gambar QRIS']);
+        $path = $media->store($request->file('qris'));
+        $store = StoreInfo::getSetting();
+        $old = $store->qris_image_path;
+        $store->forceFill(['qris_image_path' => $path])->save();
+        if ($old && $old !== $path) {
+            $media->delete([$old]);
+        }
+
+        return redirect()->route('admin.orders.payment-accounts.index')->with('success', 'QRIS disimpan dan tampil di halaman pembayaran customer.');
+    }
+
+    public function removeQris(ProductMediaStorage $media): RedirectResponse
+    {
+        $store = StoreInfo::getSetting();
+        if ($old = $store->qris_image_path) {
+            $store->forceFill(['qris_image_path' => null])->save();
+            $media->delete([$old]);
+        }
+
+        return redirect()->route('admin.orders.payment-accounts.index')->with('success', 'QRIS dihapus. Customer hanya melihat transfer bank.');
     }
 
     public function store(Request $request): RedirectResponse

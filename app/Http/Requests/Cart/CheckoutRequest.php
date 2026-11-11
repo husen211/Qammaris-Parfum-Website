@@ -44,7 +44,8 @@ class CheckoutRequest extends FormRequest
             'district' => ['exclude_if:delivery,pickup', 'nullable', 'string', 'max:80'],
             'subdistrict' => ['exclude_if:delivery,pickup', 'nullable', 'string', 'max:80'],
             'packaging' => ['required', 'string', 'in:paperbag,no_paperbag'],
-            'payment_preference' => ['required', 'string', 'in:'.implode(',', array_keys(config('orders.payment_preferences')))],
+            // ORD-13: with checkout pricing the customer picks transfer or QRIS on the payment page instead.
+            'payment_preference' => $priced ? ['exclude'] : ['required', 'string', 'in:'.implode(',', array_keys(config('orders.payment_preferences')))],
             // ORD-10: only a local courier is paid either way; J&T ongkir is always part of the transfer.
             'shipping_payment' => ['exclude_unless:delivery,local_delivery', ...($priced ? ['exclude_unless:shipping_option,manual'] : []), 'required', 'string', 'in:'.implode(',', array_keys(OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS))],
             'shipping_option' => $priced ? ['exclude_if:delivery,pickup', 'required', 'string', 'regex:/^(manual|[A-Za-z0-9]{20})$/'] : ['exclude'],
@@ -67,7 +68,7 @@ class CheckoutRequest extends FormRequest
             'subdistrict' => $data['subdistrict'] ?? null,
             'packaging' => $data['packaging'],
             'customer_note' => $data['customer_note'] ?? null,
-            'payment_preference' => $data['payment_preference'],
+            'payment_preference' => $data['payment_preference'] ?? null,
             'shipping_payer' => isset($data['shipping_option']) && $data['shipping_option'] !== 'manual'
                 ? 'added_to_transfer'
                 : OnlineOrder::customerShippingPayer($data['delivery'], $data['shipping_payment'] ?? null),

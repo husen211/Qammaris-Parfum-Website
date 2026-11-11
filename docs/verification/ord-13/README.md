@@ -63,9 +63,23 @@ Re-checked in headless Chrome through the DevTools protocol (permission set per 
 
 Chrome's real "Allow this time" prompt and a phone's GPS cannot be driven headless; every outcome they can produce (granted, refused, unavailable) is covered above.
 
+## Checkout tidy-up and payment step (Owner 2026-11-11)
+
+Synthetic products and orders again (QAM-0020: 1 pcs J&T to Palu Barat; QAM-0021: 2 pcs), temporary admin removed afterwards.
+
+| View | Result | Screenshot |
+|---|---|---|
+| Checkout 390, J&T | Destination, J&T Rp8.000 → Rp5.500 (30%), then one address field; no kelurahan/kecamatan/postcode, no payment choice; button "Lanjut ke pembayaran" | [pay-390-checkout-jnt](pay-390-checkout-jnt.jpg), [pay-390-checkout-bottom](pay-390-checkout-bottom.jpg) |
+| Order page, 1 pcs | "Langkah berikutnya: pembayaran", total, Transfer bank / QRIS "Segera tersedia", "Kirim bukti bayar ke WhatsApp"; no automatic WhatsApp before paying | [pay-390-pay-now](pay-390-pay-now.jpg) |
+| Order page, 2 pcs | Clock "Menunggu admin cek stok", "Uji Ongkir Musk × 2 perlu dicek", WhatsApp button; no payment yet; checkout button said "Pesan & minta cek stok" | [pay-390-waiting](pay-390-waiting.jpg) |
+| Admin confirmation | "Customer sudah bisa bayar langsung …" / "Perlu cek stok: Uji Ongkir Musk 50 ml × 2 …" | [pay-390-admin-pay-now](pay-390-admin-pay-now.jpg), [pay-390-admin-stock-check](pay-390-admin-stock-check.jpg) |
+| Admin QRIS card 1440 | Empty state with upload (PNG/JPG/WebP, min 300 × 300, max 4 MB) | [pay-1440-admin-qris](pay-1440-admin-qris.jpg) |
+
+Local has no verified bank account and no store WhatsApp number (ORD-07), so the page says the account is sent on WhatsApp and shows the proof text for copying; with accounts and a store number it lists them and the button opens WhatsApp (covered by tests).
+
 ## Tests
 
-- `CheckoutShippingQuoteTest` (7): instant pricing and discount, the request sent to Biteship (key header, couriers, 800 g × quantity, store origin), order locking and display, WhatsApp text; J&T area search and pricing; discount rules; forged / other delivery / expired / other cart options refused; no courier, Biteship down and outside the area fall back to "dikonfirmasi admin"; staff may lower but not raise or send to the driver; flag off or no key leaves the checkout as before. The pin becomes `location_url`.
+- `CheckoutShippingQuoteTest` (11, four for the payment step: single pieces pay at once and the choice opens WhatsApp; 2 pcs or staff-priced ongkir wait and payment opens after confirmation; QRIS upload rights, size check, payment with QRIS and removal; J&T fills kecamatan and postcode). Earlier seven: instant pricing and discount, the request sent to Biteship (key header, couriers, 800 g × quantity, store origin), order locking and display, WhatsApp text; J&T area search and pricing; discount rules; forged / other delivery / expired / other cart options refused; no courier, Biteship down and outside the area fall back to "dikonfirmasi admin"; staff may lower but not raise or send to the driver; flag off or no key leaves the checkout as before. The pin becomes `location_url`.
 - `tests/js/checkout-shipping.test.mjs` (7): preselecting the cheapest charged option, discount text, distance text, when our pop-up shows, every failure keeps a way to order, a hint for every location outcome, place search results (labels, no duplicates, no RT/RW).
 - Full suite: 844 passed, 10 skipped, 3 known local-only failures (J&T QR without GD ×2, ReleaseCheck VAPID). JS 101 passed. Pint on the changed files passed. `npm run build`: `checkout-shipping` 10 kB (4,2 kB gzip), lazy `map` 150 kB (43,6 kB gzip).
 

@@ -13,9 +13,18 @@
         @if ($order->fulfillment !== 'pickup')
             <div><dt class="text-gray-500">Alamat</dt><dd class="break-words text-gray-900">{{ $order->address }}{{ $order->subdistrict ? ', '.$order->subdistrict : '' }}{{ $order->district ? ', '.$order->district : '' }}{{ $order->postcode ? ' '.$order->postcode : '' }}</dd></div>
         @endif
-        <div><dt class="text-gray-500">Paperbag · Pembayaran</dt><dd class="text-gray-900">{{ OnlineOrder::PACKAGING[$order->packaging] ?? '-' }} · {{ config('orders.payment_preferences')[$order->payment_preference] ?? '-' }}</dd></div>
+        <div><dt class="text-gray-500">Paperbag · Pembayaran</dt><dd class="text-gray-900">{{ OnlineOrder::PACKAGING[$order->packaging] ?? '-' }} · {{ config('orders.payment_preferences')[$order->payment_preference] ?? 'belum dipilih' }}</dd></div>
         @if ($order->customer_note)<div><dt class="text-gray-500">Catatan customer</dt><dd class="break-words text-gray-900">{{ $order->customer_note }}</dd></div>@endif
     </dl>
+    {{-- ORD-13: whether the customer may already pay, or what staff must check first. --}}
+    @if ($order->source === 'website' && config('orders.shipping_quotes.enabled'))
+        @php($multiple = $order->items->where('quantity', '>', 1))
+        @if ($order->payableBeforeConfirmation())
+            <p class="mt-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-900" data-pay-now-note>Customer sudah bisa bayar langsung (semua produk 1 pcs, ongkir final). Setelah bukti bayar masuk di WhatsApp: konfirmasi pesanan, lalu Tandai Lunas.</p>
+        @elseif ($multiple->isNotEmpty())
+            <p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" data-stock-check-note>Perlu cek stok: <strong>{{ $multiple->map(fn ($item) => $item->label().' × '.$item->quantity)->join(', ') }}</strong>. Customer bisa bayar setelah pesanan dikonfirmasi.</p>
+        @endif
+    @endif
     <ol class="mt-3 list-decimal space-y-1 pl-5 text-sm text-gray-700">
         <li>Cocokkan dengan chat WhatsApp customer (nomor {{ $order->code }}).</li>
         <li>Cek stok {{ $order->items->sum('quantity') }} barang di Produk dipesan{{ match (true) {

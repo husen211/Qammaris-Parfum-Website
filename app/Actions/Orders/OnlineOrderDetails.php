@@ -70,6 +70,24 @@ class OnlineOrderDetails
         return false;
     }
 
+    /** ORD-13: the customer's choice of transfer or QRIS on the payment page; a preference, never a payment. */
+    public function choosePaymentByCustomer(OnlineOrder $order, string $method): OnlineOrder
+    {
+        if (! $order->customerCanPay()) {
+            throw new InvalidOrderTransition('Pembayaran untuk pesanan ini belum dibuka atau sudah selesai.');
+        }
+
+        return $this->mutateV2($order, null, null, function (OnlineOrder $order) use ($method): bool {
+            if ($order->payment_preference === $method) {
+                return false;
+            }
+            $order->payment_preference = $method;
+            $this->orderEvent($order, null, 'details_updated', 'Customer memilih bayar lewat '.(config('orders.payment_preferences')[$method] ?? $method));
+
+            return true;
+        });
+    }
+
     /** Owner D5: Staff Order corrects recipient details until handover; money fields are Super Admin only. */
     public function updateByAdmin(OnlineOrder $order, int $revision, User $actor, array $data): OnlineOrder
     {

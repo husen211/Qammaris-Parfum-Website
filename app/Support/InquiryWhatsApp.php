@@ -92,8 +92,13 @@ final class InquiryWhatsApp
     /** The same text, shown for copying where no store number is available (test environments, ORD-07). */
     public function websiteOrderMessage(OnlineOrder $order): string
     {
-        $delivery = config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-';
         $quote = $order->shipping_quote;
+        // ORD-13: the priced courier says more than the delivery type (J&T also delivers inside Palu).
+        $delivery = match ($quote['kind'] ?? null) {
+            'instant' => $quote['label'].' (kurir instan)',
+            'jnt' => 'J&T ke '.($quote['destination']['area_label'] ?? '-'),
+            default => config('orders.checkout_deliveries')[$order->fulfillment]['label'] ?? '-',
+        };
 
         return implode("\n", [
             'Halo Qammaris, saya baru memesan lewat website.',
@@ -110,6 +115,23 @@ final class InquiryWhatsApp
             ] : []),
             '',
             $quote ? 'Mohon konfirmasi stok dan pembayarannya. Terima kasih.' : 'Mohon konfirmasi stok, ongkir, dan pembayarannya. Terima kasih.',
+            '',
+            'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
+        ]);
+    }
+
+    /** ORD-13: sent after paying; the proof itself is attached by the customer in the chat. */
+    public function paymentProofMessage(OnlineOrder $order, string $method): string
+    {
+        return implode("\n", [
+            'Halo Qammaris, saya sudah membayar pesanan saya.',
+            '',
+            'Nomor pesanan: *'.$order->code.'*',
+            'Nama: '.$this->plainText((string) $order->customer_name),
+            'Total: '.Rupiah::format($order->customerTotal()),
+            'Dibayar lewat: '.(config('orders.payment_preferences')[$method] ?? $method),
+            '',
+            'Bukti pembayaran saya kirim di chat ini.',
             '',
             'Link pesanan untuk admin: '.OrderTaskLink::for($order)['url'],
         ]);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ProductMediaStorage;
 use App\Support\PhoneNumber;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,14 @@ class StoreInfo extends Model
         'hero_title',
         'hero_subtitle',
     ];
+
+    /** ORD-13: the static QRIS image customers pay with, or null until a Super Admin uploads one. */
+    public static function qrisImageUrl(): ?string
+    {
+        $path = self::query()->value('qris_image_path');
+
+        return $path ? app(ProductMediaStorage::class)->url($path) : null;
+    }
 
     /**
      * Get the single store info instance (Singleton pattern)

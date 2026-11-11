@@ -8,14 +8,17 @@ use App\Models\Category;
 use App\Models\OnlineOrder;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\StoreInfo;
 use App\Models\User;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderStepper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -73,9 +76,10 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->assertFalse($order->customerSetsShippingPayment(), 'a locked ongkir cannot be switched to "bayar ke driver"');
         $this->assertArrayNotHasKey('shipping_quote', $order->toArray());
 
+        // Two pieces of one product: staff check the stock before the customer can pay.
         $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertOk()
             ->assertSee('Ongkir GoSend')->assertSee('Potongan ongkir 15% dari Qammaris')->assertSee('Rp 20.500')->assertSee('Rp 17.000')
-            ->assertSee('mengonfirmasi stok dan pembayaran');
+            ->assertSee('Menunggu admin cek stok')->assertSee('Musk Sintetis × 2')->assertDontSee('Kirim bukti bayar ke WhatsApp');
         $message = app(InquiryWhatsApp::class)->websiteOrderMessage($order);
         $this->assertStringContainsString('Ongkir GoSend: Rp 17.000 (potongan ongkir 15% dari Qammaris)', $message);
         $this->assertStringContainsString('Total: Rp 824.000', $message);
@@ -107,6 +111,94 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->post(route('cart.checkout'), $this->form('intercity', ['shipping_option' => $option['id']]))->assertRedirect();
         $order = OnlineOrder::sole();
         $this->assertSame(['48000.00', 'added_to_transfer', 'jnt', 'Makassar, Makassar, Sulawesi Selatan. 90141'], [$order->shipping_fee, $order->shipping_payer, $order->shipping_quote['provider'], $order->shipping_quote['destination']['area_label']]);
+        $this->assertSame(['Makassar', '90141'], [$order->district, $order->postcode], 'the J&T destination fills kecamatan and postcode');
+    }
+
+    public function test_single_pieces_go_straight_to_payment_and_the_choice_opens_whatsapp(): void
+    {
+        Http::fake([self::RATES => Http::response($this->pricing([['grab', 'instant', 15000, '1 - 3', 'hours']]))]);
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1, $this->variant('Musk Sintetis', 189000)->id => 1]);
+        $this->get(route('cart.checkout.show'))->assertOk()->assertSee('Lanjut ke pembayaran')
+            ->assertDontSee('name="district"', false)->assertDontSee('name="subdistrict"', false)->assertDontSee('name="payment_preference"', false);
+        $id = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.88, 'longitude' => 119.87])->json('options.0.id');
+        $placed = $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $id]));
+        $order = OnlineOrder::sole();
+        $this->assertNull($order->payment_preference, 'the customer picks it on the payment page');
+        $this->assertTrue($order->payableBeforeConfirmation());
+
+        $page = $this->followRedirects($placed)->assertOk()->assertSee('Langkah berikutnya: pembayaran')->assertSee('Transfer bank')
+            ->assertSee('Segera tersedia')->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok');
+        $this->assertStringNotContainsString('data-auto-open="1"', $page->getContent(), 'WhatsApp opens with the proof, not before paying');
+
+        $token = $order->customer_token_encrypted;
+        $this->post(route('orders.customer.pay', $token), ['payment_preference' => 'qris'])->assertSessionHasErrors('payment_preference');
+        $to = $this->post(route('orders.customer.pay', $token), ['payment_preference' => 'transfer'])->assertRedirect()->headers->get('Location');
+        $this->assertStringStartsWith('https://wa.me/', $to);
+        parse_str((string) parse_url($to, PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('Nomor pesanan: *'.$order->code.'*', $query['text']);
+        $this->assertStringContainsString('Dibayar lewat: Transfer bank', $query['text']);
+        $this->assertSame(['transfer', 'unpaid', 'draft'], [$order->fresh()->payment_preference, $order->fresh()->payment_status, $order->fresh()->lifecycle]);
+
+        $this->actingAs(User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh());
+        $this->get(route('admin.orders.show', $order))->assertSee('data-pay-now-note', false)->assertSee('Transfer bank');
+    }
+
+    public function test_two_pieces_or_staff_priced_ongkir_wait_and_payment_opens_after_confirmation(): void
+    {
+        Http::fake([self::RATES => Http::response($this->pricing([['grab', 'instant', 15000, '1 - 3', 'hours']]))]);
+        $variant = $this->variant('Oud Sintetis', 425000);
+        $this->review([$variant->id => 2]);
+        $this->get(route('cart.checkout.show'))->assertSee('Pesan &amp; minta cek stok', false);
+        $id = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.88, 'longitude' => 119.87])->json('options.0.id');
+        $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $id]));
+        $order = OnlineOrder::sole();
+        $token = $order->customer_token_encrypted;
+
+        $this->get(route('orders.customer.show', $token))->assertSee('Menunggu admin cek stok')->assertSee('Oud Sintetis × 2')
+            ->assertSee('Kirim pesanan ke WhatsApp')->assertDontSee('Kirim bukti bayar ke WhatsApp');
+        $this->post(route('orders.customer.pay', $token), ['payment_preference' => 'transfer'])->assertSessionHas('error');
+        $this->assertNull($order->fresh()->payment_preference);
+
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh();
+        $this->actingAs($staff)->get(route('admin.orders.show', $order))->assertSee('data-stock-check-note', false)->assertSee('Perlu cek stok');
+        $this->post(route('admin.orders.v2.confirm-website', $order), ['revision' => $order->fresh()->revision])->assertSessionHas('order_notice.type', 'success');
+        auth()->logout();
+        $this->get(route('orders.customer.show', $token))->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok');
+    }
+
+    public function test_ongkir_confirmed_by_staff_waits_too(): void
+    {
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => 'manual', 'shipping_payment' => 'added_to_transfer']));
+        $this->get(route('orders.customer.show', OnlineOrder::sole()->customer_token_encrypted))
+            ->assertSee('Menunggu admin menghitung ongkir')->assertDontSee('Kirim bukti bayar ke WhatsApp');
+    }
+
+    public function test_super_admin_uploads_the_store_qris_and_customers_can_pay_with_it(): void
+    {
+        Storage::fake('public');
+        config(['media.product_disk' => 'public']);
+        $this->actingAs(User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh())
+            ->post(route('admin.orders.payment-accounts.qris'), ['qris' => UploadedFile::fake()->createWithContent('qris.png', $this->png(600, 600))])->assertForbidden();
+        $this->actingAs(User::factory()->create(['role' => User::ROLE_SUPER_ADMIN])->fresh());
+        $this->post(route('admin.orders.payment-accounts.qris'), ['qris' => UploadedFile::fake()->createWithContent('kecil.png', $this->png(120, 120))])->assertSessionHasErrors('qris');
+        $this->post(route('admin.orders.payment-accounts.qris'), ['qris' => UploadedFile::fake()->createWithContent('qris.png', $this->png(600, 600))])->assertSessionHas('success');
+        $path = StoreInfo::query()->value('qris_image_path');
+        Storage::disk('public')->assertExists($path);
+        $this->get(route('admin.orders.payment-accounts.index'))->assertSee('data-qris-settings', false)->assertSee('Ganti gambar QRIS');
+        auth()->logout();
+
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        $this->post(route('cart.checkout'), $this->form('pickup'));
+        $token = OnlineOrder::sole()->customer_token_encrypted;
+        $this->get(route('orders.customer.show', $token))->assertSee('alt="QRIS Qammaris Perfumes"', false)->assertDontSee('Segera tersedia');
+        $to = $this->post(route('orders.customer.pay', $token), ['payment_preference' => 'qris'])->headers->get('Location');
+        parse_str((string) parse_url($to, PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('Dibayar lewat: QRIS', $query['text']);
+
+        $this->actingAs(User::where('role', User::ROLE_SUPER_ADMIN)->first())->post(route('admin.orders.payment-accounts.qris.remove'))->assertSessionHas('success');
+        $this->assertNull(StoreInfo::query()->value('qris_image_path'));
+        Storage::disk('public')->assertMissing($path);
     }
 
     public function test_discount_rules_round_down_and_respect_the_threshold_and_cap(): void
@@ -192,6 +284,15 @@ class CheckoutShippingQuoteTest extends TestCase
         }
         $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_payment' => 'added_to_transfer']))->assertRedirect();
         $this->assertNull(OnlineOrder::sole()->shipping_quote);
+    }
+
+    /** A plain white PNG built without GD (not installed everywhere tests run). */
+    private function png(int $width, int $height): string
+    {
+        $chunk = fn (string $type, string $data) => pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
+
+        return "\x89PNG\r\n\x1a\n".$chunk('IHDR', pack('NNCCCCC', $width, $height, 8, 2, 0, 0, 0))
+            .$chunk('IDAT', gzcompress(str_repeat("\0".str_repeat("\xff", $width * 3), $height))).$chunk('IEND', '');
     }
 
     private function pricing(array $rates): array

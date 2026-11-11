@@ -17,7 +17,10 @@
         $deliveries['local_delivery'] = ['label' => 'Kurir instan', 'help' => 'GoSend atau GrabExpress, Kota Palu. Ongkir langsung dihitung dari titik lokasimu.'];
         $deliveries['intercity'] = ['label' => 'J&T', 'help' => 'Dalam dan luar kota, tiba 2–3 hari. Ongkir langsung dihitung.'];
     }
+    // ORD-13: more than one piece of a product needs a stock check before paying (Owner 2026-11-11).
+    $needsStockCheck = collect($items)->contains(fn ($item) => $item['quantity'] > 1);
     $submitLabel = match (true) {
+        $autoShipping => $needsStockCheck ? 'Pesan & minta cek stok' : 'Lanjut ke pembayaran',
         $savesOrder && $whatsappAvailable => 'Pesan & lanjut ke WhatsApp',
         $savesOrder => 'Pesan sekarang',
         $whatsappAvailable => 'Lanjut ke WhatsApp',
@@ -85,7 +88,7 @@
                             <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">{{ match (true) { $autoShipping => 'Isi jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.', $savesOrder => 'Isi jalan, nomor rumah, dan patokan. Untuk pengiriman dalam kota, kirim juga Sharelok di WhatsApp.', default => 'Isi jalan, nomor rumah, kelurahan, kecamatan, kota/kabupaten, dan provinsi.' } }}</p>
                             @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </div>
-                        @if ($savesOrder)
+                        @if ($savesOrder && ! $autoShipping)
                             <div class="grid gap-5 sm:grid-cols-2">
                                 @foreach (['subdistrict' => ['Kelurahan', 'address-level4'], 'district' => ['Kecamatan', 'address-level3']] as $field => [$label, $autocomplete])
                                     <div>
@@ -96,7 +99,8 @@
                                 @endforeach
                             </div>
                         @endif
-                        <div>
+                        {{-- ORD-13: the pin or the J&T destination already says where; no second kecamatan/postcode question. --}}
+                        <div @if ($autoShipping) hidden @endif>
                             <label for="customer_postcode" class="block text-sm font-medium text-brand-black">Kode pos <span class="font-normal text-gray-500">(opsional)</span></label>
                             <input id="customer_postcode" name="customer_postcode" value="{{ old('customer_postcode') }}" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" aria-invalid="{{ $errors->has('customer_postcode') ? 'true' : 'false' }}" @error('customer_postcode') aria-describedby="customer_postcode-error" @enderror class="mt-2 min-h-12 w-full border border-gray-300 px-3 py-3 text-base focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black sm:max-w-40">
                             @error('customer_postcode') <p id="customer_postcode-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
@@ -116,6 +120,8 @@
                             </div>
                             @error('packaging') <p id="packaging-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
+{{-- ORD-13: with checkout pricing, transfer or QRIS is chosen on the payment page after ordering. --}}
+                        @unless ($autoShipping)
                         <fieldset aria-describedby="payment-help{{ $errors->has('payment_preference') ? ' payment_preference-error' : '' }}">
                             <legend class="text-sm font-medium text-brand-black">Pembayaran <span aria-hidden="true">*</span></legend>
                             <div class="mt-3 grid grid-cols-2 gap-3">
@@ -129,6 +135,7 @@
                             <p id="payment-help" class="mt-2 text-xs leading-5 text-gray-500">{{ $autoShipping ? 'Bayar setelah admin mengonfirmasi stok di WhatsApp.' : 'Bayar setelah admin mengonfirmasi total dan ongkir di WhatsApp.' }}</p>
                             @error('payment_preference') <p id="payment_preference-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
+                        @endunless
                         {{-- ORD-10: only a local courier can be paid on arrival; J&T ongkir is always part of the payment. --}}
                         <fieldset data-local-only @if ($delivery !== 'local_delivery' || ($autoShipping && old('shipping_option') !== 'manual')) hidden @endif aria-describedby="shipping-payment-help{{ $errors->has('shipping_payment') ? ' shipping_payment-error' : '' }}">
                             <legend class="text-sm font-medium text-brand-black">Metode pembayaran ongkir <span aria-hidden="true">*</span></legend>
@@ -184,8 +191,12 @@
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Ongkir dan pembayaran dilanjutkan di WhatsApp.</p>
                 @endif
-                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 gap-3">@if ($whatsappAvailable)<x-icon name="whatsapp" class="text-[1.2rem]" />@endif<span data-submit-label>{{ $submitLabel }}</span></button>
-                @if ($savesOrder)
+                <button type="submit" @disabled(! $canSubmit) class="mt-6 flex min-h-14 w-full items-center justify-center bg-brand-black px-4 text-xs font-semibold uppercase tracking-widest text-white [touch-action:manipulation] hover:bg-gray-800 active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 gap-3" @if ($autoShipping) data-label-check="{{ $needsStockCheck ? 'Pesan & minta cek stok' : 'Pesan & minta cek ongkir' }}" data-label-pay="{{ $submitLabel }}" @endif>@if ($whatsappAvailable && ! $autoShipping)<x-icon name="whatsapp" class="text-[1.2rem]" />@endif<span data-submit-label>{{ $submitLabel }}</span></button>
+                @if ($autoShipping)
+                    <p class="mt-3 text-xs leading-5 text-gray-600" data-next-hint>{{ $needsStockCheck
+                        ? 'Ada produk lebih dari 1 pcs: admin mengecek stoknya dulu lewat WhatsApp, lalu cara bayar muncul di halaman pesanan.'
+                        : 'Setelah ini pilih transfer atau QRIS, lalu kirim bukti bayar lewat WhatsApp. Data penerima hanya dipakai untuk pesanan ini.' }}</p>
+                @elseif ($savesOrder)
                     <p class="mt-3 text-xs leading-5 text-gray-600">Pesanan diproses setelah admin mengonfirmasi lewat WhatsApp. Data penerima disimpan hanya untuk mengurus pesanan ini dan hanya dapat dilihat tim Qammaris.</p>
                 @else
                     <p class="mt-3 text-xs leading-5 text-gray-600">Data penerima diteruskan ke WhatsApp. Setelah terbuka, tekan Kirim untuk mengirim pesanan.</p>
@@ -242,6 +253,11 @@ const syncOngkir = () => {
     note.hidden = !(charged !== null && discount && !discount.hidden);
     note.textContent = note.hidden ? '' : discount.textContent;
     syncTotal(choice === 'pickup' ? 0 : charged);
+    // ORD-13: ongkir confirmed by staff means the order waits for them before paying; the button says so.
+    if (autoShipping && orderSubmit?.dataset.labelPay) {
+        const waits = orderSubmit.dataset.labelPay !== 'Lanjut ke pembayaran' || (choice !== 'pickup' && option?.value === 'manual');
+        orderLabel.textContent = waits ? orderSubmit.dataset.labelCheck : orderSubmit.dataset.labelPay;
+    }
 };
 // ORD-04: show the paperbag charge and running total for the chosen option (display only; the server computes).
 const paperbagSummary = document.querySelector('[data-paperbag-summary]');
@@ -290,6 +306,7 @@ window.addEventListener('pageshow', () => {
         orderSubmit.disabled = {{ $canSubmit ? 'false' : 'true' }};
         orderLabel.textContent = initialOrderLabel;
         orderFeedback.textContent = '';
+        syncDelivery();
     }
 });
 </script>

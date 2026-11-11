@@ -85,6 +85,8 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/pesanan-saya/lupakan', [OnlineOrderController::class, 'forgetMine'])->name('orders.customer.forget');
     Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
     Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
+    // ORD-13: the customer picks transfer or QRIS and opens WhatsApp to send the proof.
+    Route::post('/pesanan/{token}/bayar', [OnlineOrderController::class, 'pay'])->name('orders.customer.pay');
     Route::post('/tugas-pesanan/{token}/langkah', [OnlineOrderStaffController::class, 'advance'])->name('orders.staff.advance');
     Route::post('/tugas-pesanan/{token}/talangan', [OnlineOrderStaffController::class, 'recordAdvance'])->name('orders.staff.advance-cost');
 });
@@ -197,6 +199,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
                 Route::post('/', 'store')->name('store');
                 Route::post('{account}/verify', 'verify')->name('verify');
                 Route::post('{account}/deactivate', 'deactivate')->name('deactivate');
+                Route::post('qris', 'qris')->name('qris');
+                Route::post('qris/hapus', 'removeQris')->name('qris.remove');
             });
         // ORD-04: UAT-only opt-in of this browser to the official store WhatsApp number (Super Admin).
         Route::post('orders/uat-whatsapp', [AdminStorePaymentAccountController::class, 'uatWhatsapp'])->middleware('can:orders.payment-accounts')->name('orders.uat-whatsapp');

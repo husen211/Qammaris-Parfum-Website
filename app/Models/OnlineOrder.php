@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\OnlineOrderLegacyState;
 use App\Support\OnlineOrderMoney;
+use App\Support\OnlineOrderStepper;
 use App\Support\OnlineOrderV2State;
 use App\Support\OrderApi\OrderWebhookOutbox;
 use App\Support\Rupiah;
@@ -276,6 +277,24 @@ class OnlineOrder extends Model
         return $this->isV2() && $this->lifecycle !== 'draft' && $this->shipping_payer !== 'store_free' && $this->shipping_quote === null
             && ($this->lifecycle === 'awaiting_customer' || ($this->customerCanEdit() && $this->preparation_status === 'not_started'))
             && OnlineOrderMoney::totals($this)['received'] === 0;
+    }
+
+    /**
+     * ORD-13 (Owner 2026-11-11): a website order may be paid before staff confirm it when nothing needs checking:
+     * the total is final and every product is a single unit ("Tersedia" says one exists, not how many).
+     */
+    public function payableBeforeConfirmation(): bool
+    {
+        return $this->isV2() && $this->source === 'website' && $this->lifecycle === 'draft'
+            && (bool) config('orders.shipping_quotes.enabled') && OnlineOrderStepper::totalIsFinal($this)
+            && $this->items->every(fn (OnlineOrderItem $item) => $item->quantity === 1);
+    }
+
+    /** ORD-04/ORD-13: the customer page shows how to pay: final total, unpaid, and confirmed or payable before confirmation. */
+    public function customerCanPay(): bool
+    {
+        return $this->isV2() && $this->payment_status !== 'paid' && OnlineOrderStepper::totalIsFinal($this)
+            && ($this->lifecycle === 'active' || $this->payableBeforeConfirmation());
     }
 
     /** ORD-10: shipping payer from the customer's form: their choice for a local courier, always the transfer for J&T. */

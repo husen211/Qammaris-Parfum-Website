@@ -284,6 +284,12 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - **Tidak pernah buntu.** Kurir tidak menjangkau, titik di luar area Palu dan sekitarnya, atau Biteship tidak menjawab: customer tetap bisa memesan dengan **Ongkir dikonfirmasi admin** (alur ORD-04/ORD-10).
 - **Lokasi.** Sebelum HP meminta izin lokasi, checkout menampilkan pop-up Qammaris yang menjelaskan alasannya. Peta selalu bisa dipakai tanpa izin lokasi: customer mencari alamat (jalan, gedung, tempat), memilih kecamatan, atau menggeser peta; pin selalu diam di tengah. Titik antar disimpan di pesanan seperti alamat, dikirim ke Biteship untuk harga, dan menjadi link lokasi pesanan untuk staf dan Qammaris App (pengganti Sharelok). Teks pencarian alamat dikirim ke layanan pencarian OpenStreetMap (Photon).
 - **Pesan WhatsApp** checkout memuat ongkir dan total; admin cukup mengonfirmasi stok dan pembayaran.
+- **Form checkout satu kali tanya** (Owner 2026-11-11): kelurahan, kecamatan, dan kode pos tidak ditanya lagi (pin atau tujuan J&T sudah menentukan; tujuan J&T mengisi kecamatan dan kode pos pesanan). Cara bayar dipilih sesudah memesan.
+- **Langkah pembayaran** (Owner 2026-11-11). Pesanan dan pembayaran tetap manual lewat WhatsApp; bedanya data sudah lengkap.
+  - **Boleh langsung bayar** bila setiap produk hanya 1 pcs dan total sudah final (ongkir otomatis atau ambil di toko): halaman pesanan langsung menampilkan pilihan **Transfer bank** (rekening terverifikasi) atau **QRIS** (gambar QRIS statis toko), lalu tombol **Kirim bukti bayar ke WhatsApp**. Pilihan cara bayar disimpan di pesanan; tidak ada yang otomatis tercatat lunas.
+  - **Menunggu admin** bila ada produk 2 pcs atau lebih ("Tersedia" belum menjamin jumlah) atau ongkir dikonfirmasi admin: halaman menampilkan ikon jam "Menunggu admin cek stok"/"menghitung ongkir" dan tombol kirim pesanan ke WhatsApp; cara bayar muncul setelah admin mengonfirmasi.
+  - **WhatsApp tetap wajib** di kedua kasus. Di admin alurnya tetap Konfirmasi pesanan → Tandai Lunas; kartu konfirmasi menandai "Customer sudah bisa bayar langsung" atau "Perlu cek stok: produk × jumlah".
+  - **QRIS statis** di-upload Super Admin di halaman Rekening pembayaran (PNG/JPG/WebP, minimal 300 × 300 piksel); sebelum ada, pilihan QRIS tampil "Segera tersedia".
 
 Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-biteship.md). Akun dan kunci: [runbook Biteship](../runbooks/BITESHIP.md).
 
