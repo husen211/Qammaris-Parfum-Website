@@ -64,7 +64,9 @@
                         </div>
                     @endforeach
 
-                    @if ($savesOrder)
+                    @if ($savesOrder && $autoShipping)
+                        @include('cart._shipping')
+                    @elseif ($savesOrder)
                         <fieldset @if ($errors->has('delivery')) aria-describedby="delivery-error" @endif>
                             <legend class="text-sm font-medium text-brand-black">Cara pengiriman <span aria-hidden="true">*</span></legend>
                             <div class="mt-3 space-y-3">
@@ -81,12 +83,10 @@
                             </div>
                             @error('delivery') <p id="delivery-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </fieldset>
-                        @if ($autoShipping)
-                            @include('cart._shipping')
-                            @error('shipping_option') <p id="shipping_option-error" class="text-sm text-red-700">{{ $message }}</p> @enderror
-                        @endif
                     @endif
 
+                    {{-- ORD-16: with checkout pricing the address lives in the shipping partial (address before options). --}}
+                    @unless ($autoShipping)
                     <div @if ($savesOrder) data-delivery-only @if (! $isDelivery) hidden @endif @endif class="space-y-5">
                         <div>
                             <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
@@ -112,6 +112,7 @@
                             @error('customer_postcode') <p id="customer_postcode-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                         </div>
                     </div>
+                    @endunless
 
                     @if ($savesOrder)
                         <fieldset @if ($errors->has('packaging')) aria-describedby="packaging-error" @endif>
@@ -225,19 +226,27 @@ let orderRetryTimer;
 const deliveryOnly = orderForm?.querySelector('[data-delivery-only]');
 const autoShipping = orderForm?.hasAttribute('data-auto-shipping');
 const rupiah = (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
-const deliveryChoice = () => orderForm.querySelector('[data-delivery]:checked')?.value ?? '';
+// ORD-16: with checkout pricing the delivery type is a hidden field the shipping script keeps in step.
+const deliveryChoice = () => orderForm.querySelector('[data-delivery-value]')?.value ?? orderForm.querySelector('[data-delivery]:checked')?.value ?? '';
+const wantsDelivery = () => autoShipping
+    ? orderForm.querySelector('[data-receive]:checked')?.value === 'delivery'
+    : ['local_delivery', 'intercity'].includes(deliveryChoice());
 // ORD-13: the courier option the customer picked (radios of hidden panels are disabled by the shipping script).
 const shippingChoice = () => orderForm.querySelector('[data-shipping-choice]:checked:not(:disabled)');
 const syncDelivery = () => {
-    if (!deliveryOnly) return;
     const choice = deliveryChoice();
-    const delivers = choice === 'local_delivery' || choice === 'intercity';
-    deliveryOnly.hidden = !delivers;
-    orderForm.querySelector('#customer_address').required = delivers;
+    if (deliveryOnly) {
+        const delivers = choice === 'local_delivery' || choice === 'intercity';
+        deliveryOnly.hidden = !delivers;
+        orderForm.querySelector('#customer_address').required = delivers;
+    }
     // ORD-10: "Metode pembayaran ongkir" is asked for the local courier only, and with ORD-13 only when staff price it.
-    const asks = choice === 'local_delivery' && (!autoShipping || shippingChoice()?.value === 'manual');
-    orderForm.querySelector('[data-local-only]').hidden = !asks;
-    orderForm.querySelectorAll('[data-shipping-payment]').forEach((input) => { input.required = asks; });
+    const localOnly = orderForm?.querySelector('[data-local-only]');
+    if (localOnly) {
+        const asks = choice === 'local_delivery' && (!autoShipping || shippingChoice()?.value === 'manual');
+        localOnly.hidden = !asks;
+        orderForm.querySelectorAll('[data-shipping-payment]').forEach((input) => { input.required = asks; });
+    }
     syncOngkir();
 };
 const syncOngkir = () => {
@@ -251,7 +260,7 @@ const syncOngkir = () => {
     const price = option?.dataset.price ? Number(option.dataset.price) : null;
     const discount = option?.closest('[data-option]')?.querySelector('[data-option-discount]');
     summary.textContent = choice === 'pickup' ? 'Tidak ada' : toDriver ? 'Dibayar langsung ke driver'
-        : charged !== null ? rupiah(charged) : autoShipping && !option ? 'Pilih kurir dulu' : 'Menunggu konfirmasi staf';
+        : charged !== null ? rupiah(charged) : autoShipping && !option ? 'Pilih pengiriman dulu' : 'Menunggu konfirmasi staf';
     const struck = document.querySelector('[data-ongkir-price]');
     const note = document.querySelector('[data-ongkir-discount]');
     struck.hidden = !(charged !== null && price > charged);
@@ -285,7 +294,7 @@ orderForm?.addEventListener('shipping-options', syncDelivery);
 syncDelivery();
 orderForm?.addEventListener('submit', (event) => {
     // ORD-13: a delivery needs a priced courier (or "dikonfirmasi admin") before anything is sent.
-    if (autoShipping && ['local_delivery', 'intercity'].includes(deliveryChoice()) && !shippingChoice()) {
+    if (autoShipping && wantsDelivery() && !shippingChoice()) {
         event.preventDefault();
         orderForm.dispatchEvent(new CustomEvent('shipping-missing'));
         return;

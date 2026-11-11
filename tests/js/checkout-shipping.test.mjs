@@ -1,6 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cheapest, discountText, distanceKm, locationStep, locationText, pinSummary, placeResults, reasonText } from '../../resources/js/checkout-shipping/logic.js';
+import { cheapest, deliveryFor, discountText, distanceKm, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, placeResults, reasonText } from '../../resources/js/checkout-shipping/logic.js';
+
+test('ORD-16: instant couriers are offered for Palu and its neighbours only', () => {
+    assert.equal(instantArea('Palu Barat, Palu, Sulawesi Tengah. 94221'), true);
+    assert.equal(instantArea('Sigi Biromaru, Sigi, Sulawesi Tengah. 94364'), true);
+    assert.equal(instantArea('Makassar, Makassar, Sulawesi Selatan. 90141'), false);
+    assert.equal(instantArea(null), false);
+});
+
+test('ORD-16: the order delivery type follows the chosen option', () => {
+    assert.equal(deliveryFor('pickup', 'instant', 'Palu'), 'pickup');
+    assert.equal(deliveryFor('delivery', 'instant', 'Palu'), 'local_delivery');
+    assert.equal(deliveryFor('delivery', 'jnt', 'Palu Barat, Palu'), 'intercity');
+    assert.equal(deliveryFor('delivery', 'manual', 'Palu Barat, Palu'), 'local_delivery');
+    assert.equal(deliveryFor('delivery', 'manual', 'Makassar, Makassar'), 'intercity');
+    assert.equal(deliveryFor('delivery', undefined, 'Palu'), '');
+    assert.equal(deliveryFor('', 'jnt', 'Palu'), '');
+});
+
+test('ORD-16: the map opens on the chosen Palu kecamatan', () => {
+    const kecamatan = { 'Palu Barat': [-0.895, 119.856], 'Palu Timur': [-0.885, 119.876] };
+    assert.deepEqual(kecamatanCenter('Palu Timur, Palu, Sulawesi Tengah. 94111', kecamatan), [-0.885, 119.876]);
+    assert.equal(kecamatanCenter('Makassar, Makassar', kecamatan), null);
+});
 
 test('the cheapest charged ongkir is preselected, not the cheapest courier price', () => {
     const options = [

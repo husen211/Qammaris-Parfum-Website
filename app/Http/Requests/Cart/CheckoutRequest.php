@@ -49,6 +49,9 @@ class CheckoutRequest extends FormRequest
             // ORD-10: only a local courier is paid either way; J&T ongkir is always part of the transfer.
             'shipping_payment' => ['exclude_unless:delivery,local_delivery', ...($priced ? ['exclude_unless:shipping_option,manual'] : []), 'required', 'string', 'in:'.implode(',', array_keys(OnlineOrder::CUSTOMER_SHIPPING_PAYMENTS))],
             'shipping_option' => $priced ? ['exclude_if:delivery,pickup', 'required', 'string', 'regex:/^(manual|[A-Za-z0-9]{20})$/'] : ['exclude'],
+            // ORD-16: the destination the customer searched (Biteship area); kept to show it again and for the order's kecamatan.
+            'delivery_area_id' => $priced ? ['exclude_if:delivery,pickup', 'nullable', 'string', 'regex:/^[A-Za-z0-9]{1,64}$/'] : ['exclude'],
+            'delivery_area_label' => $priced ? ['exclude_if:delivery,pickup', 'nullable', 'string', 'max:160'] : ['exclude'],
             'checkout_key' => ['required', 'uuid'],
         ]);
     }
@@ -98,6 +101,7 @@ class CheckoutRequest extends FormRequest
             'customer_note' => 'catatan pesanan',
             'checkout_quote' => 'ringkasan pesanan',
             'delivery' => 'cara pengiriman',
+            'delivery_area_id' => 'kecamatan atau kota',
             'district' => 'kecamatan',
             'subdistrict' => 'kelurahan',
             'packaging' => 'pilihan paperbag',
@@ -118,11 +122,11 @@ class CheckoutRequest extends FormRequest
             'customer_phone.regex' => 'Isi nomor HP yang valid, misalnya 08… atau +62… (8–15 angka).',
             'customer_postcode.regex' => 'Kode pos harus terdiri dari 5 angka.',
             'checkout_quote.size' => 'Buka kembali checkout untuk meninjau ringkasan terbaru.',
-            'delivery.required' => 'Pilih cara pengiriman.',
+            'delivery.required' => 'Pilih cara menerima, lalu pilih pengiriman.',
             'packaging.required' => 'Pilih pakai paperbag atau tidak.',
             'payment_preference.required' => 'Pilih metode pembayaran.',
             'shipping_payment.required' => 'Pilih metode pembayaran ongkir.',
-            'shipping_option.required' => 'Tentukan titik antar atau tujuan, lalu pilih kurir.',
+            'shipping_option.required' => 'Isi kecamatan atau kota tujuan, lalu pilih pengiriman.',
             'shipping_option.regex' => 'Pilih kurir lagi; ongkir perlu dihitung ulang.',
             'in' => 'Pilih :attribute dari pilihan yang tersedia.',
             'checkout_key.uuid' => 'Buka kembali checkout untuk meninjau ringkasan terbaru.',

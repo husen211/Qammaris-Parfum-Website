@@ -1,6 +1,8 @@
-// ORD-13: checkout courier picker. Instant couriers are priced from a map pin, J&T from a destination area; the
-// server prices and keeps every option, the page only shows them and submits the chosen option id.
-import { cheapest, discountText, distanceKm, formatRupiah, locationStep, locationText, pinSummary, placeResults, reasonText } from './checkout-shipping/logic.js';
+// ORD-13/ORD-16: checkout delivery in marketplace order. The customer chooses how to receive, fills the address
+// (destination area, full address and, for instant couriers, a map pin), then picks a priced option grouped as
+// Instan (GoSend, GrabExpress) or Reguler (J&T). The server prices and keeps every option; the page only shows them,
+// submits the chosen option id and keeps the hidden `delivery` in step with it.
+import { deliveryFor, discountText, distanceKm, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, placeResults, reasonText } from './checkout-shipping/logic.js';
 
 const root = document.querySelector('[data-shipping-quotes]');
 if (root) setup(root);
@@ -9,64 +11,61 @@ function setup(root) {
     const form = root.closest('form');
     const config = JSON.parse(root.dataset.config);
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    const panels = Object.fromEntries([...root.querySelectorAll('[data-shipping-panel]')].map((panel) => [panel.dataset.shippingPanel, panel]));
+    const deliveryInput = root.querySelector('[data-delivery-value]');
+    const section = root.querySelector('[data-delivery-section]');
+    const choices = root.querySelector('[data-shipping-choices]');
+    const hint = root.querySelector('[data-shipping-hint]');
+    const groups = { instant: root.querySelector('[data-shipping-group="instant"]'), jnt: root.querySelector('[data-shipping-group="jnt"]') };
+    const pinBlock = root.querySelector('[data-instant-pin]');
     const manual = root.querySelector('[data-manual-option]');
     const manualInput = manual.querySelector('input');
     const template = root.querySelector('[data-option-template]');
+    const areaInput = root.querySelector('#delivery-area');
+    const areaIdInput = root.querySelector('[data-area-id]');
+    const areaLabelInput = root.querySelector('[data-area-label]');
+    const address = root.querySelector('#customer_address');
     const locationDialog = document.querySelector('[data-location-dialog]');
     const mapDialog = document.querySelector('[data-map-dialog]');
     const mapMessage = mapDialog.querySelector('[data-map-message]');
-    const instant = panels.local_delivery;
-    const jnt = panels.intercity;
-    const delivery = () => form.querySelector('[data-delivery]:checked')?.value ?? '';
-    let manualFor = manual.hidden ? null : delivery();
+    const runs = { instant: 0, jnt: 0 };
+    let area = areaIdInput.value && areaLabelInput.value ? { id: areaIdInput.value, label: areaLabelInput.value } : null;
     let map = null;
     let pin = null;
 
-    // All options share one radio name, so picking J&T unchecks the instant courier; each delivery keeps its own pick.
-    const picked = { [delivery()]: form.querySelector('[data-shipping-choice]:checked')?.value };
-    // The courier (GoSend, Grab) the customer chose survives a new price check for another pin.
-    const pickedProvider = {};
-    form.addEventListener('change', (event) => {
-        if (!event.target.matches?.('[data-shipping-choice]')) return;
-        picked[delivery()] = event.target.value;
-        pickedProvider[delivery()] = event.target.dataset.provider;
-    });
-    let quoteRun = 0;
-
+    const receive = () => form.querySelector('[data-receive]:checked')?.value ?? '';
+    const selected = () => form.querySelector('[data-shipping-choice]:checked:not(:disabled)');
     const announce = () => form.dispatchEvent(new Event('shipping-options'));
+    const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Only the chosen delivery's panel is visible and submitted; "dikonfirmasi admin" belongs to the panel that failed.
-    const syncPanels = () => {
-        const current = delivery();
-        Object.entries(panels).forEach(([value, panel]) => {
-            panel.hidden = value !== current;
-            panel.querySelectorAll('[data-shipping-choice]').forEach((input) => { input.disabled = value !== current; });
+    // One place decides what is visible, required and sent.
+    const sync = () => {
+        const delivers = receive() === 'delivery';
+        section.hidden = !delivers;
+        address.required = delivers;
+        root.querySelectorAll('[data-shipping-choice]').forEach((input) => {
+            input.disabled = !delivers || (input === manualInput && manual.hidden);
         });
-        manual.hidden = manualFor !== current;
-        manualInput.disabled = manual.hidden;
-        const again = [...root.querySelectorAll('[data-shipping-choice]:not(:disabled)')].find((input) => input.value === picked[current]);
-        if (again) again.checked = true;
+        deliveryInput.value = deliveryFor(receive(), selected()?.dataset.kind, area?.label);
         announce();
     };
 
-    const offerManual = (show) => {
-        manualFor = show ? delivery() : null;
-        if (!show) manualInput.checked = false;
-        syncPanels();
-    };
-
-    const status = (panel, text, error = false) => {
-        const line = panel.querySelector('[data-shipping-status]');
+    const status = (group, text, error = false) => {
+        const line = group.querySelector('[data-shipping-status]');
         line.textContent = text;
         line.classList.toggle('text-red-700', error);
         line.classList.toggle('text-gray-600', !error);
+    };
+
+    const offerManual = (show) => {
+        manual.hidden = !show;
+        if (!show) manualInput.checked = false;
     };
 
     const card = (option) => {
         const node = template.content.firstElementChild.cloneNode(true);
         const input = node.querySelector('input');
         input.value = option.id;
+        input.dataset.kind = option.kind;
         input.dataset.provider = option.provider;
         input.dataset.charged = option.charged;
         input.dataset.price = option.price;
@@ -87,14 +86,23 @@ function setup(root) {
         return node;
     };
 
-    const quote = async (panel, body) => {
-        // Only the latest price check may fill the panel; an older, slower answer is for a previous pin or area.
-        const run = ++quoteRun;
-        const box = panel.querySelector('[data-shipping-options]');
+    const clearGroup = (kind) => {
+        groups[kind].querySelector('[data-shipping-options]').replaceChildren();
+        status(groups[kind], '');
+    };
+
+    // Each group asks the server on its own; only its latest answer may fill it (an older one is for a previous pin or area).
+    const quote = async (kind, body) => {
+        const group = groups[kind];
+        const run = ++runs[kind];
+        const box = group.querySelector('[data-shipping-options]');
+        // A courier the customer already chose in this group stays chosen at its new price.
+        const keepProvider = selected()?.dataset.kind === kind ? selected().dataset.provider : null;
+        group.hidden = false;
+        hint.hidden = true;
         box.replaceChildren();
-        offerManual(false);
-        status(panel, 'Menghitung ongkir…');
-        panel.setAttribute('aria-busy', 'true');
+        status(group, 'Menghitung ongkir…');
+        group.setAttribute('aria-busy', 'true');
         let reason = 'unavailable';
         try {
             const response = await fetch(config.quoteUrl, {
@@ -103,27 +111,50 @@ function setup(root) {
                 body: JSON.stringify(body),
             });
             const data = await response.json().catch(() => ({}));
-            if (run !== quoteRun) return;
+            if (run !== runs[kind]) return;
             reason = { 419: 'session', 429: 'busy' }[response.status] ?? data.reason ?? 'unavailable';
             if (response.ok && data.options?.length) {
                 box.replaceChildren(...data.options.map(card));
-                const kept = data.options.find((option) => option.provider === pickedProvider[delivery()]);
-                const chosen = kept ?? cheapest(data.options);
-                box.querySelector(`input[value="${chosen.id}"]`).checked = true;
-                picked[delivery()] = chosen.id;
-                status(panel, data.options.length > 1 ? (kept ? 'Kurir pilihan Anda tetap dipilih; harga sudah diperbarui.' : 'Pilih kurir. Yang termurah sudah dipilihkan.') : '');
-                announce();
+                const kept = keepProvider ? data.options.find((option) => option.provider === keepProvider) : null;
+                if (kept) box.querySelector(`input[value="${kept.id}"]`).checked = true;
+                status(group, '');
+                sync();
 
                 return;
             }
         } catch {
-            if (run !== quoteRun) return;
+            if (run !== runs[kind]) return;
             reason = 'unavailable';
         } finally {
-            if (run === quoteRun) panel.removeAttribute('aria-busy');
+            if (run === runs[kind]) group.removeAttribute('aria-busy');
         }
-        status(panel, reasonText(reason, body.mode), reason === 'cart' || reason === 'session');
+        status(group, reasonText(reason, kind), reason === 'cart' || reason === 'session');
         if (!['cart', 'session', 'busy'].includes(reason)) offerManual(true);
+        sync();
+    };
+
+    // The destination decides the groups: J&T everywhere, instant couriers around Palu (after a map pin).
+    const setArea = (choice, { requote = true } = {}) => {
+        area = choice;
+        areaIdInput.value = choice?.id ?? '';
+        areaLabelInput.value = choice?.label ?? '';
+        const instant = instantArea(choice?.label);
+        pinBlock.hidden = !instant;
+        groups.instant.hidden = !instant;
+        if (!instant) clearGroup('instant');
+        else if (!groups.instant.querySelector('[data-shipping-choice]')) {
+            status(groups.instant, pin ? '' : 'Tentukan titik di peta (di atas) untuk melihat ongkir GoSend dan GrabExpress.');
+        }
+        if (!choice) {
+            groups.jnt.hidden = true;
+            clearGroup('jnt');
+            offerManual(false);
+            hint.hidden = false;
+        } else if (requote) {
+            offerManual(false);
+            quote('jnt', { mode: 'jnt', area_id: choice.id, area_label: choice.label });
+        }
+        sync();
     };
 
     // Dialogs: centered pop-ups; the page behind does not scroll while one is open.
@@ -164,10 +195,14 @@ function setup(root) {
     const openMap = async (message) => {
         openDialog(mapDialog);
         mapMessage.textContent = message ?? locationText('manual');
+        // The map opens on the pin, else on the chosen kecamatan, else on the store.
+        const start = pin ?? kecamatanCenter(area?.label, config.kecamatan);
         if (!map) {
             const { createPinMap } = await import('./checkout-shipping/map.js');
-            map = createPinMap(mapDialog.querySelector('[data-map]'), { center: pin ?? config.origin, zoom: pin ? 17 : 14 });
+            map = createPinMap(mapDialog.querySelector('[data-map]'), { center: start ?? config.origin, zoom: pin ? 17 : start ? 15 : 14 });
             mapDialog.querySelector('[data-map-loading]')?.remove();
+        } else if (!pin && start) {
+            map.setView(start, 15);
         }
         requestAnimationFrame(() => map.refresh());
     };
@@ -206,8 +241,8 @@ function setup(root) {
         await openMap(null);
         placeInput.focus({ preventScroll: true });
     });
-    instant.querySelector('[data-open-location]').addEventListener('click', startLocation);
-    instant.querySelector('[data-change-pin]').addEventListener('click', () => openMap(null));
+    pinBlock.querySelector('[data-open-location]').addEventListener('click', startLocation);
+    pinBlock.querySelector('[data-change-pin]').addEventListener('click', () => openMap(null));
     mapDialog.querySelector('[data-locate-me]').addEventListener('click', goToMyLocation);
 
     // Starting views per kecamatan; the customer still moves the map to the exact spot.
@@ -226,14 +261,14 @@ function setup(root) {
 
     // Place search (streets, buildings, landmarks) inside the service area, then fine-tune by moving the map.
     const placeInput = mapDialog.querySelector('#place-search');
-    const area = config.serviceArea;
+    const serviceArea = config.serviceArea;
     combobox({
         input: placeInput,
         list: mapDialog.querySelector('#place-search-list'),
         idPrefix: 'place',
         search: async (query, signal) => {
             const params = new URLSearchParams({ q: query, limit: '6', lat: String(config.origin[0]), lon: String(config.origin[1]),
-                bbox: [area.west, area.south, area.east, area.north].join(',') });
+                bbox: [serviceArea.west, serviceArea.south, serviceArea.east, serviceArea.north].join(',') });
             const response = await fetch(`${config.placeSearchUrl}?${params}`, { signal });
             if (!response.ok) throw new Error('search');
 
@@ -251,23 +286,18 @@ function setup(root) {
         if (!map) return;
         pin = map.center();
         closeDialog(mapDialog);
-        instant.querySelector('[data-open-location]').hidden = true;
-        instant.querySelector('[data-pin-summary]').hidden = false;
-        instant.querySelector('[data-pin-text]').textContent = pinSummary(distanceKm(config.origin, pin));
-        quote(instant, { mode: 'instant', latitude: pin[0], longitude: pin[1] });
+        pinBlock.querySelector('[data-open-location]').hidden = true;
+        pinBlock.querySelector('[data-pin-summary]').hidden = false;
+        pinBlock.querySelector('[data-pin-text]').textContent = pinSummary(distanceKm(config.origin, pin));
+        quote('instant', { mode: 'instant', latitude: pin[0], longitude: pin[1] });
     });
 
-    // J&T destination: the same combobox over the server's area search.
-    const areaInput = jnt.querySelector('#jnt-area');
+    // Destination: kecamatan, city or postcode from the server's area search.
     combobox({
         input: areaInput,
-        list: jnt.querySelector('#jnt-area-list'),
-        idPrefix: 'jnt-area',
-        onInput: () => {
-            jnt.querySelector('[data-shipping-options]').replaceChildren();
-            status(jnt, '');
-            offerManual(false);
-        },
+        list: root.querySelector('#delivery-area-list'),
+        idPrefix: 'delivery-area',
+        onInput: () => { if (area) setArea(null); },
         search: async (query, signal) => {
             const response = await fetch(`${config.areaUrl}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal });
             const data = await response.json().catch(() => ({}));
@@ -277,22 +307,45 @@ function setup(root) {
             return { items: data.areas ?? [], note: 'Belum ada hasil. Coba nama kecamatan, kota, atau kode pos lain.' };
         },
         failed: () => {
-            status(jnt, reasonText('unavailable', 'jnt'));
+            groups.jnt.hidden = false;
+            hint.hidden = true;
+            status(groups.jnt, reasonText('unavailable', 'jnt'));
             offerManual(true);
+            sync();
         },
-        onChoose: (choice) => quote(jnt, { mode: 'jnt', area_id: choice.id, area_label: choice.label }),
+        onChoose: (choice) => setArea(choice),
     });
 
-    // The form refused to send without a courier: point at what is missing.
+    // The form refused to send without an option: point at the first thing that is missing.
     form.addEventListener('shipping-missing', () => {
-        const panel = panels[delivery()];
-        status(panel, delivery() === 'intercity' ? 'Pilih kecamatan atau kota tujuan dulu, lalu ongkir J&T muncul.' : 'Tentukan titik antar dulu, lalu pilih kurir.', true);
-        panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
-        (delivery() === 'intercity' ? areaInput : instant.querySelector('[data-open-location]:not([hidden])') ?? instant.querySelector('[data-change-pin]')).focus({ preventScroll: true });
+        const focusOn = (element, message) => {
+            hint.hidden = false;
+            hint.textContent = message;
+            hint.classList.add('text-red-700');
+            choices.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+            element?.focus({ preventScroll: true });
+        };
+        if (!area) {
+            focusOn(areaInput, 'Isi kecamatan atau kota tujuan dulu, lalu pilih pengiriman.');
+            areaInput.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+        } else {
+            focusOn(root.querySelector('[data-shipping-choice]:not(:disabled)') ?? pinBlock.querySelector('[data-open-location]:not([hidden])'),
+                'Pilih salah satu pengiriman di bawah.');
+        }
     });
 
-    form.querySelectorAll('[data-delivery]').forEach((input) => input.addEventListener('change', syncPanels));
-    syncPanels();
+    form.addEventListener('change', (event) => {
+        if (event.target.matches?.('[data-receive]')) sync();
+        if (event.target.matches?.('[data-shipping-choice]')) {
+            hint.classList.remove('text-red-700');
+            if (area) hint.hidden = true;
+            sync();
+        }
+    });
+
+    // Back from a failed submit: the area is known again; J&T is priced again (an instant option stays as chosen).
+    if (area) setArea(area, { requote: !root.querySelector('[data-shipping-group="jnt"] [data-shipping-choice]') || selected()?.dataset.kind !== 'jnt' });
+    sync();
 }
 
 /** Accessible search-as-you-type list (ARIA combobox): arrow keys, Enter, Escape, tap; results are text only. */

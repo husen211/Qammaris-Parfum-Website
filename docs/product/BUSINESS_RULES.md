@@ -316,6 +316,17 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 
 Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-biteship.md).
 
+### Urutan checkout seperti marketplace (ORD-16, Owner 2026-11-11)
+
+- Dengan ongkir otomatis aktif, checkout berurutan:
+  1. data penerima;
+  2. **Cara menerima** (Dikirim ke alamat / Ambil di toko);
+  3. **Alamat pengiriman**: kecamatan/kota, alamat lengkap, dan titik peta untuk area Palu, Sigi, Donggala;
+  4. **Pilih pengiriman**: Instan GoSend/GrabExpress, Reguler J&T, masing-masing dengan harga;
+  5. paperbag dan catatan.
+- Tidak ada pilihan kurir yang terpilih otomatis; customer memilih sendiri. Jenis pengiriman pesanan mengikuti pilihan itu.
+- Kecamatan dan kode pos pesanan diisi dari tujuan yang dicari, untuk kurir instan maupun J&T.
+
 ### Logo kurir dan bank, batal otomatis bila belum dibayar (ORD-15, Owner 2026-11-11)
 
 - **Logo:** checkout menampilkan logo Gojek dan Grab di samping "Kurir instan", logo J&T di samping "J&T", dan logo kurir di setiap pilihan harga. Rekening BRI memakai logo BRI asli; bank lain tetap tanda warna. File logo dari Wikimedia Commons (public domain).

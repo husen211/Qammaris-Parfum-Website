@@ -233,6 +233,8 @@ class CartController extends Controller
             $lines[$item['id']] = ['quantity' => $item['quantity'], 'price' => $item['price']];
         }
         $details = $request->orderDetails();
+        // ORD-16: Biteship's own label of the searched destination (never the browser's text), for the order's kecamatan.
+        $details['area_label'] = session(self::AREA_SESSION, [])[(string) $request->validated('delivery_area_id')] ?? null;
         // ORD-13: the picked courier option must be one this session priced for this very cart.
         $option = $request->validated('shipping_option');
         if (is_string($option) && $option !== 'manual') {
