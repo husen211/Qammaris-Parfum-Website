@@ -118,18 +118,31 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertSame(1, $order->costs()->count());
     }
 
-    public function test_without_a_store_phone_the_driver_gets_the_store_whatsapp_number(): void
+    public function test_an_empty_info_toko_still_books_with_the_published_store_profile(): void
     {
-        // Live 2026-11-12: Info Toko had no phone, and Biteship refused "origin contact phone is filled".
-        config(['store.test_environments' => []]);
-        $this->assertNull(StoreInfo::getSetting()->getRawOriginal('phone_number'));
+        // Live 2026-11-12: Info Toko had no phone or address; Biteship refused "origin contact phone/address is filled".
+        $store = StoreInfo::getSetting();
+        $this->assertSame([null, null], [$store->getRawOriginal('phone_number'), $store->getRawOriginal('address')]);
         $order = $this->packed($this->instantOrder());
         $this->answer('POST /v1/orders', $this->biteshipOrder('confirmed'));
         $this->actingAs($this->staff);
         $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'success');
         $booking = $this->sent[0]->data();
         $this->assertSame(['085144924931', '085144924931'], [$booking['origin_contact_phone'], $booking['shipper_contact_phone']]);
+        $this->assertSame('Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111', $booking['origin_address']);
+        $this->assertSame('Qammaris Perfumes', $booking['origin_contact_name']);
         $this->assertStringContainsString('WhatsApp admin toko 085144924931.', $booking['origin_note']);
+    }
+
+    public function test_a_booking_with_an_empty_required_field_stops_before_biteship_with_a_clear_reason(): void
+    {
+        $order = $this->packed($this->instantOrder());
+        $order->forceFill(['address' => ''])->save();
+        $this->actingAs($this->staff);
+        $this->bookCourier($order->fresh(), 'gojek')
+            ->assertSessionHas('order_notice.message', 'Kurir belum terpesan: Data untuk kurir belum lengkap: alamat penerima. Lengkapi dulu, lalu pesan lagi.');
+        $this->assertSame([], $this->sent);
+        $this->assertSame(['failed', 'unassigned'], [$order->fresh()->courier_booking['state'], $order->fresh()->courier_status]);
     }
 
     public function test_a_refused_booking_shows_biteships_reason_and_a_retry_is_a_new_attempt(): void

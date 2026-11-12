@@ -38,7 +38,7 @@ class BiteshipCourier
         $reserved = $this->fulfillment->startBiteshipBooking($order, $revision, $actor, $courier, $checkedDashboard);
         $attempt = (int) $reserved->courier_booking['attempt'];
         try {
-            $result = $this->client->createOrder($this->payload($reserved, $courier, $attempt));
+            $result = $this->client->createOrder(self::complete($this->payload($reserved, $courier, $attempt)));
         } catch (RuntimeException $failure) {
             $reason = self::reason($failure->getMessage());
             // No answer (or an unreadable one) may still mean Biteship booked the driver.
@@ -90,6 +90,25 @@ class BiteshipCourier
         };
     }
 
+    /** Fields Biteship refuses to book without; an empty one stops here with a reason staff can fix. */
+    private static function complete(array $payload): array
+    {
+        $missing = array_filter([
+            'origin_contact_name' => 'nama toko',
+            'origin_contact_phone' => 'nomor HP toko',
+            'origin_address' => 'alamat toko',
+            'destination_contact_name' => 'nama penerima',
+            'destination_contact_phone' => 'nomor HP penerima',
+            'destination_address' => 'alamat penerima',
+            'items' => 'produk',
+        ], fn (string $label, string $field) => empty($payload[$field]), ARRAY_FILTER_USE_BOTH);
+        if ($missing !== []) {
+            throw new RuntimeException('Data untuk kurir belum lengkap: '.implode(', ', $missing).'. Lengkapi dulu, lalu pesan lagi.');
+        }
+
+        return $payload;
+    }
+
     private function payload(OnlineOrder $order, string $courier, int $attempt): array
     {
         $origin = config('orders.shipping_quotes.origin');
@@ -97,16 +116,20 @@ class BiteshipCourier
         $destination = $order->deliveryPin();
         $weight = (int) config('orders.shipping_quotes.item_weight_grams');
         $phone = fn (?string $number) => preg_replace('/\D+/', '', (string) $number);
-        // Biteship refuses a booking without a pickup phone; Info Toko has no phone field in the admin, so the store
-        // WhatsApp number is the fallback.
-        $adminPhone = $phone(PhoneNumber::local($origin['contact_phone'] ?: $store->getRawOriginal('phone_number') ?: $store->whatsapp_number));
+        // Biteship refuses a booking without a pickup name, phone or address. Info Toko may leave them empty (live has no
+        // phone or address there), so the store profile the website publishes (config/store.php) is the fallback.
+        $profile = config('store.profile');
+        $adminPhone = $phone(PhoneNumber::local($origin['contact_phone'] ?: $store->getRawOriginal('phone_number') ?: $profile['telephone']));
+        $originName = trim((string) ($origin['contact_name'] ?: $store->store_name ?: $profile['name']));
+        $originAddress = trim((string) ($origin['address'] ?: $store->address))
+            ?: implode(', ', [$profile['street'], $profile['locality'], $profile['region'].' '.$profile['postal_code']]);
 
         return [
-            'shipper_contact_name' => $origin['contact_name'] ?: $store->store_name,
+            'shipper_contact_name' => $originName,
             'shipper_contact_phone' => $adminPhone,
-            'origin_contact_name' => $origin['contact_name'] ?: $store->store_name,
+            'origin_contact_name' => $originName,
             'origin_contact_phone' => $adminPhone,
-            'origin_address' => mb_substr((string) ($origin['address'] ?: $store->address), 0, 300),
+            'origin_address' => mb_substr($originAddress, 0, 300),
             'origin_postal_code' => (int) $origin['postal_code'],
             'origin_coordinate' => ['latitude' => $origin['latitude'], 'longitude' => $origin['longitude']],
             // ORD-14: the driver can always reach the store, whatever number the courier app shows.
