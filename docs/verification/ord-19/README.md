@@ -23,3 +23,11 @@ The Owner asked that the pin come first and the kecamatan second, filled automat
 | 390, pin on the Palu Selatan map shortcut (real Nominatim, Biteship test key) | Kecamatan "Palu Selatan, Palu, Sulawesi Tengah. 94231" filled; GrabExpress Rp16.000, GoSend Rp17.000 (struck Rp20.500), J&T Rp5.500 (struck Rp8.000) ([shot](after-390-pin-filled.jpg)) |
 | Two kecamatan (pin answer simulated with real Biteship areas for Ulujadi and Palu Barat) | Choice shown, field empty; tapping "Palu Barat" filled it and priced J&T Rp5.500 ([390](after-390-pin-two-choices.jpg), [1440](after-1440-pin-two-choices.jpg)) |
 | 1440 | Same flow ([before](after-1440-pin-first.jpg), [filled](after-1440-pin-filled.jpg)) |
+
+## Live (qammarisparfum.id, after PR #174 and #175)
+
+- On a phone-size screen, a pin on the Palu Selatan shortcut filled "Palu Selatan, Palu, Sulawesi Tengah. 94231" by itself.
+- Prices came from Biteship live: GrabExpress Rp18.000, GoSend Rp17.000 (struck Rp20.500), J&T Rp5.500 (struck Rp8.000).
+- Screenshots: [before the pin](live-390-pin-first.jpg), [filled](live-390-pin-filled.jpg).
+- No order was placed.
+
