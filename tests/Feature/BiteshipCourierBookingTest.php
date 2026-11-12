@@ -206,7 +206,7 @@ class BiteshipCourierBookingTest extends TestCase
         $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'success');
         $booking = $this->sent[0]->data();
         $this->assertSame(['085144924931', '085144924931'], [$booking['origin_contact_phone'], $booking['shipper_contact_phone']]);
-        $this->assertSame('Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111', $booking['origin_address']);
+        $this->assertSame('Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94221', $booking['origin_address']);
         $this->assertSame('Qammaris Perfumes', $booking['origin_contact_name']);
         $this->assertStringContainsString('WhatsApp admin toko 085144924931.', $booking['origin_note']);
     }

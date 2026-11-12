@@ -67,7 +67,7 @@ class SeoTechnicalTest extends TestCase
 
         $this->assertSame(route('store.location').'#store', $store['@id']);
         $this->assertSame('Jl. Sis Aljufri, Siranindi, Kec. Palu Barat', $store['address']['streetAddress']);
-        $this->assertSame('94111', $store['address']['postalCode']);
+        $this->assertSame('94221', $store['address']['postalCode']);
         $this->assertArrayNotHasKey('telephone', $store, 'ORD-07: no real store number outside production');
         $this->app->detectEnvironment(fn () => 'production');
         $this->assertSame('+6285144924931', $this->jsonLd($this->get(route('store.location'))->getContent())['Store']['telephone']);
