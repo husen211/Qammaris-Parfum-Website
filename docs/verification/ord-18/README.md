@@ -101,4 +101,4 @@ The keyboard itself cannot be shown in headless Chrome. The Owner should check o
   - the retry button.
 - To stop the keyboard glitch, the screen's height on phones follows the visible area above the keyboard, and the screen follows that area if the browser shifts it (`visualViewport` resize and scroll).
 - Checks: [390](after-390-full-screen.jpg) is full screen 390×844 with 10 results and nothing picked after Enter; [1440](after-1440-full-screen.jpg) is a 512 px panel. JS 109 passed; checkout and polish tests 23 passed; build OK.
-
+- Live after PR #173: full screen at 390×844, "Jakarta" + Enter listed 10 places and picked nothing ([live](live-390-full-screen.jpg)).
