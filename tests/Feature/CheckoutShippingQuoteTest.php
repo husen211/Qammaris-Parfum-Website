@@ -303,6 +303,18 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->assertSame(2, $calls);
     }
 
+    public function test_an_empty_area_answer_is_not_remembered(): void
+    {
+        $answers = [['success' => true, 'areas' => []], ['success' => true, 'areas' => [['id' => 'IDNP27IDNC350IDND4127IDZ94221', 'name' => 'Palu Barat, Palu, Sulawesi Tengah. 94221']]]];
+        Http::fake(function () use (&$answers) {
+            return Http::response(array_shift($answers));
+        });
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        $this->getJson(route('cart.checkout.areas', ['q' => 'Palu Barat']))->assertOk();
+        // One odd empty answer must not hide the kecamatan for a month: the next search asks Biteship again.
+        $this->getJson(route('cart.checkout.areas', ['q' => 'Palu Barat']))->assertOk()->assertJsonPath('areas.0.label', 'Palu Barat, Palu, Sulawesi Tengah. 94221');
+    }
+
     public function test_discount_rules_round_down_and_respect_the_threshold_and_cap(): void
     {
         $this->assertSame(['charged' => 19999, 'discount' => 0, 'percent' => 0], ShippingQuotes::discounted('instant', 19999));

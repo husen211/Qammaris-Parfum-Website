@@ -411,7 +411,10 @@ class CartController extends Controller
         $areas = Cache::get($cacheKey);
         if ($areas === null) {
             $areas = $biteship->areas($query);
-            Cache::put($cacheKey, $areas, now()->addDays(30));
+            // An empty answer is not kept: one odd reply would otherwise hide a kecamatan for a month.
+            if ($areas !== []) {
+                Cache::put($cacheKey, $areas, now()->addDays(30));
+            }
         }
         // ORD-18: a customer who searched several times may pick an older result; it must still price.
         $known = array_replace(session(self::AREA_SESSION, []), array_column($areas, 'label', 'id'));

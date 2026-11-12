@@ -38,12 +38,14 @@
         @if ($courierTrip)
             <section class="mt-6 border border-gray-200 bg-white p-4" aria-labelledby="courier-title" data-customer-courier="{{ $courierTrip['status'] ?? '' }}">
                 <p class="text-xs font-semibold uppercase tracking-widest text-gray-500">{{ \App\Actions\Orders\OnlineOrderFulfillment::biteshipLabel($courierTrip['courier'] ?? null) }}</p>
-                <h2 id="courier-title" class="mt-1 text-base font-semibold text-brand-black">{{ match ($courierTrip['status'] ?? null) {
+                @php($tripStatus = $order->handover_status === 'handed_over' && in_array($courierTrip['status'] ?? null, ['confirmed', 'scheduled', 'allocated', 'picking_up'], true) ? 'picked' : ($courierTrip['status'] ?? null))
+                <h2 id="courier-title" class="mt-1 text-base font-semibold text-brand-black">{{ match ($tripStatus) {
                     'allocated', 'picking_up' => 'Driver menuju toko untuk mengambil pesanan',
                     'picked', 'in_transit' => 'Pesanan dalam perjalanan ke alamat Anda',
                     'dropping_off' => 'Driver hampir sampai',
                     'on_hold' => 'Pengiriman ditahan sementara. Admin akan menghubungi Anda.',
                     'return_in_transit', 'returned' => 'Pesanan dikembalikan ke toko. Admin akan menghubungi Anda.',
+                    'cancelled', 'rejected', 'disposed', 'courier_not_found' => 'Pengiriman bermasalah. Admin akan menghubungi Anda.',
                     default => 'Mencari driver untuk pesanan Anda',
                 } }}</h2>
                 @if (! empty($courierTrip['driver_name']))

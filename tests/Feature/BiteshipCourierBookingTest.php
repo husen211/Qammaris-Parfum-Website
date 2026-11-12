@@ -109,8 +109,8 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertSame(['handed_over', 'system', 'Biteship (otomatis)'], [$event->kind, $event->actor_type, $event->actorLabel()]);
         $this->assertStringContainsString('Diambil driver GoSend · ongkir kurir Rp21.000 · saldo Biteship (otomatis)', $event->note);
         $this->get(route('admin.orders.show', $order))->assertSee('saldo Biteship (Owner)')->assertSee('Paket diambil driver')->assertDontSee('Batalkan kurir')
-            // Received also comes from Biteship: no manual "Tandai diterima customer" for this courier.
-            ->assertDontSee('data-delivery-form', false)->assertSee('Saat paket sampai, pesanan otomatis tercatat diterima customer.');
+            // Received comes from Biteship; "Tandai diterima customer" stays as the fallback when its status lags (live 2026-11-12).
+            ->assertSee('data-delivery-form', false)->assertSee('Saat paket sampai, pesanan otomatis tercatat diterima customer.');
 
         $this->answer('GET /v1/orders/bs_order_1', $this->biteshipOrder('delivered'));
         $this->webhook(['order_id' => 'bs_order_1', 'status' => 'delivered'])->assertOk();
@@ -130,6 +130,63 @@ class BiteshipCourierBookingTest extends TestCase
 
         // Without a driver yet, "confirmed" still reads as searching.
         $this->assertSame('confirmed', $this->biteshipStatusOf($this->biteshipOrder('confirmed')));
+    }
+
+    public function test_staff_record_the_pickup_and_delivery_themselves_when_biteships_status_lags(): void
+    {
+        // Live 2026-11-12: Biteship stayed "confirmed" while the driver was on the way; nothing may wait on it forever.
+        $order = $this->packed($this->instantOrder());
+        $this->answer('POST /v1/orders', $this->biteshipOrder('confirmed'));
+        $this->actingAs($this->staff);
+        $this->bookCourier($order, 'gojek');
+        // No driver yet: no manual pickup.
+        $this->get(route('admin.orders.show', $order))->assertDontSee('data-biteship-manual-pickup', false);
+
+        $this->answer('GET /v1/orders/bs_order_1', $this->biteshipOrder('confirmed', ['driver_name' => 'Budi Kurir', 'link' => 'https://track.example.test/1']));
+        $this->post(route('admin.orders.v2.biteship.refresh', $order), ['_section' => 'pengiriman']);
+        $this->get(route('admin.orders.show', $order))->assertSee('data-biteship-manual-pickup', false)->assertSee('Driver sudah ambil paket');
+
+        $this->post(route('admin.orders.v2.handover', $order), ['revision' => $order->fresh()->revision, 'handed_to' => 'courier'])->assertSessionHasNoErrors();
+        $order->refresh();
+        $this->assertSame(['handed_over', 'courier', 'active'], [$order->handover_status, $order->handed_to, $order->courier_booking['state']]);
+        $this->get(route('admin.orders.show', $order))->assertSee('Paket diambil driver')->assertDontSee('Batalkan kurir')
+            ->assertDontSee('data-biteship-manual-pickup', false)->assertSee('data-delivery-form', false);
+        $this->get(route('orders.customer.show', $order->customer_token_encrypted))->assertSee('Pesanan dalam perjalanan ke alamat Anda');
+
+        // Biteship catches up later: no second handover, and the courier cost is still recorded once.
+        $this->answer('GET /v1/orders/bs_order_1', $this->biteshipOrder('picked', ['driver_name' => 'Budi Kurir']));
+        $this->webhook(['event' => 'order.status', 'order_id' => 'bs_order_1', 'status' => 'picked'])->assertOk();
+        $this->assertSame(1, $order->events()->where('kind', 'handed_over')->count());
+        $this->assertSame(1, $order->costs()->where('origin', 'website')->count());
+
+        // Delivery Biteship never reports: staff mark it received.
+        $this->post(route('admin.orders.v2.delivery', $order), ['revision' => $order->fresh()->revision])->assertSessionHasNoErrors();
+        $this->assertSame('delivered', $order->fresh()->delivery_status);
+    }
+
+    public function test_biteships_english_refusals_read_in_indonesian_and_no_courier_is_a_refusal_not_unsure(): void
+    {
+        $order = $this->packed($this->instantOrder());
+        $this->actingAs($this->staff);
+        $this->answer('POST /v1/orders', ['success' => false, 'error' => 'Key has not been activated', 'code' => 40101001], 400);
+        $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.message',
+            'Kurir belum terpesan: Order API kunci Biteship belum aktif. Aktifkan di dashboard Biteship: Integrasi → Kunci API → Aktivasi Order API. (Biteship: Key has not been activated)');
+
+        $this->answer('POST /v1/orders', ['success' => false, 'error' => 'No courier available for this route', 'code' => 40001010], 400);
+        $this->bookCourier($order->fresh(), 'gojek')->assertSessionHas('order_notice.message',
+            'Kurir belum terpesan: Kurir ini sedang tidak melayani titik atau jam ini. Coba kurir lain atau pesan manual. (Biteship: No courier available for this route)');
+        $this->assertSame('failed', $order->fresh()->courier_booking['state']);
+    }
+
+    public function test_history_names_website_confirmation_and_claims(): void
+    {
+        $order = $this->instantOrder();
+        foreach (['website_confirmed', 'claimed', 'claim_released'] as $kind) {
+            $order->events()->create(['kind' => $kind, 'note' => 'x', 'stage' => $order->stage, 'actor_type' => 'user', 'actor_user_id' => $this->staff->id]);
+        }
+        $this->actingAs($this->staff)->get(route('admin.orders.show', $order))
+            ->assertSee('mengonfirmasi pesanan website')->assertSee('mengambil tugas')->assertSee('melepas tugas')
+            ->assertDontSee('website_confirmed');
     }
 
     private function biteshipStatusOf(array $answer): string

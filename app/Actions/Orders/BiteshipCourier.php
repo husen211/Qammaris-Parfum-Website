@@ -86,8 +86,29 @@ class BiteshipCourier
             'biteship_unavailable' => 'Biteship tidak menjawab. Cek dashboard Biteship sebelum memesan ulang, supaya tidak dobel.',
             'biteship_not_configured' => 'Kunci API Biteship belum diatur.',
             'biteship_invalid_order' => 'Jawaban Biteship tidak lengkap. Cek dashboard Biteship sebelum memesan ulang.',
-            default => $message,
+            default => self::translate($message),
         };
+    }
+
+    /** Live 2026-11-12: Biteship answers in English; known refusals read in Indonesian, with Biteship's words kept. */
+    private static function translate(string $message): string
+    {
+        $known = [
+            '/not been activated/i' => 'Order API kunci Biteship belum aktif. Aktifkan di dashboard Biteship: Integrasi → Kunci API → Aktivasi Order API.',
+            '/insufficient|balance/i' => 'Saldo Biteship tidak cukup. Isi saldo di dashboard Biteship.',
+            '/origin.*(phone|address|name)|shipper/i' => 'Data toko untuk kurir (nama, nomor, alamat) belum lengkap.',
+            '/destination.*coordinate|coordinate/i' => 'Titik antar tidak terbaca. Minta customer memasang ulang titik di link pesanan.',
+            '/destination.*phone/i' => 'Nomor HP penerima tidak valid. Perbaiki di Data penerima.',
+            '/destination.*(address|name)/i' => 'Nama atau alamat penerima belum lengkap. Perbaiki di Data penerima.',
+            '/no courier|not available|unavailable|operational|outside/i' => 'Kurir ini sedang tidak melayani titik atau jam ini. Coba kurir lain atau pesan manual.',
+        ];
+        foreach ($known as $pattern => $indonesian) {
+            if (preg_match($pattern, $message)) {
+                return $indonesian.' (Biteship: '.$message.')';
+            }
+        }
+
+        return $message;
     }
 
     /** Fields Biteship refuses to book without; an empty one stops here with a reason staff can fix. */

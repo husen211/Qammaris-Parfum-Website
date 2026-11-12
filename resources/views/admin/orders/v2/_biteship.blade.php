@@ -10,6 +10,9 @@
     $chosen = old('courier', $customerCourier);
     $stale = $state === 'booking' && now()->getTimestamp() - (int) ($booking['started_at'] ?? 0) >= 120;
     $carrying = in_array($booking['status'] ?? null, OnlineOrderFulfillment::BITESHIP_CARRYING, true);
+    // Live 2026-11-12: Biteship's order status can lag behind the driver. Once the parcel is handed over (by hand or by
+    // Biteship), a status from before pickup reads as picked up.
+    $shownStatus = ! $pending && in_array($booking['status'] ?? null, ['confirmed', 'scheduled', 'allocated', 'picking_up'], true) ? 'picked' : ($booking['status'] ?? '');
     // ORD-14 (Owner 2026-11-11): no chat in the courier app for staff, so WhatsApp/phone from here once a driver is assigned.
     $whatsApp = app(\App\Support\InquiryWhatsApp::class);
     $driverPhone = $booking['driver_phone'] ?? null;
@@ -22,7 +25,7 @@
         <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ OnlineOrderFulfillment::biteshipLabel($booking['courier'] ?? null) }} · Biteship</p>
-                <p class="mt-0.5 text-base font-semibold text-gray-900">{{ OnlineOrderLabels::BITESHIP[$booking['status'] ?? ''] ?? 'Menunggu status' }}</p>
+                <p class="mt-0.5 text-base font-semibold text-gray-900">{{ OnlineOrderLabels::BITESHIP[$shownStatus] ?? 'Menunggu status' }}</p>
             </div>
             @if (! empty($booking['price']))<p class="text-sm tabular-nums text-gray-700">Ongkir kurir {{ format_rupiah($booking['price']) }}</p>@endif
         </div>
@@ -50,6 +53,14 @@
                 <button class="{{ $secondary }}" data-busy-label="Memperbarui…" data-biteship-refresh>Perbarui status</button>
             </form>
         </div>
+        {{-- Live 2026-11-12: Biteship's status can lag or its webhook can fail; staff record the pickup themselves. --}}
+        @if ($pending && $active && ! $carrying && ! empty($booking['driver_name']))
+            <form method="POST" action="{{ route('admin.orders.v2.handover', $order) }}" class="mt-3" data-confirm="Driver sudah mengambil paket? Ini mencatat pesanan sudah diserahkan." data-biteship-manual-pickup>
+                @csrf {!! $hidden('pengiriman') !!} <input type="hidden" name="handed_to" value="courier">
+                <button class="{{ $secondary }}" data-busy-label="Menyimpan…">Driver sudah ambil paket</button>
+                <p class="mt-1 text-xs text-gray-500">Pakai bila status di atas belum berubah setelah driver datang.</p>
+            </form>
+        @endif
         @if ($pending && ! $carrying && $active)
             <details class="mt-3 border-t border-gray-100 pt-2" @if (old('_section') === 'pengiriman' && old('reason') !== null) open @endif>
                 <summary class="{{ $quiet }} -ml-3 cursor-pointer text-red-700">Batalkan kurir…</summary>
