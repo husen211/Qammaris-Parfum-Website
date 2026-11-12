@@ -28,8 +28,13 @@ Owner decisions (2026-11-11):
   - the coordinates are rounded to 4 decimals, the request identifies the site, and each answer is cached for 30 days;
   - only coordinates inside the service area are sent, never a name or an address;
   - the answer only drives a warning, shown when it agrees with the nearest Palu kecamatan centre (OpenStreetMap is wrong around Balaroa).
+- **Pin first (ORD-19, Owner 2026-11-12, Palu only).** The address starts with the pin; `GET /cart/checkout/titik` also returns `areas`:
+  - the exact Biteship area (same title, city Palu/Sigi/Donggala) for the kecamatan, found through the same cached and remembered area search, so it prices and is saved with Biteship's label;
+  - one area when OpenStreetMap and the nearest centre agree, when OpenStreetMap names a kecamatan outside Palu city, or (no OpenStreetMap answer) for the nearest centre within 5 km; the page fills it in;
+  - two areas when they disagree inside Palu, for the customer to tap; none when nothing is read, and the page offers the search;
+  - the customer can always change it; outside Palu the destination is searched as before, without a pin.
 - **Checkout in two steps; manual payment** (Owner 2026-11-11). Step 1 asks once: no kelurahan/kecamatan/postcode (pin or J&T area; the area fills `district`/`postcode`) and no payment method. Step 2 is the customer order page: a draft whose total is final and whose lines are all quantity 1 may be paid at once (`payableBeforeConfirmation`); otherwise a clock card says what staff check (stock for quantities from 2, or ongkir) and payment opens after confirmation. The customer picks transfer (verified accounts) or the static QRIS (Super Admin upload, new nullable `store_info.qris_image_path`), and one button stores the choice and opens WhatsApp with the proof message. Payments are still recorded by staff after Konfirmasi; no gateway.
-- **Limits.** Rate limits `shipping-quote` (12/min, 120/h per IP) and `shipping-area` (30/min, 300/h), since each call is a paid Biteship request.
+- **Limits.** Rate limits `shipping-quote` (30/min, 300/h per IP since ORD-18; also the pin endpoint) and `shipping-area` (30/min, 300/h), since each call is a paid Biteship request.
 
 ## Consequences
 

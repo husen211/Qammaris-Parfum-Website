@@ -54,28 +54,13 @@
     </fieldset>
 
     <div data-delivery-section @if ($receive !== 'delivery') hidden @endif class="space-y-6">
-        {{-- Address first: the destination decides which couriers can go there. --}}
+        {{-- Address first: the pin (Palu) or the destination (outside Palu) decides which couriers can go there. --}}
         <section class="{{ $panelClass }}" aria-labelledby="address-title">
             <h3 id="address-title" class="{{ $sectionTitle }}">Alamat pengiriman</h3>
-            <div>
-                {{-- ORD-17: our own search screen (full screen on phones), so typing and the keyboard's Search key behave the same everywhere. --}}
-                <p id="delivery-area-title" class="block text-sm font-medium text-brand-black">Kecamatan atau kota <span aria-hidden="true">*</span></p>
-                <button type="button" id="delivery-area" data-area-open aria-haspopup="dialog" aria-labelledby="delivery-area-title delivery-area" class="mt-2 flex min-h-12 w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 py-2.5 text-left text-base text-brand-black [touch-action:manipulation] active:bg-gray-50 focus-visible:border-brand-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-black">
-                    <span data-area-text class="min-w-0 {{ $areaLabel ? '' : 'text-gray-500' }}">{{ $areaLabel ?: 'Cari kecamatan atau kota' }}</span>
-                    <svg aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                </button>
-                <input type="hidden" name="delivery_area_id" value="{{ old('delivery_area_id') }}" data-area-id>
-                <input type="hidden" name="delivery_area_label" value="{{ $areaLabel }}" data-area-label>
-            </div>
-            <div>
-                <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
-                <textarea id="customer_address" name="customer_address" rows="3" @if ($receive === 'delivery') required @endif minlength="10" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 bg-white px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address') }}</textarea>
-                <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">Nama jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.</p>
-                @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
-            </div>
-            {{-- Instant couriers need the exact spot; only offered for destinations they reach. --}}
-            <div data-instant-pin @if ($selectedKind !== 'instant') hidden @endif class="space-y-2">
-                <p class="text-sm font-medium text-brand-black">Titik antar <span class="font-normal text-gray-500">(untuk kurir instan)</span></p>
+            {{-- ORD-19: in Palu the address starts with the pin; the kecamatan is filled from it. --}}
+            <div data-instant-pin class="space-y-2">
+                <p class="text-sm font-medium text-brand-black">Titik antar</p>
+                <p class="text-xs leading-5 text-gray-500">Untuk Palu dan sekitarnya. Kecamatan terisi otomatis.</p>
                 <button type="button" data-open-location @if ($selectedKind === 'instant') hidden @endif class="flex min-h-12 w-full items-center justify-center gap-2 border border-brand-black bg-white px-4 text-base font-medium text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
                     <svg aria-hidden="true" class="h-5 w-5 text-[#8A6A2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                     Tentukan titik di peta
@@ -90,17 +75,39 @@
                         <svg aria-hidden="true" width="28" height="36" viewBox="0 0 34 44"><path d="M17 43C17 43 33 27.5 33 16.5A16 16 0 0 0 1 16.5C1 27.5 17 43 17 43Z" fill="#C5A059" stroke="#1a1a1a" stroke-width="2"/><circle cx="17" cy="16.5" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/></svg>
                     </div>
                 </div>
+                {{-- ORD-19: the pin lies where two kecamatan meet, or its kecamatan could not be read. --}}
+                <div data-pin-areas hidden role="status" class="space-y-2 border border-gray-200 bg-[#FAF8F3] px-3 py-2 text-sm leading-6 text-brand-black">
+                    <p data-pin-areas-text></p>
+                    <div data-pin-areas-buttons class="flex flex-wrap gap-2"></div>
+                </div>
                 <div data-pin-mismatch hidden role="status" class="space-y-2 border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
                     <p data-pin-mismatch-text></p>
                     <button type="button" data-pin-mismatch-fix class="min-h-11 font-semibold underline underline-offset-4"></button>
                 </div>
+            </div>
+            <div>
+                {{-- ORD-17: our own search screen (full screen on phones), so typing and the keyboard's Search key behave the same everywhere. --}}
+                <p id="delivery-area-title" class="block text-sm font-medium text-brand-black">Kecamatan atau kota <span aria-hidden="true">*</span></p>
+                <button type="button" id="delivery-area" data-area-open aria-haspopup="dialog" aria-labelledby="delivery-area-title delivery-area" class="mt-2 flex min-h-12 w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 py-2.5 text-left text-base text-brand-black [touch-action:manipulation] active:bg-gray-50 focus-visible:border-brand-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-black">
+                    <span data-area-text class="min-w-0 {{ $areaLabel ? '' : 'text-gray-500' }}">{{ $areaLabel ?: 'Cari kecamatan atau kota' }}</span>
+                    <svg aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                </button>
+                <p class="mt-2 text-xs leading-5 text-gray-500">Terisi dari titik antar. Kirim ke luar Palu? Cari di sini.</p>
+                <input type="hidden" name="delivery_area_id" value="{{ old('delivery_area_id') }}" data-area-id>
+                <input type="hidden" name="delivery_area_label" value="{{ $areaLabel }}" data-area-label>
+            </div>
+            <div>
+                <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
+                <textarea id="customer_address" name="customer_address" rows="3" @if ($receive === 'delivery') required @endif minlength="10" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 bg-white px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address') }}</textarea>
+                <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">Nama jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.</p>
+                @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
             </div>
         </section>
 
         {{-- Then the shipping options with their prices, grouped like marketplaces: Instan, Reguler. --}}
         <section class="{{ $panelClass }}" aria-labelledby="shipping-title" data-shipping-choices>
             <h3 id="shipping-title" class="{{ $sectionTitle }}">Pilih pengiriman</h3>
-            <p data-shipping-hint class="text-sm leading-6 text-gray-600" @if ($selectedKind) hidden @endif>Isi kecamatan atau kota dulu, lalu pilihan pengiriman dan ongkirnya muncul di sini.</p>
+            <p data-shipping-hint class="text-sm leading-6 text-gray-600" @if ($selectedKind) hidden @endif>Pasang titik antar atau isi kecamatan dulu, lalu pilihan pengiriman muncul di sini.</p>
             <div data-shipping-group="instant" @if ($selectedKind !== 'instant') hidden @endif class="space-y-2">
                 <p class="text-sm font-semibold text-brand-black">Instan <span class="font-normal text-gray-600">· tiba di hari yang sama</span></p>
                 <div data-shipping-options role="radiogroup" aria-label="Kurir instan" class="space-y-2">
