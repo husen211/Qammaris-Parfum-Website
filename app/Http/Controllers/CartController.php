@@ -312,7 +312,7 @@ class CartController extends Controller
     }
 
     /** ORD-17: the kecamatan OpenStreetMap gives for the customer's pin, to warn when it differs from the chosen one. */
-    public function pinKecamatan(Request $request, PinKecamatan $lookup): JsonResponse
+    public function pinKecamatan(Request $request, PinKecamatan $lookup, BiteshipClient $biteship): JsonResponse
     {
         abort_unless(ShippingQuotes::enabled(), 404);
         $area = config('orders.shipping_quotes.service_area');
@@ -320,9 +320,67 @@ class CartController extends Controller
             'latitude' => ['required', 'numeric', 'between:'.$area['south'].','.$area['north']],
             'longitude' => ['required', 'numeric', 'between:'.$area['west'].','.$area['east']],
         ]);
+        $latitude = (float) $data['latitude'];
+        $longitude = (float) $data['longitude'];
+        $kecamatan = $lookup->find($latitude, $longitude);
+        // ORD-19: the Biteship area the pin fills in (one), or two to choose from when the signals disagree.
+        $areas = [];
+        foreach (self::pinKecamatanNames($kecamatan, $latitude, $longitude) as $name) {
+            try {
+                $found = self::exactPaluArea($this->findAreas($biteship, $name), $name);
+            } catch (RuntimeException) {
+                $found = null;
+            }
+            if ($found) {
+                $areas[] = $found;
+            }
+        }
 
-        return response()->json(['kecamatan' => $lookup->find((float) $data['latitude'], (float) $data['longitude'])])
-            ->header('Cache-Control', 'no-store, private');
+        return response()->json(['kecamatan' => $kecamatan, 'areas' => $areas])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * ORD-19: which kecamatan a Palu pin is in. OpenStreetMap and the nearest Palu kecamatan centre agree: that one.
+     * They disagree inside Palu (OpenStreetMap reads Balaroa as Ulujadi while Biteship says Palu Barat): both, for the
+     * customer to choose. OpenStreetMap names a kecamatan outside Palu (Sigi, Donggala): that one. No OpenStreetMap
+     * answer: the nearest centre within 5 km.
+     *
+     * @return list<string>
+     */
+    private static function pinKecamatanNames(?string $kecamatan, float $latitude, float $longitude): array
+    {
+        $centres = config('orders.shipping_quotes.kecamatan');
+        $nearest = null;
+        $nearestKm = INF;
+        foreach ($centres as $name => [$centreLatitude, $centreLongitude]) {
+            $km = ShippingQuotes::distanceKm(['latitude' => $centreLatitude, 'longitude' => $centreLongitude], $latitude, $longitude);
+            if ($km < $nearestKm) {
+                [$nearest, $nearestKm] = [$name, $km];
+            }
+        }
+        $nearest = $nearestKm <= 5 ? $nearest : null;
+        if ($kecamatan === null) {
+            return $nearest ? [$nearest] : [];
+        }
+        $inPalu = in_array(mb_strtolower($kecamatan), array_map('mb_strtolower', array_keys($centres)), true);
+        if (! $inPalu || $nearest === null || mb_strtolower($kecamatan) === mb_strtolower($nearest)) {
+            return [$kecamatan];
+        }
+
+        return [$kecamatan, $nearest];
+    }
+
+    /** ORD-19: the search result that is exactly this kecamatan in Palu, Sigi or Donggala. */
+    private static function exactPaluArea(array $areas, string $name): ?array
+    {
+        foreach ($areas as $area) {
+            $parts = array_map(fn ($part) => mb_strtolower(trim($part)), explode(',', (string) $area['label']));
+            if ($parts[0] === mb_strtolower($name) && preg_grep('/^(kota |kab\. |kabupaten )?(palu|sigi|donggala)\b/u', array_slice($parts, 1))) {
+                return ['id' => $area['id'], 'label' => $area['label']];
+            }
+        }
+
+        return null;
     }
 
     /** ORD-13: destination areas for J&T (kecamatan, city and postal code), searched by the customer. */
@@ -330,18 +388,30 @@ class CartController extends Controller
     {
         abort_unless(ShippingQuotes::enabled(), 404);
         $data = $request->validate(['q' => ['required', 'string', 'min:3', 'max:60']]);
-        // ORD-17: the same search answers at once the next time, for every customer, without a paid Biteship call.
-        $query = mb_strtolower(preg_replace('/\s+/u', ' ', trim($data['q'])));
-        // ORD-18: "v2" because searches cached before ORD-18 hold at most 8 of Biteship's 10 results.
-        $cacheKey = 'biteship-areas-v2:'.md5($query);
         try {
-            $areas = Cache::get($cacheKey);
-            if ($areas === null) {
-                $areas = $biteship->areas($query);
-                Cache::put($cacheKey, $areas, now()->addDays(30));
-            }
+            $areas = $this->findAreas($biteship, $data['q']);
         } catch (RuntimeException) {
             return response()->json(['areas' => [], 'reason' => 'unavailable']);
+        }
+
+        return response()->json(['areas' => $areas])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * Biteship areas for a search, remembered so the chosen one prices and is saved with Biteship's own label.
+     *
+     * @throws RuntimeException when Biteship cannot answer
+     */
+    private function findAreas(BiteshipClient $biteship, string $query): array
+    {
+        // ORD-17: the same search answers at once the next time, for every customer, without a paid Biteship call.
+        $query = mb_strtolower(preg_replace('/\s+/u', ' ', trim($query)));
+        // ORD-18: "v2" because searches cached before ORD-18 hold at most 8 of Biteship's 10 results.
+        $cacheKey = 'biteship-areas-v2:'.md5($query);
+        $areas = Cache::get($cacheKey);
+        if ($areas === null) {
+            $areas = $biteship->areas($query);
+            Cache::put($cacheKey, $areas, now()->addDays(30));
         }
         // ORD-18: a customer who searched several times may pick an older result; it must still price.
         $known = array_replace(session(self::AREA_SESSION, []), array_column($areas, 'label', 'id'));
@@ -350,7 +420,7 @@ class CartController extends Controller
             Cache::put('biteship-area-label:'.$found['id'], $found['label'], now()->addDays(30));
         }
 
-        return response()->json(['areas' => $areas])->header('Cache-Control', 'no-store, private');
+        return $areas;
     }
 
     private function placed(string $token)

@@ -321,12 +321,18 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
 - Dengan ongkir otomatis aktif, checkout berurutan:
   1. data penerima;
   2. **Metode pengiriman** (Dikirim ke alamat dengan logo kurir / Ambil di toko dengan ikon toko);
-  3. **Alamat pengiriman**: kecamatan/kota, alamat lengkap, dan titik peta untuk area Palu, Sigi, Donggala;
+  3. **Alamat pengiriman** (ORD-19): **titik antar dulu** (Palu, Sigi, Donggala), lalu kecamatan/kota yang terisi otomatis dari titik (luar Palu: dicari sendiri), lalu alamat lengkap;
   4. **Pilih pengiriman**: Instan GoSend/GrabExpress, Reguler J&T, masing-masing dengan harga;
   5. paperbag dan catatan.
 - Tidak ada pilihan kurir yang terpilih otomatis; customer memilih sendiri. Jenis pengiriman pesanan mengikuti pilihan itu.
 - Ringkasan checkout menulis **Total** (produk + paperbag + ongkir yang dipilih), bukan "Total sementara". Teks keranjang dan checkout dibuat singkat (ORD-18).
-- Kecamatan dan kode pos pesanan diisi dari tujuan yang dicari, untuk kurir instan maupun J&T.
+- Kecamatan dan kode pos pesanan diisi dari tujuan (terisi dari titik atau dicari), untuk kurir instan maupun J&T.
+- **Kecamatan dari titik (ORD-19, Owner 2026-11-12, hanya Palu dan sekitarnya):**
+  - OpenStreetMap dan pusat kecamatan terdekat sepakat: kecamatan itu terisi otomatis dan harga Instan + Reguler langsung muncul;
+  - tidak sepakat (misalnya Balaroa terbaca Ulujadi): customer mengetuk salah satu dari dua kecamatan;
+  - OpenStreetMap tidak menjawab: pusat kecamatan terdekat (paling jauh 5 km); di Sigi/Donggala: kecamatan dari OpenStreetMap;
+  - tidak terbaca sama sekali: customer diminta mencari kecamatan;
+  - customer selalu bisa mengganti kecamatan lewat kolom pencarian. Kirim ke luar Palu tetap lewat pencarian, tanpa titik.
 - **Pencarian kecamatan/kota (ORD-17, diperbaiki ORD-18):**
   - membuka layar pencarian penuh di HP (panel di tengah di desktop), setinggi area di atas keyboard, tanpa daftar Palu di awal;
   - menampilkan semua hasil Biteship (paling banyak 10) dalam daftar yang bisa di-scroll; bila 10 hasil, ada saran mengetik lebih lengkap;
@@ -334,7 +340,7 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
   - hasil pencarian disimpan 30 hari; area yang pernah dicari tetap bisa dihitung ongkirnya.
 - **Ongkir gagal dihitung:** sambungan ke Biteship yang putus dicoba ulang sekali otomatis (hanya cek harga dan pencarian, tidak pernah pemesanan kurir). Bila tetap gagal, customer melihat tombol "Hitung ulang ongkir" di samping pilihan "Ongkir dikonfirmasi admin".
 - **Titik antar:** sesudah dipilih tampil peta kecil.
-- **Titik vs kecamatan:** bila titik tampak berada di kecamatan lain (OpenStreetMap dan pusat kecamatan terdekat sama-sama menunjuk kecamatan lain), customer diberi peringatan dan tombol ganti kecamatan. Kecamatan tidak diganti otomatis. Ongkir instan selalu dari titik.
+- **Titik vs kecamatan:** bila customer mengganti kecamatan sendiri dan titik tampak berada di kecamatan lain (OpenStreetMap dan pusat kecamatan terdekat sama-sama menunjuk kecamatan lain), customer diberi peringatan dan tombol ganti kecamatan. Kecamatan tidak diganti otomatis. Ongkir instan selalu dari titik.
 
 ### Logo kurir dan bank, batal otomatis bila belum dibayar (ORD-15, Owner 2026-11-11)
 

@@ -1,5 +1,6 @@
-// ORD-13/ORD-16: checkout delivery in marketplace order. The customer chooses how to receive, fills the address
-// (destination area, full address and, for instant couriers, a map pin), then picks a priced option grouped as
+// ORD-13/ORD-16/ORD-19: checkout delivery in marketplace order. The customer chooses how to receive, fills the address
+// (in Palu the map pin first, which fills the kecamatan; elsewhere the destination area; then the full address), then
+// picks a priced option grouped as
 // Instan (GoSend, GrabExpress) or Reguler (J&T). The server prices and keeps every option; the page only shows them,
 // submits the chosen option id and keeps the hidden `delivery` in step with it.
 import { areaParts, deliveryFor, discountText, distanceKm, exactArea, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, pinWarning, placeResults, reasonText } from './checkout-shipping/logic.js';
@@ -28,6 +29,7 @@ function setup(root) {
     const areaState = areaDialog.querySelector('[data-area-state]');
     const preview = root.querySelector('[data-pin-preview]');
     const mismatch = root.querySelector('[data-pin-mismatch]');
+    const pinAreas = root.querySelector('[data-pin-areas]');
     const areaIdInput = root.querySelector('[data-area-id]');
     const areaLabelInput = root.querySelector('[data-area-label]');
     const address = root.querySelector('#customer_address');
@@ -103,6 +105,8 @@ function setup(root) {
     };
 
     const clearGroup = (kind) => {
+        runs[kind] += 1;
+        groups[kind].removeAttribute('aria-busy');
         groups[kind].querySelector('[data-shipping-options]').replaceChildren();
         status(groups[kind], '');
     };
@@ -158,18 +162,18 @@ function setup(root) {
         areaText.textContent = choice?.label ?? 'Cari kecamatan atau kota';
         areaText.classList.toggle('text-gray-500', !choice);
         showMismatch();
-        const instant = instantArea(choice?.label);
-        pinBlock.hidden = !instant;
+        // ORD-19: with a pin and no kecamatan yet (being read, or to be chosen) the instant prices stay.
+        const instant = choice ? instantArea(choice.label) : Boolean(pin);
         groups.instant.hidden = !instant;
         if (!instant) clearGroup('instant');
-        else if (!groups.instant.querySelector('[data-shipping-choice]')) {
-            status(groups.instant, pin ? '' : 'Tentukan titik di peta (di atas) untuk melihat ongkir GoSend dan GrabExpress.');
+        else if (!pin && !groups.instant.querySelector('[data-shipping-choice]')) {
+            status(groups.instant, 'Tentukan titik di peta (di atas) untuk melihat ongkir GoSend dan GrabExpress.');
         }
         if (!choice) {
             groups.jnt.hidden = true;
             clearGroup('jnt');
             offerManual(false);
-            hint.hidden = false;
+            hint.hidden = Boolean(pin);
         } else if (requote) {
             offerManual(false);
             quote('jnt', { mode: 'jnt', area_id: choice.id, area_label: choice.label });
@@ -310,8 +314,9 @@ function setup(root) {
         pinBlock.querySelector('[data-pin-summary]').hidden = false;
         pinBlock.querySelector('[data-pin-text]').textContent = pinSummary(distanceKm(config.origin, pin));
         showPreview();
-        checkPinKecamatan();
+        groups.instant.hidden = false;
         quote('instant', { mode: 'instant', latitude: pin[0], longitude: pin[1] });
+        checkPinKecamatan({ fill: true });
     });
 
     // ORD-17/18: kecamatan/kota search screen. Typing searches after a short pause ("Mencari…" at once); the keyboard's
@@ -495,17 +500,57 @@ function setup(root) {
             openAreaSearch();
         }
     });
-    const checkPinKecamatan = async () => {
+    // ORD-19: the kecamatan of a new pin fills itself in; where two kecamatan meet the customer taps one, and when
+    // it cannot be read the search is offered. The customer can always change it with the kecamatan field.
+    const offerPinAreas = (text, choices) => {
+        pinAreas.hidden = !text;
+        pinAreas.querySelector('[data-pin-areas-text]').textContent = text ?? '';
+        pinAreas.querySelector('[data-pin-areas-buttons]').replaceChildren(...choices.map(({ label, onPick }) => {
+            const button = Object.assign(document.createElement('button'), { type: 'button', textContent: label });
+            button.className = 'min-h-11 border border-brand-black bg-white px-4 text-sm font-medium text-brand-black [touch-action:manipulation] active:bg-gray-100';
+            button.addEventListener('click', () => {
+                offerPinAreas(null, []);
+                onPick();
+            });
+
+            return button;
+        }));
+    };
+    const checkPinKecamatan = async ({ fill = false } = {}) => {
         pinKecamatan = null;
         showMismatch();
+        offerPinAreas(null, []);
         if (!pin) return;
         const asked = pin;
+        if (fill) {
+            areaText.textContent = 'Membaca kecamatan dari titik…';
+            areaText.classList.add('text-gray-500');
+        }
+        let found = [];
         try {
             const response = await fetch(`${config.pinUrl}?latitude=${asked[0]}&longitude=${asked[1]}`, { headers: { Accept: 'application/json' } });
             const data = await response.json().catch(() => ({}));
-            if (asked === pin) pinKecamatan = response.ok ? (data.kecamatan ?? null) : null;
+            if (asked !== pin) return;
+            pinKecamatan = response.ok ? (data.kecamatan ?? null) : null;
+            found = response.ok && Array.isArray(data.areas) ? data.areas : [];
         } catch {
-            pinKecamatan = null;
+            if (asked !== pin) return;
+        }
+        if (!fill) {
+            showMismatch();
+
+            return;
+        }
+        if (found.length === 1) {
+            if (found[0].id !== area?.id) setArea(found[0]);
+            else setArea(area, { requote: false });
+        } else {
+            setArea(area?.id && found.some((entry) => entry.id === area.id) ? area : null, { requote: false });
+            if (found.length > 1) {
+                offerPinAreas('Titik ini di perbatasan kecamatan. Pilih yang sesuai:', found.map((entry) => ({ label: areaParts(entry.label).title, onPick: () => setArea(entry) })));
+            } else {
+                offerPinAreas('Kecamatan belum terbaca dari titik ini.', [{ label: 'Cari kecamatan', onPick: () => openAreaSearch() }]);
+            }
         }
         showMismatch();
     };
@@ -519,7 +564,11 @@ function setup(root) {
             choices.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
             element?.focus({ preventScroll: true });
         };
-        if (!area) {
+        if (!area && !pin) {
+            const pinButton = pinBlock.querySelector('[data-open-location]');
+            focusOn(pinButton, 'Pasang titik antar dulu (luar Palu: isi kecamatan atau kota), lalu pilih pengiriman.');
+            pinButton.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+        } else if (!area) {
             focusOn(areaButton, 'Isi kecamatan atau kota tujuan dulu, lalu pilih pengiriman.');
             areaButton.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
         } else {

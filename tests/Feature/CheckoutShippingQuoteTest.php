@@ -57,7 +57,7 @@ class CheckoutShippingQuoteTest extends TestCase
             ->assertSee('data-partner-logo="gosend"', false)->assertSee('data-partner-logo="grab"', false)->assertSee('data-partner-logo="jnt"', false)
             ->assertSee('images\/partners\/gojek.svg', false)
             // ORD-16: marketplace order: how to receive, the address, then the options grouped Instan and Reguler.
-            ->assertSeeInOrder(['Metode pengiriman', 'Dikirim ke alamat', 'Ambil di toko', 'Alamat pengiriman', 'Kecamatan atau kota', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Paperbag'])
+            ->assertSeeInOrder(['Metode pengiriman', 'Dikirim ke alamat', 'Ambil di toko', 'Alamat pengiriman', 'Titik antar', 'Kecamatan terisi otomatis', 'Kecamatan atau kota', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Paperbag'])
             ->assertSee('data-delivery-value', false)->assertDontSee('name="delivery" value="local_delivery"', false)
             // ORD-17: the area field opens our own search screen; the pin check has its own endpoint.
             ->assertSee('data-area-open', false)->assertSee('data-area-dialog', false)->assertSee('data-pin-preview', false)
@@ -233,15 +233,49 @@ class CheckoutShippingQuoteTest extends TestCase
         Storage::disk('public')->assertMissing($path);
     }
 
-    public function test_the_pin_kecamatan_comes_from_openstreetmap_once_and_only_inside_the_area(): void
+    public function test_a_palu_pin_fills_its_kecamatan_and_offers_two_where_openstreetmap_and_the_centre_disagree(): void
     {
-        Http::fake(['nominatim.openstreetmap.org/*' => Http::response(['address' => ['village' => 'Tatura Utara', 'municipality' => 'Kecamatan Palu Selatan']])]);
-        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        $osm = ['-0.9160,119.8860' => 'Kecamatan Palu Selatan', '-0.8950,119.8560' => 'Kecamatan Ulujadi', '-1.0500,119.9500' => 'Kecamatan Sigi Biromaru'];
+        $nominatim = 0;
+        Http::fake(function (HttpRequest $request) use ($osm, &$nominatim) {
+            if (str_contains($request->url(), 'nominatim.openstreetmap.org')) {
+                $nominatim++;
+                $name = $osm[sprintf('%.4f,%.4f', $request['lat'], $request['lon'])] ?? null;
 
-        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.916, 'longitude' => 119.886]))->assertOk()->assertExactJson(['kecamatan' => 'Palu Selatan']);
-        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.91601, 'longitude' => 119.88602]))->assertOk()->assertExactJson(['kecamatan' => 'Palu Selatan']);
-        Http::assertSentCount(1);
-        Http::assertSent(fn (HttpRequest $request) => str_starts_with($request->header('User-Agent')[0] ?? '', 'QammarisPerfumes/'));
+                return $name ? Http::response(['address' => ['village' => 'Tatura Utara', 'municipality' => $name]]) : Http::response([], 500);
+            }
+            if (str_contains($request->url(), '/v1/maps/areas')) {
+                $name = ucwords((string) $request['input']);
+                $city = str_starts_with($name, 'Sigi') ? 'Sigi' : 'Palu';
+
+                return Http::response(['success' => true, 'areas' => [
+                    ['id' => 'IDOTHER'.str_replace(' ', '', $name), 'name' => $name.' Raya, Makassar, Sulawesi Selatan. 90111'],
+                    ['id' => 'ID'.str_replace(' ', '', $name), 'name' => "{$name}, {$city}, Sulawesi Tengah. 94111"],
+                ]]);
+            }
+
+            return Http::response([], 404);
+        });
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        $area = fn (string $name, string $city = 'Palu') => ['id' => 'ID'.str_replace(' ', '', $name), 'label' => "{$name}, {$city}, Sulawesi Tengah. 94111"];
+
+        // OpenStreetMap and the nearest centre agree: that kecamatan, in Palu (not the Makassar namesake), fills itself.
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.916, 'longitude' => 119.886]))->assertOk()
+            ->assertExactJson(['kecamatan' => 'Palu Selatan', 'areas' => [$area('Palu Selatan')]]);
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.91601, 'longitude' => 119.88602]))->assertOk()->assertJsonPath('kecamatan', 'Palu Selatan');
+        $this->assertSame(1, $nominatim, 'a pin is looked up once');
+        Http::assertSent(fn (HttpRequest $request) => ! str_contains($request->url(), 'nominatim') || str_starts_with($request->header('User-Agent')[0] ?? '', 'QammarisPerfumes/'));
+        $this->assertSame('Palu Selatan, Palu, Sulawesi Tengah. 94111', session('shipping_areas')['IDPaluSelatan'], 'the filled area prices and is saved like a searched one');
+        // They disagree (OpenStreetMap reads Balaroa as Ulujadi): both, for the customer to choose.
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.895, 'longitude' => 119.856]))->assertOk()
+            ->assertExactJson(['kecamatan' => 'Ulujadi', 'areas' => [$area('Ulujadi'), $area('Palu Barat')]]);
+        // No OpenStreetMap answer: the nearest Palu centre.
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -0.923, 'longitude' => 119.85]))->assertOk()
+            ->assertExactJson(['kecamatan' => null, 'areas' => [$area('Tatanga')]]);
+        // Outside Palu city (Sigi): OpenStreetMap's kecamatan; with no answer and no centre within 5 km, nothing.
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -1.05, 'longitude' => 119.95]))->assertOk()
+            ->assertExactJson(['kecamatan' => 'Sigi Biromaru', 'areas' => [$area('Sigi Biromaru', 'Sigi')]]);
+        $this->getJson(route('cart.checkout.pin', ['latitude' => -1.1, 'longitude' => 120.05]))->assertOk()->assertExactJson(['kecamatan' => null, 'areas' => []]);
         // Outside Palu and its surroundings nothing is asked.
         $this->getJson(route('cart.checkout.pin', ['latitude' => -5.14, 'longitude' => 119.42]))->assertUnprocessable();
     }
