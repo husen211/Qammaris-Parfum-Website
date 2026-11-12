@@ -24,7 +24,7 @@ return [
         'street' => 'Jl. Sis Aljufri, Siranindi, Kec. Palu Barat',
         'locality' => 'Kota Palu',
         'region' => 'Sulawesi Tengah',
-        'postal_code' => '94111',
+        'postal_code' => '94221',
         'country' => 'ID',
         'telephone' => '+6285144924931',
         'maps_url' => 'https://maps.app.goo.gl/npKqotHHTo2AAyag9',

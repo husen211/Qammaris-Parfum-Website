@@ -74,7 +74,7 @@ class SeoLocalPaluTest extends TestCase
     public function test_footer_shows_the_same_address_on_every_public_page(): void
     {
         foreach (['/', '/products', route('blog.index')] as $url) {
-            $this->get($url)->assertOk()->assertSee('Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94111');
+            $this->get($url)->assertOk()->assertSee('Jl. Sis Aljufri, Siranindi, Kec. Palu Barat, Kota Palu, Sulawesi Tengah 94221');
         }
     }
 
