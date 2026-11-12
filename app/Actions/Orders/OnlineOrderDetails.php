@@ -70,6 +70,26 @@ class OnlineOrderDetails
         return false;
     }
 
+    /** ORD-20: the delivery pin from the order link, saved as a Google Maps link (the same form as a checkout pin). */
+    public function setPinByCustomer(OnlineOrder $order, float $latitude, float $longitude): OnlineOrder
+    {
+        if (! $order->customerLinkUsable()) {
+            throw new InvalidOrderTransition('Link pesanan ini sudah tidak berlaku. Hubungi kami lewat WhatsApp.');
+        }
+
+        return $this->mutateV2($order, null, null, function (OnlineOrder $order) use ($latitude, $longitude): bool {
+            if (! $order->customerCanSetPin()) {
+                throw new InvalidOrderTransition('Titik antar tidak bisa diubah lagi. Hubungi kami lewat WhatsApp.');
+            }
+            $order->location_url = sprintf('https://www.google.com/maps?q=%.6F,%.6F', $latitude, $longitude);
+            if ($order->isDirty('location_url')) {
+                $this->orderEvent($order, null, 'details_updated', 'Titik antar diisi customer');
+            }
+
+            return false;
+        });
+    }
+
     /** ORD-13: the customer's choice of transfer or QRIS on the payment page; a preference, never a payment. */
     public function choosePaymentByCustomer(OnlineOrder $order, string $method): OnlineOrder
     {

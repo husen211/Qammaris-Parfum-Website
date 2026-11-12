@@ -23,6 +23,7 @@ export default defineConfig({
                 'resources/js/about.js',
                 'resources/js/virtual-tour.js',
                 'resources/js/checkout-shipping.js',
+                'resources/js/order-pin.js',
                 'resources/js/blog-editor.js',
                 'resources/js/reactbits/about-lanyard-loader.js',
                 'resources/js/reactbits/card-nav.jsx'

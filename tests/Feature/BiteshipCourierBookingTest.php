@@ -218,9 +218,10 @@ class BiteshipCourierBookingTest extends TestCase
         $this->bookCourier($unpacked, 'grab')->assertSessionHas('order_notice.message', 'Konfirmasi packing dulu sebelum menyerahkan pesanan.');
         $this->get(route('admin.orders.show', $this->packed($unpacked)))->assertSee('data-biteship-book', false)->assertSee('value="grab" checked', false);
 
-        // An order made by staff has no pin: only the manual booking.
+        // An order made by staff without a pin yet: the manual booking and a hint to get the pin from the order link.
         $manual = $this->packed($this->paidV2Order('local_delivery'));
         $this->get(route('admin.orders.show', $manual))->assertDontSee('data-biteship-book', false)->assertSee('data-courier-booking', false)
+            ->assertSee('data-biteship-needs-pin', false)
             ->assertDontSee('Pesan manual di aplikasi kurir')->assertSee('data-handover-form', false);
         $this->bookCourier($manual, 'gojek')->assertSessionHas('order_notice.type', 'error');
 
@@ -236,6 +237,43 @@ class BiteshipCourierBookingTest extends TestCase
         $this->get(route('admin.orders.show', $order))->assertDontSee('data-biteship-book', false)->assertSee('data-courier-booking', false);
         $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'error');
         $this->assertSame([], $this->sent);
+    }
+
+    public function test_an_admin_made_order_gets_its_pin_on_the_order_link_and_staff_book_the_courier(): void
+    {
+        $order = $this->packed($this->paidV2Order('local_delivery'));
+        $token = $order->customer_token_encrypted;
+        $this->get(route('admin.orders.show', $order))->assertSee('data-biteship-needs-pin', false)->assertDontSee('data-biteship-book', false);
+
+        // The customer places the pin on the order link; outside Palu it is refused.
+        $this->get(route('orders.customer.show', $token))->assertOk()->assertSee('data-order-pin', false)->assertSee('Tentukan titik di peta');
+        $this->post(route('orders.customer.pin', $token), ['latitude' => -5.14, 'longitude' => 119.42])->assertSessionHasErrors('latitude');
+        $this->post(route('orders.customer.pin', $token), ['latitude' => -0.8951234, 'longitude' => 119.8561234])
+            ->assertSessionHas('success', 'Titik antar tersimpan. Terima kasih.');
+        $order->refresh();
+        $this->assertSame('https://www.google.com/maps?q=-0.895123,119.856123', $order->location_url, 'staff group, App and Maps use the same link');
+        $this->assertSame('Titik antar diisi customer', $order->events()->reorder('id', 'desc')->value('note'));
+        $this->get(route('orders.customer.show', $token))->assertSee('Titik antar tersimpan')->assertSee('Ubah titik');
+
+        // Staff now book through Biteship to that pin.
+        $this->get(route('admin.orders.show', $order))->assertSee('data-biteship-book', false)->assertSee('Titik antar dari link pesanan')
+            ->assertDontSee('data-biteship-needs-pin', false);
+        $this->answer('POST /v1/orders', $this->biteshipOrder('confirmed'));
+        $this->bookCourier($order, 'grab')->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame(['latitude' => -0.895123, 'longitude' => 119.856123], $this->sent[0]->data()['destination_coordinate']);
+
+        // A courier is on the way: the pin is locked on the link.
+        $this->get(route('orders.customer.show', $token))->assertDontSee('data-order-pin', false);
+        $this->post(route('orders.customer.pin', $token), ['latitude' => -0.9, 'longitude' => 119.87])
+            ->assertSessionHas('error', 'Titik antar tidak bisa diubah lagi. Hubungi kami lewat WhatsApp.');
+        $this->assertSame('https://www.google.com/maps?q=-0.895123,119.856123', $order->fresh()->location_url);
+
+        // A Google Maps link with coordinates saved by staff is a pin too; a short Sharelok link or a point outside Palu is not.
+        $this->assertSame(['latitude' => -0.9, 'longitude' => 119.87], OnlineOrder::pinFromUrl('https://maps.google.com/?q=-0.9,119.87'));
+        $this->assertNull(OnlineOrder::pinFromUrl('https://maps.app.goo.gl/AbCdEf'));
+        $this->assertNull(OnlineOrder::pinFromUrl('https://www.google.com/maps?q=-5.14,119.42'));
+        // A website instant order keeps its checkout pin: its ongkir was priced from it.
+        $this->assertFalse($this->instantOrder()->customerCanSetPin());
     }
 
     public function test_the_webhook_needs_the_secret_and_only_acts_on_a_booked_order(): void
