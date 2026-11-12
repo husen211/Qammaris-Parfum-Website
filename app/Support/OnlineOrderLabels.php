@@ -54,6 +54,7 @@ final class OnlineOrderLabels
     /** ORD-14: Biteship courier statuses, as staff and the customer read them. */
     public const BITESHIP = [
         'confirmed' => 'Mencari driver',
+        'scheduled' => 'Dijadwalkan',
         'allocated' => 'Driver ditemukan',
         'picking_up' => 'Driver menuju toko',
         'picked' => 'Paket diambil driver',
@@ -73,6 +74,9 @@ final class OnlineOrderLabels
 
     private const EVENTS = [
         'created' => 'membuat pesanan',
+        'website_confirmed' => 'mengonfirmasi pesanan website',
+        'claimed' => 'mengambil tugas',
+        'claim_released' => 'melepas tugas',
         'advance' => 'menandai data diterima',
         'details_updated' => 'mengubah detail',
         'link_regenerated' => 'membuat ulang link',

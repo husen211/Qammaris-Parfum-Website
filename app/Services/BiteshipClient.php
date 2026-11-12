@@ -143,7 +143,8 @@ class BiteshipClient
             throw new RuntimeException('biteship_unavailable');
         }
 
-        if ($response->status() === 400 && is_array($payload) && ($payload['code'] ?? null) === self::NO_COURIER) {
+        // "No courier for this route" is an empty price list; on a booking it stays a refusal staff can read.
+        if ($path === '/v1/rates/couriers' && $response->status() === 400 && is_array($payload) && ($payload['code'] ?? null) === self::NO_COURIER) {
             return ['pricing' => []];
         }
         if (! $response->successful() || ! is_array($payload) || ($payload['success'] ?? null) !== true) {

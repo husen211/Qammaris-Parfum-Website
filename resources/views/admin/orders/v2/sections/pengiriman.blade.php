@@ -44,8 +44,8 @@
                 <button class="{{ $secondary }}" data-busy-label="Menyimpan…">Simpan resi</button>
             </form>
         @endif
-        {{-- ORD-14: a Biteship delivery is marked received by Biteship's own status. --}}
-        @if ($order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled' && ! $biteshipActive)
+        {{-- ORD-14: Biteship marks a delivery received by itself; the button stays as a fallback when its status lags. --}}
+        @if ($order->fulfillment !== 'pickup' && $order->delivery_status !== 'delivered' && $order->lifecycle !== 'cancelled')
             <form method="POST" action="{{ route('admin.orders.v2.delivery', $order) }}" class="mt-3" data-delivery-form>
                 @csrf {!! $hidden('pengiriman') !!}
                 <button class="{{ $secondary }} w-full sm:w-auto" data-busy-label="Menyimpan…">Tandai diterima customer</button>
