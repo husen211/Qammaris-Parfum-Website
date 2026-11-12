@@ -100,13 +100,21 @@ class BiteshipClient
             throw new RuntimeException('biteship_invalid_order');
         }
 
+        $status = self::status($order['status'] ?? null);
+        $driver = $text($courier['driver_name'] ?? $courier['name'] ?? null, 80);
+        // Live 2026-11-12: Biteship kept the order "confirmed" after the driver was assigned and on the way (its
+        // tracking page already said so). A driver name means the driver is found, whatever the order status says.
+        if (in_array($status, ['confirmed', 'scheduled'], true) && $driver !== null) {
+            $status = 'allocated';
+        }
+
         return [
             'id' => $order['id'],
-            'status' => self::status($order['status'] ?? null),
+            'status' => $status,
             'price' => is_numeric($order['price'] ?? null) ? (int) $order['price'] : null,
             'company' => $text($courier['company'] ?? null, 40),
             'link' => is_string($courier['link'] ?? null) && str_starts_with($courier['link'], 'https://') ? mb_substr($courier['link'], 0, 500) : null,
-            'driver_name' => $text($courier['driver_name'] ?? $courier['name'] ?? null, 80),
+            'driver_name' => $driver,
             'driver_phone' => $text($courier['driver_phone'] ?? $courier['phone'] ?? null, 30),
             'driver_plate' => $text($courier['driver_plate_number'] ?? null, 20),
             'waybill' => $text($courier['waybill_id'] ?? null, 60),
