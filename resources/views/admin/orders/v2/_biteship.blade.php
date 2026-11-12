@@ -68,7 +68,8 @@
     <form method="POST" action="{{ route('admin.orders.v2.biteship.book', $order) }}" class="mt-3 rounded-lg border border-gray-200 p-3" data-biteship-book data-confirm="Pesan driver sekarang? Saldo Biteship terpotong sesuai ongkir kurir.">
         @csrf {!! $hidden('pengiriman') !!}
         <p class="text-sm font-semibold text-gray-900">Pesan kurir lewat Biteship</p>
-        <p class="mt-0.5 text-xs text-gray-600">Customer memilih {{ OnlineOrderFulfillment::biteshipLabel($customerCourier) }}@if (isset($quote['destination']['distance_km'])) · titik antar ±{{ str_replace('.', ',', (string) $quote['destination']['distance_km']) }} km dari toko @endif · ongkir customer {{ format_rupiah($order->shipping_fee) }}</p>
+        {{-- ORD-20: an order without a checkout quote (admin-made, or ongkir by staff) uses the pin from the order link. --}}
+        <p class="mt-0.5 text-xs text-gray-600">@if (($quote['kind'] ?? null) === 'instant')Customer memilih {{ OnlineOrderFulfillment::biteshipLabel($customerCourier) }}@if (isset($quote['destination']['distance_km'])) · titik antar ±{{ str_replace('.', ',', (string) $quote['destination']['distance_km']) }} km dari toko @endif @else Titik antar dari link pesanan @endif · ongkir customer {{ $order->shipping_fee !== null ? format_rupiah($order->shipping_fee) : 'belum diisi' }}</p>
         @if ($state === 'failed')
             <p class="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert" data-biteship-error>Pemesanan terakhir gagal: {{ $booking['error'] ?? 'Biteship tidak menjawab.' }}</p>
         @elseif ($state === 'ended')

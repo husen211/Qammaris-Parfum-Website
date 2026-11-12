@@ -550,7 +550,7 @@ class OnlineOrderFulfillment
                 throw new OrderActionNotAllowed('Kurir Biteship dipesan dari halaman pesanan Website.');
             }
             if (! $order->biteshipBookable()) {
-                throw new InvalidOrderTransition('Pesan lewat Biteship hanya untuk kurir instan dengan titik antar dari checkout, sebelum diserahkan.');
+                throw new InvalidOrderTransition('Pesan lewat Biteship butuh titik antar di Palu (dari checkout atau link pesanan), sebelum diserahkan.');
             }
             if (! in_array($courier, ['gojek', 'grab'], true)) {
                 throw new OrderValidationFailed('Pilih GoSend atau GrabExpress.', ['courier' => 'gojek atau grab']);

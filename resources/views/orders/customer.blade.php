@@ -401,7 +401,37 @@
             @if ($order->fulfillment === 'local_delivery' && ! $order->location_url && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled' && ! $locationUrl && \App\Models\StoreInfo::usesTestWhatsapp())
                 <p class="mt-6 border border-dashed border-gray-300 p-3 text-xs leading-5 text-gray-600" data-location-test-note>Mode uji: tombol Kirim Sharelok tampil di website live. Di sini WhatsApp toko sengaja tidak aktif.</p>
             @endif
-            @if ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
+            @if ($order->customerCanSetPin() && config('orders.shipping_quotes.enabled'))
+                {{-- ORD-20: the customer places the delivery pin here (admin-made orders too), so staff book the instant courier from the admin. --}}
+                @php($pin = $order->deliveryPin())
+                @php($pinConfig = ['origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')], 'kecamatan' => config('orders.shipping_quotes.kecamatan'), 'serviceArea' => config('orders.shipping_quotes.service_area'), 'placeSearchUrl' => 'https://photon.komoot.io/api/', 'point' => $pin ? [$pin['latitude'], $pin['longitude']] : null])
+                <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="pin-title" data-order-pin data-config='@json($pinConfig)'>
+                    <h2 id="pin-title" class="text-base font-semibold text-brand-black">Titik antar</h2>
+                    @if ($pin)
+                        <p class="mt-1 text-sm leading-6 text-gray-700">Titik antar tersimpan. Kurir menuju titik ini.</p>
+                        <div class="mt-2 flex flex-wrap gap-x-5">
+                            <a href="{{ $order->location_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center text-sm font-semibold text-brand-black underline underline-offset-4">Lihat di Maps</a>
+                            <button type="button" data-open-map class="inline-flex min-h-11 items-center text-sm font-semibold text-brand-black underline underline-offset-4">Ubah titik</button>
+                        </div>
+                    @else
+                        <p class="mt-1 text-sm leading-6 text-gray-700">Pasang titik di peta supaya kurir langsung ke lokasi Anda.</p>
+                        <button type="button" data-open-map class="mt-3 flex min-h-14 w-full items-center justify-center gap-2 bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                            <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            Tentukan titik di peta
+                        </button>
+                        @if ($locationUrl)
+                            <a href="{{ $locationUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex min-h-11 items-center text-sm text-gray-700 underline underline-offset-4">Atau kirim Sharelok lewat WhatsApp</a>
+                        @endif
+                    @endif
+                    <form method="POST" action="{{ route('orders.customer.pin', $token) }}" hidden data-pin-form>
+                        @csrf
+                        <input type="hidden" name="latitude">
+                        <input type="hidden" name="longitude">
+                    </form>
+                </section>
+                @include('cart._map_dialog')
+                @vite('resources/js/order-pin.js')
+            @elseif ($locationUrl && $order->stepIndex() < $order->stepIndex('shipped') && $order->stage !== 'cancelled')
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="location-title">
                     <h2 id="location-title" class="text-base font-semibold text-brand-black">Kirim Sharelok</h2>
                     <p class="mt-1 text-sm leading-6 text-gray-700">Supaya kurir tepat sampai ke lokasi Anda.</p>

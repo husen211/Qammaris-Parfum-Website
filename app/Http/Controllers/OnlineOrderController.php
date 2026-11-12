@@ -142,6 +142,25 @@ class OnlineOrderController extends Controller
         }));
     }
 
+    /** ORD-20: the delivery pin placed on the order link's map (Palu only), so staff can book the instant courier. */
+    public function savePin(Request $request, string $token, OnlineOrderDetails $details)
+    {
+        $order = $this->usableOrder($token);
+        abort_unless($order, 404);
+        $area = config('orders.shipping_quotes.service_area');
+        $data = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:'.$area['south'].','.$area['north']],
+            'longitude' => ['required', 'numeric', 'between:'.$area['west'].','.$area['east']],
+        ], ['latitude.between' => 'Titik antar harus di Palu dan sekitarnya.', 'longitude.between' => 'Titik antar harus di Palu dan sekitarnya.']);
+        try {
+            $details->setPinByCustomer($order, (float) $data['latitude'], (float) $data['longitude']);
+        } catch (OnlineOrderRejected $error) {
+            return $this->private(redirect()->route('orders.customer.show', $token)->with('error', $error->getMessage()));
+        }
+
+        return $this->private(redirect()->route('orders.customer.show', $token)->with('success', 'Titik antar tersimpan. Terima kasih.'));
+    }
+
     public function confirmReceived(string $token, OnlineOrderWorkflow $workflow, OnlineOrderFulfillment $fulfillment)
     {
         $order = $this->usableOrder($token);

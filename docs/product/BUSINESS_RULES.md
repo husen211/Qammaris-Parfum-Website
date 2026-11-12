@@ -297,7 +297,11 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 
 ### Pesan kurir instan dari admin lewat Biteship (ORD-14, Owner 2026-11-11, saklar yang sama)
 
-- **Tombol "Pesan kurir sekarang"** muncul di Pengiriman untuk pesanan website dengan kurir instan dan titik antar dari checkout, setelah lunas dan dipacking, bila toko yang memesan kurir. Kurir pilihan customer sudah terpilih; staf boleh ganti ke GoSend/GrabExpress yang lain (misalnya driver tidak ditemukan). Ongkir customer tidak berubah.
+- **Tombol "Pesan kurir sekarang"** muncul di Pengiriman untuk pesanan Pengiriman Dalam Kota yang punya titik antar, setelah lunas dan dipacking, bila toko yang memesan kurir.
+- **Titik antar (ORD-20, Owner 2026-11-12):** dari checkout website, atau dipasang customer sendiri di peta pada **link pesanan** (juga untuk pesanan buatan admin), atau link Google Maps berkoordinat yang diisi staf di Link lokasi. Tanpa titik, admin melihat petunjuk "Minta customer memasang titik lewat link pesanan" dan jalur pesan manual tetap ada.
+  - Customer bisa memasang atau mengubah titik selama kurir belum dipesan; titik harus di Palu dan sekitarnya. Titik dari checkout untuk kurir instan tidak bisa diubah lewat link (ongkirnya dihitung dari titik itu).
+  - Link pesanan tetap menawarkan "kirim Sharelok lewat WhatsApp" sebagai pilihan lain; link Sharelok pendek tidak berisi koordinat, jadi belum bisa dipakai untuk pesan kurir.
+- Kurir pilihan customer sudah terpilih; staf boleh ganti ke GoSend/GrabExpress yang lain (misalnya driver tidak ditemukan). Ongkir customer tidak berubah.
 - **Dibayar dari saldo Biteship (dana Owner).** Saat driver mengambil paket, ongkir kurir tercatat otomatis sebagai "saldo Biteship (Owner)", tanpa memilih uang siapa dan tanpa reimburse.
 - **Status berubah sendiri** dari Biteship: Mencari driver → Driver ditemukan → Driver menuju toko → Paket diambil driver (= sudah diserahkan) → Dalam perjalanan → Sudah diterima (= diterima customer). Riwayat menulis "Biteship (otomatis)". Tombol **Perbarui status** membaca ulang dari Biteship kapan saja.
 - **Driver tidak ditemukan / dibatalkan kurir** sebelum paket diambil: langkah kurir kembali kosong dan staf bisa memesan ulang. Setelah paket diambil, status bermasalah (ditahan, dikembalikan) hanya dicatat di riwayat; staf mengecek dan mencatat kendala bila perlu.

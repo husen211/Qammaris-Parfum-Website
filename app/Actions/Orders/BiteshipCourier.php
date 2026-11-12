@@ -94,7 +94,7 @@ class BiteshipCourier
     {
         $origin = config('orders.shipping_quotes.origin');
         $store = StoreInfo::getSetting();
-        $destination = $order->shipping_quote['destination'];
+        $destination = $order->deliveryPin();
         $weight = (int) config('orders.shipping_quotes.item_weight_grams');
         $phone = fn (?string $number) => preg_replace('/\D+/', '', (string) $number);
         $adminPhone = $phone($origin['contact_phone'] ?: $store->getRawOriginal('phone_number'));

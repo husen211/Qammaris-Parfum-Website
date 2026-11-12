@@ -295,11 +295,48 @@ class OnlineOrder extends Model
     /** ORD-14: a store-booked instant courier with the customer's checkout pin can be booked through Biteship. */
     public function biteshipBookable(): bool
     {
-        $quote = $this->shipping_quote;
-
         return $this->isV2() && $this->fulfillment === 'local_delivery' && $this->courier_booking_responsibility === 'store'
-            && $this->handover_status === 'pending' && ($quote['kind'] ?? null) === 'instant'
-            && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null);
+            && $this->handover_status === 'pending' && $this->deliveryPin() !== null;
+    }
+
+    /**
+     * ORD-13/ORD-20: where the driver goes. The checkout pin of an instant quote; otherwise a pin the customer set on
+     * the order link, or a Google Maps link with coordinates staff saved, inside the Palu service area.
+     *
+     * @return array{latitude: float, longitude: float}|null
+     */
+    public function deliveryPin(): ?array
+    {
+        $quote = $this->shipping_quote ?? [];
+        if (($quote['kind'] ?? null) === 'instant' && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null)) {
+            return ['latitude' => (float) $quote['destination']['latitude'], 'longitude' => (float) $quote['destination']['longitude']];
+        }
+
+        return self::pinFromUrl($this->location_url);
+    }
+
+    /** ORD-20: coordinates from a plain Google Maps link ("…google.com/maps?q=-0.9,119.87"); short links have none. */
+    public static function pinFromUrl(?string $url): ?array
+    {
+        if (! is_string($url) || ! preg_match('~^https://(?:www\.|maps\.)?google\.com/(?:maps/?)?\?q=(-?\d{1,2}(?:\.\d{1,8})?),\s*(-?\d{1,3}(?:\.\d{1,8})?)$~', trim($url), $match)) {
+            return null;
+        }
+        [$latitude, $longitude] = [(float) $match[1], (float) $match[2]];
+        $area = config('orders.shipping_quotes.service_area');
+        if ($latitude < $area['south'] || $latitude > $area['north'] || $longitude < $area['west'] || $longitude > $area['east']) {
+            return null;
+        }
+
+        return ['latitude' => $latitude, 'longitude' => $longitude];
+    }
+
+    /** ORD-20: the customer may place (or move) the delivery pin on the order link until a courier is on the way. */
+    public function customerCanSetPin(): bool
+    {
+        return $this->isV2() && $this->fulfillment === 'local_delivery' && $this->handover_status === 'pending'
+            && in_array($this->lifecycle, ['draft', 'awaiting_customer', 'active'], true)
+            && ($this->shipping_quote['kind'] ?? null) !== 'instant'
+            && $this->courier_status === 'unassigned' && ! $this->biteshipBusy();
     }
 
     /** ORD-14: a Biteship driver is booked, or a booking started less than two minutes ago is still waiting for Biteship. */
