@@ -14,7 +14,13 @@ Checkout menghitung ongkir GoSend, GrabExpress, dan J&T lewat Biteship; staf mem
 - Dibuat Owner di **Integrasi → Platforms → Kunci API → Tambah Kunci API** (centang Rates, Order, Tracking). Mode Testing menghasilkan kunci `biteship_test.…`; mode live menghasilkan `biteship_live.…`.
 - Simpan hanya di `.env` server atau `.env` lokal: `BITESHIP_API_KEY=…`. Jangan masuk Git, chat, log, atau screenshot.
 - Untuk menempel tanpa menampilkan kunci di layar, gunakan prompt tersembunyi (contoh skrip lokal 2026-11-11: `Read-Host -AsSecureString`, lalu tulis satu baris ke `.env` tanpa BOM).
-- Rotasi: buat kunci baru, ganti di `.env`, cek checkout, lalu **Buang Kunci** yang lama di dashboard.
+- **Kunci live baru: Order API mati sampai diaktivasi.** Rates dan Tracking langsung aktif, jadi ongkir di checkout jalan, tetapi memesan kurir ditolak dengan "Key has not been activated". Aktivasi di **Integrasi → Kunci API → Aktivasi Order API**:
+  - pilih kunci live dan kurir instan (Gojek, Grab);
+  - isi Order ID Biteship dari satu pesanan tes berstatus "delivered" dan satu berstatus "cancelled". Order ID ada di **Shipping → Pesanan** dengan Mode Testing menyala; status pesanan tes dimajukan dengan **Update Status** (lihat "Mode tes" di bawah);
+  - kotak "Periksa Jika Diperlukan" boleh dikosongkan. Mencentang perubahan harga/resi meminta ID pesanan tes tambahan dengan perubahan itu.
+  - Kirim, lalu pastikan kolom Order API pada kunci itu menjadi "Aktif".
+  - Dilakukan 2026-11-12 untuk kunci `website-live` (Gojek, Grab; pesanan tes QAM-0022-1 delivered, QAM-0023-3 cancelled), langsung disetujui.
+- Rotasi: buat kunci baru, aktivasi Order API-nya seperti di atas, ganti di `.env`, cek checkout, lalu **Buang Kunci** yang lama di dashboard.
 
 ## Menyalakan
 
@@ -43,5 +49,6 @@ Mode tes: kunci `biteship_test.…` membuat pesanan tes tanpa memotong saldo dan
 - "Kurir instan belum menjangkau titik ini": GoSend/GrabExpress tidak melayani titik itu (jarak lebih dari sekitar 20 km atau di luar area). Customer bisa memilih J&T.
 - Pengaturan diskon, berat per produk, titik toko, dan area layanan ada di `config/orders.php` → `shipping_quotes`.
 - "Kurir belum terpesan: …": alasan dari Biteship (saldo, akun belum terverifikasi, kurir menolak). Perbaiki di dashboard, lalu tekan Pesan kurir sekarang lagi.
+- "Kurir belum terpesan: Key has not been activated": Order API kunci live belum diaktivasi (lihat Kunci API di atas). Tidak ada pesanan yang terbuat di Biteship, jadi aman memesan ulang setelah aktivasi.
 - "Biteship tidak menjawab. Cek dashboard Biteship sebelum memesan ulang": jawaban tidak sampai, padahal pesanan mungkin sudah dibuat. Cari kode pesanan (misalnya `QAM-0023-1`) di dashboard Biteship sebelum memesan ulang supaya tidak dobel.
 - Status tidak berubah: webhook tidak sampai (URL/rahasia salah, server mati). Tekan **Perbarui status**: admin membaca status terbaru langsung dari Biteship. Untuk kurir Biteship tidak ada tombol "Sudah diserahkan ke kurir"; penyerahan tercatat dari status Biteship.
