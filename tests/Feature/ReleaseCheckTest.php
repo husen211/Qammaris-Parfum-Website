@@ -65,4 +65,20 @@ class ReleaseCheckTest extends TestCase
         Http::fake([self::URL => Http::response(['error' => 'down'], 503)]);
         $this->artisan('qammaris:release-check')->assertFailed()->expectsOutputToContain('App tidak terjangkau atau menolak');
     }
+
+    public function test_biteship_live_booking_needs_a_live_key_and_reports_a_missing_webhook_secret(): void
+    {
+        Http::fake([self::URL => Http::response(['data' => [['app_user_id' => '6660aaaa0000000000000001', 'display_name' => 'Andi']],
+            'approver' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner Qammaris']])]);
+        // Synthetic values: only their prefix and length are read.
+        config(['orders.shipping_quotes.enabled' => true, 'services.biteship.key' => 'biteship_live.synthetic',
+            'services.biteship.webhook_secret' => str_repeat('s', 40), 'admin_push.vapid.public_key' => '', 'admin_push.vapid.private_key' => '']);
+        $this->artisan('qammaris:release-check')->assertSuccessful()
+            ->expectsOutputToContain('kunci live')->doesntExpectOutputToContain('biteship_live.synthetic');
+
+        config(['services.biteship.key' => 'biteship_test.synthetic', 'services.biteship.webhook_secret' => 'short']);
+        $this->app['env'] = 'production';
+        $this->artisan('qammaris:release-check')->assertFailed()
+            ->expectsOutputToContain('kunci test')->expectsOutputToContain('hanya berubah lewat');
+    }
 }
