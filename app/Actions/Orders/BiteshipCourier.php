@@ -97,7 +97,9 @@ class BiteshipCourier
         $destination = $order->deliveryPin();
         $weight = (int) config('orders.shipping_quotes.item_weight_grams');
         $phone = fn (?string $number) => preg_replace('/\D+/', '', (string) $number);
-        $adminPhone = $phone($origin['contact_phone'] ?: $store->getRawOriginal('phone_number'));
+        // Biteship refuses a booking without a pickup phone; Info Toko has no phone field in the admin, so the store
+        // WhatsApp number is the fallback.
+        $adminPhone = $phone(PhoneNumber::local($origin['contact_phone'] ?: $store->getRawOriginal('phone_number') ?: $store->whatsapp_number));
 
         return [
             'shipper_contact_name' => $origin['contact_name'] ?: $store->store_name,
