@@ -118,6 +118,25 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertSame(1, $order->costs()->count());
     }
 
+    public function test_a_confirmed_order_with_a_driver_shows_the_driver_found_not_searching(): void
+    {
+        // Live 2026-11-12: Biteship kept "confirmed" while the driver was already on the way.
+        $order = $this->packed($this->instantOrder());
+        $this->answer('POST /v1/orders', $this->biteshipOrder('confirmed', ['driver_name' => 'Driver Uji', 'driver_phone' => '+6281200000001', 'link' => 'https://track.biteship.com/trk1']));
+        $this->actingAs($this->staff);
+        $this->bookCourier($order, 'gojek')->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame('allocated', $order->fresh()->courier_booking['status']);
+        $this->get(route('admin.orders.show', $order))->assertSee('Driver ditemukan')->assertDontSee('Mencari driver');
+
+        // Without a driver yet, "confirmed" still reads as searching.
+        $this->assertSame('confirmed', $this->biteshipStatusOf($this->biteshipOrder('confirmed')));
+    }
+
+    private function biteshipStatusOf(array $answer): string
+    {
+        return (fn () => $this->normalise($answer))->call(app(\App\Services\BiteshipClient::class))['status'];
+    }
+
     public function test_an_empty_info_toko_still_books_with_the_published_store_profile(): void
     {
         // Live 2026-11-12: Info Toko had no phone or address; Biteship refused "origin contact phone/address is filled".
