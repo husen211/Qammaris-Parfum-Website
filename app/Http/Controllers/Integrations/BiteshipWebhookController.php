@@ -29,7 +29,9 @@ class BiteshipWebhookController extends Controller
         }
         $order = OnlineOrder::query()->where('courier_reference', $id)->whereNotNull('courier_booking')->first();
         if ($order === null) {
-            return response()->json(['ok' => true]);
+            // Biteship can report a new order before its booking answer is saved here; while a booking is still in
+            // flight, ask Biteship to retry instead of dropping the event.
+            return $this->bookingInFlight() ? response()->json(['ok' => false], 503) : response()->json(['ok' => true]);
         }
         try {
             $courier->refresh($order);
@@ -41,5 +43,11 @@ class BiteshipWebhookController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    private function bookingInFlight(): bool
+    {
+        return OnlineOrder::query()->where('courier_booking->state', 'booking')->get(['id', 'courier_booking'])
+            ->contains(fn (OnlineOrder $order) => now()->getTimestamp() - (int) ($order->courier_booking['started_at'] ?? 0) < 120);
     }
 }

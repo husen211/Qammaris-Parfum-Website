@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\OnlineOrder;
 use App\Models\StoreInfo;
 use App\Models\User;
+use App\Services\BiteshipClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -191,7 +192,7 @@ class BiteshipCourierBookingTest extends TestCase
 
     private function biteshipStatusOf(array $answer): string
     {
-        return (fn () => $this->normalise($answer))->call(app(\App\Services\BiteshipClient::class))['status'];
+        return (fn () => $this->normalise($answer))->call(app(BiteshipClient::class))['status'];
     }
 
     public function test_an_empty_info_toko_still_books_with_the_published_store_profile(): void
@@ -389,6 +390,19 @@ class BiteshipCourierBookingTest extends TestCase
 
         config(['services.biteship.webhook_secret' => null]);
         $this->webhook(['order_id' => 'bs_order_1'])->assertNotFound();
+    }
+
+    public function test_an_early_webhook_during_a_booking_is_retried_not_dropped(): void
+    {
+        $order = $this->instantOrder();
+        // Biteship has the order already, but its booking answer is not saved here yet.
+        $order->forceFill(['courier_booking' => ['state' => 'booking', 'attempt' => 1, 'courier' => 'gojek', 'started_at' => now()->getTimestamp()]])->saveQuietly();
+        $this->webhook(['order_id' => 'bs_order_1', 'status' => 'allocated'])->assertStatus(503);
+
+        // A booking stuck for over two minutes no longer holds back unknown events.
+        $this->travel(3)->minutes();
+        $this->webhook(['order_id' => 'bs_order_1', 'status' => 'allocated'])->assertOk();
+        $this->assertSame([], $this->sent);
     }
 
     public function test_a_website_order_payment_card_skips_the_instructions_the_customer_already_has(): void

@@ -11,7 +11,7 @@ use Throwable;
 
 /**
  * ORD-08/09 release check (read-only). Run on the server after a deploy: one table tells whether the courier-cost
- * integration and the admin push can work with this environment. It reads configuration and asks the App for its
+ * integration, the admin push and Biteship courier booking can work with this environment. It reads configuration and asks the App for its
  * employee list (signed GET); it writes nothing and prints no secret (only a short public-key fingerprint).
  */
 class ReleaseCheck extends Command
@@ -36,6 +36,7 @@ class ReleaseCheck extends Command
 
         $this->appChecks();
         $this->pushChecks();
+        $this->biteshipChecks();
 
         $failed = collect($this->checks)->where('status', 'FAIL')->count();
         $this->table(['Status', 'Pemeriksaan', 'Detail'], array_map(fn ($c) => [$c['status'], $c['check'], $c['detail']], $this->checks));
@@ -88,6 +89,26 @@ class ReleaseCheck extends Command
         $sync = config('queue.default') === 'sync';
         $failedJobs = rescue(fn () => DB::table('failed_jobs')->where('payload', 'like', '%SendAdminPush%')->count(), 0, false);
         $this->add($sync ? 'WARN' : 'PASS', 'antrean push', ($sync ? 'QUEUE_CONNECTION=sync (push dikirim langsung saat checkout)' : 'antrean '.config('queue.default').' / '.config('qammaris_app.queue').' (worker harus mendengarkan antrean ini)').', gagal: '.$failedJobs);
+    }
+
+    /** ORD-14: live courier booking needs a live key; status updates need the webhook secret (never printed). */
+    private function biteshipChecks(): void
+    {
+        if (! config('orders.shipping_quotes.enabled')) {
+            $this->add('INFO', 'Biteship', 'ongkir otomatis mati (ORDERS_SHIPPING_QUOTES)');
+
+            return;
+        }
+        $key = (string) config('services.biteship.key');
+        $this->add(...match (true) {
+            str_starts_with($key, 'biteship_live.') => ['PASS', 'kunci Biteship', 'kunci live'],
+            str_starts_with($key, 'biteship_test.') => [app()->isProduction() ? 'FAIL' : 'WARN', 'kunci Biteship', 'kunci test: driver tidak sungguhan dipesan'],
+            default => ['FAIL', 'kunci Biteship', 'BITESHIP_API_KEY kosong atau bukan kunci Biteship'],
+        });
+        $secret = strlen((string) config('services.biteship.webhook_secret')) >= 32;
+        $this->add($secret ? 'PASS' : 'WARN', 'webhook Biteship', $secret
+            ? 'secret terisi; URL webhook harus terdaftar di dashboard Biteship'
+            : 'BITESHIP_WEBHOOK_SECRET kosong atau kurang dari 32 karakter: status kurir hanya berubah lewat "Perbarui status"');
     }
 
     private function add(string $status, string $check, string $detail): void
