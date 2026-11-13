@@ -9,6 +9,7 @@ use App\Services\BiteshipClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Tests\Concerns\BuildsV2Orders;
 use Tests\TestCase;
@@ -403,6 +404,49 @@ class BiteshipCourierBookingTest extends TestCase
         $this->travel(3)->minutes();
         $this->webhook(['order_id' => 'bs_order_1', 'status' => 'allocated'])->assertOk();
         $this->assertSame([], $this->sent);
+    }
+
+    public function test_events_for_orders_the_website_does_not_know_are_passed_on_to_the_app(): void
+    {
+        $forward = 'POST /api/integrations/biteship/webhook';
+        $toApp = fn () => array_values(array_filter($this->sent, fn (Request $request) => str_starts_with($request->url(), 'https://api.qammarisapp.test/')));
+        $event = ['event' => 'order.status', 'order_id' => 'bs_app_1', 'status' => 'allocated', 'courier_driver_phone' => '081200000000'];
+
+        // Switched off (no URL and secret): nothing leaves the Website.
+        $this->webhook($event)->assertOk();
+        $this->assertSame([], $toApp());
+
+        // ADR-060: the App's order is passed on as it came, with the shared secret in a header.
+        config(['services.biteship.forward_url' => 'https://api.qammarisapp.test/api/integrations/biteship/webhook',
+            'services.biteship.forward_secret' => str_repeat('f', 40)]);
+        $this->answer($forward, ['ok' => true]);
+        $this->webhook($event)->assertOk()->assertExactJson(['ok' => true]);
+        $this->assertCount(1, $toApp());
+        $this->assertSame(json_encode($event), $toApp()[0]->body());
+        $this->assertSame([str_repeat('f', 40)], $toApp()[0]->header('X-Qammaris-Biteship-Secret'));
+
+        // Biteship's own URL check (empty body) and the Website's own orders are not passed on.
+        $this->postJson(route('integrations.biteship.webhook', self::SECRET), [])->assertOk();
+        $order = $this->instantOrder();
+        $order->forceFill(['courier_reference' => 'bs_order_1', 'courier_status' => 'requested',
+            'courier_booking' => ['state' => 'active', 'id' => 'bs_order_1', 'status' => 'confirmed', 'courier' => 'gojek', 'attempt' => 1]])->saveQuietly();
+        $this->answer('GET /v1/orders/bs_order_1', $this->biteshipOrder('confirmed'));
+        $this->webhook(['order_id' => 'bs_order_1', 'status' => 'confirmed'])->assertOk();
+        $this->assertCount(1, $toApp());
+
+        // The App down: Biteship still gets the Website's answer; the log names the status only (no body, no secret).
+        Log::spy();
+        $this->answer($forward, ['error' => 'down'], 500);
+        $this->webhook($event)->assertOk();
+        $this->assertCount(2, $toApp());
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context = []) => $message === 'biteship.forward_failed' && $context === ['status' => 500]);
+        Log::shouldNotHaveReceived('warning', [\Mockery::on(fn ($message) => str_contains((string) $message, '0812'))]);
+
+        // While a Website booking is in flight the 503 still asks Biteship to retry; the App gets the event anyway.
+        $order->forceFill(['courier_reference' => null, 'courier_booking' => ['state' => 'booking', 'attempt' => 2, 'courier' => 'gojek', 'started_at' => now()->getTimestamp()]])->saveQuietly();
+        $this->answer($forward, ['ok' => true]);
+        $this->webhook($event)->assertStatus(503);
+        $this->assertCount(3, $toApp());
     }
 
     public function test_a_website_order_payment_card_skips_the_instructions_the_customer_already_has(): void
