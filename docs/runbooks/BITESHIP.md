@@ -44,6 +44,15 @@ Urutan rilis pertama (migrasi, saklar, kunci live, webhook, uji pesanan sungguha
 
 Mode tes: kunci `biteship_test.…` membuat pesanan tes tanpa memotong saldo dan tanpa driver sungguhan (driver tes "John Doe"). Status pesanan tes dimajukan dari dashboard Biteship (Mode Testing aktif): **Shipping → Pesanan**, kolom Aksi, tombol kuning **Update Status** pada baris pesanan (misalnya `QAM-0022-1`), lalu pilih status berikutnya (Start picking up, lalu seterusnya, atau Cancel). Biteship tidak bisa mengirim webhook ke localhost, jadi setelah itu tekan **Perbarui status** di halaman pesanan admin. Dicek 2026-11-11: Teralokasi di dashboard terbaca di admin sebagai "Driver ditemukan".
 
+## Meneruskan event ke App (ORD-22)
+
+Biteship hanya mengizinkan satu webhook status per akun, dan webhook itu milik Website. Order driver Shopee dari App (`reference_id` berawalan `qrm-`) ikut masuk ke webhook Website, lalu Website meneruskannya ke App ([ADR-060](../architecture/decisions/ADR-060-biteship-webhook-forwarded-to-app.md)).
+
+1. `.env` server Website: `APP_BITESHIP_FORWARD_URL=https://api.qammarisapp.com/api/integrations/biteship/webhook` dan `APP_BITESHIP_FORWARD_SECRET=` yang **sama persis** dengan `BITESHIP_WEBHOOK_SECRET` di `.env` App (minimal 32 karakter). Diisi Owner sendiri; jangan dikirim lewat chat atau screenshot. Setelah mengubah `.env`, jalankan `php artisan config:cache` bila konfigurasi di-cache.
+2. Cek: `php artisan qammaris:release-check` menampilkan **teruskan ke App: PASS**. Nilai secret tidak dicetak.
+3. Event diteruskan lewat antrean integrasi (worker yang sama dengan webhook Order API). Kalau worker mati atau App menolak, status order Website tetap jalan; App memakai cek status sendiri tiap ~20 detik sebagai cadangan.
+4. Jangan mengubah atau menghapus URL webhook di dashboard Biteship tanpa mengingat ini: App ikut kehilangan event.
+
 ## Kalau ada masalah
 
 - Customer melihat "Ongkir otomatis sedang tidak bisa dihitung": Biteship tidak menjawab (kunci salah/kedaluwarsa, saldo habis, gangguan). Pesanan tetap masuk dengan ongkir dikonfirmasi admin. Cek kunci dan saldo di dashboard Biteship.

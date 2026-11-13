@@ -65,5 +65,6 @@ Important supersession: ADR-025 updates connected recurring drafts/prices from A
 | ADR-057 | [Checkout prices ongkir through Biteship](ADR-057-checkout-shipping-quotes-biteship.md) |
 | ADR-058 | [Staff book the instant courier through Biteship](ADR-058-admin-courier-booking-biteship.md) |
 | ADR-059 | [The production deploy runs listed, reviewed migrations](ADR-059-deploy-runs-listed-migrations.md) |
+| ADR-060 | [The Website passes the App's Biteship events on to the App](ADR-060-biteship-webhook-forwarded-to-app.md) |
 
 Checkout formerly shared ADR-026 with Shopee. The [old checkout filename](ADR-026-whatsapp-order-checkout.md) remains a compatibility alias to ADR-028; ADR-026 uniquely means recurring Shopee enrichment. Retained [original checkout](../../history/2026-10-07-context/ADR-026-whatsapp-order-checkout.md) preserves provenance. ADR-032–040 belong to the Journal and fragrance preference on main. The order line first used 034/035, then 037–040; for the release candidate (2026-10-11) those order decisions became ADR-048–051, and every old order filename stays as an alias. Use canonical ID + descriptive filename in new references; do not delete aliases or silently renumber historical evidence.

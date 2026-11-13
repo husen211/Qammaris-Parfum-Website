@@ -72,13 +72,15 @@ class ReleaseCheckTest extends TestCase
             'approver' => ['app_user_id' => self::OWNER, 'display_name' => 'Owner Qammaris']])]);
         // Synthetic values: only their prefix and length are read.
         config(['orders.shipping_quotes.enabled' => true, 'services.biteship.key' => 'biteship_live.synthetic',
-            'services.biteship.webhook_secret' => str_repeat('s', 40), 'admin_push.vapid.public_key' => '', 'admin_push.vapid.private_key' => '']);
+            'services.biteship.webhook_secret' => str_repeat('s', 40), 'admin_push.vapid.public_key' => '', 'admin_push.vapid.private_key' => '',
+            'services.biteship.forward_url' => 'https://api.qammarisapp.test/api/integrations/biteship/webhook', 'services.biteship.forward_secret' => str_repeat('f', 40)]);
         $this->artisan('qammaris:release-check')->assertSuccessful()
-            ->expectsOutputToContain('kunci live')->doesntExpectOutputToContain('biteship_live.synthetic');
+            ->expectsOutputToContain('kunci live')->doesntExpectOutputToContain('biteship_live.synthetic')
+            ->expectsOutputToContain('event order App diteruskan ke api.qammarisapp.test')->doesntExpectOutputToContain(str_repeat('f', 40));
 
-        config(['services.biteship.key' => 'biteship_test.synthetic', 'services.biteship.webhook_secret' => 'short']);
+        config(['services.biteship.key' => 'biteship_test.synthetic', 'services.biteship.webhook_secret' => 'short', 'services.biteship.forward_url' => 'http://api.qammarisapp.test/x']);
         $this->app['env'] = 'production';
         $this->artisan('qammaris:release-check')->assertFailed()
-            ->expectsOutputToContain('kunci test')->expectsOutputToContain('hanya berubah lewat');
+            ->expectsOutputToContain('kunci test')->expectsOutputToContain('hanya berubah lewat')->expectsOutputToContain('harus https');
     }
 }

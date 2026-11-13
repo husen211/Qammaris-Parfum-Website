@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Integrations;
 
 use App\Actions\Orders\BiteshipCourier;
 use App\Http\Controllers\Controller;
+use App\Jobs\ForwardBiteshipWebhook;
 use App\Models\OnlineOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,9 @@ use Throwable;
 /**
  * ORD-14: Biteship order events (order.status, order.price, order.waybill_id). Biteship documents no signature, so
  * the URL carries a long secret and the body is only a hint: the order is re-read from Biteship before anything
- * changes. Biteship's own URL check (an empty body) and unknown orders get a plain 200.
+ * changes. Biteship's own URL check (an empty body) and unknown orders get a plain 200. Biteship allows this one
+ * webhook per account, so an event for an order the Website does not know (the App's) is passed on to the App
+ * (ADR-060), without changing the answer to Biteship.
  */
 class BiteshipWebhookController extends Controller
 {
@@ -29,6 +32,8 @@ class BiteshipWebhookController extends Controller
         }
         $order = OnlineOrder::query()->where('courier_reference', $id)->whereNotNull('courier_booking')->first();
         if ($order === null) {
+            $this->forward($request);
+
             // Biteship can report a new order before its booking answer is saved here; while a booking is still in
             // flight, ask Biteship to retry instead of dropping the event.
             return $this->bookingInFlight() ? response()->json(['ok' => false], 503) : response()->json(['ok' => true]);
@@ -43,6 +48,20 @@ class BiteshipWebhookController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    private function forward(Request $request): void
+    {
+        $body = $request->getContent();
+        if (! ForwardBiteshipWebhook::enabled() || $body === '' || strlen($body) > 16384) {
+            return;
+        }
+        try {
+            ForwardBiteshipWebhook::dispatch($body);
+        } catch (Throwable $failure) {
+            // The queue is down: the App's own status check catches up; Biteship still gets the Website's answer.
+            Log::warning('biteship.forward_not_queued', ['error' => $failure::class]);
+        }
     }
 
     private function bookingInFlight(): bool

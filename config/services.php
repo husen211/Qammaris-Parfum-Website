@@ -35,6 +35,10 @@ return [
         'timeout' => 8,
         // ORD-14: secret part of the webhook URL registered in the Biteship dashboard (at least 32 characters).
         'webhook_secret' => env('BITESHIP_WEBHOOK_SECRET'),
+        // ADR-060: Biteship events for orders the Website does not know (the App's) are passed on to the App. Both empty
+        // (or not https / a secret under 32 characters) = nothing is passed on.
+        'forward_url' => env('APP_BITESHIP_FORWARD_URL'),
+        'forward_secret' => env('APP_BITESHIP_FORWARD_SECRET'),
     ],
 
     'slack' => [

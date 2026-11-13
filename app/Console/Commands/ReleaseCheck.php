@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ForwardBiteshipWebhook;
 use App\Support\OrderApi\AppEmployees;
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
@@ -109,6 +110,13 @@ class ReleaseCheck extends Command
         $this->add($secret ? 'PASS' : 'WARN', 'webhook Biteship', $secret
             ? 'secret terisi; URL webhook harus terdaftar di dashboard Biteship'
             : 'BITESHIP_WEBHOOK_SECRET kosong atau kurang dari 32 karakter: status kurir hanya berubah lewat "Perbarui status"');
+        // ADR-060: the App's driver events reach it only through this webhook.
+        $url = (string) config('services.biteship.forward_url');
+        $this->add(...match (true) {
+            ForwardBiteshipWebhook::enabled() => ['PASS', 'teruskan ke App', 'event order App diteruskan ke '.parse_url($url, PHP_URL_HOST)],
+            $url === '' && (string) config('services.biteship.forward_secret') === '' => ['INFO', 'teruskan ke App', 'mati (APP_BITESHIP_FORWARD_URL kosong)'],
+            default => ['FAIL', 'teruskan ke App', 'APP_BITESHIP_FORWARD_URL harus https dan APP_BITESHIP_FORWARD_SECRET minimal 32 karakter'],
+        });
     }
 
     private function add(string $status, string $check, string $detail): void
