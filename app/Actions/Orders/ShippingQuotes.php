@@ -4,17 +4,20 @@ namespace App\Actions\Orders;
 
 use App\Http\Requests\Cart\CheckoutRequest;
 use App\Services\BiteshipClient;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
  * ORD-13: courier prices for checkout. Biteship gives the courier's price; the store's discount turns it into the
- * charged ongkir. Every option shown is kept in the session for a short while, bound to the cart it was priced for,
- * so the order uses the server's price and never a number sent by the browser.
+ * charged ongkir. Every option shown is kept on the server for a short while, bound to this visitor's checkout and the
+ * cart it was priced for, so the order uses the server's price and never a number sent by the browser.
+ *
+ * Live 2026-11-13: options are cached one by one, not kept as a list in the session. The checkout asks for instant
+ * prices, J&T prices and the pin's kecamatan at the same time; each request saves the whole session it read when it
+ * started, so a list in the session lost the options another request had just added and the order was refused.
  */
 class ShippingQuotes
 {
-    public const SESSION_KEY = 'shipping_quotes';
-
     /** Biteship courier code → order courier/provider key (OnlineOrder::COURIERS). */
     private const PROVIDERS = ['gojek' => 'gosend', 'grab' => 'grab', 'jnt' => 'jnt'];
 
@@ -65,7 +68,7 @@ class ShippingQuotes
     /** The stored option the customer picked, if it still belongs to this cart and delivery type. */
     public function resolve(string $id, string $cart, string $fulfillment): ?array
     {
-        $quote = $this->stored()[$id] ?? null;
+        $quote = $this->stored($id);
         $kind = ['local_delivery' => 'instant', 'intercity' => 'jnt'][$fulfillment] ?? null;
 
         return $quote && $quote['kind'] === $kind && hash_equals($quote['cart'], $cart) ? $quote : null;
@@ -97,7 +100,7 @@ class ShippingQuotes
     /** A stored option of this cart, to show the customer's choice again after a failed submit. */
     public function remembered(string $id, string $cart): ?array
     {
-        $quote = $this->stored()[$id] ?? null;
+        $quote = $this->stored($id);
 
         return $quote && hash_equals($quote['cart'], $cart) ? $quote : null;
     }
@@ -136,17 +139,28 @@ class ShippingQuotes
             'cart' => $cart,
             'expires_at' => now()->addMinutes((int) config('orders.shipping_quotes.quote_minutes', 30))->getTimestamp(),
         ];
-        session([self::SESSION_KEY => array_slice([...$this->stored(), $quote['id'] => $quote], -12, null, true)]);
+        if ($key = self::cacheKey($quote['id'])) {
+            Cache::put($key, $quote, now()->setTimestamp($quote['expires_at']));
+        }
 
         return $quote;
     }
 
-    /** @return array<string, array<string, mixed>> unexpired options of this session */
-    private function stored(): array
+    /** An unexpired option this session was shown. */
+    private function stored(string $id): ?array
     {
-        $stored = session(self::SESSION_KEY, []);
+        $key = preg_match('/^[A-Za-z0-9]{20}$/', $id) ? self::cacheKey($id) : null;
+        $quote = $key ? Cache::get($key) : null;
 
-        return array_filter(is_array($stored) ? $stored : [], fn ($quote) => is_array($quote) && ($quote['expires_at'] ?? 0) > now()->getTimestamp());
+        return is_array($quote) && ($quote['expires_at'] ?? 0) > now()->getTimestamp() ? $quote : null;
+    }
+
+    /** Bound to this checkout's key (set when the checkout page opens, never by the parallel price requests). */
+    private static function cacheKey(string $id): ?string
+    {
+        $checkout = session('checkout_key');
+
+        return is_string($checkout) && $checkout !== '' ? 'shipping-quote:'.hash('sha256', $checkout).':'.$id : null;
     }
 
     private function items(array $items): array

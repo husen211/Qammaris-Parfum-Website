@@ -28,8 +28,6 @@ use RuntimeException;
 class CartController extends Controller
 {
     /** ORD-13: Biteship areas this session searched (id => label), so a J&T quote uses Biteship's own label. */
-    private const AREA_SESSION = 'shipping_areas';
-
     public function __construct(private readonly InquiryWhatsApp $inquiryWhatsApp) {}
 
     public function index()
@@ -246,7 +244,7 @@ class CartController extends Controller
             $details['shipping'] = app(ShippingQuotes::class)->resolve($option, $quote, $details['fulfillment']);
             if ($details['shipping'] === null) {
                 return $this->privateResponse(redirect()->route('cart.checkout.show')->withInput($form())
-                    ->with('error', 'Ongkir perlu dihitung ulang karena sudah lewat 30 menit atau keranjang berubah. Pilih kurir lagi, lalu kirim.'));
+                    ->with('error', 'Pilihan ongkir sudah tidak berlaku (lewat 30 menit atau keranjang berubah). Pasang titik atau pilih kurir lagi, lalu kirim.'));
             }
         }
 
@@ -308,7 +306,7 @@ class CartController extends Controller
             return null;
         }
 
-        return session(self::AREA_SESSION, [])[$id] ?? Cache::get('biteship-area-label:'.$id);
+        return Cache::get('biteship-area-label:'.$id);
     }
 
     /** ORD-17: the kecamatan OpenStreetMap gives for the customer's pin, to warn when it differs from the chosen one. */
@@ -416,9 +414,8 @@ class CartController extends Controller
                 Cache::put($cacheKey, $areas, now()->addDays(30));
             }
         }
-        // ORD-18: a customer who searched several times may pick an older result; it must still price.
-        $known = array_replace(session(self::AREA_SESSION, []), array_column($areas, 'label', 'id'));
-        session([self::AREA_SESSION => array_slice($known, -300, null, true)]);
+        // ORD-18: a customer who searched several times may pick an older result; it must still price. Kept site-wide,
+        // not in the session: the checkout's parallel requests would overwrite each other's session (live 2026-11-13).
         foreach ($areas as $found) {
             Cache::put('biteship-area-label:'.$found['id'], $found['label'], now()->addDays(30));
         }
