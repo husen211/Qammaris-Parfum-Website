@@ -17,6 +17,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
@@ -76,7 +77,7 @@ class CheckoutShippingQuoteTest extends TestCase
             && $request['origin_latitude'] === config('orders.shipping_quotes.origin.latitude')
             && array_column($request['items'], 'weight') === [800, 800] && array_column($request['items'], 'quantity') === [1, 2]);
 
-        session(['shipping_areas' => ['IDNP28PALUBARAT94221' => 'Palu Barat, Palu, Sulawesi Tengah. 94221']]);
+        Cache::put('biteship-area-label:IDNP28PALUBARAT94221', 'Palu Barat, Palu, Sulawesi Tengah. 94221');
         $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $options['gosend']['id'],
             'delivery_area_id' => 'IDNP28PALUBARAT94221', 'delivery_area_label' => 'Kota palsu, 99999']))->assertRedirect();
         $order = OnlineOrder::sole();
@@ -265,7 +266,7 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->getJson(route('cart.checkout.pin', ['latitude' => -0.91601, 'longitude' => 119.88602]))->assertOk()->assertJsonPath('kecamatan', 'Palu Selatan');
         $this->assertSame(1, $nominatim, 'a pin is looked up once');
         Http::assertSent(fn (HttpRequest $request) => ! str_contains($request->url(), 'nominatim') || str_starts_with($request->header('User-Agent')[0] ?? '', 'QammarisPerfumes/'));
-        $this->assertSame('Palu Selatan, Palu, Sulawesi Tengah. 94111', session('shipping_areas')['IDPaluSelatan'], 'the filled area prices and is saved like a searched one');
+        $this->assertSame('Palu Selatan, Palu, Sulawesi Tengah. 94111', Cache::get('biteship-area-label:IDPaluSelatan'), 'the filled area prices and is saved like a searched one');
         // They disagree (OpenStreetMap reads Balaroa as Ulujadi): both, for the customer to choose.
         $this->getJson(route('cart.checkout.pin', ['latitude' => -0.895, 'longitude' => 119.856]))->assertOk()
             ->assertExactJson(['kecamatan' => 'Ulujadi', 'areas' => [$area('Ulujadi'), $area('Palu Barat')]]);
@@ -296,8 +297,9 @@ class CheckoutShippingQuoteTest extends TestCase
         });
         $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
         $this->getJson(route('cart.checkout.areas', ['q' => 'Makassar']))->assertOk();
-        // The session forgot it (many searches, or another tab): the site-wide memory of Biteship's label still prices it.
-        session()->forget('shipping_areas');
+        // A new visitor who never searched: the site-wide memory of Biteship's label still prices it.
+        $this->flushSession();
+        $this->review([$this->variant('Musk Sintetis', 189000)->id => 1]);
         $this->postJson(route('cart.checkout.shipping'), ['mode' => 'jnt', 'area_id' => 'IDNP28IDNC248IDND2564IDZ90141'])
             ->assertOk()->assertJsonPath('options.0.area_label', 'Makassar, Makassar, Sulawesi Selatan. 90141')->assertJsonPath('options.0.charged', 48000);
         $this->assertSame(2, $calls);
@@ -324,6 +326,28 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->assertSame(['charged' => 90000, 'discount' => 30000, 'percent' => 30], ShippingQuotes::discounted('jnt', 120000), 'at most Rp30.000 off');
     }
 
+    public function test_a_picked_option_survives_a_parallel_request_saving_an_older_session(): void
+    {
+        Http::fake([
+            self::RATES => Http::response($this->pricing([['gojek', 'instant', 20500, '1 - 3', 'hours']])),
+            '*/v1/maps/areas*' => Http::response(['success' => true, 'areas' => [['id' => 'IDNP27MANTIKULORE94233', 'name' => 'Mantikulore, Palu, Sulawesi Tengah. 94233']]]),
+        ]);
+        $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
+        // Live 2026-11-13: the J&T price and the pin's kecamatan were asked while the instant price was still on its way.
+        // Each request saves the whole session it read at its start; the one finishing last wrote back a session
+        // without the GoSend option, and the order was refused although the customer had just picked it.
+        $older = session()->all();
+        $id = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.88, 'longitude' => 119.9])->json('options.0.id');
+        $this->getJson(route('cart.checkout.areas', ['q' => 'Mantikulore']))->assertOk();
+        session()->flush();
+        session()->put($older);
+
+        $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $id, 'delivery_area_id' => 'IDNP27MANTIKULORE94233']))
+            ->assertSessionMissing('error')->assertRedirect();
+        $order = OnlineOrder::sole();
+        $this->assertSame(['Mantikulore', '17000.00'], [$order->district, $order->shipping_fee]);
+    }
+
     public function test_an_option_of_another_cart_delivery_or_time_is_refused_and_nothing_is_ordered(): void
     {
         Http::fake([self::RATES => Http::response($this->pricing([['grab', 'instant', 15000, '1 - 3', 'hours']]))]);
@@ -331,7 +355,7 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->review([$first->id => 1]);
         $id = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.88, 'longitude' => 119.87])->json('options.0.id');
 
-        $refused = 'Ongkir perlu dihitung ulang';
+        $refused = 'Pilihan ongkir sudah tidak berlaku';
         $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => Str::random(20)]))->assertSessionHas('error', fn ($error) => str_contains($error, $refused));
         $this->post(route('cart.checkout'), $this->form('intercity', ['shipping_option' => $id]))->assertSessionHas('error', fn ($error) => str_contains($error, $refused));
         $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => '17000']))->assertSessionHasErrors('shipping_option');
@@ -339,6 +363,13 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->travel(31)->minutes();
         $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $id]))->assertSessionHas('error', fn ($error) => str_contains($error, $refused));
         $this->travelBack();
+
+        // Another visitor (another checkout) cannot use this checkout's option.
+        $id = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.88, 'longitude' => 119.87])->json('options.0.id');
+        $mine = session('checkout_key');
+        session(['checkout_key' => (string) Str::uuid()]);
+        $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => $id]))->assertSessionHas('error', fn ($error) => str_contains($error, $refused));
+        session(['checkout_key' => $mine]);
 
         // Same session, different cart: the price was for the old basket.
         $id = $this->postJson(route('cart.checkout.shipping'), ['mode' => 'instant', 'latitude' => -0.88, 'longitude' => 119.87])->json('options.0.id');
