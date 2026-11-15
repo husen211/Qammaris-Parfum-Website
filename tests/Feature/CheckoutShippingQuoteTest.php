@@ -154,7 +154,10 @@ class CheckoutShippingQuoteTest extends TestCase
 
         $page = $this->followRedirects($placed)->assertOk()->assertSee('Langkah berikutnya: pembayaran')->assertSee('Transfer bank')
             ->assertSee('Segera tersedia')->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok')
-            ->assertSee('Nomor rekening resmi dikirim admin lewat WhatsApp');
+            ->assertSee('Nomor rekening resmi dikirim admin lewat WhatsApp')
+            // ORD-25: the order journey says the same next step as the payment card; the locked ongkir is never "confirmed".
+            ->assertSee('Bayar lewat transfer atau QRIS, lalu kirim bukti bayar di WhatsApp. Admin mengecek pembayaran dan stok.')
+            ->assertDontSee('Dikonfirmasi toko')->assertDontSee('ongkir, dan pembayaran')->assertDontSee('Ongkir dan pembayaran dikonfirmasi');
         // A verified account is shown at once with its bank mark and a copy button (digits only).
         StorePaymentAccount::create(['bank_name' => 'BRI', 'account_number' => '0123-01-000000-50-1', 'account_holder' => 'Qammaris Perfumes', 'created_by' => User::factory()->create()->id])
             ->forceFill(['verified_at' => now()])->save();
@@ -188,7 +191,10 @@ class CheckoutShippingQuoteTest extends TestCase
         $token = $order->customer_token_encrypted;
 
         $this->get(route('orders.customer.show', $token))->assertSee('Menunggu admin cek stok')->assertSee('Oud Sintetis × 2')
-            ->assertSee('Kirim pesanan ke WhatsApp')->assertDontSee('Kirim bukti bayar ke WhatsApp');
+            ->assertSee('Kirim pesanan ke WhatsApp')->assertDontSee('Kirim bukti bayar ke WhatsApp')
+            // ORD-25: stock is checked first; the ongkir was locked at checkout, so it is not mentioned.
+            ->assertSee('Dikonfirmasi toko')->assertSee('Admin mengecek stok lewat WhatsApp. Setelah itu Anda bisa membayar.')
+            ->assertDontSee('ongkir, dan pembayaran');
         $this->post(route('orders.customer.pay', $token), ['payment_preference' => 'transfer'])->assertSessionHas('error');
         $this->assertNull($order->fresh()->payment_preference);
 
@@ -196,7 +202,8 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->actingAs($staff)->get(route('admin.orders.show', $order))->assertSee('data-stock-check-note', false)->assertSee('Perlu cek stok');
         $this->post(route('admin.orders.v2.confirm-website', $order), ['revision' => $order->fresh()->revision])->assertSessionHas('order_notice.type', 'success');
         auth()->logout();
-        $this->get(route('orders.customer.show', $token))->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok');
+        $this->get(route('orders.customer.show', $token))->assertSee('Kirim bukti bayar ke WhatsApp')->assertDontSee('Menunggu admin cek stok')
+            ->assertSee('Stok sudah dikonfirmasi.')->assertSee('Bayar lewat transfer atau QRIS, lalu kirim bukti bayar di WhatsApp.');
     }
 
     public function test_ongkir_confirmed_by_staff_waits_too(): void
@@ -204,7 +211,9 @@ class CheckoutShippingQuoteTest extends TestCase
         $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
         $this->post(route('cart.checkout'), $this->form('local_delivery', ['shipping_option' => 'manual', 'shipping_payment' => 'added_to_transfer']));
         $this->get(route('orders.customer.show', OnlineOrder::sole()->customer_token_encrypted))
-            ->assertSee('Menunggu admin menghitung ongkir')->assertDontSee('Kirim bukti bayar ke WhatsApp');
+            ->assertSee('Menunggu admin menghitung ongkir')->assertDontSee('Kirim bukti bayar ke WhatsApp')
+            // ORD-25: here the ongkir is still open, so the store confirms it with the stock.
+            ->assertSee('Admin mengecek stok dan ongkir lewat WhatsApp. Setelah itu Anda bisa membayar.');
     }
 
     public function test_super_admin_uploads_the_store_qris_and_customers_can_pay_with_it(): void
