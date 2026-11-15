@@ -34,7 +34,8 @@ final class OnlineOrderTimeline
                 'title' => match (true) {
                     $stage === OnlineOrder::STAGE_AWAITING_CUSTOMER => 'Pesanan dibuat',
                     // ORD-04: a website checkout already has the recipient; this step is the store's confirmation.
-                    $stage === OnlineOrder::STAGE_DETAILS_RECEIVED && $order->source === 'website' && $order->created_by === null => 'Dikonfirmasi toko',
+                    // ORD-25: when the customer may pay at once, this is where they pay.
+                    $stage === OnlineOrder::STAGE_DETAILS_RECEIVED && $order->source === 'website' && $order->created_by === null => $audience === 'customer' && self::paysFirst($order) ? 'Pembayaran' : 'Dikonfirmasi toko',
                     default => $order->stageLabel($stage),
                 },
                 'description' => self::description($order, $stage, $status, $audience),
@@ -59,6 +60,17 @@ final class OnlineOrderTimeline
         return $items;
     }
 
+    /**
+     * ORD-25: a website checkout the customer may pay before the store confirms it (ORD-13 payment step: automatic
+     * ongkir, final total, one piece per product), whether or not it is confirmed yet.
+     */
+    private static function paysFirst(OnlineOrder $order): bool
+    {
+        return $order->isV2() && $order->source === 'website' && $order->created_by === null
+            && (bool) config('orders.shipping_quotes.enabled') && OnlineOrderStepper::totalIsFinal($order)
+            && $order->items->every(fn ($item) => $item->quantity === 1);
+    }
+
     /** The latest advance into a stage, ignoring one later reverted by an admin correction. */
     private static function effectiveEvent($events, string $stage): ?OnlineOrderEvent
     {
@@ -75,10 +87,20 @@ final class OnlineOrderTimeline
         $courier = OnlineOrder::COURIERS[$order->isV2() ? $order->courier_provider : $order->courier] ?? 'kurir';
 
         $websiteCheckout = $order->source === 'website' && $order->created_by === null;
+        // ORD-25 (Owner 2026-11-15): the customer reads one next step. A locked ongkir is never "confirmed" again.
+        $ongkirOpen = ! OnlineOrderStepper::totalIsFinal($order);
         if ($websiteCheckout && $stage === OnlineOrder::STAGE_DETAILS_RECEIVED) {
+            if ($audience === 'customer' && self::paysFirst($order)) {
+                return match ($status) {
+                    'completed' => 'Pesanan dikonfirmasi toko.',
+                    'active' => 'Bayar lewat transfer atau QRIS, lalu kirim bukti bayar di WhatsApp. Admin mengecek pembayaran dan stok.',
+                    default => null,
+                };
+            }
+
             return match ($status) {
-                'completed' => 'Stok, ongkir, dan pembayaran sudah disepakati.',
-                'active' => 'Admin mengonfirmasi stok, ongkir, dan pembayaran lewat WhatsApp.',
+                'completed' => $ongkirOpen ? 'Stok dan ongkir sudah dikonfirmasi.' : 'Stok sudah dikonfirmasi.',
+                'active' => 'Admin mengecek stok'.($ongkirOpen ? ' dan ongkir' : '').' lewat WhatsApp. Setelah itu Anda bisa membayar.',
                 default => null,
             };
         }
@@ -98,7 +120,8 @@ final class OnlineOrderTimeline
 
         return match ($stage) {
             OnlineOrder::STAGE_DETAILS_RECEIVED => 'Menunggu data penerima.',
-            OnlineOrder::STAGE_PAID => $audience === 'customer' ? 'Ongkir dan pembayaran dikonfirmasi lewat WhatsApp.' : 'Menunggu pembayaran.',
+            OnlineOrder::STAGE_PAID => $audience !== 'customer' ? 'Menunggu pembayaran.'
+                : ($ongkirOpen ? 'Ongkir dan pembayaran dikonfirmasi lewat WhatsApp.' : 'Bayar lewat transfer atau QRIS, lalu kirim bukti bayar di WhatsApp.'),
             OnlineOrder::STAGE_SHIPPED => 'Pesanan sedang disiapkan untuk dikirim.',
             OnlineOrder::STAGE_COMPLETED => $pickup ? 'Pesanan siap diambil di toko.'
                 : ($audience === 'customer' ? 'Menunggu konfirmasi penerimaan dari Anda.' : 'Pesanan dalam perjalanan.'),
