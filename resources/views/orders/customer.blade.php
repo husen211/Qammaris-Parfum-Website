@@ -11,6 +11,13 @@
     $choiceClass = 'flex min-h-14 cursor-pointer items-start gap-3 border border-gray-300 bg-white p-4 [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] active:bg-gray-50 has-[:checked]:border-brand-black has-[:checked]:bg-[#FAF8F3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-black';
     $fulfillment = old('fulfillment', $order->fulfillment);
     $describedBy = fn (string $field, ?string $help = null) => trim(($help ?? '').($errors->has($field) ? ' '.$field.'-error' : ''));
+    // ORD-23: the form itself asks for the delivery pin (Pengiriman Dalam Kota).
+    $asksPin = $editing && $order->customerFormAsksPin();
+    $formPin = $asksPin ? $order->deliveryPin() : null;
+    $pinConfig = ['origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')],
+        'kecamatan' => config('orders.shipping_quotes.kecamatan'), 'serviceArea' => config('orders.shipping_quotes.service_area'),
+        'placeSearchUrl' => 'https://photon.komoot.io/api/'];
+    $localAddressHelp = $asksPin ? 'Cukup patokan. Lokasi tepat dari titik antar di bawah.' : 'Cukup patokan. Lokasi tepat lewat Sharelok.';
 @endphp
 
 @section('content')
@@ -301,7 +308,7 @@
                     <div class="mt-3 space-y-3">
                         @foreach ([
                             'pickup' => ['Ambil di toko', 'Datang dan ambil sendiri di toko Qammaris.'],
-                            'local_delivery' => ['Pengiriman Dalam Kota', 'Tiba 1–2 jam setelah pesanan diproses. Lokasi lewat Sharelok.'],
+                            'local_delivery' => ['Pengiriman Dalam Kota', 'Tiba 1–2 jam setelah pesanan diproses. '.($asksPin ? 'Titik antar dipasang di peta.' : 'Lokasi lewat Sharelok.')],
                             'intercity' => ['Kirim ke luar kota', 'Dikirim J&T ke alamat Anda.'],
                         ] as $value => [$title, $hint])
                             <label class="{{ $choiceClass }}">
@@ -320,10 +327,33 @@
                     </label>
                     <textarea id="address" name="address" rows="3" maxlength="500" autocomplete="street-address" aria-invalid="{{ $errors->has('address') ? 'true' : 'false' }}" aria-describedby="{{ $describedBy('address', 'address-help') }}" class="{{ $fieldClass }} resize-y leading-6" @if ($fulfillment === 'intercity') required @endif>{{ old('address', $order->address) }}</textarea>
                     <p id="address-help" class="mt-2 text-sm leading-5 text-gray-600" data-address-help>
-                        {{ $fulfillment === 'intercity' ? 'Jalan, nomor rumah, dan kota.' : 'Cukup patokan. Lokasi tepat lewat Sharelok.' }}
+                        {{ $fulfillment === 'intercity' ? 'Jalan, nomor rumah, dan kota.' : $localAddressHelp }}
                     </p>
                     @error('address') <p id="address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                 </div>
+
+                {{-- ORD-23 (Owner 2026-11-15): the delivery pin is part of the form for "Pengiriman Dalam Kota", so staff can book the courier through Biteship. --}}
+                @if ($asksPin)
+                    @php($pinLat = old('pin_latitude', $formPin['latitude'] ?? null))
+                    @php($pinLng = old('pin_longitude', $formPin['longitude'] ?? null))
+                    @php($hasPin = is_numeric($pinLat) && is_numeric($pinLng))
+                    <div data-show-for="local_delivery" @if ($fulfillment !== 'local_delivery') hidden @endif>
+                        <div class="border-l-4 border-brand-gold bg-[#FAF8F3] p-4" data-pin-field data-pin-required data-pin-chosen-text="Titik antar dipilih. Tekan tombol kirim di bawah untuk menyimpan." data-config='@json($pinConfig + ['point' => $hasPin ? [(float) $pinLat, (float) $pinLng] : null])'>
+                            <p class="text-base font-medium text-brand-black">Titik antar</p>
+                            <p id="pin-help" class="mt-1 text-sm leading-6 text-gray-700" data-pin-status>{{ $hasPin ? 'Titik antar sudah dipasang. Kurir menuju titik ini.' : 'Wajib untuk Pengiriman Dalam Kota. Kurir langsung menuju titik ini.' }}</p>
+                            <input type="hidden" name="pin_latitude" value="{{ $pinLat }}" data-pin-lat>
+                            <input type="hidden" name="pin_longitude" value="{{ $pinLng }}" data-pin-lng>
+                            <button type="button" data-open-map aria-describedby="pin-help{{ $errors->has('pin_latitude') ? ' pin_latitude-error' : '' }}" class="mt-3 flex min-h-14 w-full items-center justify-center gap-2 bg-[#0D3F33] px-4 text-sm font-semibold uppercase tracking-widest text-white [touch-action:manipulation] active:bg-[#0a2f26] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                                <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span data-pin-empty @if ($hasPin) hidden @endif>Tentukan titik di peta</span>
+                                <span data-pin-chosen @unless ($hasPin) hidden @endunless>Ubah titik</span>
+                            </button>
+                            <a href="{{ $hasPin ? 'https://www.google.com/maps?q='.$pinLat.','.$pinLng : '#' }}" target="_blank" rel="noopener noreferrer" data-pin-maps data-pin-chosen @unless ($hasPin) hidden @endunless class="mt-2 inline-flex min-h-11 items-center text-sm text-gray-700 underline underline-offset-4">Lihat di Maps</a>
+                            @error('pin_latitude') <p id="pin_latitude-error" class="mt-2 text-sm text-red-700" data-pin-error>{{ $message }}</p> @enderror
+                            @error('pin_longitude') <p class="mt-2 text-sm text-red-700" data-pin-error>{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                @endif
 
                 <div data-show-for="intercity" @if ($fulfillment !== 'intercity') hidden @endif>
                     <label for="postcode" class="block text-base font-medium text-brand-black">Kode pos <span class="font-normal text-gray-600">(opsional)</span></label>
@@ -397,6 +427,10 @@
                     @endif
                 </div>
             </form>
+            @if ($asksPin)
+                @include('cart._map_dialog')
+                @vite('resources/js/order-pin.js')
+            @endif
         @else
 
             {{-- ADM-01: also right after a website checkout (draft), when the customer is already in the WhatsApp chat. --}}
@@ -406,7 +440,7 @@
             @if ($order->customerCanSetPin() && config('orders.shipping_quotes.enabled'))
                 {{-- ORD-20: the customer places the delivery pin here (admin-made orders too), so staff book the instant courier from the admin. --}}
                 @php($pin = $order->deliveryPin())
-                @php($pinConfig = ['origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')], 'kecamatan' => config('orders.shipping_quotes.kecamatan'), 'serviceArea' => config('orders.shipping_quotes.service_area'), 'placeSearchUrl' => 'https://photon.komoot.io/api/', 'point' => $pin ? [$pin['latitude'], $pin['longitude']] : null])
+                @php($pinConfig += ['point' => $pin ? [$pin['latitude'], $pin['longitude']] : null])
                 <section class="mt-6 border-l-4 border-brand-gold bg-[#FAF8F3] p-4" aria-labelledby="pin-title" data-order-pin data-config='@json($pinConfig)'>
                     <h2 id="pin-title" class="text-base font-semibold text-brand-black">Titik antar</h2>
                     @if ($pin)
@@ -557,7 +591,7 @@ document.querySelector('[data-received-form]')?.addEventListener('submit', (even
         optional.hidden = intercity;
         help.textContent = intercity
             ? 'Jalan, nomor rumah, dan kota.'
-            : 'Cukup patokan. Lokasi tepat lewat Sharelok.';
+            : @json($localAddressHelp);
     };
     form.querySelectorAll('[data-fulfillment]').forEach((input) => input.addEventListener('change', sync));
     sync();
@@ -565,7 +599,19 @@ document.querySelector('[data-received-form]')?.addEventListener('submit', (even
     const submit = form.querySelector('button[type="submit"]');
     const feedback = form.querySelector('[data-order-feedback]');
     const initialLabel = submit.textContent;
-    form.addEventListener('submit', () => {
+    form.addEventListener('submit', (event) => {
+        // ORD-23: "Pengiriman Dalam Kota" needs the pin; point at it instead of a round trip to the server.
+        const pin = form.querySelector('[data-pin-field][data-pin-required]');
+        if (pin && !pin.closest('[hidden]') && !pin.querySelector('[data-pin-lat]').value) {
+            event.preventDefault();
+            if (!pin.querySelector('[data-pin-error]')) {
+                pin.querySelector('[data-open-map]').insertAdjacentHTML('afterend', '<p class="mt-2 text-sm text-red-700" data-pin-error role="alert">Tentukan titik antar di peta.</p>');
+            }
+            pin.querySelector('[data-open-map]').focus();
+            pin.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+
+            return;
+        }
         submit.disabled = true;
         submit.textContent = 'Mengirim…';
         feedback.textContent = 'Menyimpan data pesanan…';

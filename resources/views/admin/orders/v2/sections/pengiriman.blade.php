@@ -84,7 +84,7 @@
                 @include('admin.orders.v2._biteship')
             @elseif ($biteshipEnabled && $order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store' && $order->courier_status === 'unassigned' && $order->deliveryPin() === null)
                 {{-- ORD-20: the Biteship button needs a pin; the customer places it on the order link. --}}
-                <p class="mt-3 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700" data-biteship-needs-pin>Pesan kurir lewat Biteship butuh titik antar. Minta customer memasang titik lewat link pesanan, atau isi Link lokasi dengan link Google Maps berisi koordinat.</p>
+                <p class="mt-3 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700" data-biteship-needs-pin>Pesan kurir lewat Biteship butuh titik antar. Minta customer memasang titik lewat link pesanan, atau pasang sendiri di Data penerima → Pasang titik di peta.</p>
             @endif
             @if ($order->courier_booking_responsibility === 'store' && $order->courier_status === 'unassigned')
                 {{-- ORD-08: one step — booking the courier records the fee and whose money pays it. --}}
