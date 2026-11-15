@@ -3,7 +3,8 @@
 // a place. "Pakai titik ini" sends the point; the server checks it is in Palu and saves it on the order.
 // ORD-23: a [data-pin-field] fills its form instead (the order link's form, the admin's recipient details and the
 // admin's new order); the point is saved with that form.
-import { locationText, placeResults } from './checkout-shipping/logic.js';
+import { locationText, pointFromText } from './checkout-shipping/logic.js';
+import { createPinMap, placeSearch } from './checkout-shipping/pin-map.js';
 import { combobox } from './checkout-shipping/combobox.js';
 
 const saved = document.querySelector('[data-order-pin]');
@@ -16,7 +17,7 @@ if (saved) setup(saved, (latitude, longitude, useButton) => {
     useButton.textContent = 'Menyimpan…';
     form.submit();
 });
-else if (field) setup(field, (latitude, longitude, useButton, close) => {
+else if (field) pasteable(field, setup(field, (latitude, longitude, useButton, close) => {
     const [lat, lng] = [latitude.toFixed(6), longitude.toFixed(6)];
     const latInput = field.querySelector('[data-pin-lat]');
     const lngInput = field.querySelector('[data-pin-lng]');
@@ -33,10 +34,36 @@ else if (field) setup(field, (latitude, longitude, useButton, close) => {
     field.querySelector('[data-pin-error]')?.remove();
     close();
     field.querySelector('[data-open-map]')?.focus();
-});
+}));
+
+// ORD-24: staff paste the customer's Sharelok or coordinates into the location field; a readable point shows at once
+// (and moves the map), a short Sharelok link is read by the server when the form is saved.
+function pasteable(field, picker) {
+    const input = field.dataset.pinUrl ? document.getElementById(field.dataset.pinUrl) : null;
+    const status = field.querySelector('[data-pin-status]');
+    if (!input || !status) return;
+    input.addEventListener('input', () => {
+        const value = input.value.trim();
+        const point = pointFromText(value);
+        if (point) {
+            const [lat, lng] = point;
+            field.querySelectorAll('[data-pin-empty]').forEach((element) => { element.hidden = true; });
+            field.querySelectorAll('[data-pin-chosen]').forEach((element) => { element.hidden = false; });
+            const link = field.querySelector('[data-pin-maps]');
+            if (link) link.href = `https://www.google.com/maps?q=${lat},${lng}`;
+            status.textContent = `Titik dari tempelan: ${lat}, ${lng}. Simpan formulir ini supaya titik tersimpan.`;
+            picker.moveTo(point);
+        } else if (/^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps)\//.test(value)) {
+            status.textContent = 'Link Sharelok ditempel. Titiknya dibaca saat formulir disimpan.';
+        } else if (value !== '') {
+            status.textContent = 'Belum terbaca sebagai titik. Tempel Sharelok, link Google Maps, atau koordinat seperti -0.8951, 119.8561.';
+        }
+    });
+}
 
 function setup(root, choose) {
     const config = JSON.parse(root.dataset.config);
+    let pending = null;
     const dialog = document.querySelector('[data-map-dialog]');
     const message = dialog.querySelector('[data-map-message]');
     const useButton = dialog.querySelector('[data-use-pin]');
@@ -54,8 +81,8 @@ function setup(root, choose) {
         document.documentElement.style.overflow = 'hidden';
         message.textContent = locationText('manual');
         if (!map) {
-            const { createPinMap } = await import('./checkout-shipping/map.js');
-            map = createPinMap(dialog.querySelector('[data-map]'), { center: config.point ?? config.origin, zoom: config.point ? 17 : 14 });
+            const start = pending ?? config.point;
+            map = await createPinMap(dialog.querySelector('[data-map]'), { center: start ?? config.origin, zoom: start ? 17 : 14, googleKey: config.googleKey });
             dialog.querySelector('[data-map-loading]')?.remove();
         }
         requestAnimationFrame(() => map.refresh());
@@ -95,23 +122,21 @@ function setup(root, choose) {
 
     const placeInput = dialog.querySelector('#place-search');
     const area = config.serviceArea;
+    const places = placeSearch(config);
     combobox({
         input: placeInput,
         list: dialog.querySelector('#place-search-list'),
         idPrefix: 'place',
-        search: async (query, signal) => {
-            const params = new URLSearchParams({ q: query, limit: '6', lat: String(config.origin[0]), lon: String(config.origin[1]),
-                bbox: [area.west, area.south, area.east, area.north].join(',') });
-            const response = await fetch(`${config.placeSearchUrl}?${params}`, { signal });
-            if (!response.ok) throw new Error('search');
-
-            return { items: placeResults(await response.json()), note: 'Belum ketemu. Coba nama jalan atau tempat lain, atau geser peta.' };
-        },
+        search: places.search,
         failed: () => { message.textContent = 'Pencarian sedang tidak bisa dipakai. Pilih kecamatan atau geser peta ke titik antar.'; },
-        onChoose: (place) => {
-            map?.setView(place.point, 17);
-            message.textContent = `Peta di ${place.label}. Geser sedikit bila pin belum tepat di titik antar.`;
+        onChoose: async (place) => {
             placeInput.blur();
+            try {
+                map?.setView(await places.point(place), 17);
+                message.textContent = `Peta di ${place.label}. Geser sedikit bila pin belum tepat di titik antar.`;
+            } catch {
+                message.textContent = 'Lokasi tempat ini belum terbaca. Geser peta ke titik antar.';
+            }
         },
     });
 
@@ -125,4 +150,6 @@ function setup(root, choose) {
         }
         choose(latitude, longitude, useButton, close);
     });
+
+    return { moveTo: (point) => { pending = point; map?.setView(point, 17); } };
 }

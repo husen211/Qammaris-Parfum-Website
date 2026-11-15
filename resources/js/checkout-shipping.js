@@ -3,8 +3,9 @@
 // picks a priced option grouped as
 // Instan (GoSend, GrabExpress) or Reguler (J&T). The server prices and keeps every option; the page only shows them,
 // submits the chosen option id and keeps the hidden `delivery` in step with it.
-import { areaParts, deliveryFor, discountText, distanceKm, exactArea, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, pinWarning, placeResults, reasonText } from './checkout-shipping/logic.js';
+import { areaParts, deliveryFor, discountText, distanceKm, exactArea, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, pinWarning, reasonText } from './checkout-shipping/logic.js';
 import { combobox } from './checkout-shipping/combobox.js';
+import { createPinMap, createPreviewMap, placeSearch } from './checkout-shipping/pin-map.js';
 
 const root = document.querySelector('[data-shipping-quotes]');
 if (root) setup(root);
@@ -223,8 +224,7 @@ function setup(root) {
         // The map opens on the pin, else on the chosen kecamatan, else on the store.
         const start = pin ?? kecamatanCenter(area?.label, config.kecamatan);
         if (!map) {
-            const { createPinMap } = await import('./checkout-shipping/map.js');
-            map = createPinMap(mapDialog.querySelector('[data-map]'), { center: start ?? config.origin, zoom: pin ? 17 : start ? 15 : 14 });
+            map = await createPinMap(mapDialog.querySelector('[data-map]'), { center: start ?? config.origin, zoom: pin ? 17 : start ? 15 : 14, googleKey: config.googleKey });
             mapDialog.querySelector('[data-map-loading]')?.remove();
         } else if (!pin && start) {
             map.setView(start, 15);
@@ -286,24 +286,21 @@ function setup(root) {
 
     // Place search (streets, buildings, landmarks) inside the service area, then fine-tune by moving the map.
     const placeInput = mapDialog.querySelector('#place-search');
-    const serviceArea = config.serviceArea;
+    const places = placeSearch(config);
     combobox({
         input: placeInput,
         list: mapDialog.querySelector('#place-search-list'),
         idPrefix: 'place',
-        search: async (query, signal) => {
-            const params = new URLSearchParams({ q: query, limit: '6', lat: String(config.origin[0]), lon: String(config.origin[1]),
-                bbox: [serviceArea.west, serviceArea.south, serviceArea.east, serviceArea.north].join(',') });
-            const response = await fetch(`${config.placeSearchUrl}?${params}`, { signal });
-            if (!response.ok) throw new Error('search');
-
-            return { items: placeResults(await response.json()), note: 'Belum ketemu. Coba nama jalan atau tempat lain, atau geser peta.' };
-        },
+        search: places.search,
         failed: () => { mapMessage.textContent = 'Pencarian sedang tidak bisa dipakai. Pilih kecamatan atau geser peta ke titik antar.'; },
-        onChoose: (place) => {
-            map?.setView(place.point, 17);
-            mapMessage.textContent = `Peta di ${place.label}. Geser sedikit bila pin belum tepat di titik antar.`;
+        onChoose: async (place) => {
             placeInput.blur();
+            try {
+                map?.setView(await places.point(place), 17);
+                mapMessage.textContent = `Peta di ${place.label}. Geser sedikit bila pin belum tepat di titik antar.`;
+            } catch {
+                mapMessage.textContent = 'Lokasi tempat ini belum terbaca. Geser peta ke titik antar.';
+            }
         },
     });
 
@@ -482,8 +479,7 @@ function setup(root) {
             return;
         }
         preview.hidden = false;
-        const { createPreviewMap } = await import('./checkout-shipping/map.js');
-        if (!previewMap) previewMap = createPreviewMap(preview.querySelector('[data-pin-preview-map]'), pin);
+        if (!previewMap) previewMap = await createPreviewMap(preview.querySelector('[data-pin-preview-map]'), pin, config.googleKey);
         previewMap.show(pin);
     };
     const showMismatch = () => {

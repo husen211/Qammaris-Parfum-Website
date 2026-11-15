@@ -291,9 +291,11 @@
                     @if ($order->customerFormAsksPin())
                         @include('admin.orders._pin-field', ['pinPoint' => $order->deliveryPin(), 'urlInputId' => 'location_url'])
                     @endif
-                    <label class="block text-sm font-medium text-gray-700">Link Google Maps <span class="font-normal text-gray-500">(opsional)</span>
-                        <input id="location_url" name="location_url" type="url" inputmode="url" value="{{ old('location_url', $order->location_url) }}" maxlength="500" placeholder="https://maps.app.goo.gl/…" class="{{ $input }}">
+                    {{-- ORD-24: paste the customer's Sharelok, a Google Maps link or coordinates; a readable one becomes the pin. --}}
+                    <label class="block text-sm font-medium text-gray-700">Sharelok / link Google Maps / koordinat <span class="font-normal text-gray-500">(opsional)</span>
+                        <input id="location_url" name="location_url" type="text" inputmode="url" autocomplete="off" value="{{ old('location_url', $order->location_url) }}" maxlength="500" placeholder="Tempel Sharelok, atau -0.8951, 119.8561" class="{{ $input }}">
                     </label>
+                    @error('location_url')<p class="-mt-2 text-sm text-red-700">{{ $message }}</p>@enderror
                     <label class="block text-sm font-medium text-gray-700">Catatan untuk staf<input name="staff_note" value="{{ old('staff_note', $order->staff_note) }}" maxlength="300" class="{{ $input }}"></label>
                     <input type="hidden" name="recorded_in_majoo" value="{{ $order->recorded_in_majoo ? 1 : 0 }}">
                     <button class="{{ $primary }} sm:w-full" data-busy-label="Menyimpan…">Simpan data penerima</button>

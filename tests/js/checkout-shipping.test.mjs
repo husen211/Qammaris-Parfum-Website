@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { areaParts, cheapest, deliveryFor, discountText, distanceKm, exactArea, instantArea, kecamatanCenter, locationStep, locationText, nearestKecamatan, pinMismatch, pinSummary, pinWarning, placeResults, reasonText } from '../../resources/js/checkout-shipping/logic.js';
+import { areaParts, cheapest, deliveryFor, discountText, distanceKm, exactArea, instantArea, kecamatanCenter, locationStep, locationText, nearestKecamatan, pinMismatch, pinSummary, pinWarning, placeResults, pointFromText, reasonText } from '../../resources/js/checkout-shipping/logic.js';
 
 test('ORD-17: an area label reads in two lines', () => {
     assert.deepEqual(areaParts('Palu Timur, Palu, Sulawesi Tengah. 94111'), { title: 'Palu Timur', detail: 'Palu, Sulawesi Tengah · 94111' });
@@ -106,4 +106,15 @@ test('place search results become labelled points, without duplicates or pointle
         { label: 'Jalan Basuki Rahmat I', detail: 'Birobuli Utara', point: [-0.917, 119.8888] },
     ]);
     assert.deepEqual(placeResults(null), []);
+});
+
+test('ORD-24: a pasted location gives the pin; a short Sharelok waits for the server', () => {
+    assert.deepEqual(pointFromText(' -0.8951234, 119.8561234 '), [-0.8951234, 119.8561234]);
+    assert.deepEqual(pointFromText('https://maps.google.com/maps?q=-0.8951%2C119.8561&z=17&hl=en'), [-0.8951, 119.8561]);
+    assert.deepEqual(pointFromText('https://www.google.com/maps/place/Toko/@-0.9000,119.8700,17z/data=!3m1!4b1!4m6!3m5!1s0x0:0x0!8m2!3d-0.8951!4d119.8561'), [-0.8951, 119.8561], 'the place, not the map centre');
+    assert.deepEqual(pointFromText('https://www.google.com/maps/search/-0.8951,+119.8561'), [-0.8951, 119.8561]);
+    assert.equal(pointFromText('https://maps.app.goo.gl/AbCdEf123'), null);
+    assert.equal(pointFromText('https://evil.example/maps?q=-0.8951,119.8561'), null, 'coordinates only from Google links');
+    assert.equal(pointFromText('Jl. Sis Aljufri 12'), null);
+    assert.equal(pointFromText('%E0%A4%A'), null);
 });

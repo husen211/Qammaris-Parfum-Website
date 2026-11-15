@@ -29,6 +29,12 @@ return [
     ],
 
     // ORD-13: shipping rates (GoSend, GrabExpress, J&T) through the Biteship aggregator. The key lives in .env only.
+    // ORD-24: browser key for the pin map and place search (Maps JavaScript API + Places API (New)). It is public by
+    // nature; Google Cloud restricts it to this site's address and caps daily use. Empty = OpenStreetMap map.
+    'google_maps' => [
+        'browser_key' => env('GOOGLE_MAPS_BROWSER_KEY'),
+    ],
+
     'biteship' => [
         'key' => env('BITESHIP_API_KEY'),
         'base_url' => env('BITESHIP_BASE_URL', 'https://api.biteship.com'),
