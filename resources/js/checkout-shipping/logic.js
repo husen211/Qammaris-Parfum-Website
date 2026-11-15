@@ -157,3 +157,32 @@ export function pinWarning(areaLabel, pin, osmKecamatan, kecamatan) {
 
     return (nearestKecamatan(pin, kecamatan) ?? '').toLowerCase() === String(osmKecamatan).trim().toLowerCase();
 }
+
+/**
+ * ORD-24: a point from what staff paste: plain coordinates ("-0.8951, 119.8561") or a Google Maps link that carries
+ * them. A Sharelok short link has none; the server reads it when the form is saved (App\Support\MapsLink).
+ */
+export function pointFromText(text) {
+    let value = String(text ?? '').replace(/\+/g, ' ').trim();
+    try { value = decodeURIComponent(value); } catch { /* a stray % stays as typed */ }
+    const number = /(-?\d{1,3}\.\d{1,10})/.source;
+    const comma = /\s*,\s*/.source;
+    const read = (match) => (match && Math.abs(Number(match[1])) <= 90 && Math.abs(Number(match[2])) <= 180 ? [Number(match[1]), Number(match[2])] : null);
+    const plain = read(value.match(new RegExp('^' + number + comma + number + '$')));
+    if (plain) return plain;
+    let host = '';
+    try { host = new URL(value).hostname.toLowerCase(); } catch { return null; }
+    if (!value.startsWith('https://') || !/(^|\.)(google\.[a-z.]{2,8}|goo\.gl)$/.test(host)) return null;
+    const patterns = [
+        '!3d' + number + '!4d' + number,
+        /[?&](?:q|query|ll|destination|center)=(?:loc:)?/.source + number + comma + number,
+        /\/(?:search|place|dir\/[^/]*)\//.source + number + comma + number,
+        '@' + number + ',' + number,
+    ];
+    for (const pattern of patterns) {
+        const point = read(value.match(new RegExp(pattern)));
+        if (point) return point;
+    }
+
+    return null;
+}

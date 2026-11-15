@@ -75,8 +75,11 @@
                 @include('admin.orders._customer-fields')
                 @if (config('orders.shipping_quotes.enabled') && config('orders.v2_enabled'))
                     {{-- ORD-23: the pin for "Pengiriman Dalam Kota", kept as a Google Maps link with coordinates. --}}
-                    <input type="hidden" id="new-order-location-url" name="location_url" value="{{ old('location_url') }}">
                     @include('admin.orders._pin-field', ['pinPoint' => \App\Models\OnlineOrder::pinFromUrl(old('location_url')), 'urlInputId' => 'new-order-location-url'])
+                    {{-- ORD-24: or paste what the customer sent; a readable Sharelok / link / coordinates becomes the pin. --}}
+                    <label for="new-order-location-url" class="block text-sm font-medium text-gray-700">Sharelok / link Google Maps / koordinat <span class="font-normal text-gray-500">(opsional)</span></label>
+                    <input id="new-order-location-url" name="location_url" type="text" inputmode="url" autocomplete="off" value="{{ old('location_url') }}" maxlength="500" placeholder="Tempel Sharelok, atau -0.8951, 119.8561" class="mt-1 min-h-12 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10">
+                    @error('location_url')<p class="mt-1 text-sm text-red-700">{{ $message }}</p>@enderror
                 @endif
                 {{-- ORD-05: no "save as customer" box; a name with a valid number is remembered automatically. --}}
                 <p class="text-xs text-gray-500" data-new-customer @if (old('customer_id')) hidden @endif>Pelanggan baru otomatis tersimpan dari nama dan nomor WhatsApp ini.</p>

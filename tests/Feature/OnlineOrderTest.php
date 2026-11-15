@@ -11,6 +11,7 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -292,6 +293,8 @@ class OnlineOrderTest extends TestCase
 
     public function test_group_message_variants_follow_who_books_the_courier(): void
     {
+        // ORD-24: the pasted short link is opened once to read its pin; here Google does not know it.
+        Http::fake(['maps.app.goo.gl/*' => Http::response('', 404)]);
         [$order, $token] = $this->order();
         $this->post(route('orders.customer.submit', $token), $this->details());
         $this->actingAs($this->admin)->patch(route('admin.orders.update', $order), $this->adminDetails($order->fresh()->revision, [

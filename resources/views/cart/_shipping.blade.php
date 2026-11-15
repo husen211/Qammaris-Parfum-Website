@@ -18,6 +18,7 @@
         'serviceArea' => config('orders.shipping_quotes.service_area'),
         'logos' => \App\Support\PartnerLogos::urls(),
         'pinUrl' => route('cart.checkout.pin'),
+        'googleKey' => config('services.google_maps.browser_key') ?: null,
     ];
 @endphp
 @vite('resources/js/checkout-shipping.js')

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Actions\Orders\CreateOnlineOrder;
 use App\Http\Requests\Orders\OnlineOrderDetailRules;
-use App\Models\OnlineOrder;
+use App\Support\MapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,12 +19,8 @@ class OnlineOrderStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        // ORD-23: the pin placed on the map comes as a Google Maps link with coordinates.
-        $customer = $this->boolean('fill_customer') ? $this->customerDetailRules() + ['location_url' => ['nullable', 'string', 'max:500', function ($attribute, $value, $fail) {
-            if (OnlineOrder::pinFromUrl($value) === null) {
-                $fail('Titik antar harus di Palu dan sekitarnya. Pasang ulang titiknya di peta.');
-            }
-        }]] : [];
+        // ORD-23/24: the pin from the map, or a pasted Sharelok / Google Maps link / coordinates.
+        $customer = $this->boolean('fill_customer') ? $this->customerDetailRules() + ['location_url' => ['nullable', 'string', 'max:500', MapsLink::rule()]] : [];
 
         return [
             'items' => ['required', 'array', 'min:1', 'max:20'],
@@ -55,6 +51,9 @@ class OnlineOrderStoreRequest extends FormRequest
     {
         if ($this->boolean('fill_customer')) {
             $this->normalizeCustomerDetails();
+            // ORD-24: a readable Sharelok / link / coordinates becomes the pin itself.
+            $location = is_string($this->input('location_url')) ? trim($this->input('location_url')) : null;
+            $this->merge(['location_url' => $location === '' ? null : ($location && MapsLink::point($location) ? MapsLink::normalise($location) : $location)]);
         }
     }
 

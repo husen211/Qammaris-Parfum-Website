@@ -16,7 +16,7 @@
     $formPin = $asksPin ? $order->deliveryPin() : null;
     $pinConfig = ['origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')],
         'kecamatan' => config('orders.shipping_quotes.kecamatan'), 'serviceArea' => config('orders.shipping_quotes.service_area'),
-        'placeSearchUrl' => 'https://photon.komoot.io/api/'];
+        'placeSearchUrl' => 'https://photon.komoot.io/api/', 'googleKey' => config('services.google_maps.browser_key') ?: null];
     $localAddressHelp = $asksPin ? 'Cukup patokan. Lokasi tepat dari titik antar di bawah.' : 'Cukup patokan. Lokasi tepat lewat Sharelok.';
 @endphp
 

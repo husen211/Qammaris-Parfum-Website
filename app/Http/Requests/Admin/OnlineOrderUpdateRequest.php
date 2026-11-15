@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Http\Requests\Orders\OnlineOrderDetailRules;
 use App\Models\OnlineOrder;
+use App\Support\MapsLink;
 use App\Support\Rupiah;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,12 +22,8 @@ class OnlineOrderUpdateRequest extends FormRequest
     {
         return [
             'revision' => ['required', 'integer', 'min:1'],
-            'location_url' => ['nullable', 'string', 'max:500', 'url:https', function ($attribute, $value, $fail) {
-                $host = strtolower((string) parse_url((string) $value, PHP_URL_HOST));
-                if (! preg_match('/(^|\.)(google\.[a-z.]+|goo\.gl|maps\.app\.goo\.gl)$/', $host)) {
-                    $fail('Gunakan link Google Maps (https://maps.google.com/… atau https://maps.app.goo.gl/…).');
-                }
-            }],
+            // ORD-24: a pasted Sharelok, Google Maps link or coordinates; stored as the pin when it can be read.
+            'location_url' => ['nullable', 'string', 'max:500', MapsLink::rule()],
             'courier' => ['nullable', Rule::in(array_keys(OnlineOrder::COURIERS))],
             'courier_booked_by' => ['required', Rule::in(array_keys(OnlineOrder::BOOKERS))],
             'tracking_number' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9-]+$/'],
@@ -51,6 +48,10 @@ class OnlineOrderUpdateRequest extends FormRequest
                 $values[$field] = $value === '' ? null : ($field === 'shipping_fee' && preg_match('/^\d{1,3}(\.\d{3})+$/', $value) ? str_replace('.', '', $value) : $value);
             }
         }
+        // ORD-24: a readable Sharelok / link / coordinates becomes the pin itself; anything else is checked as typed.
+        if (isset($values['location_url']) && MapsLink::point($values['location_url'])) {
+            $values['location_url'] = MapsLink::normalise($values['location_url']);
+        }
         $this->merge($values);
     }
 
@@ -66,7 +67,6 @@ class OnlineOrderUpdateRequest extends FormRequest
     public function messages(): array
     {
         return $this->customerDetailMessages() + [
-            'location_url.url' => 'Link lokasi harus diawali https://.',
             'tracking_number.regex' => 'Nomor resi hanya berisi huruf, angka, atau tanda minus.',
             'shipping_fee.regex' => 'Ongkir harus rupiah bulat, misalnya 11500.',
             'shipping_fee.numeric' => 'Ongkir harus berupa angka, misalnya 11500.',

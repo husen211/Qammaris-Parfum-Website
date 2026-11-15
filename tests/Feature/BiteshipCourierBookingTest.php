@@ -7,6 +7,7 @@ use App\Models\StoreInfo;
 use App\Models\User;
 use App\Services\BiteshipClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -507,6 +508,51 @@ class BiteshipCourierBookingTest extends TestCase
         $instant = $this->instantOrder();
         $this->assertFalse($instant->customerFormAsksPin());
         $this->get(route('admin.orders.show', $instant))->assertDontSee('data-pin-field', false);
+    }
+
+    public function test_staff_paste_the_customers_sharelok_or_coordinates_as_the_pin(): void
+    {
+        // Owner 2026-11-15: the customer already sent a Sharelok on WhatsApp; staff paste it instead of searching the map.
+        $order = $this->v2Order('local_delivery');
+        $save = fn (string $location) => $this->actingAs($this->staff)->patch(route('admin.orders.v2.details', $order), [
+            'revision' => $order->fresh()->revision, 'customer_name' => 'E2E Siti Rahma', 'customer_phone' => '081234567890',
+            'fulfillment' => 'local_delivery', 'address' => 'Jl. Sintetis 1', 'packaging' => 'no_paperbag', 'location_url' => $location,
+        ]);
+
+        // Coordinates as text (WhatsApp desktop shows them), and Google Maps links that carry them.
+        $save(' -0.8951234, 119.8561234 ')->assertSessionHasNoErrors();
+        $this->assertSame('https://www.google.com/maps?q=-0.895123,119.856123', $order->fresh()->location_url);
+        $save('https://maps.google.com/maps?q=-0.9012%2C119.8701&z=17&hl=en')->assertSessionHasNoErrors();
+        $this->assertSame(['latitude' => -0.9012, 'longitude' => 119.8701], $order->fresh()->deliveryPin());
+
+        // A Sharelok short link is opened once on Google to read the place.
+        Http::swap(new Factory);
+        Http::fake(function (Request $request) {
+            $this->sent[] = $request;
+
+            return str_contains($request->url(), 'maps.app.goo.gl/AbCdEf123')
+                ? Http::response('', 302, ['Location' => 'https://www.google.com/maps/place/Kos/@-0.9000,119.8700,17z/data=!3m1!4b1!4m6!3m5!8m2!3d-0.8877!4d119.8899'])
+                : Http::response('', 500);
+        });
+        $save('https://maps.app.goo.gl/AbCdEf123')->assertSessionHasNoErrors();
+        $this->assertSame('https://www.google.com/maps?q=-0.887700,119.889900', $order->fresh()->location_url, 'the place, not the map centre');
+        $this->assertCount(1, array_filter($this->sent, fn (Request $request) => str_contains($request->url(), 'maps.app.goo.gl/AbCdEf123')));
+
+        // A short link Google does not answer is kept as pasted (as before); staff can still pin it on the map.
+        $save('https://maps.app.goo.gl/Unknown999')->assertSessionHasNoErrors();
+        $this->assertSame(['https://maps.app.goo.gl/Unknown999', null], [$order->fresh()->location_url, $order->fresh()->deliveryPin()]);
+
+        // Coordinates outside Palu and plain text are refused.
+        $save('-5.1400, 119.4200')->assertSessionHasErrors(['location_url' => 'Koordinat harus di Palu dan sekitarnya.']);
+        $save('rumah dekat masjid')->assertSessionHasErrors('location_url');
+        $save('https://evil.example/maps?q=-0.8951,119.8561')->assertSessionHasErrors('location_url');
+
+        // The same paste works when staff create the order.
+        $variant = array_key_first($this->orderLines);
+        $this->post(route('admin.orders.store'), ['items' => [['variant_id' => $variant, 'quantity' => 1]], 'fill_customer' => '1',
+            'customer_name' => 'E2E Uji Tempel', 'customer_phone' => '080000000104', 'fulfillment' => 'local_delivery',
+            'address' => 'Patokan sintetis', 'packaging' => 'paperbag', 'location_url' => '-0.8800, 119.8600'])->assertRedirect();
+        $this->assertSame(['latitude' => -0.88, 'longitude' => 119.86], OnlineOrder::query()->where('customer_name', 'E2E Uji Tempel')->sole()->deliveryPin());
     }
 
     public function test_a_website_order_payment_card_skips_the_instructions_the_customer_already_has(): void
