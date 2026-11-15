@@ -288,8 +288,11 @@
                     @include('admin.orders.v2._notice', ['section' => 'detail'])
                     @if ($customerChatUrl)<a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} mt-2 gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Chat customer di WhatsApp</a>@endif
                     @include('admin.orders._customer-fields', ['order' => $order])
+                    @if ($order->customerFormAsksPin())
+                        @include('admin.orders._pin-field', ['pinPoint' => $order->deliveryPin(), 'urlInputId' => 'location_url'])
+                    @endif
                     <label class="block text-sm font-medium text-gray-700">Link Google Maps <span class="font-normal text-gray-500">(opsional)</span>
-                        <input name="location_url" type="url" inputmode="url" value="{{ old('location_url', $order->location_url) }}" maxlength="500" placeholder="https://maps.app.goo.gl/…" class="{{ $input }}">
+                        <input id="location_url" name="location_url" type="url" inputmode="url" value="{{ old('location_url', $order->location_url) }}" maxlength="500" placeholder="https://maps.app.goo.gl/…" class="{{ $input }}">
                     </label>
                     <label class="block text-sm font-medium text-gray-700">Catatan untuk staf<input name="staff_note" value="{{ old('staff_note', $order->staff_note) }}" maxlength="300" class="{{ $input }}"></label>
                     <input type="hidden" name="recorded_in_majoo" value="{{ $order->recorded_in_majoo ? 1 : 0 }}">

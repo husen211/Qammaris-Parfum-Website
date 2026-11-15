@@ -69,7 +69,9 @@ class CreateOnlineOrder
                 // A confirmed saved address is copied into the order; later edits never change the saved one.
                 $customer = array_merge($customer ?? [], [
                     'fulfillment' => CustomerAddress::TYPES[$address->type], 'address' => $address->address,
-                    'postcode' => $address->type === 'intercity' ? $address->postcode : null, 'location_url' => $address->location_url,
+                    'postcode' => $address->type === 'intercity' ? $address->postcode : null,
+                    // ORD-23: a pin staff just placed on the map wins over the saved address's link.
+                    'location_url' => ($customer['location_url'] ?? null) ?: $address->location_url,
                 ]);
             }
             // Admins confirm stock in the chat, so any published offer or App draft offer (ORD-12) with a valid price may be ordered.

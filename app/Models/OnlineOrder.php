@@ -339,6 +339,20 @@ class OnlineOrder extends Model
             && $this->courier_status === 'unassigned' && ! $this->biteshipBusy();
     }
 
+    /**
+     * ORD-23 (Owner 2026-11-15): the order link's form asks for the delivery pin with "Pengiriman Dalam Kota", so a
+     * WhatsApp order can be booked through Biteship like a website order. Not for a website instant order (its
+     * checkout pin priced the ongkir) or once a courier is on the way.
+     */
+    public function customerFormAsksPin(): bool
+    {
+        return $this->isV2() && (bool) config('orders.shipping_quotes.enabled') && $this->handover_status === 'pending'
+            && in_array($this->lifecycle, ['awaiting_customer', 'active'], true)
+            && ($this->shipping_quote['kind'] ?? null) !== 'instant'
+            // "not_needed": no delivery chosen yet (a new WhatsApp order), so no courier either.
+            && in_array($this->courier_status, ['unassigned', 'not_needed'], true) && ! $this->biteshipBusy();
+    }
+
     /** ORD-14: a Biteship driver is booked, or a booking started less than two minutes ago is still waiting for Biteship. */
     public function biteshipBusy(): bool
     {

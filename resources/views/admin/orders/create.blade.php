@@ -73,6 +73,11 @@
             </div>
             <div class="mt-4 space-y-4" data-fill-fields @unless (old('fill_customer') === '1') hidden @endunless>
                 @include('admin.orders._customer-fields')
+                @if (config('orders.shipping_quotes.enabled') && config('orders.v2_enabled'))
+                    {{-- ORD-23: the pin for "Pengiriman Dalam Kota", kept as a Google Maps link with coordinates. --}}
+                    <input type="hidden" id="new-order-location-url" name="location_url" value="{{ old('location_url') }}">
+                    @include('admin.orders._pin-field', ['pinPoint' => \App\Models\OnlineOrder::pinFromUrl(old('location_url')), 'urlInputId' => 'new-order-location-url'])
+                @endif
                 {{-- ORD-05: no "save as customer" box; a name with a valid number is remembered automatically. --}}
                 <p class="text-xs text-gray-500" data-new-customer @if (old('customer_id')) hidden @endif>Pelanggan baru otomatis tersimpan dari nama dan nomor WhatsApp ini.</p>
             </div>

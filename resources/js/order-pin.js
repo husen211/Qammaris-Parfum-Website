@@ -1,15 +1,42 @@
 // ORD-20: the delivery pin on the customer's order link (admin-made orders too). The same map as the checkout:
 // the pin stays in the middle and the customer moves the map, finds their location, picks a kecamatan or searches
 // a place. "Pakai titik ini" sends the point; the server checks it is in Palu and saves it on the order.
+// ORD-23: a [data-pin-field] fills its form instead (the order link's form, the admin's recipient details and the
+// admin's new order); the point is saved with that form.
 import { locationText, placeResults } from './checkout-shipping/logic.js';
 import { combobox } from './checkout-shipping/combobox.js';
 
-const root = document.querySelector('[data-order-pin]');
-if (root) setup(root);
+const saved = document.querySelector('[data-order-pin]');
+const field = document.querySelector('[data-pin-field]');
+if (saved) setup(saved, (latitude, longitude, useButton) => {
+    const form = saved.querySelector('[data-pin-form]');
+    form.querySelector('[name="latitude"]').value = latitude.toFixed(6);
+    form.querySelector('[name="longitude"]').value = longitude.toFixed(6);
+    useButton.disabled = true;
+    useButton.textContent = 'Menyimpan…';
+    form.submit();
+});
+else if (field) setup(field, (latitude, longitude, useButton, close) => {
+    const [lat, lng] = [latitude.toFixed(6), longitude.toFixed(6)];
+    const latInput = field.querySelector('[data-pin-lat]');
+    const lngInput = field.querySelector('[data-pin-lng]');
+    if (latInput) latInput.value = lat;
+    if (lngInput) lngInput.value = lng;
+    const urlInput = field.dataset.pinUrl ? document.getElementById(field.dataset.pinUrl) : null;
+    if (urlInput) urlInput.value = `https://www.google.com/maps?q=${lat},${lng}`;
+    field.querySelectorAll('[data-pin-empty]').forEach((element) => { element.hidden = true; });
+    field.querySelectorAll('[data-pin-chosen]').forEach((element) => { element.hidden = false; });
+    const link = field.querySelector('[data-pin-maps]');
+    if (link) link.href = `https://www.google.com/maps?q=${lat},${lng}`;
+    const status = field.querySelector('[data-pin-status]');
+    if (status) status.textContent = field.dataset.pinChosenText ?? 'Titik antar dipilih.';
+    field.querySelector('[data-pin-error]')?.remove();
+    close();
+    field.querySelector('[data-open-map]')?.focus();
+});
 
-function setup(root) {
+function setup(root, choose) {
     const config = JSON.parse(root.dataset.config);
-    const form = root.querySelector('[data-pin-form]');
     const dialog = document.querySelector('[data-map-dialog]');
     const message = dialog.querySelector('[data-map-message]');
     const useButton = dialog.querySelector('[data-use-pin]');
@@ -96,10 +123,6 @@ function setup(root) {
 
             return;
         }
-        form.querySelector('[name="latitude"]').value = latitude.toFixed(6);
-        form.querySelector('[name="longitude"]').value = longitude.toFixed(6);
-        useButton.disabled = true;
-        useButton.textContent = 'Menyimpan…';
-        form.submit();
+        choose(latitude, longitude, useButton, close);
     });
 }

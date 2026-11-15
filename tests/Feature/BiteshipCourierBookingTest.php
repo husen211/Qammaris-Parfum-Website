@@ -449,6 +449,66 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertCount(3, $toApp());
     }
 
+    public function test_a_whatsapp_order_link_asks_for_the_pin_with_local_delivery(): void
+    {
+        // Owner 2026-11-15: a WhatsApp order made by staff, filled by the customer on the link.
+        $order = $this->v2Order(null);
+        $token = $order->customer_token_encrypted;
+        $this->get(route('orders.customer.show', $token))->assertOk()
+            ->assertSee('name="pin_latitude"', false)->assertSee('Tentukan titik di peta')->assertSee('Titik antar dipasang di peta.')
+            ->assertDontSee('Lokasi tepat lewat Sharelok');
+
+        $form = ['customer_name' => 'E2E Uji Pin', 'customer_phone' => '080000000101', 'fulfillment' => 'local_delivery',
+            'address' => 'Patokan sintetis', 'packaging' => 'paperbag', 'payment_preference' => 'qris', 'shipping_payment' => 'added_to_transfer'];
+        // Pengiriman Dalam Kota without a pin, or with a pin outside Palu, is refused and nothing changes.
+        $this->post(route('orders.customer.submit', $token), $form)->assertSessionHasErrors(['pin_latitude' => 'Tentukan titik antar di peta.']);
+        $this->post(route('orders.customer.submit', $token), $form + ['pin_latitude' => -5.14, 'pin_longitude' => 119.42])->assertSessionHasErrors('pin_latitude');
+        $this->assertSame('awaiting_customer', $order->fresh()->stage);
+        // Pickup needs no pin.
+        $this->post(route('orders.customer.submit', $token), ['fulfillment' => 'pickup'] + $form)->assertSessionHasNoErrors();
+        $this->assertSame(['details_received', 'pickup', null], [$order->fresh()->stage, $order->fresh()->fulfillment, $order->fresh()->location_url]);
+
+        $order = $this->v2Order(null);
+        $token = $order->customer_token_encrypted;
+        $this->post(route('orders.customer.submit', $token), $form + ['pin_latitude' => -0.8951234, 'pin_longitude' => 119.8561234])
+            ->assertSessionHas('success', 'Terima kasih, data pesanan sudah kami terima.');
+        $order->refresh();
+        $this->assertSame(['details_received', 'local_delivery', 'https://www.google.com/maps?q=-0.895123,119.856123'], [$order->stage, $order->fulfillment, $order->location_url]);
+        $this->assertSame(['latitude' => -0.895123, 'longitude' => 119.856123], $order->deliveryPin(), 'staff can book Biteship to it');
+
+        // Changing the details later shows the saved pin and keeps it.
+        $this->get(route('orders.customer.show', [$token, 'ubah' => 1]))->assertSee('Titik antar sudah dipasang')->assertSee('Ubah titik');
+
+        // Staff see the pin in Data penerima and can move it on the same map.
+        $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertOk()
+            ->assertSee('data-pin-field', false)->assertSee('data-pin-url="location_url"', false)->assertSee('Titik antar terpasang')->assertSee('id="location_url"', false);
+
+        // Off without automatic ongkir: the link keeps the Sharelok text and asks no pin.
+        config(['orders.shipping_quotes.enabled' => false]);
+        $other = $this->v2Order(null);
+        $this->get(route('orders.customer.show', $other->customer_token_encrypted))->assertDontSee('name="pin_latitude"', false)->assertSee('Lokasi tepat lewat Sharelok');
+        $this->post(route('orders.customer.submit', $other->customer_token_encrypted), $form)->assertSessionHasNoErrors();
+    }
+
+    public function test_staff_place_the_pin_when_creating_an_order_and_a_website_instant_order_keeps_its_checkout_pin(): void
+    {
+        $this->v2Order(null); // creates the catalog lines
+        $variant = array_key_first($this->orderLines);
+        $payload = ['items' => [['variant_id' => $variant, 'quantity' => 1]], 'fill_customer' => '1', 'customer_name' => 'E2E Uji Pin Admin',
+            'customer_phone' => '080000000102', 'fulfillment' => 'local_delivery', 'address' => 'Patokan sintetis', 'packaging' => 'paperbag'];
+        $this->actingAs($this->staff)->get(route('admin.orders.create'))->assertOk()->assertSee('data-pin-url="new-order-location-url"', false)->assertSee('Pasang titik di peta');
+
+        $this->post(route('admin.orders.store'), $payload + ['location_url' => 'https://www.google.com/maps?q=-5.14,119.42'])->assertSessionHasErrors('location_url');
+        $this->post(route('admin.orders.store'), $payload + ['location_url' => 'https://www.google.com/maps?q=-0.9,119.87'])->assertRedirect();
+        $made = OnlineOrder::query()->where('customer_name', 'E2E Uji Pin Admin')->sole();
+        $this->assertSame(['latitude' => -0.9, 'longitude' => 119.87], $made->deliveryPin());
+
+        // A website instant order: its checkout pin priced the ongkir, so neither the link nor the admin moves it.
+        $instant = $this->instantOrder();
+        $this->assertFalse($instant->customerFormAsksPin());
+        $this->get(route('admin.orders.show', $instant))->assertDontSee('data-pin-field', false);
+    }
+
     public function test_a_website_order_payment_card_skips_the_instructions_the_customer_already_has(): void
     {
         $order = $this->instantOrder(paid: false);

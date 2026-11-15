@@ -40,12 +40,17 @@ class OnlineOrderDetails
         if ($order->lifecycle === 'draft') {
             throw new InvalidOrderTransition('Pesanan sedang menunggu konfirmasi. Sampaikan perubahan lewat WhatsApp.');
         }
+        $pin = isset($details['pin_latitude'], $details['pin_longitude']) ? [(float) $details['pin_latitude'], (float) $details['pin_longitude']] : null;
         if ($order->isV2() && OnlineOrderChangeRequests::customerMustRequest($order) && $order->lifecycle !== 'awaiting_customer') {
+            // ORD-23: the pin is not a reviewed change; it is saved at once while a courier is not yet on the way.
+            if ($pin && $order->fulfillment === 'local_delivery' && $order->customerCanSetPin()) {
+                $order = $this->setPinByCustomer($order, ...$pin);
+            }
             $this->changeRequests->submit($order, array_intersect_key($details, array_flip(self::CUSTOMER_FIELDS)));
 
             return true;
         }
-        $this->mutateV2($order, null, null, function (OnlineOrder $order) use ($details): bool {
+        $this->mutateV2($order, null, null, function (OnlineOrder $order) use ($details, $pin): bool {
             // ORD-10: decided on the stored order, before the form changes the delivery choice.
             $setsShippingPayment = $order->customerSetsShippingPayment();
             $order->fill(array_intersect_key($details, array_flip(self::CUSTOMER_FIELDS)));
@@ -55,6 +60,10 @@ class OnlineOrderDetails
             // ORD-03: a preference only while unpaid; the admin still records the payment itself.
             if (isset($details['payment_preference']) && $order->payment_status === 'unpaid') {
                 $order->payment_preference = $details['payment_preference'];
+            }
+            // ORD-23: the pin from the form, in the same Google Maps form as a checkout or order-link pin.
+            if ($pin && $order->fulfillment === 'local_delivery' && $order->customerFormAsksPin()) {
+                $order->location_url = sprintf('https://www.google.com/maps?q=%.6F,%.6F', ...$pin);
             }
             $this->customers->link($order, null);
             if ($order->lifecycle === 'awaiting_customer') {

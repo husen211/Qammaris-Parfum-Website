@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Actions\Orders\CreateOnlineOrder;
 use App\Http\Requests\Orders\OnlineOrderDetailRules;
+use App\Models\OnlineOrder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,12 @@ class OnlineOrderStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $customer = $this->boolean('fill_customer') ? $this->customerDetailRules() : [];
+        // ORD-23: the pin placed on the map comes as a Google Maps link with coordinates.
+        $customer = $this->boolean('fill_customer') ? $this->customerDetailRules() + ['location_url' => ['nullable', 'string', 'max:500', function ($attribute, $value, $fail) {
+            if (OnlineOrder::pinFromUrl($value) === null) {
+                $fail('Titik antar harus di Palu dan sekitarnya. Pasang ulang titiknya di peta.');
+            }
+        }]] : [];
 
         return [
             'items' => ['required', 'array', 'min:1', 'max:20'],
@@ -66,7 +72,7 @@ class OnlineOrderStoreRequest extends FormRequest
     public function customer(): ?array
     {
         return $this->boolean('fill_customer')
-            ? $this->safe()->only(['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'packaging', 'customer_note'])
+            ? $this->safe()->only(['customer_name', 'customer_phone', 'fulfillment', 'address', 'postcode', 'packaging', 'customer_note', 'location_url'])
             : null;
     }
 
