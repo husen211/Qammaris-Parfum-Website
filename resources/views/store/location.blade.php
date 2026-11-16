@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Toko Parfum Timur Tengah di Palu - Qammaris Perfumes')
-@section('meta_description', 'Kunjungi toko parfum Qammaris di Jl. Sis Aljufri, Siranindi, Palu Barat. Coba tester parfum Timur Tengah dan lokal, konsultasi aroma, buka Sabtu–Kamis 09.00–21.00 WITA.')
+@section('meta_description', 'Kunjungi toko parfum Qammaris di Jl. Sis Aljufri, Siranindi, Palu Barat. Coba tester parfum Timur Tengah dan lokal, konsultasi aroma, buka setiap hari.')
 
 @push('jsonld')
 <script type="application/ld+json">{!! json_encode($storeSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) !!}</script>
@@ -100,7 +100,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Jumat</p>
-                            <p class="text-brand-black font-medium opacity-50">Tutup</p>
+                            <p class="text-brand-black font-medium">13.00–21.00 WITA</p>
                         </div>
                     </div>
                     <div class="mt-8 p-4 bg-[#FAFAFA] border border-gray-100 flex items-start gap-3">
@@ -147,7 +147,7 @@
             ['question' => 'Apakah saya bisa mencoba tester di toko?', 'answer' => 'Bisa. Semua parfum di toko tersedia testernya. Anda bisa mencoba dengan paper test atau di kulit dan membandingkan beberapa aroma sebelum membeli.'],
             ['question' => 'Apakah tersedia parfum pria, wanita, dan unisex?', 'answer' => 'Ada. Koleksi kami mencakup parfum pria, wanita, dan unisex dari brand Timur Tengah dan lokal. Lihat semuanya di katalog website.'],
             ['question' => 'Apakah bisa kirim ke luar Palu?', 'answer' => 'Bisa. Pesan lewat website atau WhatsApp, kami kirim ke seluruh Indonesia. Ongkir dikonfirmasi admin sesuai alamat penerima.'],
-            ['question' => 'Kapan toko buka?', 'answer' => 'Sabtu sampai Kamis, pukul 09.00–21.00 WITA. Jumat tutup. Untuk hari libur nasional, cek Instagram @qammaris.'],
+            ['question' => 'Kapan toko buka?', 'answer' => 'Setiap hari. Sabtu sampai Kamis pukul 09.00–21.00 WITA, Jumat pukul 13.00–21.00 WITA. Untuk hari libur nasional, cek Instagram @qammaris.'],
         ]" />
     </div>
 </section>

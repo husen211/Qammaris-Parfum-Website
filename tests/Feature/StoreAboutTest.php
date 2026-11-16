@@ -21,7 +21,7 @@ class StoreAboutTest extends TestCase
         $response = $this->get('/store/about')->assertOk()
             ->assertSee('Husein')->assertSee('Mengenal parfum saat merantau')
             ->assertSee('Semua produk di toko tersedia testernya.')
-            ->assertSee('Sabtu–Kamis · 09.00–21.00 WITA')->assertSee('Jumat tutup')
+            ->assertSee('Sabtu–Kamis · 09.00–21.00 WITA')->assertSee('Jumat · 13.00–21.00 WITA')->assertDontSee('Jumat tutup')
             ->assertDontSee('paper-test-')->assertDontSee('skin-test-')
             ->assertSee('data-about-split-hero', false)->assertDontSee('data-about-hero10', false)->assertDontSee('data-cinematic-hero', false)->assertSee('data-about-spy', false)
             ->assertDontSee('Loading 3D...')->assertDontSee('about-lanyard')
@@ -52,16 +52,25 @@ class StoreAboutTest extends TestCase
     {
         $this->get('/store/about')->assertOk()->assertViewHas('aboutSchema', function ($schema) {
             $store = $schema['@graph'][1];
-            $hours = $store['openingHoursSpecification'][0];
+            [$hours, $friday] = $store['openingHoursSpecification'];
 
             return $schema['@graph'][0]['@type'] === 'AboutPage'
                 && $store['@type'] === 'Store'
                 && $hours['opens'] === '09:00' && $hours['closes'] === '21:00'
                 && count($hours['dayOfWeek']) === 6 && ! in_array('Friday', $hours['dayOfWeek'], true)
+                && $friday['dayOfWeek'] === ['Friday'] && $friday['opens'] === '13:00' && $friday['closes'] === '21:00'
                 && ! isset($store['aggregateRating']) && ! isset($store['review'])
                 && $schema['@graph'][2]['@type'] === 'BreadcrumbList';
         });
         $this->get('/store/about?utm_source=test')->assertSee('rel="canonical" href="'.route('store.about').'"', false);
+    }
+
+    public function test_location_page_shows_the_store_open_every_day(): void
+    {
+        $this->get('/store/location')->assertOk()
+            ->assertSeeInOrder(['Sabtu–Kamis', '09.00–21.00 WITA', 'Jumat', '13.00–21.00 WITA'])
+            ->assertSee('Jumat pukul 13.00–21.00 WITA')
+            ->assertDontSee('Jumat tutup');
     }
 
     public function test_stored_address_is_escaped_in_markup_and_json_ld(): void
