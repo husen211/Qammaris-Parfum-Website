@@ -3,9 +3,11 @@
 namespace App\Actions\Orders;
 
 use App\Http\Requests\Cart\CheckoutRequest;
+use App\Models\OnlineOrder;
 use App\Services\BiteshipClient;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * ORD-13: courier prices for checkout. Biteship gives the courier's price; the store's discount turns it into the
@@ -15,17 +17,95 @@ use Illuminate\Support\Str;
  * Live 2026-11-13: options are cached one by one, not kept as a list in the session. The checkout asks for instant
  * prices, J&T prices and the pin's kecamatan at the same time; each request saves the whole session it read when it
  * started, so a list in the session lost the options another request had just added and the order was refused.
+ *
+ * ORD-26: the same prices on an order link (admin-made and WhatsApp orders), kept per order instead of per checkout.
  */
 class ShippingQuotes
 {
     /** Biteship courier code → order courier/provider key (OnlineOrder::COURIERS). */
     private const PROVIDERS = ['gojek' => 'gosend', 'grab' => 'grab', 'jnt' => 'jnt'];
 
+    /** Whose options these are: this visitor's checkout (null) or one order ("order:<id>"). */
+    private ?string $scope = null;
+
     public function __construct(private readonly BiteshipClient $biteship) {}
 
     public static function enabled(): bool
     {
-        return (bool) config('orders.shipping_quotes.enabled') && CheckoutRequest::savesOrder() && app(BiteshipClient::class)->configured();
+        return self::pricesOrders() && CheckoutRequest::savesOrder();
+    }
+
+    /** ORD-26: prices for an existing order need Biteship, not the website checkout. */
+    public static function pricesOrders(): bool
+    {
+        return (bool) config('orders.shipping_quotes.enabled') && app(BiteshipClient::class)->configured();
+    }
+
+    /** ORD-26: the same pricing for one order: options kept for that order and its current lines only. */
+    public function forOrder(OnlineOrder $order): static
+    {
+        $copy = clone $this;
+        $copy->scope = 'order:'.$order->id;
+
+        return $copy;
+    }
+
+    /** @return list<array{product_name: string, price: string, quantity: int}> */
+    public static function orderItems(OnlineOrder $order): array
+    {
+        return $order->items->map(fn ($item) => ['product_name' => (string) $item->product_name, 'price' => (string) $item->unit_price, 'quantity' => (int) $item->quantity])->all();
+    }
+
+    /** The order's lines as priced; a changed line makes its earlier options invalid, like a changed cart. */
+    public static function orderCart(OnlineOrder $order): string
+    {
+        return hash('sha256', json_encode($order->items->map(fn ($item) => [$item->variant_id, (int) $item->quantity, (string) $item->unit_price])->all(), JSON_THROW_ON_ERROR));
+    }
+
+    /** Validation of a price request from the checkout or an order link. */
+    public static function requestRules(): array
+    {
+        return [
+            'mode' => ['required', 'in:instant,jnt'],
+            'latitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-90,90'],
+            'longitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-180,180'],
+            'area_id' => ['exclude_unless:mode,jnt', 'required', 'string', 'regex:/^[A-Za-z0-9]{1,64}$/'],
+            'area_label' => ['exclude_unless:mode,jnt', 'nullable', 'string', 'max:160'],
+        ];
+    }
+
+    /**
+     * The answer to a validated price request: the options the browser may see, and why there are none.
+     *
+     * @return array{options: list<array<string, mixed>>, reason: ?string}
+     */
+    public function answer(array $data, array $items, string $cart): array
+    {
+        $area = config('orders.shipping_quotes.service_area');
+        // The label staff ship to must be the one Biteship gave for this area id, not text sent by the browser.
+        $areaLabel = $data['mode'] === 'jnt' ? self::areaLabel($data['area_id']) : null;
+        if ($data['mode'] === 'jnt' && $areaLabel === null) {
+            return ['options' => [], 'reason' => 'unavailable'];
+        }
+        if ($data['mode'] === 'instant' && ((float) $data['latitude'] < $area['south'] || (float) $data['latitude'] > $area['north']
+            || (float) $data['longitude'] < $area['west'] || (float) $data['longitude'] > $area['east'])) {
+            return ['options' => [], 'reason' => 'outside_area'];
+        }
+        try {
+            $options = $data['mode'] === 'instant'
+                ? $this->instant($items, $cart, (float) $data['latitude'], (float) $data['longitude'])
+                : $this->jnt($items, $cart, $data['area_id'], $areaLabel);
+        } catch (RuntimeException) {
+            return ['options' => [], 'reason' => 'unavailable'];
+        }
+
+        return ['options' => array_map([self::class, 'public'], $options), 'reason' => $options ? null : 'no_courier'];
+    }
+
+    /** ORD-18: Biteship's own label for an area id someone searched; never text from the browser. */
+    public static function areaLabel(string $id): ?string
+    {
+        return $id === '' ? null : Cache::get('biteship-area-label:'.$id);
     }
 
     /** @return list<array<string, mixed>> one option per instant courier that reaches the pin */
@@ -54,15 +134,26 @@ class ShippingQuotes
     /** @return list<array<string, mixed>> the J&T option for the destination area, or none */
     public function jnt(array $items, string $cart, string $areaId, string $areaLabel): array
     {
+        return $this->jntTo(['destination_area_id' => $areaId], $items, $cart, ['area_id' => $areaId, 'area_label' => $areaLabel]);
+    }
+
+    /** ORD-26: the J&T option for an order staff filled with a postcode (no area searched). */
+    public function jntToPostcode(array $items, string $cart, string $postcode): array
+    {
+        return $this->jntTo(['destination_postal_code' => $postcode], $items, $cart, ['postal_code' => $postcode]);
+    }
+
+    private function jntTo(array $destination, array $items, string $cart, array $kept): array
+    {
         $rates = collect($this->biteship->rates([
             'origin_postal_code' => config('orders.shipping_quotes.origin.postal_code'),
-            'destination_area_id' => $areaId,
+            ...$destination,
             'couriers' => 'jnt',
             'items' => $this->items($items),
         ]))->where('courier', 'jnt');
         $rate = $rates->firstWhere('service', 'ez') ?? $rates->sortBy('price')->first();
 
-        return $rate ? [$this->remember('jnt', 'jnt', 'J&T', $rate, $items, $cart, ['area_id' => $areaId, 'area_label' => $areaLabel])] : [];
+        return $rate ? [$this->remember('jnt', 'jnt', 'J&T', $rate, $items, $cart, $kept)] : [];
     }
 
     /** The stored option the customer picked, if it still belongs to this cart and delivery type. */
@@ -139,7 +230,7 @@ class ShippingQuotes
             'cart' => $cart,
             'expires_at' => now()->addMinutes((int) config('orders.shipping_quotes.quote_minutes', 30))->getTimestamp(),
         ];
-        if ($key = self::cacheKey($quote['id'])) {
+        if ($key = $this->cacheKey($quote['id'])) {
             Cache::put($key, $quote, now()->setTimestamp($quote['expires_at']));
         }
 
@@ -149,16 +240,16 @@ class ShippingQuotes
     /** An unexpired option this session was shown. */
     private function stored(string $id): ?array
     {
-        $key = preg_match('/^[A-Za-z0-9]{20}$/', $id) ? self::cacheKey($id) : null;
+        $key = preg_match('/^[A-Za-z0-9]{20}$/', $id) ? $this->cacheKey($id) : null;
         $quote = $key ? Cache::get($key) : null;
 
         return is_array($quote) && ($quote['expires_at'] ?? 0) > now()->getTimestamp() ? $quote : null;
     }
 
-    /** Bound to this checkout's key (set when the checkout page opens, never by the parallel price requests). */
-    private static function cacheKey(string $id): ?string
+    /** Bound to this checkout's key (set when the checkout page opens, never by the parallel price requests), or the order. */
+    private function cacheKey(string $id): ?string
     {
-        $checkout = session('checkout_key');
+        $checkout = $this->scope ?? session('checkout_key');
 
         return is_string($checkout) && $checkout !== '' ? 'shipping-quote:'.hash('sha256', $checkout).':'.$id : null;
     }

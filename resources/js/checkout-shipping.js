@@ -1,8 +1,7 @@
-// ORD-13/ORD-16/ORD-19: checkout delivery in marketplace order. The customer chooses how to receive, fills the address
-// (in Palu the map pin first, which fills the kecamatan; elsewhere the destination area; then the full address), then
-// picks a priced option grouped as
-// Instan (GoSend, GrabExpress) or Reguler (J&T). The server prices and keeps every option; the page only shows them,
-// submits the chosen option id and keeps the hidden `delivery` in step with it.
+// ORD-13/ORD-16/ORD-26: checkout delivery in marketplace order. The customer fills the address first (the kecamatan
+// or city; around Palu also the map pin; then the full address), then picks a priced option grouped as Instan
+// (GoSend, GrabExpress), Reguler (J&T) or Ambil sendiri (pickup). The server prices and keeps every option; the page
+// only shows them, submits the chosen option id and keeps the hidden `delivery` in step with it.
 import { areaParts, deliveryFor, discountText, distanceKm, exactArea, formatRupiah, instantArea, kecamatanCenter, locationStep, locationText, pinSummary, pinWarning, reasonText } from './checkout-shipping/logic.js';
 import { combobox } from './checkout-shipping/combobox.js';
 import { createPinMap, createPreviewMap, placeSearch } from './checkout-shipping/pin-map.js';
@@ -15,7 +14,7 @@ function setup(root) {
     const config = JSON.parse(root.dataset.config);
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
     const deliveryInput = root.querySelector('[data-delivery-value]');
-    const section = root.querySelector('[data-delivery-section]');
+    const section = root.querySelector('[data-address-section]');
     const choices = root.querySelector('[data-shipping-choices]');
     const hint = root.querySelector('[data-shipping-hint]');
     const groups = { instant: root.querySelector('[data-shipping-group="instant"]'), jnt: root.querySelector('[data-shipping-group="jnt"]') };
@@ -46,8 +45,9 @@ function setup(root) {
     let pin = preview.dataset.point ? JSON.parse(preview.dataset.point) : null;
     let pinKecamatan = null;
 
-    const receive = () => form.querySelector('[data-receive]:checked')?.value ?? '';
     const selected = () => form.querySelector('[data-shipping-choice]:checked:not(:disabled)');
+    // ORD-26: no "dikirim atau ambil" question any more; Ambil di toko is one of the shipping choices.
+    const receive = () => (selected()?.dataset.kind === 'pickup' ? 'pickup' : 'delivery');
     const announce = () => form.dispatchEvent(new Event('shipping-options'));
     const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -57,7 +57,7 @@ function setup(root) {
         section.hidden = !delivers;
         address.required = delivers;
         root.querySelectorAll('[data-shipping-choice]').forEach((input) => {
-            input.disabled = !delivers || (input === manualInput && manual.hidden);
+            input.disabled = input === manualInput && manual.hidden;
         });
         deliveryInput.value = deliveryFor(receive(), selected()?.dataset.kind, area?.label);
         announce();
@@ -166,6 +166,8 @@ function setup(root) {
         showMismatch();
         // ORD-19: with a pin and no kecamatan yet (being read, or to be chosen) the instant prices stay.
         const instant = choice ? instantArea(choice.label) : Boolean(pin);
+        // ORD-26: the map pin is asked only for a destination around Palu.
+        pinBlock.hidden = !instant;
         groups.instant.hidden = !instant;
         if (!instant) clearGroup('instant');
         else if (!pin && !groups.instant.querySelector('[data-shipping-choice]')) {
@@ -561,12 +563,8 @@ function setup(root) {
             choices.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
             element?.focus({ preventScroll: true });
         };
-        if (!area && !pin) {
-            const pinButton = pinBlock.querySelector('[data-open-location]');
-            focusOn(pinButton, 'Pasang titik antar dulu (luar Palu: isi kecamatan atau kota), lalu pilih pengiriman.');
-            pinButton.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
-        } else if (!area) {
-            focusOn(areaButton, 'Isi kecamatan atau kota tujuan dulu, lalu pilih pengiriman.');
+        if (!area) {
+            focusOn(areaButton, 'Isi kecamatan atau kota tujuan dulu, atau pilih Ambil di toko.');
             areaButton.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
         } else {
             focusOn(root.querySelector('[data-shipping-choice]:not(:disabled)') ?? pinBlock.querySelector('[data-open-location]:not([hidden])'),
@@ -575,11 +573,13 @@ function setup(root) {
     });
 
     form.addEventListener('change', (event) => {
-        if (event.target.matches?.('[data-receive]')) sync();
         if (event.target.matches?.('[data-shipping-choice]')) {
             hint.classList.remove('text-red-700');
             if (area) hint.hidden = true;
+            const wasHidden = section.hidden;
             sync();
+            // The address panel above folds away for Ambil di toko; keep the tapped choice under the finger.
+            if (wasHidden !== section.hidden) event.target.scrollIntoView({ behavior: 'auto', block: 'nearest' });
         }
     });
 

@@ -207,7 +207,17 @@
                         @else
                             <div class="flex min-h-11 items-center gap-3 rounded-xl border border-dashed border-gray-200 px-4 py-2 text-sm text-gray-400">
                                 <span aria-hidden="true" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs">{{ $i + 1 }}</span>
-                                <span>{{ $step['label'] }}</span>
+                                <span>{{ $step['label'] }}
+                                    {{-- ORD-26 (Owner 2026-11-16, B): the Biteship driver is not hidden until packing; staff see what it still needs. --}}
+                                    @if ($step['key'] === 'pengiriman' && $biteshipEnabled && $order->fulfillment === 'local_delivery' && $order->courier_booking_responsibility === 'store' && $order->lifecycle !== 'cancelled')
+                                        <span class="mt-0.5 flex flex-wrap gap-x-3 text-xs text-gray-600" data-biteship-checklist>
+                                            <span>Pesan driver Biteship setelah:</span>
+                                            @foreach (['Titik antar' => $order->deliveryPin() !== null, 'Lunas' => $order->payment_status === 'paid', 'Packing' => $order->preparation_status === 'packed'] as $need => $met)
+                                                <span class="whitespace-nowrap {{ $met ? 'font-medium text-gray-900' : 'text-amber-800' }}" data-biteship-need="{{ $met ? 'done' : 'missing' }}">@if ($met)<span aria-hidden="true">✓ </span>{{ $need }}<span class="sr-only"> sudah</span>@else{{ $need }} belum @endif</span>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                </span>
                             </div>
                         @endif
                     </li>
@@ -288,7 +298,7 @@
                     @include('admin.orders.v2._notice', ['section' => 'detail'])
                     @if ($customerChatUrl)<a href="{{ $customerChatUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $secondary }} mt-2 gap-2" data-whatsapp-button><x-icon name="whatsapp" class="text-[1.2rem] text-[#128C7E]" /> Chat customer di WhatsApp</a>@endif
                     @include('admin.orders._customer-fields', ['order' => $order])
-                    @if ($order->customerFormAsksPin())
+                    @if ($order->staffCanMovePin())
                         @include('admin.orders._pin-field', ['pinPoint' => $order->deliveryPin(), 'urlInputId' => 'location_url'])
                     @endif
                     {{-- ORD-24: paste the customer's Sharelok, a Google Maps link or coordinates; a readable one becomes the pin. --}}

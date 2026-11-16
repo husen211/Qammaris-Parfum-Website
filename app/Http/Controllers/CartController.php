@@ -237,7 +237,7 @@ class CartController extends Controller
         }
         $details = $request->orderDetails();
         // ORD-16: Biteship's own label of the searched destination (never the browser's text), for the order's kecamatan.
-        $details['area_label'] = self::areaLabel((string) $request->validated('delivery_area_id'));
+        $details['area_label'] = ShippingQuotes::areaLabel((string) $request->validated('delivery_area_id'));
         // ORD-13: the picked courier option must be one this session priced for this very cart.
         $option = $request->validated('shipping_option');
         if (is_string($option) && $option !== 'manual') {
@@ -265,48 +265,13 @@ class CartController extends Controller
     public function shippingQuote(Request $request, ShippingQuotes $quotes): JsonResponse
     {
         abort_unless(ShippingQuotes::enabled(), 404);
-        $area = config('orders.shipping_quotes.service_area');
-        $data = $request->validate([
-            'mode' => ['required', 'in:instant,jnt'],
-            'latitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-90,90'],
-            'longitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-180,180'],
-            'area_id' => ['exclude_unless:mode,jnt', 'required', 'string', 'regex:/^[A-Za-z0-9]{1,64}$/'],
-            'area_label' => ['exclude_unless:mode,jnt', 'nullable', 'string', 'max:160'],
-        ]);
+        $data = $request->validate(ShippingQuotes::requestRules());
         $items = $this->resolveCartItems(session('cart', []));
         if (! $items || ! $this->canOrder($items)) {
             return response()->json(['options' => [], 'reason' => 'cart'], 409);
         }
-        // The label staff ship to must be the one Biteship gave for this area id, not text sent by the browser.
-        $areaLabel = $data['mode'] === 'jnt' ? self::areaLabel($data['area_id']) : null;
-        if ($data['mode'] === 'jnt' && $areaLabel === null) {
-            return response()->json(['options' => [], 'reason' => 'unavailable']);
-        }
-        if ($data['mode'] === 'instant' && ((float) $data['latitude'] < $area['south'] || (float) $data['latitude'] > $area['north']
-            || (float) $data['longitude'] < $area['west'] || (float) $data['longitude'] > $area['east'])) {
-            return response()->json(['options' => [], 'reason' => 'outside_area']);
-        }
 
-        try {
-            $options = $data['mode'] === 'instant'
-                ? $quotes->instant($items, $this->quote($items), (float) $data['latitude'], (float) $data['longitude'])
-                : $quotes->jnt($items, $this->quote($items), $data['area_id'], $areaLabel);
-        } catch (RuntimeException) {
-            return response()->json(['options' => [], 'reason' => 'unavailable']);
-        }
-
-        return response()->json(['options' => array_map([ShippingQuotes::class, 'public'], $options), 'reason' => $options ? null : 'no_courier'])
-            ->header('Cache-Control', 'no-store, private');
-    }
-
-    /** ORD-18: Biteship's own label for an area id this session (or any customer) searched; never text from the browser. */
-    private static function areaLabel(string $id): ?string
-    {
-        if ($id === '') {
-            return null;
-        }
-
-        return Cache::get('biteship-area-label:'.$id);
+        return response()->json($quotes->answer($data, $items, $this->quote($items)))->header('Cache-Control', 'no-store, private');
     }
 
     /** ORD-17: the kecamatan OpenStreetMap gives for the customer's pin, to warn when it differs from the chosen one. */

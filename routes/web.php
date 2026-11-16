@@ -87,6 +87,8 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/pesanan-saya/lupakan', [OnlineOrderController::class, 'forgetMine'])->name('orders.customer.forget');
     Route::post('/pesanan/{token}', [OnlineOrderController::class, 'submit'])->name('orders.customer.submit');
     Route::post('/pesanan/{token}/titik', [OnlineOrderController::class, 'savePin'])->middleware('throttle:10,1')->name('orders.customer.pin');
+    // ORD-26: courier prices on the order link (JSON for the page's own script), bound to the order's lines.
+    Route::post('/pesanan/{token}/ongkir', [OnlineOrderController::class, 'shippingQuote'])->middleware('throttle:shipping-quote')->name('orders.customer.shipping');
     Route::post('/pesanan/{token}/diterima', [OnlineOrderController::class, 'confirmReceived'])->name('orders.customer.received');
     // ORD-13: the customer picks transfer or QRIS and opens WhatsApp to send the proof.
     Route::post('/pesanan/{token}/bayar', [OnlineOrderController::class, 'pay'])->middleware('throttle:10,1')->name('orders.customer.pay');
@@ -238,6 +240,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('jnt/qr', 'jntQr')->name('jnt.qr');
             Route::get('jnt/qr', 'showJntQr')->name('jnt.qr.show');
             Route::post('shipping', 'shipping')->name('shipping');
+            // ORD-26: Biteship prices for an order staff filled, then the chosen one becomes the ongkir.
+            Route::post('shipping/quotes', 'priceShipping')->middleware('throttle:20,1')->name('shipping.quotes');
+            Route::post('shipping/quote', 'useShippingQuote')->name('shipping.quote');
             Route::post('handover', 'handover')->name('handover');
             Route::post('delivery', 'delivery')->name('delivery');
             Route::post('issues', 'openIssue')->name('issues');

@@ -1,7 +1,8 @@
 {{--
-    ORD-13/ORD-16: how to receive, the address (destination area, full address, and for instant couriers a map pin), then
-    the priced options grouped Instan (GoSend, GrabExpress) and Reguler (J&T). The hidden `delivery` follows the chosen
-    option. The radio value is a quote id the server priced and kept for this cart; "manual" means staff confirm ongkir.
+    ORD-13/ORD-26: the address (destination area, for instant couriers a map pin, full address), then the priced options
+    grouped Instan (GoSend, GrabExpress), Reguler (J&T) and Ambil sendiri. The hidden `delivery` follows the chosen
+    option. The radio value is a quote id the server priced and kept for this cart; "manual" means staff confirm ongkir;
+    "pickup" is Ambil di toko.
 --}}
 @php
     $selectedKind = $shippingSelected['kind'] ?? null;
@@ -9,7 +10,8 @@
     $panelClass = 'space-y-3 border border-gray-200 bg-white p-4';
     $optionCard = 'flex min-h-16 cursor-pointer items-center gap-3 border border-gray-300 bg-white p-4 [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] active:bg-gray-50 has-[:checked]:border-brand-black has-[:checked]:bg-[#FAF8F3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-black';
     $config = [
-        'quoteUrl' => route('cart.checkout.shipping'),
+        // ORD-26: an order link prices its own lines.
+        'quoteUrl' => $quoteUrl ?? route('cart.checkout.shipping'),
         'areaUrl' => route('cart.checkout.areas'),
         'origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')],
         'kecamatan' => config('orders.shipping_quotes.kecamatan'),
@@ -23,115 +25,109 @@
 @endphp
 @vite('resources/js/checkout-shipping.js')
 @php
-    // ORD-16 (Owner 2026-11-11): marketplace order: how to receive → address → shipping options with prices.
-    $receive = $delivery === 'pickup' ? 'pickup' : ($delivery ? 'delivery' : null);
+    // ORD-26 (Owner 2026-11-16): customers do not know the store is in Palu, so they are not asked "dikirim atau
+    // ambil" or "dalam atau luar kota" first. The address comes first (kecamatan or city, the map pin around Palu, the
+    // full address), then every way to receive with its price, Ambil di toko included.
+    $pickup = $delivery === 'pickup';
     $areaLabel = old('delivery_area_label', $selectedKind === 'jnt' ? ($shippingSelected['area_label'] ?? '') : '');
     $sectionTitle = 'font-mayluxa text-xl text-brand-black';
+    $nearStore = $selectedKind === 'instant' || (bool) preg_match('/\b(palu|sigi|donggala)\b/i', (string) $areaLabel);
+    $store = config('store.profile');
 @endphp
-<div data-shipping-quotes data-config='@json($config)' class="space-y-5">
+<div data-shipping-quotes data-config='@json($config)' class="space-y-6">
     <input type="hidden" name="delivery" value="{{ $delivery }}" data-delivery-value>
-    <fieldset @if ($errors->has('delivery')) aria-describedby="delivery-error" @endif>
-        <legend class="text-sm font-medium text-brand-black">Metode pengiriman <span aria-hidden="true">*</span></legend>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2">
-            <label class="{{ $choiceClass }}">
-                <input type="radio" name="receive" value="delivery" @checked($receive === 'delivery') required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-receive>
-                <span class="min-w-0 flex-1">
-                    <span class="block text-base font-medium text-brand-black">Dikirim ke alamat</span>
-                    <span class="mt-0.5 block text-sm leading-5 text-gray-600">Diantar langsung oleh kurir.</span>
-                    <span class="mt-2 flex flex-wrap items-center gap-3"><x-partner-logo name="gosend" class="h-4" /><x-partner-logo name="grab" class="h-4" /><x-partner-logo name="jnt" class="h-4" /></span>
-                </span>
-            </label>
-            <label class="{{ $choiceClass }}">
-                <input type="radio" name="receive" value="pickup" @checked($receive === 'pickup') required class="mt-1 h-5 w-5 shrink-0 accent-brand-black" data-receive>
+    @error('delivery') <p id="delivery-error" class="text-sm text-red-700">{{ $message }}</p> @enderror
+    {{-- Address first: the destination decides which couriers can go there and what they cost. --}}
+    <section class="{{ $panelClass }}" aria-labelledby="address-title" data-address-section @if ($pickup) hidden @endif>
+        <h3 id="address-title" class="{{ $sectionTitle }}">Alamat pengiriman</h3>
+        <div>
+            {{-- ORD-17: our own search screen (full screen on phones), so typing and the keyboard's Search key behave the same everywhere. --}}
+            <p id="delivery-area-title" class="block text-sm font-medium text-brand-black">Kecamatan atau kota tujuan <span aria-hidden="true">*</span></p>
+            <button type="button" id="delivery-area" data-area-open aria-haspopup="dialog" aria-labelledby="delivery-area-title delivery-area" class="mt-2 flex min-h-12 w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 py-2.5 text-left text-base text-brand-black [touch-action:manipulation] active:bg-gray-50 focus-visible:border-brand-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-black">
+                <span data-area-text class="min-w-0 {{ $areaLabel ? '' : 'text-gray-500' }}">{{ $areaLabel ?: 'Cari kecamatan atau kota' }}</span>
+                <svg aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </button>
+            <p class="mt-2 text-xs leading-5 text-gray-500">Ketik kecamatan, kota, atau kode pos tujuan. Pilihan kurir dan ongkir mengikuti tujuan ini.</p>
+            <input type="hidden" name="delivery_area_id" value="{{ old('delivery_area_id') }}" data-area-id>
+            <input type="hidden" name="delivery_area_label" value="{{ $areaLabel }}" data-area-label>
+        </div>
+        {{-- ORD-26: the map pin only for a destination around Palu (instant couriers); it may still correct the kecamatan. --}}
+        <div data-instant-pin class="space-y-2" @unless ($nearStore) hidden @endunless>
+            <p class="text-sm font-medium text-brand-black">Titik antar</p>
+            <p class="text-xs leading-5 text-gray-500">Tujuan di Palu dan sekitarnya bisa diantar kurir instan (GoSend, GrabExpress). Pasang titik supaya ongkirnya muncul.</p>
+            <button type="button" data-open-location @if ($selectedKind === 'instant') hidden @endif class="flex min-h-12 w-full items-center justify-center gap-2 border border-brand-black bg-white px-4 text-base font-medium text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
+                <svg aria-hidden="true" class="h-5 w-5 text-[#8A6A2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Tentukan titik di peta
+            </button>
+            <div data-pin-summary @if ($selectedKind !== 'instant') hidden @endif class="flex flex-wrap items-center justify-between gap-2 bg-[#FAF8F3] px-3 py-2 text-sm text-brand-black">
+                <span class="flex items-center gap-2"><svg aria-hidden="true" class="h-4 w-4 shrink-0 text-[#8A6A2E]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg><span data-pin-text>{{ isset($shippingSelected['distance_km']) ? 'Titik antar dipilih · ±'.number_format($shippingSelected['distance_km'], 1, ',', '.').' km dari toko' : 'Titik antar dipilih' }}</span></span>
+                <button type="button" data-change-pin class="min-h-11 px-2 font-medium underline underline-offset-4">Ubah titik</button>
+            </div>
+            <div data-pin-preview @if (! $pinPoint) hidden @endif @if ($pinPoint) data-point="{{ json_encode($pinPoint) }}" @endif class="relative h-40 w-full overflow-hidden border border-gray-200 bg-[#eef0ea]" role="img" aria-label="Peta kecil titik antar">
+                <div data-pin-preview-map class="qm-map absolute inset-0"></div>
+                <div class="pointer-events-none absolute left-1/2 top-1/2 z-[500] -translate-x-1/2 -translate-y-full">
+                    <svg aria-hidden="true" width="28" height="36" viewBox="0 0 34 44"><path d="M17 43C17 43 33 27.5 33 16.5A16 16 0 0 0 1 16.5C1 27.5 17 43 17 43Z" fill="#C5A059" stroke="#1a1a1a" stroke-width="2"/><circle cx="17" cy="16.5" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/></svg>
+                </div>
+            </div>
+            {{-- ORD-19: the pin lies where two kecamatan meet, or its kecamatan could not be read. --}}
+            <div data-pin-areas hidden role="status" class="space-y-2 border border-gray-200 bg-[#FAF8F3] px-3 py-2 text-sm leading-6 text-brand-black">
+                <p data-pin-areas-text></p>
+                <div data-pin-areas-buttons class="flex flex-wrap gap-2"></div>
+            </div>
+            <div data-pin-mismatch hidden role="status" class="space-y-2 border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+                <p data-pin-mismatch-text></p>
+                <button type="button" data-pin-mismatch-fix class="min-h-11 font-semibold underline underline-offset-4"></button>
+            </div>
+        </div>
+        <div>
+            <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
+            <textarea id="customer_address" name="customer_address" rows="3" @unless ($pickup) required @endunless minlength="10" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 bg-white px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address', $savedAddress ?? null) }}</textarea>
+            <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">Nama jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.</p>
+            @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+            @error('address') <p class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+        </div>
+    </section>
+
+    {{-- Then every way to receive with its price: Instan, Reguler, Ambil sendiri. --}}
+    <section class="{{ $panelClass }}" aria-labelledby="shipping-title" data-shipping-choices>
+        <h3 id="shipping-title" class="{{ $sectionTitle }}">Pilih pengiriman</h3>
+        <p data-shipping-hint class="text-sm leading-6 text-gray-600" @if ($selectedKind) hidden @endif>Isi kecamatan atau kota tujuan di atas, lalu pilihan kurir dan ongkirnya muncul di sini.</p>
+        {{-- ORD-15: the couriers the store sends with, before any price is shown. --}}
+        <p class="flex flex-wrap items-center gap-3"><x-partner-logo name="gosend" class="h-4" /><x-partner-logo name="grab" class="h-4" /><x-partner-logo name="jnt" class="h-4" /></p>
+        <div data-shipping-group="instant" @if ($selectedKind !== 'instant') hidden @endif class="space-y-2">
+            <p class="text-sm font-semibold text-brand-black">Instan <span class="font-normal text-gray-600">· tiba di hari yang sama</span></p>
+            <div data-shipping-options role="radiogroup" aria-label="Kurir instan" class="space-y-2">
+                @if ($selectedKind === 'instant')@include('cart._shipping_option', ['option' => $shippingSelected, 'checked' => true])@endif
+            </div>
+            <p data-shipping-status role="status" aria-live="polite" class="text-sm leading-6 text-gray-600"></p>
+        </div>
+        <div data-shipping-group="jnt" @if ($selectedKind !== 'jnt') hidden @endif class="space-y-2">
+            <p class="text-sm font-semibold text-brand-black">Reguler <span class="font-normal text-gray-600">· tiba 2–3 hari</span></p>
+            <div data-shipping-options role="radiogroup" aria-label="Kurir reguler" class="space-y-2">
+                @if ($selectedKind === 'jnt')@include('cart._shipping_option', ['option' => $shippingSelected, 'checked' => true])@endif
+            </div>
+            <p data-shipping-status role="status" aria-live="polite" class="text-sm leading-6 text-gray-600"></p>
+        </div>
+
+        {{-- Fallback when no courier price is available: staff confirm ongkir in WhatsApp, as before ORD-13. --}}
+        <label data-manual-option @if (! $manualSelected) hidden @endif class="{{ $optionCard }}">
+            <input type="radio" name="shipping_option" value="manual" @checked($manualSelected) @disabled(! $manualSelected) class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-choice data-kind="manual" data-charged="">
+            <span class="flex-1"><span class="block text-base font-medium text-brand-black">Ongkir dikonfirmasi admin</span><span class="block text-sm leading-5 text-gray-600">Admin menghitung ongkir dan mengabarinya di WhatsApp.</span></span>
+        </label>
+        {{-- ORD-26: picking up is one of the choices, with the store's address for customers who do not know it. --}}
+        <div class="space-y-2 border-t border-gray-100 pt-3">
+            <p class="text-sm font-semibold text-brand-black">Ambil sendiri <span class="font-normal text-gray-600">· tanpa ongkir</span></p>
+            <label class="{{ $optionCard }}">
+                <input type="radio" name="shipping_option" value="pickup" @checked($pickup) class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-choice data-kind="pickup" data-charged="0">
                 <span class="min-w-0 flex-1">
                     <span class="block text-base font-medium text-brand-black">Ambil di toko</span>
-                    <span class="mt-0.5 block text-sm leading-5 text-gray-600">Datang setelah pesanan dikonfirmasi. Tanpa ongkir.</span>
+                    <span class="block text-sm leading-5 text-gray-600">{{ $store['street'] }}, {{ $store['locality'] }}. Datang setelah pesanan dikonfirmasi.</span>
                 </span>
-                {{-- ORD-18: a storefront mark, as the delivery choice shows the courier logos. --}}
-                <svg aria-hidden="true" class="mt-0.5 h-7 w-7 shrink-0 text-brand-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9 5 4h14l1.5 5"/><path d="M3.5 9a2.83 2.83 0 0 0 5.67 0 2.83 2.83 0 0 0 5.66 0 2.83 2.83 0 0 0 5.67 0"/><path d="M5 11.5V20h14v-8.5"/><path d="M10 20v-5h4v5"/></svg>
+                <svg aria-hidden="true" class="h-7 w-7 shrink-0 text-brand-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9 5 4h14l1.5 5"/><path d="M3.5 9a2.83 2.83 0 0 0 5.67 0 2.83 2.83 0 0 0 5.66 0 2.83 2.83 0 0 0 5.67 0"/><path d="M5 11.5V20h14v-8.5"/><path d="M10 20v-5h4v5"/></svg>
             </label>
         </div>
-        @error('delivery') <p id="delivery-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
-    </fieldset>
-
-    <div data-delivery-section @if ($receive !== 'delivery') hidden @endif class="space-y-6">
-        {{-- Address first: the pin (Palu) or the destination (outside Palu) decides which couriers can go there. --}}
-        <section class="{{ $panelClass }}" aria-labelledby="address-title">
-            <h3 id="address-title" class="{{ $sectionTitle }}">Alamat pengiriman</h3>
-            {{-- ORD-19: in Palu the address starts with the pin; the kecamatan is filled from it. --}}
-            <div data-instant-pin class="space-y-2">
-                <p class="text-sm font-medium text-brand-black">Titik antar</p>
-                <p class="text-xs leading-5 text-gray-500">Untuk Palu dan sekitarnya. Kecamatan terisi otomatis.</p>
-                <button type="button" data-open-location @if ($selectedKind === 'instant') hidden @endif class="flex min-h-12 w-full items-center justify-center gap-2 border border-brand-black bg-white px-4 text-base font-medium text-brand-black [touch-action:manipulation] active:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black">
-                    <svg aria-hidden="true" class="h-5 w-5 text-[#8A6A2E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Tentukan titik di peta
-                </button>
-                <div data-pin-summary @if ($selectedKind !== 'instant') hidden @endif class="flex flex-wrap items-center justify-between gap-2 bg-[#FAF8F3] px-3 py-2 text-sm text-brand-black">
-                    <span class="flex items-center gap-2"><svg aria-hidden="true" class="h-4 w-4 shrink-0 text-[#8A6A2E]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg><span data-pin-text>{{ isset($shippingSelected['distance_km']) ? 'Titik antar dipilih · ±'.number_format($shippingSelected['distance_km'], 1, ',', '.').' km dari toko' : 'Titik antar dipilih' }}</span></span>
-                    <button type="button" data-change-pin class="min-h-11 px-2 font-medium underline underline-offset-4">Ubah titik</button>
-                </div>
-                <div data-pin-preview @if (! $pinPoint) hidden @endif @if ($pinPoint) data-point="{{ json_encode($pinPoint) }}" @endif class="relative h-40 w-full overflow-hidden border border-gray-200 bg-[#eef0ea]" role="img" aria-label="Peta kecil titik antar">
-                    <div data-pin-preview-map class="qm-map absolute inset-0"></div>
-                    <div class="pointer-events-none absolute left-1/2 top-1/2 z-[500] -translate-x-1/2 -translate-y-full">
-                        <svg aria-hidden="true" width="28" height="36" viewBox="0 0 34 44"><path d="M17 43C17 43 33 27.5 33 16.5A16 16 0 0 0 1 16.5C1 27.5 17 43 17 43Z" fill="#C5A059" stroke="#1a1a1a" stroke-width="2"/><circle cx="17" cy="16.5" r="6" fill="#fff" stroke="#1a1a1a" stroke-width="2"/></svg>
-                    </div>
-                </div>
-                {{-- ORD-19: the pin lies where two kecamatan meet, or its kecamatan could not be read. --}}
-                <div data-pin-areas hidden role="status" class="space-y-2 border border-gray-200 bg-[#FAF8F3] px-3 py-2 text-sm leading-6 text-brand-black">
-                    <p data-pin-areas-text></p>
-                    <div data-pin-areas-buttons class="flex flex-wrap gap-2"></div>
-                </div>
-                <div data-pin-mismatch hidden role="status" class="space-y-2 border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
-                    <p data-pin-mismatch-text></p>
-                    <button type="button" data-pin-mismatch-fix class="min-h-11 font-semibold underline underline-offset-4"></button>
-                </div>
-            </div>
-            <div>
-                {{-- ORD-17: our own search screen (full screen on phones), so typing and the keyboard's Search key behave the same everywhere. --}}
-                <p id="delivery-area-title" class="block text-sm font-medium text-brand-black">Kecamatan atau kota <span aria-hidden="true">*</span></p>
-                <button type="button" id="delivery-area" data-area-open aria-haspopup="dialog" aria-labelledby="delivery-area-title delivery-area" class="mt-2 flex min-h-12 w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 py-2.5 text-left text-base text-brand-black [touch-action:manipulation] active:bg-gray-50 focus-visible:border-brand-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-black">
-                    <span data-area-text class="min-w-0 {{ $areaLabel ? '' : 'text-gray-500' }}">{{ $areaLabel ?: 'Cari kecamatan atau kota' }}</span>
-                    <svg aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                </button>
-                <p class="mt-2 text-xs leading-5 text-gray-500">Terisi dari titik antar. Kirim ke luar Palu? Cari di sini.</p>
-                <input type="hidden" name="delivery_area_id" value="{{ old('delivery_area_id') }}" data-area-id>
-                <input type="hidden" name="delivery_area_label" value="{{ $areaLabel }}" data-area-label>
-            </div>
-            <div>
-                <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
-                <textarea id="customer_address" name="customer_address" rows="3" @if ($receive === 'delivery') required @endif minlength="10" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 bg-white px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address') }}</textarea>
-                <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">Nama jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.</p>
-                @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
-            </div>
-        </section>
-
-        {{-- Then the shipping options with their prices, grouped like marketplaces: Instan, Reguler. --}}
-        <section class="{{ $panelClass }}" aria-labelledby="shipping-title" data-shipping-choices>
-            <h3 id="shipping-title" class="{{ $sectionTitle }}">Pilih pengiriman</h3>
-            <p data-shipping-hint class="text-sm leading-6 text-gray-600" @if ($selectedKind) hidden @endif>Pasang titik antar atau isi kecamatan dulu, lalu pilihan pengiriman muncul di sini.</p>
-            <div data-shipping-group="instant" @if ($selectedKind !== 'instant') hidden @endif class="space-y-2">
-                <p class="text-sm font-semibold text-brand-black">Instan <span class="font-normal text-gray-600">· tiba di hari yang sama</span></p>
-                <div data-shipping-options role="radiogroup" aria-label="Kurir instan" class="space-y-2">
-                    @if ($selectedKind === 'instant')@include('cart._shipping_option', ['option' => $shippingSelected, 'checked' => true])@endif
-                </div>
-                <p data-shipping-status role="status" aria-live="polite" class="text-sm leading-6 text-gray-600"></p>
-            </div>
-            <div data-shipping-group="jnt" @if ($selectedKind !== 'jnt') hidden @endif class="space-y-2">
-                <p class="text-sm font-semibold text-brand-black">Reguler <span class="font-normal text-gray-600">· tiba 2–3 hari</span></p>
-                <div data-shipping-options role="radiogroup" aria-label="Kurir reguler" class="space-y-2">
-                    @if ($selectedKind === 'jnt')@include('cart._shipping_option', ['option' => $shippingSelected, 'checked' => true])@endif
-                </div>
-                <p data-shipping-status role="status" aria-live="polite" class="text-sm leading-6 text-gray-600"></p>
-            </div>
-
-            {{-- Fallback when no courier price is available: staff confirm ongkir in WhatsApp, as before ORD-13. --}}
-            <label data-manual-option @if (! $manualSelected) hidden @endif class="{{ $optionCard }}">
-                <input type="radio" name="shipping_option" value="manual" @checked($manualSelected) @disabled(! $manualSelected) class="h-5 w-5 shrink-0 accent-brand-black" data-shipping-choice data-kind="manual" data-charged="">
-                <span class="flex-1"><span class="block text-base font-medium text-brand-black">Ongkir dikonfirmasi admin</span><span class="block text-sm leading-5 text-gray-600">Admin menghitung ongkir dan mengabarinya di WhatsApp.</span></span>
-            </label>
-            @error('shipping_option') <p id="shipping_option-error" class="text-sm text-red-700">{{ $message }}</p> @enderror
-        </section>
-    </div>
+        @error('shipping_option') <p id="shipping_option-error" class="text-sm text-red-700">{{ $message }}</p> @enderror
+    </section>
 
     <template data-option-template>@include('cart._shipping_option', ['option' => null, 'checked' => false])</template>
 </div>
