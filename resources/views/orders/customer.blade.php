@@ -11,8 +11,19 @@
     $choiceClass = 'flex min-h-14 cursor-pointer items-start gap-3 border border-gray-300 bg-white p-4 [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] active:bg-gray-50 has-[:checked]:border-brand-black has-[:checked]:bg-[#FAF8F3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-black';
     $fulfillment = old('fulfillment', $order->fulfillment);
     $describedBy = fn (string $field, ?string $help = null) => trim(($help ?? '').($errors->has($field) ? ' '.$field.'-error' : ''));
+    // ORD-26 (Owner 2026-11-16): like the checkout, the address first, then every way to receive with its price.
+    $picksShipping = $editing && $order->customerPicksShipping();
+    if ($picksShipping) {
+        $orderQuotes = app(\App\Actions\Orders\ShippingQuotes::class)->forOrder($order);
+        $oldOption = old('shipping_option');
+        $shippingSelected = is_string($oldOption) && ! in_array($oldOption, ['manual', 'pickup'], true)
+            ? $orderQuotes->remembered($oldOption, \App\Actions\Orders\ShippingQuotes::orderCart($order)) : null;
+        $shippingPin = ($shippingSelected['kind'] ?? null) === 'instant' && isset($shippingSelected['destination']['latitude'])
+            ? [$shippingSelected['destination']['latitude'], $shippingSelected['destination']['longitude']] : null;
+        $shippingSelected = $shippingSelected ? \App\Actions\Orders\ShippingQuotes::public($shippingSelected) : null;
+    }
     // ORD-23: the form itself asks for the delivery pin (Pengiriman Dalam Kota).
-    $asksPin = $editing && $order->customerFormAsksPin();
+    $asksPin = $editing && ! $picksShipping && $order->customerFormAsksPin();
     $formPin = $asksPin ? $order->deliveryPin() : null;
     $pinConfig = ['origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')],
         'kecamatan' => config('orders.shipping_quotes.kecamatan'), 'serviceArea' => config('orders.shipping_quotes.service_area'),
@@ -265,7 +276,8 @@
                 </div>
             @elseif ($order->fulfillment !== 'pickup' && $order->shipping_fee === null && $order->payment_status !== 'paid')
                 <div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-700">
-                    <span>Ongkir</span><span>Menunggu konfirmasi staf</span>
+                    {{-- ORD-26: on the form the customer picks the courier and sees its price. --}}
+                    <span>Ongkir</span><span>{{ $picksShipping ? 'Pilih pengiriman di bawah' : 'Menunggu konfirmasi staf' }}</span>
                 </div>
             @endif
             @if (\App\Support\OnlineOrderStepper::totalIsFinal($order))
@@ -274,7 +286,7 @@
                     <strong class="text-lg tabular-nums">{{ format_rupiah($order->customerTotal()) }}</strong>
                 </div>
             @else
-                <p class="mt-2 text-sm leading-6 text-gray-600">Total final setelah ongkir dikonfirmasi admin.</p>
+                <p class="mt-2 text-sm leading-6 text-gray-600">{{ $picksShipping ? 'Total final setelah memilih pengiriman.' : 'Total final setelah ongkir dikonfirmasi admin.' }}</p>
             @endif
         </section>
 
@@ -303,6 +315,10 @@
                     @error('customer_phone') <p id="customer_phone-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                 </div>
 
+                @if ($picksShipping)
+                    @include('cart._shipping', ['delivery' => old('delivery', $order->fulfillment === 'pickup' ? 'pickup' : null), 'pinPoint' => $shippingPin, 'savedAddress' => $order->fulfillment === 'pickup' ? null : $order->address,
+                        'quoteUrl' => route('orders.customer.shipping', $token)])
+                @else
                 <fieldset aria-describedby="{{ $describedBy('fulfillment') ?: null }}">
                     <legend class="text-base font-medium text-brand-black">Cara menerima pesanan</legend>
                     <div class="mt-3 space-y-3">
@@ -360,6 +376,7 @@
                     <input id="postcode" name="postcode" value="{{ old('postcode', $order->postcode) }}" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="postal-code" aria-invalid="{{ $errors->has('postcode') ? 'true' : 'false' }}" @if ($errors->has('postcode')) aria-describedby="postcode-error" @endif class="{{ $fieldClass }} max-w-40">
                     @error('postcode') <p id="postcode-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
                 </div>
+                @endif
 
                 <fieldset>
                     <legend class="text-base font-medium text-brand-black">Paperbag</legend>
@@ -391,7 +408,7 @@
                 @endif
 
                 {{-- ORD-10: only a local courier can be paid on arrival; J&T ongkir is always part of the payment. --}}
-                @if ($order->customerSetsShippingPayment())
+                @if (! $picksShipping && $order->customerSetsShippingPayment())
                     @php($shippingPayment = old('shipping_payment', $order->fulfillment === 'local_delivery' ? $order->shipping_payer : null))
                     <fieldset data-show-for="local_delivery" @if ($fulfillment !== 'local_delivery') hidden @endif aria-describedby="shipping-payment-help{{ $errors->has('shipping_payment') ? ' shipping_payment-error' : '' }}">
                         <legend class="text-base font-medium text-brand-black">Metode pembayaran ongkir</legend>
@@ -576,6 +593,8 @@ document.querySelector('[data-received-form]')?.addEventListener('submit', (even
 (() => {
     const form = document.querySelector('[data-order-form]');
     if (!form) return;
+    // ORD-26: with priced shipping the shared block (checkout-shipping.js) handles the address and the choice.
+    const priced = form.querySelector('[data-shipping-quotes]');
     const address = form.querySelector('#address');
     const label = form.querySelector('[data-address-label]');
     const optional = form.querySelector('[data-address-optional]');
@@ -593,13 +612,22 @@ document.querySelector('[data-received-form]')?.addEventListener('submit', (even
             ? 'Jalan, nomor rumah, dan kota.'
             : @json($localAddressHelp);
     };
-    form.querySelectorAll('[data-fulfillment]').forEach((input) => input.addEventListener('change', sync));
-    sync();
+    if (!priced) {
+        form.querySelectorAll('[data-fulfillment]').forEach((input) => input.addEventListener('change', sync));
+        sync();
+    }
 
     const submit = form.querySelector('button[type="submit"]');
     const feedback = form.querySelector('[data-order-feedback]');
     const initialLabel = submit.textContent;
     form.addEventListener('submit', (event) => {
+        // ORD-26: no way to receive chosen yet: point at what is missing instead of a round trip to the server.
+        if (priced && !form.querySelector('[data-shipping-choice]:checked:not(:disabled)')) {
+            event.preventDefault();
+            form.dispatchEvent(new CustomEvent('shipping-missing'));
+
+            return;
+        }
         // ORD-23: "Pengiriman Dalam Kota" needs the pin; point at it instead of a round trip to the server.
         const pin = form.querySelector('[data-pin-field][data-pin-required]');
         if (pin && !pin.closest('[hidden]') && !pin.querySelector('[data-pin-lat]').value) {

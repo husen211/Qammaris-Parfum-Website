@@ -9,6 +9,7 @@ use App\Services\BiteshipClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
@@ -450,35 +451,80 @@ class BiteshipCourierBookingTest extends TestCase
         $this->assertCount(3, $toApp());
     }
 
-    public function test_a_whatsapp_order_link_asks_for_the_pin_with_local_delivery(): void
+    public function test_a_whatsapp_order_link_asks_the_address_first_and_offers_couriers_with_their_price(): void
     {
-        // Owner 2026-11-15: a WhatsApp order made by staff, filled by the customer on the link.
+        // ORD-26 (Owner 2026-11-16): a WhatsApp order made by staff, filled by the customer on the link like the checkout.
         $order = $this->v2Order(null);
         $token = $order->customer_token_encrypted;
         $this->get(route('orders.customer.show', $token))->assertOk()
-            ->assertSee('name="pin_latitude"', false)->assertSee('Tentukan titik di peta')->assertSee('Titik antar dipasang di peta.')
-            ->assertDontSee('Lokasi tepat lewat Sharelok');
+            ->assertSeeInOrder(['Alamat pengiriman', 'Kecamatan atau kota tujuan', 'Titik antar', 'Alamat lengkap', 'Pilih pengiriman', 'Ambil di toko', 'Paperbag'])
+            ->assertDontSee('Cara menerima pesanan')->assertDontSee('Metode pembayaran ongkir')
+            ->assertSee(json_encode(route('orders.customer.shipping', $token)), false);
+
+        // Prices for this order's lines, kept on the server for this order.
+        $this->answer('POST /v1/rates/couriers', ['success' => true, 'pricing' => [
+            ['courier_code' => 'gojek', 'courier_service_code' => 'instant', 'price' => 20500, 'shipment_duration_range' => '1 - 2', 'shipment_duration_unit' => 'hours'],
+            ['courier_code' => 'grab', 'courier_service_code' => 'instant', 'price' => 18000, 'shipment_duration_range' => '1 - 3', 'shipment_duration_unit' => 'hours'],
+        ]]);
+        $options = collect($this->postJson(route('orders.customer.shipping', $token), ['mode' => 'instant', 'latitude' => -0.8951234, 'longitude' => 119.8561234])
+            ->assertOk()->json('options'))->keyBy('provider');
+        $this->assertSame([20500, 17000], [$options['gosend']['price'], $options['gosend']['charged']]);
+        $this->assertSame([-0.8951234, 119.8561234], [$this->sent[0]['destination_latitude'], $this->sent[0]['destination_longitude']]);
+
+        $form = ['customer_name' => 'E2E Uji Link', 'customer_phone' => '080000000101', 'customer_address' => 'Jl. Sintetis No. 1, patokan uji',
+            'packaging' => 'paperbag', 'payment_preference' => 'qris', 'delivery_area_id' => ''];
+        // A made-up option, or one for another delivery type, is refused and nothing changes.
+        $this->post(route('orders.customer.submit', $token), $form + ['delivery' => 'local_delivery', 'shipping_option' => str_repeat('A', 20)])
+            ->assertSessionHasErrors('shipping_option');
+        $this->post(route('orders.customer.submit', $token), $form + ['delivery' => 'intercity', 'shipping_option' => $options['gosend']['id']])
+            ->assertSessionHasErrors('shipping_option');
+        $this->assertSame('awaiting_customer', $order->fresh()->stage);
+
+        $this->post(route('orders.customer.submit', $token), $form + ['delivery' => 'local_delivery', 'shipping_option' => $options['gosend']['id']])
+            ->assertSessionHasNoErrors()->assertSessionHas('success', 'Terima kasih, data pesanan sudah kami terima.');
+        $order->refresh();
+        $this->assertSame(['details_received', 'local_delivery', '17000.00', 'added_to_transfer', 'customer_link', 'gosend'],
+            [$order->stage, $order->fulfillment, $order->shipping_fee, $order->shipping_payer, $order->shipping_quote['chosen_by'], $order->shipping_quote['provider']]);
+        $this->assertSame(['latitude' => -0.8951234, 'longitude' => 119.8561234], $order->deliveryPin(), 'staff book Biteship to this pin');
+        $this->assertTrue($order->customerCanPay(), 'the total is final, so the customer can pay at once');
+        // Staff see the price the customer chose; the customer can still change it while nothing is paid.
+        $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertSee('data-ongkir-quote', false)->assertSee('GoSend');
+        $this->get(route('orders.customer.show', [$token, 'ubah' => 1]))->assertSee('Pilih pengiriman');
+
+        // Ambil di toko: no address, no ongkir; the earlier price is dropped.
+        $this->post(route('orders.customer.submit', $token), ['delivery' => 'pickup', 'shipping_option' => 'pickup', 'customer_address' => ''] + $form)->assertSessionHasNoErrors();
+        $order->refresh();
+        $this->assertSame(['pickup', null, null, null], [$order->fulfillment, $order->shipping_fee, $order->shipping_quote, $order->address]);
+
+        // No courier price (Biteship silent): ongkir by the admin, with the destination's kecamatan and postcode.
+        Cache::put('biteship-area-label:IDNP6IDNC148IDND836', 'Menteng, Jakarta Pusat, DKI Jakarta. 10310', now()->addHour());
+        $this->post(route('orders.customer.submit', $token), ['delivery' => 'intercity', 'shipping_option' => 'manual', 'delivery_area_id' => 'IDNP6IDNC148IDND836'] + $form)
+            ->assertSessionHasNoErrors();
+        $order->refresh();
+        $this->assertSame(['intercity', null, 'Menteng', '10310'], [$order->fulfillment, $order->shipping_fee, $order->district, $order->postcode]);
+
+        // Paid: the link no longer offers prices.
+        $this->assertFalse($this->payInFull($order->fresh())->customerPicksShipping());
+    }
+
+    public function test_an_order_link_with_ongkir_set_by_staff_still_asks_the_pin(): void
+    {
+        // ORD-23: staff already priced the ongkir by hand, so the link keeps "Cara menerima" and asks only the pin.
+        $order = $this->v2Order(null);
+        $order->forceFill(['shipping_fee' => '15000.00', 'shipping_payer' => 'added_to_transfer'])->saveQuietly();
+        $token = $order->customer_token_encrypted;
+        $this->get(route('orders.customer.show', $token))->assertOk()->assertSee('Cara menerima pesanan')
+            ->assertSee('name="pin_latitude"', false)->assertSee('Titik antar dipasang di peta.')->assertDontSee('<div data-shipping-quotes', false);
 
         $form = ['customer_name' => 'E2E Uji Pin', 'customer_phone' => '080000000101', 'fulfillment' => 'local_delivery',
             'address' => 'Patokan sintetis', 'packaging' => 'paperbag', 'payment_preference' => 'qris', 'shipping_payment' => 'added_to_transfer'];
-        // Pengiriman Dalam Kota without a pin, or with a pin outside Palu, is refused and nothing changes.
         $this->post(route('orders.customer.submit', $token), $form)->assertSessionHasErrors(['pin_latitude' => 'Tentukan titik antar di peta.']);
         $this->post(route('orders.customer.submit', $token), $form + ['pin_latitude' => -5.14, 'pin_longitude' => 119.42])->assertSessionHasErrors('pin_latitude');
-        $this->assertSame('awaiting_customer', $order->fresh()->stage);
-        // Pickup needs no pin.
-        $this->post(route('orders.customer.submit', $token), ['fulfillment' => 'pickup'] + $form)->assertSessionHasNoErrors();
-        $this->assertSame(['details_received', 'pickup', null], [$order->fresh()->stage, $order->fresh()->fulfillment, $order->fresh()->location_url]);
-
-        $order = $this->v2Order(null);
-        $token = $order->customer_token_encrypted;
         $this->post(route('orders.customer.submit', $token), $form + ['pin_latitude' => -0.8951234, 'pin_longitude' => 119.8561234])
             ->assertSessionHas('success', 'Terima kasih, data pesanan sudah kami terima.');
         $order->refresh();
-        $this->assertSame(['details_received', 'local_delivery', 'https://www.google.com/maps?q=-0.895123,119.856123'], [$order->stage, $order->fulfillment, $order->location_url]);
-        $this->assertSame(['latitude' => -0.895123, 'longitude' => 119.856123], $order->deliveryPin(), 'staff can book Biteship to it');
-
-        // Changing the details later shows the saved pin and keeps it.
-        $this->get(route('orders.customer.show', [$token, 'ubah' => 1]))->assertSee('Titik antar sudah dipasang')->assertSee('Ubah titik');
+        $this->assertSame(['details_received', 'local_delivery', 'https://www.google.com/maps?q=-0.895123,119.856123', '15000.00'],
+            [$order->stage, $order->fulfillment, $order->location_url, $order->shipping_fee]);
 
         // Staff see the pin in Data penerima and can move it on the same map.
         $this->actingAs($this->staff)->get(route('admin.orders.show', $order))->assertOk()
@@ -487,8 +533,67 @@ class BiteshipCourierBookingTest extends TestCase
         // Off without automatic ongkir: the link keeps the Sharelok text and asks no pin.
         config(['orders.shipping_quotes.enabled' => false]);
         $other = $this->v2Order(null);
-        $this->get(route('orders.customer.show', $other->customer_token_encrypted))->assertDontSee('name="pin_latitude"', false)->assertSee('Lokasi tepat lewat Sharelok');
+        $this->get(route('orders.customer.show', $other->customer_token_encrypted))->assertDontSee('name="pin_latitude"', false)
+            ->assertDontSee('<div data-shipping-quotes', false)->assertSee('Lokasi tepat lewat Sharelok');
         $this->post(route('orders.customer.submit', $other->customer_token_encrypted), $form)->assertSessionHasNoErrors();
+    }
+
+    public function test_staff_price_an_order_they_filled_and_see_what_the_driver_still_needs(): void
+    {
+        // ORD-26 (Owner 2026-11-16, A+B): staff filled the customer's details and the pin; no ongkir yet.
+        $order = $this->v2Order('local_delivery', ['location_url' => 'https://www.google.com/maps?q=-0.9012345,119.8701234']);
+        $this->actingAs($this->staff);
+        $page = $this->get(route('admin.orders.show', $order))->assertOk()->assertSee('Hitung ongkir otomatis')->assertSee('Harga GoSend dan GrabExpress ke titik antar.');
+        // B: the shipping step shows what the Biteship driver still needs, before packing.
+        $page->assertSee('Pesan driver Biteship setelah:')->assertSee('data-biteship-need="done"', false)->assertSee('Lunas belum')->assertSee('Packing belum');
+
+        $this->answer('POST /v1/rates/couriers', ['success' => true, 'pricing' => [
+            ['courier_code' => 'gojek', 'courier_service_code' => 'instant', 'price' => 20500, 'shipment_duration_range' => '1 - 2', 'shipment_duration_unit' => 'hours'],
+            ['courier_code' => 'grab', 'courier_service_code' => 'instant', 'price' => 18000, 'shipment_duration_range' => '1 - 3', 'shipment_duration_unit' => 'hours'],
+        ]]);
+        $this->post(route('admin.orders.v2.shipping.quotes', $order), ['revision' => $order->revision, '_section' => 'pembayaran'])
+            ->assertSessionHas('order_notice.message', 'Pilih ongkir di bawah.');
+        $this->assertSame([-0.9012345, 119.8701234], [$this->sent[0]['destination_latitude'], $this->sent[0]['destination_longitude']]);
+        $options = collect(session('staff_shipping_quotes.options'))->keyBy('provider');
+        $this->get(route('admin.orders.show', $order))->assertSee('Pilih ongkir dari Biteship')->assertSee('data-ongkir-option', false);
+
+        // A made-up option is refused; the chosen one becomes the ongkir with the checkout's discount, recorded in history.
+        $this->post(route('admin.orders.v2.shipping.quote', $order), ['revision' => $order->revision, 'option' => str_repeat('B', 20)])
+            ->assertSessionHas('order_notice.type', 'error');
+        $this->post(route('admin.orders.v2.shipping.quote', $order), ['revision' => $order->fresh()->revision, 'option' => $options['gosend']['id']])
+            ->assertSessionHas('order_notice.message', 'Ongkir disimpan dari harga Biteship.');
+        $order->refresh();
+        $this->assertSame(['17000.00', 'added_to_transfer', 'staff', 'gosend'], [$order->shipping_fee, $order->shipping_payer, $order->shipping_quote['chosen_by'], $order->shipping_quote['provider']]);
+        $this->assertSame('Ongkir dihitung otomatis: GoSend · ongkir - → Rp 17.000', $order->events()->reorder('id', 'desc')->value('note'));
+        $this->get(route('admin.orders.show', $order))->assertSee('dihitung otomatis oleh admin')->assertSee('data-pin-field', false);
+
+        // Moving the pin drops that price (it was for the old pin); the driver goes to the new pin.
+        $this->patch(route('admin.orders.v2.details', $order), ['revision' => $order->revision, '_section' => 'detail', 'customer_name' => $order->customer_name,
+            'customer_phone' => $order->customer_phone, 'fulfillment' => 'local_delivery', 'address' => $order->address, 'packaging' => $order->packaging,
+            'location_url' => '-0.9100000, 119.8800000'])->assertSessionHas('order_notice.type', 'success');
+        $order->refresh();
+        $this->assertSame([null, null], [$order->shipping_fee, $order->shipping_quote]);
+        $this->assertSame(['latitude' => -0.91, 'longitude' => 119.88], $order->deliveryPin());
+
+        // Paid: no more automatic pricing; the checklist follows.
+        $order->forceFill(['shipping_fee' => '17000.00', 'shipping_payer' => 'added_to_transfer'])->saveQuietly();
+        $paid = $this->payInFull($order);
+        $this->assertFalse($paid->staffPricesShipping());
+        $this->get(route('admin.orders.show', $paid))->assertDontSee('Hitung ongkir otomatis')->assertDontSee('Lunas belum');
+        $this->post(route('admin.orders.v2.shipping.quotes', $paid), ['revision' => $paid->revision])->assertSessionHas('order_notice.type', 'error');
+
+        // J&T to the postcode staff filled; without a pin or postcode the box says what is missing.
+        $jnt = $this->v2Order('intercity');
+        $this->get(route('admin.orders.show', $jnt))->assertSee('Harga J&amp;T ke kode pos 90111.', false);
+        $this->answer('POST /v1/rates/couriers', ['success' => true, 'pricing' => [
+            ['courier_code' => 'jnt', 'courier_service_code' => 'ez', 'price' => 40000, 'shipment_duration_range' => '2 - 3', 'shipment_duration_unit' => 'days'],
+        ]]);
+        $this->post(route('admin.orders.v2.shipping.quotes', $jnt), ['revision' => $jnt->revision])->assertSessionHas('order_notice.type', 'success');
+        $this->assertSame('90111', $this->sent[array_key_last($this->sent)]['destination_postal_code']);
+        $this->assertSame([40000, 28000], [session('staff_shipping_quotes.options.0.price'), session('staff_shipping_quotes.options.0.charged')]);
+        $noPin = $this->v2Order('local_delivery');
+        $this->get(route('admin.orders.show', $noPin))->assertDontSee('Hitung ongkir otomatis')->assertSee('Ongkir otomatis butuh titik antar');
+        $this->assertFalse($this->instantOrder(paid: false)->staffPricesShipping(), 'a checkout price stays');
     }
 
     public function test_staff_place_the_pin_when_creating_an_order_and_a_website_instant_order_keeps_its_checkout_pin(): void

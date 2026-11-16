@@ -10,7 +10,8 @@
     $panelClass = 'space-y-3 border border-gray-200 bg-white p-4';
     $optionCard = 'flex min-h-16 cursor-pointer items-center gap-3 border border-gray-300 bg-white p-4 [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] active:bg-gray-50 has-[:checked]:border-brand-black has-[:checked]:bg-[#FAF8F3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-black';
     $config = [
-        'quoteUrl' => route('cart.checkout.shipping'),
+        // ORD-26: an order link prices its own lines.
+        'quoteUrl' => $quoteUrl ?? route('cart.checkout.shipping'),
         'areaUrl' => route('cart.checkout.areas'),
         'origin' => [config('orders.shipping_quotes.origin.latitude'), config('orders.shipping_quotes.origin.longitude')],
         'kecamatan' => config('orders.shipping_quotes.kecamatan'),
@@ -80,9 +81,10 @@
         </div>
         <div>
             <label for="customer_address" class="block text-sm font-medium text-brand-black">Alamat lengkap <span aria-hidden="true">*</span></label>
-            <textarea id="customer_address" name="customer_address" rows="3" @unless ($pickup) required @endunless minlength="10" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 bg-white px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address') }}</textarea>
+            <textarea id="customer_address" name="customer_address" rows="3" @unless ($pickup) required @endunless minlength="10" maxlength="500" autocomplete="street-address" aria-describedby="address-help{{ $errors->has('customer_address') ? ' customer_address-error' : '' }}" aria-invalid="{{ $errors->has('customer_address') ? 'true' : 'false' }}" class="mt-2 w-full resize-y border border-gray-300 bg-white px-3 py-3 text-base leading-6 focus:border-brand-black focus:outline-none focus:ring-1 focus:ring-brand-black">{{ old('customer_address', $savedAddress ?? null) }}</textarea>
             <p id="address-help" class="mt-2 text-xs leading-5 text-gray-500">Nama jalan, nomor rumah, dan patokan supaya kurir mudah menemukan alamat.</p>
             @error('customer_address') <p id="customer_address-error" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+            @error('address') <p class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
         </div>
     </section>
 

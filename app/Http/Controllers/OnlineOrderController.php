@@ -6,6 +6,7 @@ use App\Actions\Orders\OnlineOrderChangeRequests;
 use App\Actions\Orders\OnlineOrderDetails;
 use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\OnlineOrderWorkflow;
+use App\Actions\Orders\ShippingQuotes;
 use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OnlineOrderRejected;
 use App\Http\Requests\Orders\CustomerOrderDetailsRequest;
@@ -20,6 +21,7 @@ use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderStepper;
 use App\Support\OnlineOrderTimeline;
 use App\Support\OrderActor;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /** Customer link: complete or correct recipient details, then follow the order status. */
@@ -127,7 +129,7 @@ class OnlineOrderController extends Controller
         try {
             $review = false;
             if ($order->isV2()) {
-                $review = $details->submitByCustomer($order, $request->validated());
+                $review = $details->submitByCustomer($order, $request->validated() + ['shipping' => $request->shipping()]);
             } else {
                 $workflow->submitCustomerDetails($order, $request->validated());
             }
@@ -140,6 +142,19 @@ class OnlineOrderController extends Controller
             $firstSubmit => 'Terima kasih, data pesanan sudah kami terima.',
             default => 'Perubahan data sudah disimpan.',
         }));
+    }
+
+    /** ORD-26: courier prices on the order link, for this order's lines (instant from a pin, J&T from an area). */
+    public function shippingQuote(Request $request, string $token, ShippingQuotes $quotes): JsonResponse
+    {
+        $order = $this->usableOrder($token);
+        abort_unless($order && ShippingQuotes::pricesOrders(), 404);
+        $data = $request->validate(ShippingQuotes::requestRules());
+        if (! $order->customerPicksShipping()) {
+            return $this->private(response()->json(['options' => [], 'reason' => 'cart'], 409));
+        }
+
+        return $this->private(response()->json($quotes->forOrder($order)->answer($data, ShippingQuotes::orderItems($order), ShippingQuotes::orderCart($order))));
     }
 
     /** ORD-20: the delivery pin placed on the order link's map (Palu only), so staff can book the instant courier. */

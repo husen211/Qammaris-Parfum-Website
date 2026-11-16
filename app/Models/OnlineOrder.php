@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Orders\ShippingQuotes;
 use App\Support\OnlineOrderLegacyState;
 use App\Support\OnlineOrderMoney;
 use App\Support\OnlineOrderStepper;
@@ -308,7 +309,8 @@ class OnlineOrder extends Model
     public function deliveryPin(): ?array
     {
         $quote = $this->shipping_quote ?? [];
-        if (($quote['kind'] ?? null) === 'instant' && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null)) {
+        // ORD-26: a price chosen after the order was made saved its pin in location_url too, where staff may move it.
+        if (($quote['kind'] ?? null) === 'instant' && ! isset($quote['chosen_by']) && is_numeric($quote['destination']['latitude'] ?? null) && is_numeric($quote['destination']['longitude'] ?? null)) {
             return ['latitude' => (float) $quote['destination']['latitude'], 'longitude' => (float) $quote['destination']['longitude']];
         }
 
@@ -344,6 +346,89 @@ class OnlineOrder extends Model
      * WhatsApp order can be booked through Biteship like a website order. Not for a website instant order (its
      * checkout pin priced the ongkir) or once a courier is on the way.
      */
+    /**
+     * ORD-26 (Owner 2026-11-16): like the checkout, the order link asks the address first and then shows every way to
+     * receive with its price, while the customer's details still apply directly, nothing is paid, no courier is on
+     * the way, and staff have not set the ongkir by hand or made it free (a checkout price stays as it was).
+     */
+    public function customerPicksShipping(): bool
+    {
+        return $this->isV2() && ShippingQuotes::pricesOrders() && $this->handover_status === 'pending'
+            && ($this->lifecycle === 'awaiting_customer' || ($this->customerCanEdit() && $this->preparation_status === 'not_started'))
+            && in_array($this->courier_status, [null, 'unassigned', 'not_needed'], true) && ! $this->biteshipBusy()
+            && $this->shipping_payer !== 'store_free'
+            && ($this->shipping_fee === null || isset($this->shipping_quote['chosen_by']))
+            && OnlineOrderMoney::totals($this)['received'] === 0;
+    }
+
+    /**
+     * ORD-13/ORD-26: a priced courier option becomes the order's ongkir, part of the transfer, with its destination:
+     * the kecamatan and postcode of the area ("Makassar, Makassar, Sulawesi Selatan. 90141"), and for an instant
+     * courier the pin. `chosenBy` marks a price chosen after the order was made (order link or staff).
+     */
+    public function applyShippingQuote(array $quote, ?string $areaLabel = null, ?string $chosenBy = null): void
+    {
+        $this->shipping_fee = Rupiah::decimal($quote['charged'] * 100);
+        $this->shipping_payer = 'added_to_transfer';
+        $this->shipping_estimate = Rupiah::decimal($quote['price'] * 100);
+        $this->shipping_estimate_source = 'api';
+        $this->shipping_quote = array_intersect_key($quote, array_flip(['kind', 'provider', 'label', 'service', 'eta', 'price', 'charged', 'discount', 'percent', 'destination', 'weight_grams', 'quoted_at']))
+            + ($chosenBy ? ['chosen_by' => $chosenBy] : []);
+        $this->setDestinationArea($quote['destination']['area_label'] ?? $areaLabel);
+        // The pin replaces the Sharelok: staff group message, App and recipient details all use location_url.
+        if (isset($quote['destination']['latitude'], $quote['destination']['longitude'])) {
+            $this->location_url = 'https://www.google.com/maps?q='.$quote['destination']['latitude'].','.$quote['destination']['longitude'];
+        }
+    }
+
+    /**
+     * ORD-26 (Owner 2026-11-16, A): staff price an order they filled themselves with the same Biteship prices and
+     * discount as the checkout: an instant courier to the pin, or J&T to the postcode. Only before any payment, before
+     * a courier is booked, and never over a checkout price or a free delivery.
+     */
+    public function staffPricesShipping(): bool
+    {
+        return $this->isV2() && ShippingQuotes::pricesOrders() && $this->handover_status === 'pending'
+            && in_array($this->lifecycle, ['awaiting_customer', 'active'], true)
+            && in_array($this->courier_status, [null, 'unassigned', 'not_needed'], true) && ! $this->biteshipBusy()
+            && $this->shipping_payer !== 'store_free' && ($this->shipping_quote === null || isset($this->shipping_quote['chosen_by']))
+            && OnlineOrderMoney::totals($this)['received'] === 0
+            && (($this->fulfillment === 'local_delivery' && $this->deliveryPin() !== null)
+                || ($this->fulfillment === 'intercity' && preg_match('/^[0-9]{5}$/', (string) $this->postcode) === 1));
+    }
+
+    /**
+     * ORD-26: staff may move the pin in Data penerima while the link may ask for it, and also after a price chosen on
+     * the link or by staff (moving it drops that price, to be chosen again). A checkout price keeps its pin.
+     */
+    public function staffCanMovePin(): bool
+    {
+        return $this->customerFormAsksPin() || (isset($this->shipping_quote['chosen_by']) && $this->isV2()
+            && $this->handover_status === 'pending' && in_array($this->courier_status, ['unassigned', 'not_needed'], true) && ! $this->biteshipBusy());
+    }
+
+    /** The kecamatan and postcode of a Biteship area label ("Makassar, Makassar, Sulawesi Selatan. 90141"). */
+    public function setDestinationArea(?string $label): void
+    {
+        if (preg_match('/^([^,]+),.*?(\d{5})$/u', (string) $label, $area)) {
+            $this->district = mb_substr(trim($area[1]), 0, 80);
+            $this->postcode = $area[2];
+        }
+    }
+
+    /** ORD-26: a price chosen on the link or by staff is dropped again (pickup, ongkir by admin, or a moved pin). */
+    public function dropChosenShippingQuote(): void
+    {
+        if (! isset($this->shipping_quote['chosen_by'])) {
+            return;
+        }
+        $this->shipping_quote = null;
+        $this->shipping_fee = null;
+        $this->shipping_payer = null;
+        $this->shipping_estimate = null;
+        $this->shipping_estimate_source = null;
+    }
+
     public function customerFormAsksPin(): bool
     {
         return $this->isV2() && (bool) config('orders.shipping_quotes.enabled') && $this->handover_status === 'pending'

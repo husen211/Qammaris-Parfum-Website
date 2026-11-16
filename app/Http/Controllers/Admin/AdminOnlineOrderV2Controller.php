@@ -9,6 +9,7 @@ use App\Actions\Orders\OnlineOrderCustomers;
 use App\Actions\Orders\OnlineOrderDetails;
 use App\Actions\Orders\OnlineOrderFulfillment;
 use App\Actions\Orders\RecordOnlineOrderMoney;
+use App\Actions\Orders\ShippingQuotes;
 use App\Exceptions\InvalidOrderTransition;
 use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderRevisionConflict;
@@ -37,6 +38,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 /**
  * Admin PWA screens for V2 orders (ORD-02d). Every change goes through the V2 domain operations; the ORD-01
@@ -280,6 +282,50 @@ class AdminOnlineOrderV2Controller extends Controller
                 'shipping_payer' => $data['shipping_payer'] ?? null,
             ]);
         }, 'Ongkir disimpan.');
+    }
+
+    /** ORD-26 (Owner 2026-11-16, A): Biteship prices for an order staff filled: instant to the pin, J&T to the postcode. */
+    public function priceShipping(Request $request, OnlineOrder $order, ShippingQuotes $quotes): RedirectResponse
+    {
+        return $this->attempt($order, $this->ongkirSection($request), function () use ($request, $order, $quotes) {
+            if (! $order->staffPricesShipping() || ! $request->user()->can('orders.charge-shipping', $order)) {
+                throw new InvalidOrderTransition('Ongkir pesanan ini tidak bisa dihitung otomatis (sudah ada pembayaran, kurir dipesan, atau titik/kode pos belum ada).');
+            }
+            $scoped = $quotes->forOrder($order);
+            $items = ShippingQuotes::orderItems($order);
+            $cart = ShippingQuotes::orderCart($order);
+            try {
+                $pin = $order->deliveryPin();
+                $options = $order->fulfillment === 'local_delivery'
+                    ? $scoped->instant($items, $cart, $pin['latitude'], $pin['longitude'])
+                    : $scoped->jntToPostcode($items, $cart, (string) $order->postcode);
+            } catch (RuntimeException) {
+                throw new InvalidOrderTransition('Biteship belum menjawab. Coba lagi sebentar, atau isi ongkir manual.');
+            }
+            if ($options === []) {
+                throw new InvalidOrderTransition('Tidak ada kurir yang menjangkau tujuan ini. Isi ongkir manual.');
+            }
+            session()->flash('staff_shipping_quotes', ['order' => $order->id, 'options' => array_map([ShippingQuotes::class, 'public'], $options)]);
+        }, 'Pilih ongkir di bawah.');
+    }
+
+    /** ORD-26 (A): the option staff chose becomes the ongkir; the price is the server's own, never the browser's. */
+    public function useShippingQuote(Request $request, OnlineOrder $order, ShippingQuotes $quotes): RedirectResponse
+    {
+        $data = $request->validate(['revision' => ['required', 'integer'], 'option' => ['required', 'string', 'regex:/^[A-Za-z0-9]{20}$/']]);
+
+        return $this->attempt($order, $this->ongkirSection($request), function () use ($request, $order, $quotes, $data) {
+            $quote = $quotes->forOrder($order)->resolve($data['option'], ShippingQuotes::orderCart($order), (string) $order->fulfillment);
+            if ($quote === null) {
+                throw new InvalidOrderTransition('Harga ongkir ini sudah lewat 30 menit atau pesanan berubah. Hitung lagi.');
+            }
+            $this->details->priceByAdmin($order, (int) $data['revision'], $request->user(), $quote);
+        }, 'Ongkir disimpan dari harga Biteship.');
+    }
+
+    private function ongkirSection(Request $request): string
+    {
+        return $request->input('_section') === 'konfirmasi' ? 'konfirmasi' : 'pembayaran';
     }
 
     public function handover(Request $request, OnlineOrder $order): RedirectResponse

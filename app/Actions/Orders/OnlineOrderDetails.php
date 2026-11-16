@@ -54,7 +54,17 @@ class OnlineOrderDetails
             // ORD-10: decided on the stored order, before the form changes the delivery choice.
             $setsShippingPayment = $order->customerSetsShippingPayment();
             $order->fill(array_intersect_key($details, array_flip(self::CUSTOMER_FIELDS)));
-            if ($setsShippingPayment && $order->fulfillment !== 'pickup') {
+            if ($shipping = $details['shipping'] ?? null) {
+                // ORD-26: the price chosen on the link, or none yet (Ambil di toko, or ongkir confirmed by the admin).
+                if ($shipping['quote']) {
+                    $order->applyShippingQuote($shipping['quote'], $shipping['area_label'], 'customer_link');
+                } else {
+                    $order->dropChosenShippingQuote();
+                    if ($order->fulfillment !== 'pickup') {
+                        $order->setDestinationArea($shipping['area_label']);
+                    }
+                }
+            } elseif ($setsShippingPayment && $order->fulfillment !== 'pickup') {
                 $order->shipping_payer = OnlineOrder::customerShippingPayer($order->fulfillment, $details['shipping_payment'] ?? null) ?? $order->shipping_payer;
             }
             // ORD-03: a preference only while unpaid; the admin still records the payment itself.
@@ -138,6 +148,12 @@ class OnlineOrderDetails
                     throw new OrderActionNotAllowed('Data penerima tidak dapat diubah setelah pesanan diserahkan atau ditutup. Hubungi Super Admin.');
                 }
             }
+            // ORD-26: a price chosen for the old pin no longer fits a moved pin; staff or the customer choose again.
+            $droppedPrice = $order->isDirty('location_url') && ($order->shipping_quote['kind'] ?? null) === 'instant' && isset($order->shipping_quote['chosen_by'])
+                && OnlineOrderMoney::totals($order)['received'] === 0;
+            if ($droppedPrice) {
+                $order->dropChosenShippingQuote();
+            }
             // ORD-13 (Owner 2026-11-11): ongkir priced at checkout never goes up for the customer; a costlier courier
             // is the store's difference. Lowering it, or making it free, stays possible.
             $locked = $order->shipping_quote['charged'] ?? null;
@@ -162,9 +178,32 @@ class OnlineOrderDetails
                 ? ' · ongkir '.($order->getOriginal('shipping_fee') === null ? '-' : Rupiah::format((string) $order->getOriginal('shipping_fee'))).' → '.($order->shipping_fee === null ? '-' : Rupiah::format((string) $order->shipping_fee))
                 : '';
             $this->orderEvent($order, $actor, 'details_updated', 'Diubah: '.implode(', ', array_keys($order->getDirty())).$shipping);
+            if ($droppedPrice) {
+                $this->orderEvent($order, $actor, 'details_updated', 'Titik antar dipindah: ongkir kurir instan perlu dihitung lagi');
+            }
             if ($order->lifecycle === 'awaiting_customer' && $order->hasCustomerDetails() && $order->customer_phone && $order->packaging) {
                 $order->stage = OnlineOrder::STAGE_DETAILS_RECEIVED;
             }
+
+            return true;
+        });
+    }
+
+    /**
+     * ORD-26 (Owner 2026-11-16, A): staff use a priced option (instant to the pin, J&T to the postcode) as the
+     * ongkir, with the same discount as the checkout. Recorded with its old and new value like any ongkir change.
+     */
+    public function priceByAdmin(OnlineOrder $order, int $revision, User $actor, array $quote): OnlineOrder
+    {
+        abort_unless($actor->exists && Gate::forUser($actor)->allows('orders.manage'), 403);
+
+        return $this->mutateV2($order, $revision, $actor, function (OnlineOrder $order) use ($actor, $quote): bool {
+            if (! $order->staffPricesShipping() || ! Gate::forUser($actor)->allows('orders.charge-shipping', $order)) {
+                throw new OrderActionNotAllowed('Ongkir pesanan ini tidak bisa dihitung otomatis lagi (sudah ada pembayaran, kurir dipesan, atau ongkir dari checkout).');
+            }
+            $before = $order->shipping_fee === null ? '-' : Rupiah::format((string) $order->shipping_fee);
+            $order->applyShippingQuote($quote, null, 'staff');
+            $this->orderEvent($order, $actor, 'details_updated', 'Ongkir dihitung otomatis: '.$quote['label'].' · ongkir '.$before.' → '.Rupiah::format((string) $order->shipping_fee));
 
             return true;
         });
