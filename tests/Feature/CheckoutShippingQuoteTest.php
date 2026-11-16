@@ -57,8 +57,13 @@ class CheckoutShippingQuoteTest extends TestCase
             // ORD-15: courier logos beside the delivery names, and the logo map for the script's option cards.
             ->assertSee('data-partner-logo="gosend"', false)->assertSee('data-partner-logo="grab"', false)->assertSee('data-partner-logo="jnt"', false)
             ->assertSee('images\/partners\/gojek.svg', false)
-            // ORD-16: marketplace order: how to receive, the address, then the options grouped Instan and Reguler.
-            ->assertSeeInOrder(['Metode pengiriman', 'Dikirim ke alamat', 'Ambil di toko', 'Alamat pengiriman', 'Titik antar', 'Kecamatan terisi otomatis', 'Kecamatan atau kota', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Paperbag'])
+            // ORD-26 (Owner 2026-11-16): the address first (kecamatan or city, the pin around Palu, the full address),
+            // then every way to receive with its price; no "dikirim atau ambil" question before it.
+            ->assertSeeInOrder(['Alamat pengiriman', 'Kecamatan atau kota tujuan', 'Titik antar', 'Alamat lengkap', 'Pilih pengiriman', 'Instan', 'Reguler', 'Ambil sendiri', 'Ambil di toko', 'Jl. Sis Aljufri', 'Paperbag'])
+            ->assertDontSee('Dikirim ke alamat')->assertDontSee('name="receive"', false)
+            ->assertSee('name="shipping_option" value="pickup"', false)
+            // The pin is asked only once the destination is around Palu.
+            ->assertSee('data-instant-pin class="space-y-2"  hidden', false)
             ->assertSee('data-delivery-value', false)->assertDontSee('name="delivery" value="local_delivery"', false)
             // ORD-17: the area field opens our own search screen; the pin check has its own endpoint.
             ->assertSee('data-area-open', false)->assertSee('data-area-dialog', false)->assertSee('data-pin-preview', false)
@@ -231,7 +236,10 @@ class CheckoutShippingQuoteTest extends TestCase
         auth()->logout();
 
         $this->review([$this->variant('Oud Sintetis', 425000)->id => 1]);
-        $this->post(route('cart.checkout'), $this->form('pickup'));
+        // ORD-26: Ambil di toko is sent as the page now sends it: one of the shipping choices, without an address.
+        $this->post(route('cart.checkout'), $this->form('pickup', ['shipping_option' => 'pickup', 'customer_address' => '', 'delivery_area_id' => '', 'delivery_area_label' => '']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(['pickup', null, null], [OnlineOrder::sole()->fulfillment, OnlineOrder::sole()->shipping_quote, OnlineOrder::sole()->shipping_fee]);
         $token = OnlineOrder::sole()->customer_token_encrypted;
         $this->get(route('orders.customer.show', $token))->assertSee('alt="QRIS Qammaris Perfumes"', false)->assertDontSee('Segera tersedia');
         $to = $this->post(route('orders.customer.pay', $token), ['payment_preference' => 'qris'])->headers->get('Location');

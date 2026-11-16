@@ -323,14 +323,14 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 
 Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-biteship.md).
 
-### Urutan checkout seperti marketplace (ORD-16, Owner 2026-11-11)
+### Urutan checkout: alamat dulu, baru pilih pengiriman (ORD-16, diubah ORD-26 Owner 2026-11-16)
 
-- Dengan ongkir otomatis aktif, checkout berurutan:
+- Customer belum tentu tahu toko di Palu, jadi checkout tidak bertanya "dikirim atau ambil" atau "dalam atau luar kota" di awal. Dengan ongkir otomatis aktif, checkout berurutan:
   1. data penerima;
-  2. **Metode pengiriman** (Dikirim ke alamat dengan logo kurir / Ambil di toko dengan ikon toko);
-  3. **Alamat pengiriman** (ORD-19): **titik antar dulu** (Palu, Sigi, Donggala), lalu kecamatan/kota yang terisi otomatis dari titik (luar Palu: dicari sendiri), lalu alamat lengkap;
-  4. **Pilih pengiriman**: Instan GoSend/GrabExpress, Reguler J&T, masing-masing dengan harga;
-  5. paperbag dan catatan.
+  2. **Alamat pengiriman**: **kecamatan atau kota tujuan** (dicari: kecamatan, kota, atau kode pos); bila tujuan di Palu, Sigi, atau Donggala muncul **titik antar** di peta (untuk kurir instan; peta dibuka di kecamatan itu), lalu alamat lengkap;
+  3. **Pilih pengiriman**, masing-masing dengan harga: Instan GoSend/GrabExpress (setelah titik dipasang), Reguler J&T (dari kecamatan/kota), dan **Ambil sendiri: Ambil di toko** (alamat toko tertulis, tanpa ongkir, selalu ada). Memilih Ambil di toko menutup kotak alamat dan alamat tidak wajib;
+  4. paperbag dan catatan.
+- Sebelumnya (ORD-16/ORD-19): Metode pengiriman (Dikirim ke alamat / Ambil di toko) ditanya dulu, dan alamat dimulai dari titik antar.
 - Tidak ada pilihan kurir yang terpilih otomatis; customer memilih sendiri. Jenis pengiriman pesanan mengikuti pilihan itu.
 - Ringkasan checkout menulis **Total** (produk + paperbag + ongkir yang dipilih), bukan "Total sementara". Teks keranjang dan checkout dibuat singkat (ORD-18).
 - Kecamatan dan kode pos pesanan diisi dari tujuan (terisi dari titik atau dicari), untuk kurir instan maupun J&T.
@@ -340,6 +340,7 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
   - OpenStreetMap tidak menjawab: pusat kecamatan terdekat (paling jauh 5 km); di Sigi/Donggala: kecamatan dari OpenStreetMap;
   - tidak terbaca sama sekali: customer diminta mencari kecamatan;
   - customer selalu bisa mengganti kecamatan lewat kolom pencarian. Kirim ke luar Palu tetap lewat pencarian, tanpa titik.
+  - Sejak ORD-26 kecamatan dipilih lebih dulu; titik yang dipasang sesudahnya tetap bisa membetulkan kecamatan dengan aturan di atas.
 - **Pencarian kecamatan/kota (ORD-17, diperbaiki ORD-18):**
   - membuka layar pencarian penuh di HP (panel di tengah di desktop), setinggi area di atas keyboard, tanpa daftar Palu di awal;
   - menampilkan semua hasil Biteship (paling banyak 10) dalam daftar yang bisa di-scroll; bila 10 hasil, ada saran mengetik lebih lengkap;

@@ -228,8 +228,9 @@ const autoShipping = orderForm?.hasAttribute('data-auto-shipping');
 const rupiah = (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
 // ORD-16: with checkout pricing the delivery type is a hidden field the shipping script keeps in step.
 const deliveryChoice = () => orderForm.querySelector('[data-delivery-value]')?.value ?? orderForm.querySelector('[data-delivery]:checked')?.value ?? '';
+// ORD-26: with checkout pricing "Ambil di toko" is one of the shipping choices; nothing chosen yet still needs one.
 const wantsDelivery = () => autoShipping
-    ? orderForm.querySelector('[data-receive]:checked')?.value === 'delivery'
+    ? orderForm.querySelector('[data-shipping-choice]:checked:not(:disabled)')?.dataset.kind !== 'pickup'
     : ['local_delivery', 'intercity'].includes(deliveryChoice());
 // ORD-13: the courier option the customer picked (radios of hidden panels are disabled by the shipping script).
 const shippingChoice = () => orderForm.querySelector('[data-shipping-choice]:checked:not(:disabled)');
