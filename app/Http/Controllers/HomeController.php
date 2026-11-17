@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Support\CatalogCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
+    private const NEW_ARRIVAL_DAYS = 60;
+
     public function index()
     {
         $eligibleIds = Product::query()
@@ -39,6 +43,8 @@ class HomeController extends Controller
                 ->values();
         }
 
+        $newArrivals = $this->newArrivals();
+
         $featuredPosts = BlogPost::published()
             ->latest('published_at')
             ->take(3)
@@ -66,6 +72,34 @@ class HomeController extends Controller
             ->sortBy([fn (Brand $a, Brand $b) => isset($b->logo_mark) <=> isset($a->logo_mark), ['published_count', 'desc'], ['name', 'asc']])
             ->values();
 
-        return view('home', compact('bestSellers', 'featuredPosts', 'distributorBrands'));
+        return view('home', compact('newArrivals', 'bestSellers', 'featuredPosts', 'distributorBrands'));
+    }
+
+    /**
+     * HOME-NEW-ARRIVAL (Owner 2026-11-17): the five newest first publications of the last 60 days that have a real
+     * photo, a priced offer and are not sold out. Fewer than three hides the section.
+     */
+    private function newArrivals(): Collection
+    {
+        $arrivals = Product::with(['brand', 'primaryImage', 'activeOffer'])
+            ->published()
+            ->whereNotNull('published_at')
+            ->where('published_at', '>=', now()->subDays(self::NEW_ARRIVAL_DAYS))
+            ->where(fn ($availability) => $availability->whereNull('availability_status')
+                ->orWhere('availability_status', '!=', Product::AVAILABILITY_SOLD_OUT))
+            ->whereHas('primaryImage')
+            ->whereHas('activeOffer', fn ($offer) => $offer->where('price', '>', 0))
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            // The photo file check needs the storage disk, so a few extra rows cover products whose file is missing.
+            ->take(15)
+            ->get()
+            ->filter(fn (Product $product) => $product->activeOffer?->price > 0
+                && $product->effective_availability !== Product::AVAILABILITY_SOLD_OUT
+                && ! str_ends_with($product->primaryImage->image_url, ProductImage::PLACEHOLDER_URL))
+            ->take(5)
+            ->values();
+
+        return $arrivals->count() >= 3 ? $arrivals : collect();
     }
 }

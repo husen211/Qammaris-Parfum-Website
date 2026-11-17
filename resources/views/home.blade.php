@@ -10,6 +10,7 @@
 @section('content')
     @include('home.sections.hero')
     @include('home.sections.brand-marquee')
+    @include('home.sections.new-arrival')
     @include('home.sections.best-seller')
     @include('home.sections.quiz-cta')
     @include('home.sections.shopping-guide')
