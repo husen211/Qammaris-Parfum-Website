@@ -89,7 +89,7 @@ class OrderOperationalUxTest extends TestCase
         $this->assertSame(['30000.00', null], [$order->fresh()->shipping_fee, $order->fresh()->driver_funding]);
     }
 
-    public function test_staff_still_cannot_approve_prices_or_refunds(): void
+    public function test_staff_still_cannot_approve_pending_prices_but_may_decide_refunds(): void
     {
         config(['orders.simple_ux' => true]);
         $order = $this->v2Order();
@@ -98,8 +98,8 @@ class OrderOperationalUxTest extends TestCase
         $adjustment = $order->adjustments()->sole();
         $this->assertSame('approved', $adjustment->status, 'ADM-01: staff discounts apply directly');
         $this->post(route('admin.orders.v2.adjustments.decide', [$order, $adjustment->id, 'approve']), ['revision' => $order->fresh()->revision])->assertForbidden();
-        $this->post(route('admin.orders.money.refund-decision', $order), ['revision' => $order->fresh()->revision, 'refund_due' => '0', 'reason' => 'uji'])->assertForbidden();
-        $this->get(route('admin.orders.show', $order))->assertDontSee('Setujui</button>', false)->assertDontSee('id="keuangan"', false);
+        $this->post(route('admin.orders.money.refund-decision', $order), ['revision' => $order->fresh()->revision, 'refund_due' => '0', 'reason' => 'uji'])->assertRedirect();
+        $this->get(route('admin.orders.show', $order))->assertDontSee('Setujui</button>', false);
     }
 
     public function test_customer_link_page_has_no_site_navigation_and_saves_a_payment_preference_without_paying(): void

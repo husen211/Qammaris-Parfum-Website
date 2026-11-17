@@ -65,7 +65,10 @@ final class OnlineOrderMoney
     /** Payment state for V2 orders: paid once the ledger covers the customer total. */
     public static function basePaymentFromLedger(OnlineOrder $order): string
     {
-        $received = self::totals($order)['received'];
+        $totals = self::totals($order);
+        // ORD-27: without a refund decision a refund only returns an overpayment after a change, so what the customer
+        // still holds paid is the net amount; a later price increase then shows what is left to pay.
+        $received = $order->refund_due_amount === null ? $totals['received'] - $totals['refunded'] : $totals['received'];
 
         return $received > 0 && $received >= Rupiah::minorUnits($order->customerTotal()) ? 'paid' : 'unpaid';
     }

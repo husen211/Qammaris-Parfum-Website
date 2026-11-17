@@ -140,7 +140,7 @@ class OnlineOrderMoneyTest extends TestCase
         $this->assertSame(1, $order->payments()->count());
     }
 
-    public function test_only_super_admin_decides_records_reverses_and_reconciles_refunds(): void
+    public function test_only_order_roles_decide_record_reverse_and_reconcile_refunds(): void
     {
         $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh();
         $legacyAdmin = User::factory()->create(['role' => User::ROLE_LEGACY_ADMIN])->fresh();
@@ -148,7 +148,10 @@ class OnlineOrderMoneyTest extends TestCase
         $this->assertSame('paid', $order->payment_status, 'Staff Order may record a payment');
         $flagged = $this->legacyCancelledAfterPayment();
 
-        foreach ([$staff, $legacyAdmin] as $user) {
+        // ORD-27 (Owner 2026-11-17): Staff Order and the legacy admin role may; an account without order rights may not.
+        $this->assertTrue($staff->can('orders.refund') && $legacyAdmin->can('orders.refund'));
+        $customer = User::factory()->create(['role' => User::ROLE_CUSTOMER])->fresh();
+        foreach ([$customer] as $user) {
             foreach ([
                 fn () => $this->money->decideRefund($order->fresh(), $order->fresh()->revision, $user, '0', 'Tidak ada refund'),
                 fn () => $this->money->recordRefund($order->fresh(), $order->fresh()->revision, $user, '1000', 'cash'),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Orders\BiteshipCourier;
+use App\Actions\Orders\ChangeOnlineOrder;
 use App\Actions\Orders\OnlineOrderAdjustments;
 use App\Actions\Orders\OnlineOrderChangeRequests;
 use App\Actions\Orders\OnlineOrderCustomers;
@@ -15,10 +16,12 @@ use App\Exceptions\OnlineOrderRejected;
 use App\Exceptions\OrderRevisionConflict;
 use App\Exceptions\OrderValidationFailed;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ChangeOrderRequest;
 use App\Http\Requests\Admin\OnlineOrderV2DetailsRequest;
 use App\Models\Customer;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderIssue;
+use App\Models\ProductVariant;
 use App\Models\StorePaymentAccount;
 use App\Support\InquiryWhatsApp;
 use App\Support\OnlineOrderMessages;
@@ -88,7 +91,8 @@ class AdminOnlineOrderV2Controller extends Controller
             'received' => $totals['received'],
             'refunded' => $totals['refunded'],
             'totalCents' => $totalCents,
-            'remainingCents' => max(0, $totalCents - $totals['received']),
+            // ORD-27: what the customer still holds paid (an overpayment returned after a change is netted out).
+            'remainingCents' => max(0, $totalCents - ($totals['received'] - $totals['refunded'])),
             'overpaidCents' => OnlineOrderAdjustments::overpaidCents($order),
             'customerUrl' => $customerUrl,
             'groupMessage' => $groupMessage,
@@ -321,6 +325,104 @@ class AdminOnlineOrderV2Controller extends Controller
             }
             $this->details->priceByAdmin($order, (int) $data['revision'], $request->user(), $quote);
         }, 'Ongkir disimpan dari harga Biteship.');
+    }
+
+    /** ORD-27 "Ubah pesanan": products and delivery on one page, with what the change does to the total. */
+    public function edit(OnlineOrder $order)
+    {
+        abort_unless($order->isV2(), 404);
+        $order->load(['items.product.primaryImage', 'adjustments']);
+        $totals = OnlineOrderMoney::totals($order);
+
+        return response()->view('admin.orders.v2.edit', [
+            'order' => $order,
+            'changeable' => ChangeOnlineOrder::changeable($order),
+            'paidCents' => $totals['received'] - $totals['refunded'],
+            'totalCents' => Rupiah::minorUnits($order->customerTotal()),
+            'pricesShipping' => ShippingQuotes::pricesOrders(),
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** ORD-27: Biteship prices for the edited products and destination, kept for this order only. */
+    public function quoteChange(Request $request, OnlineOrder $order, ShippingQuotes $quotes): JsonResponse
+    {
+        $data = $request->validate([
+            'items' => ['required', 'array', 'min:1', 'max:30'],
+            'items.*.line_id' => ['nullable', 'string', 'regex:/^[0-9A-HJKMNP-TV-Z]{26}$/'],
+            'items.*.variant_id' => ['nullable', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            'mode' => ['required', 'in:instant,jnt'],
+            'latitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-90,90'],
+            'longitude' => ['exclude_unless:mode,instant', 'required', 'numeric', 'between:-180,180'],
+            'postcode' => ['exclude_unless:mode,jnt', 'required', 'regex:/^[0-9]{5}$/'],
+        ]);
+        abort_unless($order->isV2() && ShippingQuotes::pricesOrders(), 409);
+        $lines = array_values(array_map(fn ($item) => [
+            'line_id' => ($item['line_id'] ?? null) ?: null,
+            'variant_id' => isset($item['variant_id']) ? (int) $item['variant_id'] : null,
+            'quantity' => (int) $item['quantity'],
+        ], $data['items']));
+        $kept = $order->items()->get()->keyBy('line_id');
+        $variants = ProductVariant::with('product')->whereIn('id', array_filter(array_column($lines, 'variant_id')))->get()->keyBy('id');
+        $items = [];
+        foreach ($lines as $line) {
+            $source = $line['line_id'] ? $kept->get($line['line_id']) : $variants->get($line['variant_id']);
+            if (! $source) {
+                return response()->json(['options' => [], 'reason' => 'cart'], 409);
+            }
+            $items[] = [
+                'product_name' => $line['line_id'] ? $source->product_name : $source->product->name,
+                'price' => (string) ($line['line_id'] ? $source->unit_price : $source->price),
+                'quantity' => $line['quantity'],
+            ];
+        }
+        $cart = ChangeOrderRequest::cartOf($lines);
+        $scoped = $quotes->forOrder($order);
+        if ($data['mode'] === 'instant') {
+            return response()->json($scoped->answer(['mode' => 'instant', 'latitude' => $data['latitude'], 'longitude' => $data['longitude']], $items, $cart));
+        }
+        try {
+            $options = $scoped->jntToPostcode($items, $cart, $data['postcode']);
+        } catch (RuntimeException) {
+            return response()->json(['options' => [], 'reason' => 'unavailable']);
+        }
+
+        return response()->json(['options' => array_map([ShippingQuotes::class, 'public'], $options), 'reason' => $options ? null : 'no_courier']);
+    }
+
+    public function change(ChangeOrderRequest $request, OnlineOrder $order, ChangeOnlineOrder $change, OnlineOrderMessages $messages, InquiryWhatsApp $whatsApp): RedirectResponse
+    {
+        $data = $request->validated();
+        try {
+            $changed = $change->handle($order, (int) $data['revision'], $request->user(), $request->lines(), $request->shipping(), $data['note'] ?? null);
+        } catch (OrderRevisionConflict) {
+            return redirect()->route('admin.orders.v2.edit', $order)
+                ->with('change_error', 'Pesanan ini baru saja diubah orang lain atau di tab lain. Data terbaru sudah ditampilkan, periksa lalu ulangi.');
+        } catch (OrderValidationFailed|InvalidOrderTransition|OnlineOrderRejected $error) {
+            return redirect()->route('admin.orders.v2.edit', $order)->withInput()->with('change_error', $error->getMessage());
+        }
+        if ($changed->revision === $order->revision) {
+            return redirect()->route('admin.orders.show', $order)->with('order_notice', ['section' => 'ringkasan', 'type' => 'success', 'message' => 'Tidak ada yang berubah.']);
+        }
+        $message = $messages->orderChanged($changed->load('items'), route('orders.customer.show', $changed->customer_token_encrypted));
+
+        return redirect()->to(route('admin.orders.show', $order).'#ringkasan')->with('order_change', [
+            'message' => $message,
+            'chat_url' => $changed->customer_phone ? $whatsApp->textUrl($changed->customer_phone, $message) : $whatsApp->shareUrl($message),
+        ]);
+    }
+
+    /** ORD-27: the store returned what the customer paid above the changed total. */
+    public function returnOverpayment(Request $request, OnlineOrder $order): RedirectResponse
+    {
+        $data = $request->validate([
+            'revision' => ['required', 'integer'],
+            'refund_method' => ['required', Rule::in(array_keys(OnlineOrder::PAYMENT_METHODS))],
+            'reference' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        return $this->attempt($order, 'kelebihan', fn () => $this->money->returnOverpayment($order, (int) $data['revision'], $request->user(), $data['refund_method'], $data['reference'] ?? null),
+            'Pengembalian kelebihan bayar dicatat.');
     }
 
     private function ongkirSection(Request $request): string

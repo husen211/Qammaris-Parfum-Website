@@ -41,5 +41,13 @@
         @csrf {!! $hidden('konfirmasi') !!}
         <button class="{{ $primary }}" data-busy-label="Mengonfirmasi…" data-confirm-website>Konfirmasi pesanan</button>
     </form>
-    <p class="mt-2 text-xs text-gray-500">Customer tidak membalas atau pesanan tidak jadi? Batalkan lewat Opsi lanjutan.</p>
+    {{-- Owner 2026-11-17: staff learn here that stock is missing, so cancelling sits here, not only in Opsi lanjutan. --}}
+    @if ($received === 0 && auth()->user()->can('orders.cancel', $order))
+        <details class="mt-3 border-t border-gray-100 pt-2" data-confirm-step-cancel @if ($isOpen('batal')) open @endif>
+            <summary class="{{ $quiet }} -ml-3 cursor-pointer text-red-700">Stok habis atau pesanan tidak jadi? Batalkan pesanan</summary>
+            @include('admin.orders.v2._cancel-form')
+        </details>
+    @else
+        <p class="mt-2 text-xs text-gray-500">Customer tidak membalas atau pesanan tidak jadi? Batalkan lewat Opsi lanjutan.</p>
+    @endif
 </details>

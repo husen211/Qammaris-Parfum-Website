@@ -104,7 +104,9 @@ class OnlineOrderKeepAdjustmentChangeTest extends TestCase
         $this->assertStringContainsString('lebih bayar', $event->note);
 
         // Refunds stay a Super Admin decision.
-        $this->assertRejected(fn () => $money->decideRefund($order, $order->revision, $this->staff, '20000', 'Kembalikan selisih'), HttpException::class);
+        // ORD-27 (Owner 2026-11-17): Staff Order may decide the refund too.
+        $this->assertNotNull(app(\App\Actions\Orders\RecordOnlineOrderMoney::class)->decideRefund($order->fresh(), $order->fresh()->revision, $this->staff, '20000', 'Kembalikan selisih')->refund_due_amount);
+        $order = $order->fresh();
         $order = $money->decideRefund($order, $order->revision, $this->owner, '20000', 'Kembalikan selisih diskon');
         $this->assertSame(['pending', 'refund_pending'], [$order->refund_status, $order->payment_status]);
 

@@ -248,7 +248,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('issues', 'openIssue')->name('issues');
             Route::post('issues/{issue}/resolve', 'resolveIssue')->name('issues.resolve');
             Route::post('claims/{task}/release', 'releaseClaim')->whereIn('task', ['preparation', 'courier_booking', 'handover'])
-                ->middleware('can:orders.refund')->name('claims.release');
+                ->middleware('can:orders.owner')->name('claims.release');
             Route::post('keep/{action}', 'keep')->whereIn('action', ['start', 'stock', 'extend', 'release'])->name('keep');
             Route::post('cancel', 'cancel')->name('cancel');
             Route::post('customer', 'linkCustomer')->name('customer');
@@ -257,6 +257,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'cache.head
             Route::post('adjustments', 'requestAdjustment')->name('adjustments');
             Route::post('adjustments/{adjustment}/{decision}', 'decideAdjustment')->whereIn('decision', ['approve', 'reject'])
                 ->middleware('can:orders.approve-adjustment')->name('adjustments.decide');
+            // ORD-27: staff change products and delivery after the order was made.
+            Route::get('ubah', 'edit')->name('edit');
+            Route::post('ubah', 'change')->name('change');
+            Route::post('ubah/ongkir', 'quoteChange')->middleware('throttle:20,1')->name('change.quotes');
+            Route::post('kelebihan-bayar', 'returnOverpayment')->name('overpayment');
             Route::post('change-requests/{changeRequest}/{decision}', 'decideChange')->whereIn('decision', ['approve', 'reject'])->name('change-requests.decide');
         });
         // Super Admin money panel; also reconciles ORD-01 orders, so it is not V2-only.

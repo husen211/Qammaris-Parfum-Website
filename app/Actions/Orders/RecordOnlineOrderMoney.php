@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 /**
  * Payments, refunds and their corrections (ORD-02c slice 2). The ledger is append-only; every operation checks
  * the expected revision so a double tap cannot record money twice, and writes an audit event.
- * Refund decisions, refund payouts, reversals and reconciliation are Super Admin only (`orders.refund`).
+ * Refund decisions, refund payouts, reversals and reconciliation need `orders.refund` (Super Admin and, since ORD-27, Staff Order).
  */
 class RecordOnlineOrderMoney
 {
@@ -89,6 +89,29 @@ class RecordOnlineOrderMoney
             }
             $this->entry($order, $actor, OnlineOrderPayment::TYPE_REFUND, $cents, ['method' => $method, 'reference' => $reference, 'note' => $note]);
             $this->event($order, $actor, 'refund_recorded', Rupiah::format(Rupiah::decimal($cents)).' · '.OnlineOrder::PAYMENT_METHODS[$method]);
+        });
+    }
+
+    /**
+     * ORD-27: after an order change made it cheaper, the store returns what the customer paid above the new total.
+     * The amount is the overpayment itself, never a number typed by staff; the order keeps going.
+     */
+    public function returnOverpayment(OnlineOrder $order, int $revision, User $actor, string $method, ?string $reference = null): OnlineOrder
+    {
+        return $this->mutate($order, $revision, $actor, 'orders.manage', function (OnlineOrder $order) use ($actor, $method, $reference): void {
+            if (! $order->isV2() || $order->refund_due_amount !== null || $order->lifecycle === 'cancelled') {
+                throw new OnlineOrderRejected('Pengembalian untuk pesanan ini dicatat lewat keputusan refund.');
+            }
+            if (! array_key_exists($method, OnlineOrder::PAYMENT_METHODS)) {
+                throw new OnlineOrderRejected('Pilih metode pengembalian yang valid.');
+            }
+            $cents = OnlineOrderAdjustments::overpaidCents($order);
+            if ($cents <= 0) {
+                throw new OnlineOrderRejected('Tidak ada kelebihan bayar yang perlu dikembalikan.');
+            }
+            $reference = $reference === null || trim($reference) === '' ? null : Str::limit(trim($reference), 80, '');
+            $this->entry($order, $actor, OnlineOrderPayment::TYPE_REFUND, $cents, ['method' => $method, 'reference' => $reference, 'note' => 'Kelebihan bayar setelah pesanan diubah']);
+            $this->event($order, $actor, 'overpayment_returned', 'Kelebihan bayar dikembalikan '.Rupiah::format(Rupiah::decimal($cents)).' · '.OnlineOrder::PAYMENT_METHODS[$method]);
         });
     }
 

@@ -72,7 +72,7 @@
                     <li class="flex flex-wrap items-center justify-between gap-2">
                         <span class="min-w-0"><span class="font-semibold">{{ ['preparation' => 'Packing', 'courier_booking' => 'Pesan kurir/J&T', 'handover' => 'Serah ke kurir'][$claim->task] }}</span>
                             · {{ $claim->holder_display_name }} <span class="text-gray-500">sejak {{ $time($claim->claimed_at) }}</span></span>
-                        @can('orders.refund')
+                        @can('orders.owner')
                             <details class="w-full sm:w-auto" @if (old('_section') === 'klaim' && old('task') === $claim->task) open @endif>
                                 <summary class="{{ $quiet }} cursor-pointer">Lepas klaim</summary>
                                 <form method="POST" action="{{ route('admin.orders.v2.claims.release', [$order, $claim->task]) }}" class="mt-2 flex flex-wrap items-end gap-2">
@@ -147,6 +147,22 @@
                 <h2 id="items-title" class="text-base font-semibold text-gray-900">Produk dipesan</h2>
                 <span class="text-sm text-gray-600" data-order-item-count>{{ $order->items->sum('quantity') }} barang</span>
             </div>
+            @include('admin.orders.v2._notice', ['section' => 'ringkasan'])
+            {{-- ORD-27: the result of "Ubah pesanan", with the message for the customer's chat. --}}
+            @if (session('order_change'))
+                <div class="mt-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-900" role="status" data-order-changed>
+                    <p class="font-semibold">Pesanan diubah.</p>
+                    <textarea id="change-message" hidden aria-hidden="true">{{ session('order_change.message') }}</textarea>
+                    <p class="mt-1 whitespace-pre-line text-green-900/90 [overflow-wrap:anywhere]">{{ session('order_change.message') }}</p>
+                    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                        @if (session('order_change.chat_url'))<a href="{{ session('order_change.chat_url') }}" target="_blank" rel="noopener noreferrer" class="{{ $primary }}">Kirim WhatsApp</a>@endif
+                        <button type="button" class="{{ $secondary }}" data-copy="#change-message">Salin pesan</button>
+                    </div>
+                </div>
+            @endif
+            @if (\App\Actions\Orders\ChangeOnlineOrder::changeable($order))
+                <a href="{{ route('admin.orders.v2.edit', $order) }}" class="{{ $secondary }} mt-3 w-full" data-change-order>Ubah pesanan</a>
+            @endif
             <ul class="mt-3 divide-y divide-gray-200 rounded-lg bg-gray-50 px-3">
                 @foreach ($order->items as $item)
                     <li class="flex items-center gap-3 py-3" data-order-item>
@@ -167,7 +183,24 @@
                 @if ($order->approvedAdjustmentCents() !== 0)<div class="flex justify-between"><dt class="text-gray-600">Penyesuaian</dt><dd class="tabular-nums">{{ $rp($order->approvedAdjustmentCents()) }}</dd></div>@endif
                 <div class="flex justify-between text-base font-semibold"><dt>Total</dt><dd class="tabular-nums">{{ $rp($totalCents) }}</dd></div>
                 @if ($received > 0)<div class="flex justify-between"><dt class="text-gray-600">Sudah diterima</dt><dd class="tabular-nums">{{ $rp($received) }}</dd></div>@endif
+                @if ($refunded > 0)<div class="flex justify-between"><dt class="text-gray-600">Sudah dikembalikan</dt><dd class="tabular-nums">{{ $rp($refunded) }}</dd></div>@endif
+                @if ($received > 0 && $remainingCents > 0 && $order->lifecycle !== 'cancelled')<div class="flex justify-between font-semibold text-red-800"><dt>Kurang bayar</dt><dd class="tabular-nums">{{ $rp($remainingCents) }}</dd></div>@endif
             </dl>
+            {{-- ORD-27: an order made cheaper after payment: the store returns the difference, recorded here by staff. --}}
+            @if ($overpaidCents > 0 && $order->refund_due_amount === null && $order->lifecycle !== 'cancelled')
+                <div id="kelebihan" class="mt-3 scroll-mt-20 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" data-overpaid>
+                    <p class="font-semibold">Customer lebih bayar {{ $rp($overpaidCents) }}. Kembalikan ke customer.</p>
+                    @include('admin.orders.v2._notice', ['section' => 'kelebihan'])
+                    <form method="POST" action="{{ route('admin.orders.v2.overpayment', $order) }}" class="mt-2 grid gap-2 sm:grid-cols-2" data-confirm="Catat {{ $rp($overpaidCents) }} sudah dikembalikan ke customer?">
+                        @csrf {!! $hidden('kelebihan') !!}
+                        <label class="text-xs font-medium text-gray-700">Lewat
+                            <select name="refund_method" class="{{ $input }}">@foreach (OnlineOrder::PAYMENT_METHODS as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select>
+                        </label>
+                        <label class="text-xs font-medium text-gray-700">Catatan <span class="font-normal">(opsional)</span><input name="reference" maxlength="80" placeholder="Contoh: BCA ke rek. customer" class="{{ $input }}"></label>
+                        <button class="{{ $primary }} sm:col-span-2" data-busy-label="Menyimpan…">Sudah dikembalikan</button>
+                    </form>
+                </div>
+            @endif
             <p class="mt-1 text-sm text-gray-600">{{ OnlineOrder::PACKAGING[$order->packaging] ?? 'Paperbag belum dipilih' }}</p>
         </section>
 
@@ -277,7 +310,7 @@
                 @if ($received > 0 || $order->refund_status)
                     <details id="keuangan" class="{{ $card }}" @if ($isOpen('keuangan', in_array($order->refund_status, ['pending', 'partial', 'needs_reconciliation'], true))) open @endif>
                         <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2">
-                            <span><span class="block text-base font-semibold text-gray-900">Keuangan</span><span class="block text-sm text-gray-600">Refund dan rekonsiliasi (Super Admin)</span></span>
+                            <span><span class="block text-base font-semibold text-gray-900">Keuangan</span><span class="block text-sm text-gray-600">Refund dan rekonsiliasi</span></span>
                             @include('admin.orders.v2._chevron')
                         </summary>
                         @include('admin.orders.v2._money-panel')

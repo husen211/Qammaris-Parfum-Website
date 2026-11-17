@@ -882,8 +882,8 @@ class OnlineOrderFulfillment
     }
 
     /**
-     * Staff Order cancels only orders without any money and not handed over (D4). If money was received, a
-     * Super Admin must state how much is returned in the same step (ADR-051); nothing is assumed.
+     * Staff Order cancels orders not handed over (D4, widened by ORD-27). If money was received, whoever cancels
+     * states how much is returned in the same step (ADR-051); nothing is assumed.
      */
     public function cancel(OnlineOrder $order, int $revision, OrderActor $actor, string $reason, ?string $refundDue = null): OnlineOrder
     {
@@ -903,7 +903,7 @@ class OnlineOrderFulfillment
                 throw new InvalidOrderTransition('Kurir Biteship masih dipesan. Batalkan kurir dulu di bagian Pengiriman, lalu batalkan pesanan.');
             }
             if (! Gate::forUser($actor->user)->allows('orders.cancel', $order)) {
-                throw new OrderActionNotAllowed('Pesanan yang sudah ada pembayaran atau sudah diserahkan hanya dapat dibatalkan Super Admin.');
+                throw new OrderActionNotAllowed('Pesanan yang sudah diserahkan hanya dapat dibatalkan Super Admin.');
             }
             $reason = trim($reason);
             if (mb_strlen($reason) < 5) {
@@ -912,9 +912,6 @@ class OnlineOrderFulfillment
             $received = OnlineOrderMoney::totals($order)['received'];
             $note = Str::limit($reason, 150);
             if ($received > 0) {
-                if (! $actor->isOwner()) {
-                    throw new OrderActionNotAllowed('Pesanan dengan pembayaran hanya dapat dibatalkan Super Admin.');
-                }
                 if ($refundDue === null || ! preg_match('/^\d{1,9}(\.\d{1,2})?$/', $refundDue) || Rupiah::minorUnits($refundDue) > $received) {
                     throw new OrderValidationFailed('Tentukan nominal yang harus dikembalikan (0 sampai '.Rupiah::format(Rupiah::decimal($received)).').', ['refund_due' => 'Wajib']);
                 }

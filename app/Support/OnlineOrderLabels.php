@@ -123,6 +123,8 @@ final class OnlineOrderLabels
         'change_requested' => 'mengajukan perubahan data',
         'change_approved' => 'menyetujui perubahan data',
         'change_rejected' => 'menolak perubahan data',
+        'order_changed' => 'mengubah pesanan',
+        'overpayment_returned' => 'mengembalikan kelebihan bayar',
     ];
 
     public static function event(OnlineOrderEvent $event): string
