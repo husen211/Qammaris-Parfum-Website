@@ -153,7 +153,7 @@ Saat saklar aktif, aturan di bawah menggantikan larangan simpan data pada butir 
   - belum bisa dicatat pembayarannya;
   - data tidak bisa diubah customer lewat link (perubahan lewat chat).
 
-  Staff Order boleh mengisi ongkir dan memperbaiki data. Setelah chat, Staff Order menekan **Konfirmasi pesanan**; pesanan lalu mengikuti alur biasa (pembayaran → packing → pengiriman → reimburse). Pesanan yang tidak jadi dibatalkan dengan alasan.
+  Staff Order boleh mengisi ongkir dan memperbaiki data. Setelah chat, Staff Order menekan **Konfirmasi pesanan**; pesanan lalu mengikuti alur biasa (pembayaran → packing → pengiriman → reimburse). Pesanan yang tidak jadi dibatalkan dengan alasan; tombol **Batalkan pesanan** ada langsung di langkah Konfirmasi (Owner 2026-11-17: stok habis ketahuan di langkah ini), selain di Opsi lanjutan.
 - **Membuka WhatsApp bukan konfirmasi**, bukan bukti pesan terkirim, dan bukan pembayaran.
   - Halaman sukses (link status pesanan, berlaku 7 hari selama belum dikonfirmasi) membuka WhatsApp sekali dan menyediakan **Buka WhatsApp lagi**.
   - Pesanan tetap tersimpan walau WhatsApp gagal atau tidak dikirim.

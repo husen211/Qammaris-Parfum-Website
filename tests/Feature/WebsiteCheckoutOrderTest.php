@@ -263,6 +263,11 @@ class WebsiteCheckoutOrderTest extends TestCase
         $this->post(route('cart.checkout'), $this->form('pickup'));
         $order = OnlineOrder::sole();
         $staff = User::factory()->create(['role' => User::ROLE_STAFF_ORDER])->fresh();
+        // Owner 2026-11-17: staff find the cancel form in the Konfirmasi step, where they learn stock is missing.
+        $page = $this->actingAs($staff)->get(route('admin.orders.show', $order))->assertOk()->getContent();
+        $step = substr($page, strpos($page, 'id="konfirmasi"'), strpos($page, 'id="lanjutan"') - strpos($page, 'id="konfirmasi"'));
+        $this->assertStringContainsString('Stok habis atau pesanan tidak jadi? Batalkan pesanan', $step);
+        $this->assertStringContainsString(route('admin.orders.v2.cancel', $order), $step);
         $this->actingAs($staff)->post(route('admin.orders.v2.cancel', $order), ['revision' => $order->revision, 'reason' => 'Customer tidak membalas chat'])
             ->assertSessionHas('order_notice.type', 'success');
         $this->assertSame('cancelled', $order->fresh()->lifecycle);
