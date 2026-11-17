@@ -28,9 +28,11 @@ return [
         'country' => 'ID',
         'telephone' => '+6285144924931',
         'maps_url' => 'https://maps.app.goo.gl/npKqotHHTo2AAyag9',
-        'opening_days' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-        'opens' => '09:00',
-        'closes' => '21:00',
+        // Owner 2026-11-16: open every day; Friday from 13:00.
+        'hours' => [
+            ['days' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'], 'opens' => '09:00', 'closes' => '21:00'],
+            ['days' => ['Friday'], 'opens' => '13:00', 'closes' => '21:00'],
+        ],
         'same_as' => [
             'https://www.instagram.com/qammaris',
             'https://www.tiktok.com/@qammaris.parfum',

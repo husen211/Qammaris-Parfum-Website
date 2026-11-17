@@ -38,12 +38,12 @@ class StoreProfile
                 'addressCountry' => $profile['country'],
             ],
             'hasMap' => $profile['maps_url'],
-            'openingHoursSpecification' => [[
+            'openingHoursSpecification' => array_map(fn (array $hours) => [
                 '@type' => 'OpeningHoursSpecification',
-                'dayOfWeek' => $profile['opening_days'],
-                'opens' => $profile['opens'],
-                'closes' => $profile['closes'],
-            ]],
+                'dayOfWeek' => $hours['days'],
+                'opens' => $hours['opens'],
+                'closes' => $hours['closes'],
+            ], $profile['hours']),
             'sameAs' => $profile['same_as'],
         ];
         // ORD-07: test environments never publish the real store number, structured data included.
