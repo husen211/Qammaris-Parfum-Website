@@ -180,20 +180,15 @@ class AdminOrderV2PagesTest extends TestCase
         $this->assertSame(['picked_up', 'handed_over', 'jnt'], [$order->jnt_status, $order->handover_status, $order->handed_to]);
     }
 
-    public function test_super_admin_panel_refund_reverse_and_adjustment_approval_with_staff_denied(): void
+    public function test_staff_use_the_refund_panel_and_super_admin_approves_old_pending_prices(): void
     {
         $order = $this->activeOrder('pickup');
         $this->actingAs($this->staff)->post(route('admin.orders.v2.payments', $order), ['revision' => $order->revision, 'amount' => '400000', 'payment_method' => 'transfer', 'recorded_in_majoo' => '1', 'confirmation_source' => 'proof_in_chat']);
         $order->refresh();
 
-        foreach ([
-            route('admin.orders.money.refund-decision', $order) => ['refund_due' => '0', 'reason' => 'Tidak ada refund'],
-            route('admin.orders.money.refunds', $order) => ['amount' => '1000', 'refund_method' => 'cash'],
-            route('admin.orders.money.reverse', [$order, OnlineOrderPayment::sole()->id]) => ['reason' => 'Salah catat'],
-            route('admin.orders.money.reconcile', $order) => ['received' => '1', 'refund_due' => '0', 'already_refunded' => '0', 'note' => 'Cek mutasi'],
-        ] as $url => $data) {
-            $this->post($url, $data + ['revision' => $order->revision])->assertForbidden();
-        }
+        // ORD-27 (Owner 2026-11-17): Staff Order may decide, record, reverse and reconcile refunds too.
+        $this->assertTrue($this->staff->can('orders.refund'));
+        $this->get(route('admin.orders.show', $order))->assertSee('Refund dan rekonsiliasi');
         // ADM-01: the staff discount applies at once; deciding (older pending ones) stays Super Admin only.
         $this->post(route('admin.orders.v2.adjustments', $order), ['revision' => $order->revision, 'direction' => 'discount', 'amount' => '20.000', 'reason' => 'Diskon member'])
             ->assertSessionHas('order_notice.type', 'success');
@@ -204,7 +199,7 @@ class AdminOrderV2PagesTest extends TestCase
         $this->get(route('admin.orders.show', $order))->assertSee('Diterapkan')->assertDontSee('Menunggu persetujuan Super Admin')->assertDontSee('Keuangan · Super Admin');
 
         $this->actingAs($this->owner);
-        $page = $this->get(route('admin.orders.show', $order))->assertSee('Keuangan · Super Admin')->assertSee('Lebih bayar');
+        $page = $this->get(route('admin.orders.show', $order))->assertSee('Refund dan rekonsiliasi')->assertSee('Lebih bayar');
 
         $this->post(route('admin.orders.money.refund-decision', $order), ['revision' => $order->revision, 'refund_due' => '20.000', 'reason' => 'Kembalikan selisih diskon']);
         $this->post(route('admin.orders.money.refunds', $order->refresh()), ['revision' => $order->revision, 'amount' => '20000', 'refund_method' => 'transfer', 'reference' => 'TRF-9']);
@@ -263,7 +258,7 @@ class AdminOrderV2PagesTest extends TestCase
         $legacy = app(OnlineOrderWorkflow::class)->advance($legacy, 'details_received', 'paid', 'admin', $this->owner, extra: ['payment_method' => 'transfer']);
         app(OnlineOrderWorkflow::class)->cancel($legacy, 'Customer batal', $this->owner);
         $this->actingAs($this->owner)->get(route('admin.orders.show', $legacy))->assertSee('Perlu rekonsiliasi')->assertSee('Simpan rekonsiliasi');
-        $this->actingAs($this->staff)->get(route('admin.orders.show', $legacy))->assertDontSee('Simpan rekonsiliasi');
+        $this->actingAs($this->staff)->get(route('admin.orders.show', $legacy))->assertSee('Simpan rekonsiliasi');
         $this->actingAs($this->owner)->get('/admin/orders?status=reconcile')->assertSee($legacy->code)->assertSee('Rekonsiliasi');
     }
 

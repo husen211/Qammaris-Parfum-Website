@@ -160,7 +160,7 @@
                     <span class="flex items-center gap-2"><strong class="text-xl tabular-nums text-brand-black">{{ format_rupiah($order->customerTotal()) }}</strong>
                         <button type="button" data-copy-account="{{ (int) \App\Support\Rupiah::minorUnits($order->customerTotal()) / 100 }}" data-copy-done="Total disalin." class="inline-flex min-h-10 items-center border border-brand-black bg-white px-2.5 text-xs font-semibold uppercase tracking-widest text-brand-black [touch-action:manipulation] active:bg-gray-100">Salin</button></span>
                 </div>
-                @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.</p>@endif
+                @if ($receivedCents > 0)<p class="text-sm text-gray-700">Sudah diterima {{ format_rupiah(\App\Support\Rupiah::decimal($receivedCents)) }}.@if (\App\Support\Rupiah::minorUnits($order->customerTotal()) > $receivedCents) <strong class="text-brand-black" data-remaining>Sisa yang perlu dibayar {{ format_rupiah(\App\Support\Rupiah::decimal(\App\Support\Rupiah::minorUnits($order->customerTotal()) - $receivedCents)) }}.</strong>@endif</p>@endif
                 {{-- ORD-15 (Owner 2026-11-11): unpaid orders are cancelled automatically after the deadline. --}}
                 @if ($receivedCents === 0 && config('orders.unpaid_cancel_hours') > 0 && $order->keep_status !== 'active')
                     <p class="mt-2 flex items-start gap-2 text-sm leading-6 text-gray-700" data-payment-deadline>

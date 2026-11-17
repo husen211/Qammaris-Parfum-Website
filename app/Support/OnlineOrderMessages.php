@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Actions\Orders\ChangeOnlineOrder;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderItem;
 use App\Models\StorePaymentAccount;
@@ -135,7 +136,8 @@ final class OnlineOrderMessages
      */
     public function paymentInstructions(OnlineOrder $order): string
     {
-        $received = OnlineOrderMoney::totals($order)['received'];
+        $money = OnlineOrderMoney::totals($order);
+        $received = $money['received'] - $money['refunded'];
         $total = Rupiah::minorUnits($order->customerTotal());
         $lines = ['Pesanan *'.$order->code.'*', 'Subtotal produk: '.Rupiah::format($order->subtotal())];
         if (Rupiah::minorUnits($order->packagingFee()) > 0) {
@@ -170,6 +172,34 @@ final class OnlineOrderMessages
         $lines[] = 'Untuk QRIS, minta kode QRIS ke admin di chat ini.';
         $lines[] = '';
         $lines[] = 'Setelah membayar, kirim foto atau screenshot bukti pembayaran di chat ini. Pesanan disiapkan setelah pembayaran kami konfirmasi.';
+
+        return implode("\n", $lines);
+    }
+
+    /** ORD-27: what changed, the new total, and what is left to pay or comes back, for the customer's chat. */
+    public function orderChanged(OnlineOrder $order, string $customerUrl): string
+    {
+        $money = OnlineOrderMoney::totals($order);
+        $paid = $money['received'] - $money['refunded'];
+        $total = Rupiah::minorUnits($order->customerTotal());
+        $lines = ['Halo Kak'.($order->customer_name ? ' '.$this->text($order->customer_name) : '').', pesanan Qammaris *'.$order->code.'* sudah kami ubah:'];
+        foreach ($order->items as $item) {
+            $lines[] = '- '.$this->text($item->label()).' '.$item->quantity.'x';
+        }
+        $lines[] = 'Pengiriman: '.ChangeOnlineOrder::shippingLabel($order)
+            .($order->shipping_fee !== null && $order->shipping_payer === 'added_to_transfer' ? ' · ongkir '.Rupiah::format($order->shipping_fee) : '');
+        $lines[] = '*Total baru: '.Rupiah::format(Rupiah::decimal($total)).'*';
+        if ($paid > 0) {
+            $lines[] = 'Sudah dibayar: '.Rupiah::format(Rupiah::decimal($paid));
+        }
+        $lines[] = match (true) {
+            $paid > 0 && $total > $paid => 'Kurang bayar *'.Rupiah::format(Rupiah::decimal($total - $paid)).'*. Mohon transfer kekurangannya, lalu kirim buktinya di chat ini.',
+            $paid > $total => 'Kelebihan bayar *'.Rupiah::format(Rupiah::decimal($paid - $total)).'* akan kami kembalikan. Mohon kirim nomor rekening atau e-wallet untuk pengembaliannya.',
+            $paid > 0 => 'Tidak ada selisih pembayaran.',
+            default => 'Detail dan cara bayar ada di link berikut:',
+        };
+        $lines[] = '';
+        $lines[] = $customerUrl;
 
         return implode("\n", $lines);
     }

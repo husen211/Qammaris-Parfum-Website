@@ -226,6 +226,7 @@ class AdminOnlineOrderController extends Controller
             'brand' => $product->brand?->name ?? 'Brand belum diisi',
             'volume' => $variant->volume,
             'price' => Rupiah::format($variant->price),
+            'price_value' => (int) round((float) $variant->price),
             'availability' => CatalogAvailability::label($product),
             'published' => $product->isPublished(),
             'image' => $product->primaryImage?->image_url ?? asset('images/product-placeholder.svg'),

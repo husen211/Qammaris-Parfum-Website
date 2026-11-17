@@ -1,5 +1,5 @@
 {{--
-    Super Admin money panel (ORD-02d, ADR-051): refund decision, refund payout, reconciliation. Also included on ORD-01
+    Money panel (Super Admin; Staff Order too since ORD-27) (ORD-02d, ADR-051): refund decision, refund payout, reconciliation. Also included on ORD-01
     pages, because a legacy cancel after payment needs reconciliation. Nothing here is ever assumed.
 --}}
 @use('App\Models\OnlineOrder')
@@ -16,7 +16,7 @@
 @endphp
 <section id="keuangan" class="scroll-mt-20 rounded-xl border border-gray-900/10 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="keuangan-title">
     <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="keuangan-title" class="text-lg font-semibold text-gray-900">Keuangan · Super Admin</h2>
+        <h2 id="keuangan-title" class="text-lg font-semibold text-gray-900">Keuangan</h2>
         @if ($order->refund_status)
             <span @class(['rounded-full px-2.5 py-1 text-xs font-semibold',
                 'bg-red-100 text-red-800' => in_array($order->refund_status, ['needs_reconciliation', 'pending', 'partial'], true),

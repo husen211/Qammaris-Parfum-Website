@@ -214,7 +214,7 @@ class OnlineOrderV2OperationsTest extends TestCase
         $partly = $this->order('pickup');
         $partly = $money->recordPayment($partly, $partly->revision, $this->staff, '100000', 'transfer', 'proof_in_chat');
         $this->assertSame('unpaid', $partly->payment_status);
-        $this->assertRejected(fn () => $this->ops->cancel($partly, $partly->revision, $this->actor(), 'Customer batal'), OrderActionNotAllowed::class, 'staff with money');
+        $this->assertRejected(fn () => $this->ops->cancel($partly, $partly->revision, $this->actor(), 'Customer batal'), OrderValidationFailed::class, 'staff with money states the refund (ORD-27)');
         $owner = OrderActor::user($this->owner);
         $this->assertRejected(fn () => $this->ops->cancel($partly, $partly->revision, $owner, 'Customer batal'), OrderValidationFailed::class, 'refund amount required');
         $this->assertRejected(fn () => $this->ops->cancel($partly, $partly->revision, $owner, 'Customer batal', '150000'), OrderValidationFailed::class, 'more than received');

@@ -74,7 +74,8 @@ class OnlineOrderController extends Controller
             'showPayment' => $showPayment,
             'paymentAccounts' => $showPayment ? StorePaymentAccount::query()->usable()->get() : collect(),
             'qrisUrl' => $qrisUrl,
-            'receivedCents' => $showPayment ? OnlineOrderMoney::totals($order)['received'] : 0,
+            // ORD-27: net of what was returned after a change, so a later increase shows what is left to pay.
+            'receivedCents' => $showPayment ? (fn ($money) => $money['received'] - $money['refunded'])(OnlineOrderMoney::totals($order)) : 0,
             'proofWhatsappUrl' => $showPayment ? $whatsApp->textUrl($this->storeNumber(), $proofMessage) : null,
             'proofMessage' => $proofMessage,
             'waitingFor' => $waitingFor,

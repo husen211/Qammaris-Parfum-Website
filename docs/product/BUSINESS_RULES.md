@@ -190,7 +190,7 @@ Keputusan: [ADR-045](../architecture/decisions/ADR-045-payment-gate-and-order-st
 
 Keputusan Owner 2026-10-07; implementasi belum dirilis. [ADR-048](../architecture/decisions/ADR-048-online-order-links-and-tracking.md), [program](../planning/ONLINE_ORDERS.md).
 
-- Admin membuat pesanan dari produk published, atau draft yang terhubung ke Qammaris App dan tidak disembunyikan App (ORD-12, Owner 2026-10-29), dengan offer aktif berharga positif. Draft manual, produk arsip, dan produk yang disembunyikan App tidak bisa dipesan; memesan tidak menayangkan draft. Checkout website pelanggan tetap hanya produk published. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok, diskon, atau edit item setelah dibuat (batalkan lalu buat ulang).
+- Admin membuat pesanan dari produk published, atau draft yang terhubung ke Qammaris App dan tidak disembunyikan App (ORD-12, Owner 2026-10-29), dengan offer aktif berharga positif. Draft manual, produk arsip, dan produk yang disembunyikan App tidak bisa dipesan; memesan tidak menayangkan draft. Checkout website pelanggan tetap hanya produk published. Status availability hanya informasi karena stok dikonfirmasi di chat. Harga menjadi snapshot dan tidak berubah oleh katalog. Tidak ada reservasi stok. Sejak ORD-27 (Owner 2026-11-17) produk dan pengiriman bisa diubah setelah pesanan dibuat lewat **Ubah pesanan** (lihat bagian Ubah pesanan); tidak perlu batal lalu buat ulang.
 - **Data customer (nama, HP, alamat, catatan) disimpan di DB tanpa hapus otomatis**, hanya terlihat oleh admin dan link tugas staf pesanan itu. Ini pengecualian terarah dari aturan checkout keranjang.
 - Link customer: tanpa login. Wajib nama, HP, cara menerima (ambil di toko / kirim dalam Kota Palu / luar kota), dan paperbag. Alamat lengkap wajib hanya untuk luar kota; kode pos opsional. Lokasi dalam kota dikirim lewat share location WhatsApp, bukan GPS browser.
 - Customer boleh mengubah data sampai admin menandai **Dibayar**; sesudahnya hanya status read-only. Link yang belum diisi kedaluwarsa 7 hari; link baru mematikan link lama.
@@ -207,7 +207,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Super Admin pertama hanya lewat bootstrap eksplisit di server setelah Owner memverifikasi identitas. Tidak ada promosi otomatis.
 - Login dengan email atau username, tanpa remember-me; sesi admin berakhir setelah 12 jam tidak aktif. Akun nonaktif tidak bisa masuk; nonaktif, ganti role, dan reset password mengakhiri semua sesi akun tersebut.
 - Super Admin aktif terakhir tidak dapat dinonaktifkan atau diturunkan.
-- Staff Order: membuat/mengubah pesanan, menandai Lunas, membatalkan pesanan yang belum Lunas dan belum diserahkan dengan alasan, dan mengubah alamat tanpa biaya sampai diserahkan. Perubahan ongkir/pendanaan, koreksi langkah, penggantian talangan, dan pembatalan setelah Lunas hanya Super Admin.
+- Staff Order: membuat/mengubah pesanan (termasuk **Ubah pesanan** ORD-27), menandai Lunas, membatalkan pesanan yang belum diserahkan dengan alasan (bila sudah ada uang masuk, sekalian menulis nominal yang dikembalikan), memutuskan dan mencatat refund, dan mengubah alamat tanpa biaya sampai diserahkan. Keputusan Owner 2026-11-17: "jangan kasih batasan staff yang bikin ribet admin". Pendanaan driver, koreksi langkah, penggantian talangan, persetujuan penyesuaian harga lama yang masih menunggu, dan melepas klaim App tetap Super Admin.
 - Role Staff Order website dan izin operasional App (`orders.handle`) adalah dua hal terpisah. Memiliki salah satu tidak otomatis memberi yang lain.
 - **Data pelanggan (D13):** nama, HP, alamat, dan catatan pesanan hanya dapat dilihat akun admin aktif dengan kemampuan pesanan (Super Admin, Staff Order, Admin lama). Customer melihat datanya sendiri lewat link pesanan. App menerima data penerima secukupnya untuk pengiriman sesuai kontrak API. **Tidak ada penghapusan otomatis** (keputusan Owner 2026-10-21); Super Admin menghapus data pelanggan secara manual atas permintaan (ORD-05). Riwayat perubahan akun dan pesanan disimpan tanpa purge.
 
@@ -217,7 +217,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
 - Bila data sudah lengkap dari chat, customer **tidak perlu** membuka form. Link tetap bisa dipakai customer untuk melihat status.
 - Form customer tetap sederhana: produk sudah terisi, tiga cara menerima, dua pilihan paperbag. Setelah Lunas atau packing dimulai, perubahan dari customer menjadi permintaan yang ditinjau toko.
 - Staff Order boleh menandai Lunas dengan sumber konfirmasi (bukti di chat, bukti diunggah, Majoo).
-- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya untuk Super Admin. Penyesuaian harga diterapkan langsung oleh siapa pun dengan akses pesanan (ADM-01, Owner 2026-10-17).
+- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi: Super Admin dan Staff Order (ORD-27, Owner 2026-11-17; sebelumnya hanya Super Admin). Penyesuaian harga diterapkan langsung oleh siapa pun dengan akses pesanan (ADM-01, Owner 2026-10-17).
 - Pesanan V2 dikerjakan staf lewat aplikasi Qammaris Admin dengan akun masing-masing. Link tugas tanpa login (ORD-01) tidak berlaku untuk pesanan V2 (D6).
 
 ### Operasional pesanan yang disederhanakan (ORD-03, branch review)
@@ -323,6 +323,16 @@ Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-
 
 Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-biteship.md).
 
+### Ubah pesanan (ORD-27, Owner 2026-11-17)
+
+- Staf (Staff Order atau Super Admin) bisa **mengubah pesanan** dari halaman pesanan, tombol **Ubah pesanan** di kartu Produk dipesan: ganti produk (mis. stok habis), ubah jumlah, tambah atau hapus produk, dan ganti cara pengiriman (Ambil di toko / Dalam kota / Luar kota) dengan ongkir otomatis Biteship atau ongkir manual. Berlaku juga setelah dibayar.
+- Batas: hanya sebelum barang diserahkan ke kurir/customer, dan tidak selama kurir Biteship masih dipesan (batalkan kurir dulu). Pesanan minimal satu produk; untuk tidak jadi sama sekali, pakai Batalkan pesanan.
+- Produk lama tetap dengan harganya saat dipesan; produk baru memakai harga katalog saat diubah. Ongkir yang diketik staf menggantikan harga ongkir dari checkout; titik antar checkout tetap dipakai.
+- Produk berubah setelah mulai/selesai packing: pesanan kembali ke **perlu packing ulang**. Hanya pengiriman yang berubah: packing tetap.
+- Selisih: total baru dibandingkan dengan yang sudah dibayar (dikurangi yang sudah dikembalikan). **Kurang bayar** → pesanan kembali belum lunas dengan sisa yang perlu dibayar (terlihat di admin dan di link customer), lalu staf menandai Lunas seperti biasa. **Lebih bayar** → kotak "Customer lebih bayar Rp X" dengan tombol **Sudah dikembalikan** (lewat transfer/QRIS/tunai, catatan opsional); nominalnya selalu kelebihan bayar itu sendiri.
+- Setelah disimpan, staf mendapat pesan WhatsApp siap kirim ke customer: daftar produk baru, pengiriman, total baru, sudah dibayar, dan kurang/lebih bayar, plus link pesanan.
+- Riwayat mencatat "mengubah pesanan" dengan produk lama → baru, pengiriman lama → baru, total lama → baru, selisih, dan catatan staf.
+
 ### Urutan checkout: alamat dulu, baru pilih pengiriman (ORD-16, diubah ORD-26 Owner 2026-11-16)
 
 - Customer belum tentu tahu toko di Palu, jadi checkout tidak bertanya "dikirim atau ambil" atau "dalam atau luar kota" di awal. Dengan ongkir otomatis aktif, checkout berurutan:
@@ -374,7 +384,7 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
   - Pesanan tampil sebagai **refund belum selesai** hanya selama masih ada sisa yang benar-benar terutang.
 - **Pesanan ORD-01 yang dibatalkan setelah Lunas** ditandai **perlu rekonsiliasi**, karena riwayat refund-nya tidak tercatat. Super Admin mengisi nominal diterima, nominal yang harus dikembalikan, dan yang sudah dikembalikan. Bila belum diketahui, tanda tetap ada.
 - Catatan pembayaran/refund tidak pernah diubah atau dihapus. Salah catat dibatalkan dengan entri pembatalan beralasan.
-- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi hanya oleh **Super Admin**, dan semuanya tercatat di riwayat pesanan. Staff Order boleh mencatat pembayaran masuk.
+- Keputusan refund, pembayaran refund, pembatalan entri, dan rekonsiliasi oleh **Super Admin atau Staff Order** (ORD-27, Owner 2026-11-17), dan semuanya tercatat di riwayat pesanan.
 - Packing baru dianggap selesai bila **setiap barang dikonfirmasi dengan jumlah persis sesuai pesanan**. Barang kurang dicatat sebagai **kendala stok**, bukan packing.
 - J&T: minta pickup, QR tersedia, dan dipickup adalah langkah terpisah. Saat dipickup, pesanan otomatis tercatat diserahkan ke J&T. Resi boleh ditambahkan kapan saja.
 - Kendala terbuka menahan status selesai. Kendala hanya bisa ditutup oleh pembukanya atau Owner/Super Admin.
@@ -394,7 +404,7 @@ Keputusan: [ADR-058](../architecture/decisions/ADR-058-admin-courier-booking-bit
   - ADM-04 (Owner 2026-10-21): jenis **Poin member** = potongan rupiah tetap dari poin yang dipakai customer; tidak perlu alasan (tercatat "Poin member").
   - Owner 2026-10-17 (ADM-01): siapa pun dengan akses pesanan (termasuk Staff Order) menerapkan potongan/tambahan langsung, dengan alasan, tanpa persetujuan Super Admin. Total langsung berubah; siapa yang menerapkan tercatat di Riwayat. Total tidak boleh di bawah 0.
   - Pengajuan lama yang masih menunggu tetap diputuskan Super Admin.
-  - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Pengembaliannya tetap butuh keputusan refund Super Admin.
+  - Bila customer jadi **lebih bayar**, hal itu ditampilkan. Sejak ORD-27 staf mencatat pengembaliannya langsung ("Sudah dikembalikan"), tanpa keputusan refund terpisah.
 - **Permintaan perubahan customer:**
   - Customer mengubah data langsung hanya selama belum Lunas dan packing belum dimulai. Setelah itu perubahan menjadi permintaan yang ditinjau admin.
   - Staff Order menyetujui perubahan penerima/alamat sampai diserahkan. Perubahan cara pengiriman (bisa mengubah biaya) hanya oleh Super Admin, dan tidak bisa bila kurir/J&T sudah diminta.

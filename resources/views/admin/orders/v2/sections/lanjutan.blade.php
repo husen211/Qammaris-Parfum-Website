@@ -58,10 +58,8 @@
         <section id="batal" class="mt-5 scroll-mt-20 border-t border-gray-100 pt-4" aria-labelledby="batal-title">
             <h3 id="batal-title" class="text-sm font-semibold text-gray-900">Batalkan pesanan</h3>
             @include('admin.orders.v2._notice', ['section' => 'batal'])
-            @if ($received > 0 && ! auth()->user()->can('orders.refund'))
-                <p class="mt-1 text-sm text-gray-600">Sudah ada pembayaran: hanya Super Admin yang dapat membatalkan.</p>
-            @elseif (! auth()->user()->can('orders.cancel', $order))
-                <p class="mt-1 text-sm text-gray-600">Pesanan yang sudah dibayar atau diserahkan hanya dapat dibatalkan Super Admin.</p>
+            @if (! auth()->user()->can('orders.cancel', $order))
+                <p class="mt-1 text-sm text-gray-600">Pesanan yang sudah diserahkan hanya dapat dibatalkan Super Admin.</p>
             @else
                 <form method="POST" action="{{ route('admin.orders.v2.cancel', $order) }}" class="mt-2 space-y-3" data-confirm="Batalkan pesanan {{ $order->code }}?">
                     @csrf {!! $hidden('batal') !!}

@@ -69,7 +69,7 @@ final class OrderActor
     /** Owner-level for override rules: Super Admin on the Website, `owner` in the App. */
     public function isOwner(): bool
     {
-        return $this->user ? Gate::forUser($this->user)->allows('orders.refund') : $this->appRole === 'owner';
+        return $this->user ? Gate::forUser($this->user)->allows('orders.owner') : $this->appRole === 'owner';
     }
 
     public function canManageOrders(): bool

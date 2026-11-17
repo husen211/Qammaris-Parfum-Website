@@ -44,15 +44,20 @@ class AuthorizationServiceProvider extends ServiceProvider
                 && in_array($order->lifecycle, ['draft', 'awaiting_customer', 'active'], true) && $order->handover_status === 'pending'
                 && OnlineOrderMoney::totals($order)['received'] === 0;
         });
-        // Refund decisions, refund payouts, ledger reversals and reconciliation: Super Admin only (Owner 2026-10-09).
-        Gate::define('orders.refund', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
+        // Refund decisions, refund payouts, ledger reversals and reconciliation. Owner 2026-11-17 (ORD-27): Staff Order
+        // too, so a changed or cancelled order never waits for the Owner (was Super Admin only since 2026-10-09).
+        Gate::define('orders.refund', fn (User $user) => $has($user, self::ORDER_ROLES));
+        // Owner-level override rules (resolving any issue, own-money courier costs, freeing App claims) stay Super Admin;
+        // they no longer ride on orders.refund since that opened to Staff Order.
+        Gate::define('orders.owner', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // ORD-05: removing a customer's personal data is a Super Admin decision.
         Gate::define('customers.delete', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // ORD-04: official bank accounts in payment instructions are Owner configuration.
         Gate::define('orders.payment-accounts', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
         // Price adjustments and cost-relevant customer changes need Super Admin approval (plan §5.1, D5).
         Gate::define('orders.approve-adjustment', fn (User $user) => $has($user, [User::ROLE_SUPER_ADMIN]));
-        // Owner D4: Staff Order may cancel only while unpaid and not handed over, always with a reason.
+        // Owner D4, widened 2026-11-17 (ORD-27): Staff Order cancels any V2 order not handed over, always with a reason;
+        // after a payment they state the amount to return in the same step.
         Gate::define('orders.cancel', function (User $user, OnlineOrder $order) use ($has): bool {
             if ($has($user, self::FULL_ADMIN)) {
                 return true;
@@ -62,9 +67,7 @@ class AuthorizationServiceProvider extends ServiceProvider
                 return false;
             }
             if ($order->isV2()) {
-                // No recorded money at all, not just "not fully paid", and not handed over.
-                return $order->payment_status === 'unpaid' && $order->handover_status === 'pending'
-                    && OnlineOrderMoney::totals($order)['received'] === 0;
+                return $order->handover_status === 'pending';
             }
 
             return in_array($order->stage, [OnlineOrder::STAGE_AWAITING_CUSTOMER, OnlineOrder::STAGE_DETAILS_RECEIVED], true);
