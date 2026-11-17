@@ -9,6 +9,7 @@ import './ui/product-gallery';
 import './ui/restock-request';
 import './ui/catalog-images';
 import './ui/home-best-sellers';
+import './ui/new-arrival';
 import './ui/brand-carousel';
 import './ui/hero-video';
 import './ui/navbar';

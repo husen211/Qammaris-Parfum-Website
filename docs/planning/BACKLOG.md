@@ -40,6 +40,14 @@ Open limits after this reconciliation (none blocks current use):
 | TEST-MYSQL-02 | `ProductSeeder` fails on duplicate SKU `AFNAN-9PM-50ML` (local seeding only) |
 | P9-01 | Limits listed in its own section |
 
+## HOME-NEW-ARRIVAL — "Baru Tiba" on the homepage — IN_REVIEW
+
+Owner 2026-11-17 (card #202): a new homepage section above Produk Terlaris that looks clearly different from it. Approved concept "A Editorial, dynamic": cream band, one large auto-rotating stage plus a numbered list of 5, no price anywhere; on desktop, hovering a list row switches the stage at once while the autoplay progress line keeps running. Selection rule in [BUSINESS_RULES](../product/BUSINESS_RULES.md#katalog-search-dan-beranda) (newest 5 first publications within 60 days, real photo, price > 0, not sold out, hidden under 3).
+
+Change: `HomeController` passes `newArrivals`; new `home/sections/new-arrival.blade.php` between the brand row and Produk Terlaris; `resources/js/ui/new-arrival.js` (4 s autoplay with crossfade and slow scale-in, mouse hover and keyboard focus switch and hold, touch swipe, pause button, reduced motion = no autoplay, pauses off screen or in a hidden tab). No migration, no new dependency. [Verification](../verification/new-arrival/README.md).
+
+Status: branch `new-arrival-beranda`, verified locally at 375 and 1440 with temporary local `published_at` dates (restored). Waiting for the Owner's check on localhost; not released.
+
 ## ORD-13 — Automatic ongkir at checkout (GoSend, GrabExpress, J&T) — IN_REVIEW
 
 Owner 2026-11-11 (card #160): customers should see ongkir in the checkout instead of waiting for staff. After comparing a Maxim-based kelurahan table with an aggregator, the Owner chose Gojek/Grab and J&T through Biteship (Starter plan, account and key by the Owner), with the store's discount: instant 15% from Rp20.000, J&T 30% capped at Rp30.000, rounded down to Rp500, shown as a struck price "Potongan ongkir N% dari Qammaris"; 800 g per product; charged ongkir never raised for the customer.
