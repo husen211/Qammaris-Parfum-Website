@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Actions\Orders\ChangeOnlineOrder;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderItem;
+use App\Models\StoreInfo;
 use App\Models\StorePaymentAccount;
 
 /** Plain-text WhatsApp messages for the staff group and the customer; every stored value is flattened. */
@@ -169,7 +170,9 @@ final class OnlineOrderMessages
                 $lines[] = '- '.$this->text($account->line());
             }
         }
-        $lines[] = 'Untuk QRIS, minta kode QRIS ke admin di chat ini.';
+        // Owner 2026-11-24: with the store QRIS uploaded the customer scans or saves it from the link, no chat needed.
+        $qris = StoreInfo::qrisImageUrl();
+        $lines[] = $qris ? 'Atau bayar dengan QRIS (simpan gambar lalu scan, masukkan total di atas): '.$qris : 'Untuk QRIS, minta kode QRIS ke admin di chat ini.';
         $lines[] = '';
         $lines[] = 'Setelah membayar, kirim foto atau screenshot bukti pembayaran di chat ini. Pesanan disiapkan setelah pembayaran kami konfirmasi.';
 

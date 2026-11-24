@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Actions\Orders\OnlineOrderFulfillment;
+use App\Models\StoreInfo;
 use App\Models\StorePaymentAccount;
 use App\Models\User;
 use App\Support\OnlineOrderMessages;
 use App\Support\OnlineOrderStepper;
 use App\Support\OrderActor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\BuildsV2Orders;
 use Tests\TestCase;
 
@@ -113,5 +115,20 @@ class OrderStepperAndPaymentInstructionsTest extends TestCase
         }
         $this->assertStringContainsString('wa.me/6281234567890?text=', $page->getContent(), 'Staff can send it to the customer chat');
         $this->assertSame('unpaid', $order->fresh()->payment_status, 'Copying instructions never marks paid');
+    }
+
+    public function test_instructions_link_the_store_qris_once_it_is_uploaded(): void
+    {
+        $order = $this->v2Order('pickup');
+        $this->assertStringContainsString('Untuk QRIS, minta kode QRIS ke admin di chat ini.', app(OnlineOrderMessages::class)->paymentInstructions($order));
+
+        Storage::fake('public');
+        config(['media.product_disk' => 'public']);
+        Storage::disk('public')->put('products/qris-sintetis.png', 'png');
+        StoreInfo::getSetting()->forceFill(['qris_image_path' => 'products/qris-sintetis.png'])->save();
+        $this->assertNotNull(StoreInfo::qrisImageUrl());
+        $text = app(OnlineOrderMessages::class)->paymentInstructions($order);
+        $this->assertStringContainsString('Atau bayar dengan QRIS (simpan gambar lalu scan, masukkan total di atas): '.StoreInfo::qrisImageUrl(), $text);
+        $this->assertStringNotContainsString('minta kode QRIS', $text);
     }
 }
