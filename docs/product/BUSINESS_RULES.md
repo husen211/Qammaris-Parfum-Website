@@ -293,6 +293,7 @@ Keputusan Owner 2026-10-08; belum dirilis. [ADR-049](../architecture/decisions/A
   - **WhatsApp tetap wajib** di kedua kasus. Di admin alurnya tetap Konfirmasi pesanan → Tandai Lunas; kartu konfirmasi menandai "Customer sudah bisa bayar langsung" atau "Perlu cek stok: produk × jumlah".
   - **Rekening tampil langsung**: setiap rekening terverifikasi tampil dengan tanda bank, nomor, nama pemilik, dan tombol salin; total juga bisa disalin. Rekening dikelola Super Admin di halaman Rekening pembayaran.
   - **QRIS statis** di-upload Super Admin di halaman Rekening pembayaran (PNG/JPG/WebP, minimal 300 × 300 piksel); sebelum ada, pilihan QRIS tampil "Segera tersedia".
+  - QRIS toko sudah di-upload (Owner 2026-11-24). Pesan "Total & Instruksi Pembayaran" yang dikirim staf menautkan gambar QRIS itu; customer tidak perlu minta QRIS lewat chat. QRIS tidak ditampilkan di checkout sebelum pesanan dibuat, karena kode pesanan dan total final baru ada setelahnya.
 
 Keputusan: [ADR-057](../architecture/decisions/ADR-057-checkout-shipping-quotes-biteship.md). Akun dan kunci: [runbook Biteship](../runbooks/BITESHIP.md).
 
